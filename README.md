@@ -8,7 +8,6 @@ This is a single self-contained web page — there's no build step, no server, a
 
 - **`index.html`** — the entire app: markup, styling, and logic all in one file, with a starting set of decks and cards baked in. This is the file to deploy.
 - **`build_offline.py`** and **`seed_data.json`** — the tooling used to *produce* `index.html` from the live version of the app plus a snapshot of deck/card data. You only need these if you want to regenerate `index.html` yourself (see "Updating content" below). They aren't needed to run or host the site.
-- 
 ## Using the app
 
 **First launch:** the app asks you to create a 4-digit parent PIN. This PIN is required for anything a kid shouldn't be able to do on their own.
