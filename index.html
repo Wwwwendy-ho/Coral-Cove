@@ -2118,12 +2118,18 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
     if(flip){
       flip.addEventListener('click', function(){
         if(dragJustHappened()) return;
-        if(S.cardFlipped || S.transitioning) return;
-        S.cardFlipped = true;
-        S.cardFlippedAt = Date.now();
+        if(S.transitioning) return;
+        // Toggles both ways now — flipping back to the front (to re-read the question, or just to
+        // flip it again for fun) is allowed any number of times before grading. Only the very FIRST
+        // reveal starts the response-time clock that feeds auto-grading below; flipping back and
+        // forth after that doesn't reset it, so mulling it over doesn't get scored as "took forever."
+        S.cardFlipped = !S.cardFlipped;
         Sound.flip();
         render();
-        Speech.speak(card.back); // read the revealed answer aloud automatically
+        if(S.cardFlipped){
+          if(!S.cardFlippedAt) S.cardFlippedAt = Date.now();
+          Speech.speak(card.back); // read the revealed answer aloud automatically
+        }
       });
     }
     var replayBtn = app.querySelector('[data-act="replay-audio"]');
