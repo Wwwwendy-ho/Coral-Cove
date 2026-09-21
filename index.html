@@ -145,6 +145,17 @@
   .filter-tab.active{ background:var(--lagoon); color:#fff; }
   .filter-tab .filter-count{ opacity:.75; font-weight:700; margin-left:2px; }
   .filter-tab.active .filter-count{ opacity:.9; }
+  /* Subject tabs -- Reading / Math / Korean / etc. Coral accent so they read as a distinct row from
+     the lagoon-colored Live/Archived filter above them when both are showing (Manage Decks). */
+  .subject-tabs{ display:flex; gap:8px; flex-wrap:wrap; margin:-2px 0 14px; }
+  .subject-tab{
+    border:none; border-radius:999px; background:var(--foam-2); color:var(--ink); font-weight:800;
+    font-size:.85rem; padding:8px 14px; cursor:pointer; transition:transform .12s ease, background .15s ease;
+  }
+  .subject-tab:active{ transform:scale(.96); }
+  .subject-tab.active{ background:var(--coral); color:#fff; }
+  .subject-tab .filter-count{ opacity:.75; font-weight:700; margin-left:2px; }
+  .subject-tab.active .filter-count{ opacity:.9; }
   .empty-filter-note{
     color:var(--ink-soft); font-weight:700; text-align:center; padding:28px 12px; font-size:.95rem;
   }
@@ -334,13 +345,19 @@
   .stat-tile .label{ font-size:.72rem; font-weight:800; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.03em; margin-top:2px; }
 
   .mastery-list{ display:flex; flex-direction:column; gap:12px; }
-  .mastery-row{ display:flex; align-items:center; gap:10px; }
+  .mastery-row{
+    display:flex; align-items:center; gap:10px; width:100%; background:none; border:none; padding:6px;
+    margin:-6px; border-radius:var(--r-sm); cursor:pointer; text-align:left; font:inherit; transition:background .15s ease;
+  }
+  .mastery-row:hover, .mastery-row:focus-visible{ background:var(--foam-2); outline:none; }
   .mastery-emoji{ font-size:1.3rem; width:28px; text-align:center; flex-shrink:0; }
   .mastery-mid{ flex:1; min-width:0; }
   .mastery-top{ display:flex; justify-content:space-between; gap:8px; font-size:.85rem; font-weight:800; color:var(--ink); margin-bottom:4px; }
   .mastery-top .pct{ color:var(--ink-soft); font-weight:700; flex-shrink:0; }
   .mastery-track{ height:12px; border-radius:999px; background:var(--foam-2); border:1px solid var(--border); overflow:hidden; position:relative; }
   .mastery-fill{ height:100%; border-radius:999px; background:linear-gradient(90deg, var(--lagoon-light), var(--lagoon)); transition:width .5s ease; }
+  .mastery-chevron{ font-size:1.3rem; color:var(--ink-soft); flex-shrink:0; }
+  .mastery-hint{ font-size:.76rem; color:var(--ink-soft); text-align:center; margin:10px 0 0; }
 
   .trend-wrap{ background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); box-shadow:var(--shadow-sm); padding:16px 14px 10px; }
   .trend-bars{ display:flex; align-items:flex-end; gap:6px; height:120px; }
@@ -350,6 +367,25 @@
   .trend-bar.low{ background:var(--coral); }
   .trend-empty{ text-align:center; color:var(--ink-soft); font-weight:700; padding:20px 10px; }
   .trend-axis{ display:flex; justify-content:space-between; margin-top:6px; font-size:.68rem; font-weight:700; color:var(--ink-soft); }
+  .trend-long{ padding-bottom:14px; }
+  .trend-svg{ width:100%; height:160px; display:block; overflow:visible; }
+  .trend-pt{ fill:var(--lagoon); stroke:var(--surface); stroke-width:1.5; cursor:pointer; transition:r .1s ease; }
+  .trend-pt:hover, .trend-pt:focus-visible{ r:6; outline:none; }
+  .trend-long-note{ font-size:.76rem; color:var(--ink-soft); text-align:center; margin:8px 0 0; }
+
+  .cat-list{ display:flex; flex-direction:column; gap:14px; }
+  .cat-row{}
+  .cat-top{ display:flex; align-items:center; gap:8px; font-size:.85rem; font-weight:800; color:var(--ink); margin-bottom:4px; }
+  .cat-top .pct{ margin-left:auto; color:var(--ink-soft); font-weight:700; }
+  .cat-tag{ font-size:.68rem; font-weight:800; padding:2px 8px; border-radius:999px; white-space:nowrap; }
+  .cat-tag.strong{ background:var(--lagoon); color:#fff; }
+  .cat-tag.weak{ background:var(--coral); color:#fff; }
+  .cat-track{ height:12px; border-radius:999px; background:var(--foam-2); border:1px solid var(--border); overflow:hidden; position:relative; }
+  .cat-fill{ height:100%; border-radius:999px; background:linear-gradient(90deg, var(--lagoon-light), var(--lagoon)); transition:width .5s ease; }
+  .cat-fill.high{ background:linear-gradient(90deg, var(--seaweed, var(--lagoon-light)), var(--lagoon)); }
+  .cat-fill.low{ background:linear-gradient(90deg, #ffab97, var(--coral)); }
+  .cat-meta{ font-size:.72rem; color:var(--ink-soft); margin-top:3px; }
+
   .chart-tip{
     position:fixed; pointer-events:none; background:var(--deep); color:#fff; font-size:.78rem; font-weight:700;
     padding:6px 10px; border-radius:8px; box-shadow:var(--shadow-sm); z-index:50; opacity:0; transform:translate(-50%,-100%) translateY(-8px);
@@ -370,6 +406,20 @@
   .emoji-opt{ font-size:1.4rem; background:none; border:none; cursor:pointer; border-radius:8px; padding:4px; }
   .emoji-opt:hover{ background:var(--foam-2); }
 
+  .subject-picker{ background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:12px 14px; margin-bottom:16px; }
+  .subject-picker-label{ display:block; font-weight:800; font-size:.85rem; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.03em; margin-bottom:8px; }
+  .subject-chip-row{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+  .subject-chip{
+    border:2px solid var(--border); border-radius:999px; background:var(--foam); color:var(--ink); font-weight:700;
+    font-size:.82rem; padding:6px 12px; cursor:pointer;
+  }
+  .subject-chip.active{ border-color:var(--coral); background:var(--coral); color:#fff; }
+  .subject-custom-input{
+    width:100%; box-sizing:border-box; border:1px solid var(--border); background:var(--foam); color:var(--ink);
+    border-radius:var(--r-sm); padding:9px 11px; font-size:.9rem;
+  }
+  .subject-picker-hint{ font-size:.76rem; color:var(--ink-soft); margin:8px 0 0; }
+
   .card-list{ display:flex; flex-direction:column; gap:10px; margin-bottom:18px; }
   .card-row{ background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:12px 14px; display:flex; gap:10px; align-items:center; box-shadow:var(--shadow-sm); }
   .card-row .cr-text{ flex:1; min-width:0; }
@@ -380,6 +430,7 @@
   .mode-tag-read{ background:var(--sun); color:#4a3300; }
   .mode-tag-choice{ background:var(--coral); color:#fff; }
   .mode-tag-leech{ background:var(--bad-bg); color:var(--bad-ink); }
+  .mode-tag-category{ background:var(--foam); border:1px solid var(--border); color:var(--ink-soft); }
 
   .mode-toggle{ display:grid; grid-template-columns:repeat(auto-fit, minmax(130px,1fr)); gap:8px; margin-bottom:14px; }
   .mode-opt{
@@ -1141,7 +1192,9 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
     finishedTally: null,
     managingDecks: false,   // true only while a grown-up has unlocked deck management from the resting screen
     deckFilter: 'all',      // 'all' | 'live' | 'archived' -- which decks the Manage Decks grid shows
+    subjectFilter: 'all',   // 'all' | a subject id/custom string -- which subject tab is selected on the deck grid
     statsData: null,        // lazily loaded { perDeck, history } for the Stats page
+    statsDeckId: null,      // set while viewing the per-deck drill-down (S.view === 'deckStats')
     lastOutcomeWrong: false, // briefly true right after a wrong answer, so the swim-progress critter can frown
     transitioning: false,   // true for the brief window a card is sliding out — locks input until the next card lands
     peeking: false,         // true while showing the read-only "last answered card" view (swiped back to review it)
@@ -1167,6 +1220,47 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
 
   var DECK_EMOJI = ['🐢','🐬','🐳','🦀','🐠','🦈','🦞','🐙','🌊','🐚','🦑','⭐'];
 
+  // Preset subjects a deck can be tagged with, shown as chips in the deck editor and as tabs on the
+  // deck grid. A deck can also carry a custom subject (any typed text) instead of one of these ids --
+  // subjectMeta() below resolves either kind to a display icon+label.
+  var SUBJECTS = [
+    { id:'reading', icon:'📖', label:'Reading' },
+    { id:'math', icon:'🔢', label:'Math' },
+    { id:'korean', icon:'🇰🇷', label:'Korean' },
+    { id:'science', icon:'🔬', label:'Science' },
+    { id:'life', icon:'🌱', label:'Life Skills' },
+    { id:'other', icon:'✨', label:'Other' }
+  ];
+  function subjectMeta(subject){
+    if(!subject) return null;
+    var preset = SUBJECTS.find(function(s){ return s.id === subject; });
+    if(preset) return preset;
+    return { id: subject, icon:'🏷️', label: subject }; // a parent-typed custom subject: the text IS the id
+  }
+  // Builds the tab list for whichever deck set is currently in view (kid home or Manage Decks, and
+  // already narrowed by the Live/Archived filter there). Returns null when nothing is tagged yet, so
+  // the tab row stays hidden until a parent actually starts using subjects -- no empty-looking UI.
+  function buildSubjectTabs(decks){
+    var present = {};
+    decks.forEach(function(d){
+      if(!d.subject) return;
+      var meta = subjectMeta(d.subject);
+      if(!present[meta.id]) present[meta.id] = { id: meta.id, icon: meta.icon, label: meta.label, count: 0 };
+      present[meta.id].count += 1;
+    });
+    var ids = Object.keys(present);
+    if(!ids.length) return null;
+    var presetOrder = SUBJECTS.map(function(s){ return s.id; });
+    ids.sort(function(a,b){
+      var ai = presetOrder.indexOf(a), bi = presetOrder.indexOf(b);
+      if(ai !== -1 && bi !== -1) return ai - bi;
+      if(ai !== -1) return -1;
+      if(bi !== -1) return 1;
+      return present[a].label.localeCompare(present[b].label);
+    });
+    return ids.map(function(id){ return present[id]; });
+  }
+
   function todayISO(d){ d = d || new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
   function shuffle(arr){ var a = arr.slice(); for(var i=a.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
@@ -1181,13 +1275,14 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
     if(S.pinPromptFor) return renderPinPad(S.pinPromptFor);
     if(!S.settings.pinHash) return renderPinSetup(); // safety net — no PIN saved yet
     if(S.view === 'sessionResults') return renderSessionResults();
-    if(S.managingDecks) return (S.view === 'editor') ? renderEditor() : (S.view === 'stats' ? renderStats() : (S.view === 'settings' ? renderSettingsPage() : renderHome()));
+    if(S.managingDecks) return (S.view === 'editor') ? renderEditor() : (S.view === 'stats' ? renderStats() : (S.view === 'deckStats' ? renderDeckStats() : (S.view === 'settings' ? renderSettingsPage() : renderHome())));
     if(!S.sessionActive) return renderLocked();
     if(S.view === 'home') return renderHome();
     if(S.view === 'study') return renderStudy();
     if(S.view === 'editor') return renderEditor();
     if(S.view === 'summary') return renderSummary();
     if(S.view === 'stats') return renderStats();
+    if(S.view === 'deckStats') return renderDeckStats();
   }
 
   function ctrlRowHTML(){
@@ -1553,12 +1648,6 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
         if(filter === 'archived') return !!d.archived;
         return true;
       });
-      // Most recently studied or edited first; decks that have never been opened fall to the back,
-      // ordered among themselves by the deck's original creation order.
-      visibleDecks = visibleDecks.slice().sort(function(a, b){
-        var diff = (b.lastOpenedAt || 0) - (a.lastOpenedAt || 0);
-        return diff !== 0 ? diff : ((a.order || 0) - (b.order || 0));
-      });
       var tabsHTML = DECK_FILTERS.map(function(f){
         var count = S.decks.filter(function(d){
           if(f.id === 'live') return !d.archived;
@@ -1568,6 +1657,36 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
         return '<button type="button" class="filter-tab'+(filter===f.id?' active':'')+'" data-filter="'+f.id+'">'+f.label+' <span class="filter-count">'+count+'</span></button>';
       }).join('');
       filterTabsHTML = '<div class="filter-tabs" role="tablist" aria-label="Filter decks">'+tabsHTML+'</div>';
+    }
+    // Subject tabs (Reading / Math / Korean / ...) sit below the archive filter and apply to both
+    // the kid home screen and Manage Decks -- built from whatever's actually tagged in the current
+    // scope (already narrowed by the Live/Archived filter above), so they only ever show subjects
+    // that have at least one deck behind them right now.
+    var subjectTabsHTML = '';
+    var subjectTabs = buildSubjectTabs(visibleDecks);
+    if(subjectTabs){
+      if(S.subjectFilter !== 'all' && !subjectTabs.some(function(t){ return t.id === S.subjectFilter; })){
+        S.subjectFilter = 'all'; // the tagged deck we were filtered to is gone (archived/edited/deleted)
+      }
+      var subjFilter = S.subjectFilter || 'all';
+      var subjChips = '<button type="button" class="subject-tab'+(subjFilter==='all'?' active':'')+'" data-subject-filter="all">🌈 All <span class="filter-count">'+visibleDecks.length+'</span></button>' +
+        subjectTabs.map(function(t){
+          return '<button type="button" class="subject-tab'+(subjFilter===t.id?' active':'')+'" data-subject-filter="'+esc(t.id)+'">'+t.icon+' '+esc(t.label)+' <span class="filter-count">'+t.count+'</span></button>';
+        }).join('');
+      subjectTabsHTML = '<div class="subject-tabs" role="tablist" aria-label="Filter by subject">'+subjChips+'</div>';
+      if(subjFilter !== 'all'){
+        visibleDecks = visibleDecks.filter(function(d){ return d.subject && subjectMeta(d.subject).id === subjFilter; });
+      }
+    } else {
+      S.subjectFilter = 'all';
+    }
+    if(managing){
+      // Most recently studied or edited first; decks that have never been opened fall to the back,
+      // ordered among themselves by the deck's original creation order.
+      visibleDecks = visibleDecks.slice().sort(function(a, b){
+        var diff = (b.lastOpenedAt || 0) - (a.lastOpenedAt || 0);
+        return diff !== 0 ? diff : ((a.order || 0) - (b.order || 0));
+      });
     }
     var deckTiles = visibleDecks.map(function(d){
       var dc = S.dueCounts[d.id] || { due:0, total:0 };
@@ -1614,7 +1733,8 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
       '<div class="mascot-wrap">'+mascotSVG('')+'</div>' +
       banner +
       filterTabsHTML +
-      (managing && !visibleDecks.length ? '<div class="empty-filter-note">'+(S.deckFilter==='archived' ? 'No archived decks.' : 'No decks here.')+'</div>' : '') +
+      subjectTabsHTML +
+      (!visibleDecks.length ? '<div class="empty-filter-note">'+(managing && S.deckFilter==='archived' ? 'No archived decks.' : (subjectTabs && S.subjectFilter!=='all' ? 'No decks tagged with this subject yet.' : 'No decks here.'))+'</div>' : '') +
       '<div class="deck-grid">' +
         deckTiles +
         (managing ? '<button type="button" class="add-deck-card" data-act="new-deck"><span class="plus">＋</span><span>New Deck</span></button>' : '') +
@@ -1622,6 +1742,13 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
 
     app.querySelectorAll('[data-act="study"]').forEach(function(b){ b.addEventListener('click', function(){ startStudy(b.dataset.deck); }); });
     app.querySelector('[data-act="open-stats"]').addEventListener('click', openStats);
+    app.querySelectorAll('[data-subject-filter]').forEach(function(b){
+      b.addEventListener('click', function(){
+        if(S.subjectFilter === b.dataset.subjectFilter) return;
+        S.subjectFilter = b.dataset.subjectFilter;
+        render();
+      });
+    });
     if(managing){
       app.querySelectorAll('[data-act="edit-deck"]').forEach(function(b){ b.addEventListener('click', function(){ openEditor(b.dataset.deck); }); });
       app.querySelectorAll('[data-act="toggle-archive"]').forEach(function(b){
@@ -2063,6 +2190,10 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
     var algo = S.settings.algorithm || 'sm2_speed';
     var diff = currentDifficulty();
     var updates = (algo === 'leitner') ? gradeCardLeitner(card, rating !== 'again', Date.now(), diff) : gradeCard(card, rating, Date.now(), diff);
+    // Cumulative right/wrong counters, independent of the scheduling algorithm above -- these are
+    // what the Progress page's per-deck "topics" breakdown groups by category and sums.
+    updates.timesSeen = (card.timesSeen || 0) + 1;
+    updates.timesCorrect = (card.timesCorrect || 0) + (rating !== 'again' ? 1 : 0);
     S.store.updateCard(S.currentDeckId, card.id, updates);
     S.sessionReviewed += 1;
     S.sessionStars += STARS[rating];
@@ -2186,13 +2317,125 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
         return S.store.getCardsOnce(d.id).then(function(cards){
           var total = cards.length;
           var mastered = cards.filter(function(c){ return (c.reps||0) > 0 && (c.interval||0) >= 4; }).length;
-          return { id: d.id, name: d.name, emoji: d.emoji, total: total, mastered: mastered };
+          // Cards are kept on the entry (not just the total/mastered counts) so the per-deck drill-down
+          // (renderDeckStats) can build its "topics" breakdown without a second round-trip.
+          return { id: d.id, name: d.name, emoji: d.emoji, total: total, mastered: mastered, cards: cards };
         });
       }))
     ]).then(function(results){
       var history = results[0].slice().sort(function(a,b){ return (a.endedAt||0)-(b.endedAt||0); });
       S.statsData = { history: history, perDeck: results[1] };
-      if(S.view === 'stats') render();
+      if(S.view === 'stats' || S.view === 'deckStats') render();
+    });
+  }
+
+  // Groups a deck's cards by their optional "Topic" tag and sums each topic's cumulative right/seen
+  // counts (tracked on every graded answer in commitGrade). Untagged cards are left out entirely --
+  // an "Uncategorized: 100%" row would just be noise, not a useful topic breakdown. Sorted strongest
+  // topic first, so a parent can see at a glance what's landed and what still needs practice.
+  function categoryBreakdown(cards){
+    var buckets = {};
+    (cards||[]).forEach(function(c){
+      var cat = (c.category||'').trim();
+      var seen = c.timesSeen || 0;
+      if(!cat || !seen) return;
+      if(!buckets[cat]) buckets[cat] = { category: cat, seen: 0, correct: 0 };
+      buckets[cat].seen += seen;
+      buckets[cat].correct += (c.timesCorrect || 0);
+    });
+    var rows = Object.keys(buckets).map(function(k){
+      var b = buckets[k];
+      return { category: b.category, seen: b.seen, correct: b.correct, accuracy: b.seen > 0 ? Math.round((b.correct/b.seen)*100) : 0 };
+    });
+    rows.sort(function(a,b){ return b.accuracy - a.accuracy; });
+    return rows;
+  }
+
+  // Aggregates raw per-round history entries into one point per calendar day (summed right/total
+  // across every round finished that day), which is what the long-term trend chart plots -- a
+  // per-round view gets noisy fast, but a daily view stays readable across weeks or months.
+  function aggregateHistoryByDay(history){
+    var byDay = {};
+    (history||[]).forEach(function(h){
+      var d = new Date(h.endedAt || 0);
+      var iso = todayISO(d);
+      if(!byDay[iso]){
+        byDay[iso] = { iso: iso, ts: new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(), right:0, total:0, rounds:0 };
+      }
+      byDay[iso].right += h.right || 0;
+      byDay[iso].total += h.total || 0;
+      byDay[iso].rounds += 1;
+    });
+    return Object.keys(byDay).map(function(k){ return byDay[k]; }).sort(function(a,b){ return a.ts - b.ts; });
+  }
+
+  // Hand-rolled inline SVG line+area chart (no chart library — this app stays a single dependency-
+  // free file) showing accuracy by day across the ENTIRE history, not just the most recent rounds.
+  // Capped to the most recent 60 days so the chart stays legible once a family has been using the
+  // app for a long stretch; older days are still counted in "days of practice" below the chart.
+  function renderLongTermTrend(history){
+    if(!history || !history.length){
+      return '<div class="trend-wrap"><div class="trend-empty">Finish a few rounds to start seeing a long-term trend! 🌊</div></div>';
+    }
+    var allDays = aggregateHistoryByDay(history);
+    var days = allDays.slice(-60);
+    var n = days.length;
+    var W = 600, H = 160, padL = 30, padR = 10, padT = 10, padB = 4;
+    var plotW = W - padL - padR, plotH = H - padT - padB;
+    function xAt(i){ return n > 1 ? padL + (i/(n-1))*plotW : padL + plotW/2; }
+    function yAt(pct){ return padT + (1 - pct/100) * plotH; }
+    var pts = days.map(function(d, i){
+      var pct = d.total > 0 ? Math.round((d.right/d.total)*100) : 0;
+      return { x: xAt(i), y: yAt(pct), pct: pct, day: d };
+    });
+    var pathD = pts.map(function(p,i){ return (i===0?'M':'L')+p.x.toFixed(1)+','+p.y.toFixed(1); }).join(' ');
+    var areaD = pathD + ' L'+pts[pts.length-1].x.toFixed(1)+','+(padT+plotH)+' L'+pts[0].x.toFixed(1)+','+(padT+plotH)+' Z';
+    var gridHTML = [0,50,100].map(function(pct){
+      var y = yAt(pct);
+      return '<line x1="'+padL+'" y1="'+y.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+y.toFixed(1)+'" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,3"/>' +
+        '<text x="2" y="'+(y+3).toFixed(1)+'" font-size="9" fill="var(--ink-soft)">'+pct+'</text>';
+    }).join('');
+    var ptsHTML = pts.map(function(p){
+      var dd = new Date(p.day.ts);
+      var label = (dd.getMonth()+1)+'/'+dd.getDate();
+      var tip = esc('🗓️ '+label+' — '+p.pct+'% ('+p.day.right+'/'+p.day.total+' across '+p.day.rounds+' round'+(p.day.rounds===1?'':'s')+')');
+      return '<circle class="trend-pt" cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="4" tabindex="0" data-tip="'+tip+'"/>';
+    }).join('');
+    var firstLabel = (function(){ var dd = new Date(days[0].ts); return (dd.getMonth()+1)+'/'+dd.getDate(); })();
+    var lastLabel = (function(){ var dd = new Date(days[days.length-1].ts); return (dd.getMonth()+1)+'/'+dd.getDate(); })();
+    var noteExtra = allDays.length > days.length ? ' (showing the most recent '+days.length+')' : '';
+    return '' +
+      '<div class="trend-wrap trend-long">' +
+        '<svg class="trend-svg" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" aria-label="Accuracy by day, over time">' +
+          gridHTML +
+          '<path d="'+areaD+'" fill="var(--lagoon)" fill-opacity="0.14" stroke="none"/>' +
+          '<path d="'+pathD+'" fill="none" stroke="var(--lagoon)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>' +
+          ptsHTML +
+        '</svg>' +
+        (n > 1 ? '<div class="trend-axis"><span>'+firstLabel+'</span><span>'+lastLabel+'</span></div>' : '') +
+        '<p class="trend-long-note">🌱 '+allDays.length+' day'+(allDays.length===1?'':'s')+' of practice so far'+noteExtra+'</p>' +
+      '</div>';
+  }
+
+  // Shared tooltip wiring for both the short-term bar chart and the long-term SVG points -- both
+  // kinds of chart mark tell you what they need with a `data-tip` attribute.
+  function wireChartTips(){
+    var tip = document.getElementById('chartTip');
+    if(!tip) return;
+    app.querySelectorAll('.trend-bar, .trend-pt').forEach(function(b){
+      function show(){
+        tip.textContent = b.dataset.tip;
+        var r = b.getBoundingClientRect();
+        tip.style.left = (r.left + r.width/2) + 'px';
+        tip.style.top = r.top + 'px';
+        tip.classList.add('show');
+      }
+      function hide(){ tip.classList.remove('show'); }
+      b.addEventListener('mouseenter', show);
+      b.addEventListener('mouseleave', hide);
+      b.addEventListener('focus', show);
+      b.addEventListener('blur', hide);
+      b.addEventListener('touchstart', function(){ show(); setTimeout(hide, 1500); }, {passive:true});
     });
   }
 
@@ -2220,13 +2463,14 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
       masteryHTML = '<div class="mastery-list">' + data.perDeck.map(function(d){
         var pct = d.total > 0 ? Math.round((d.mastered / d.total) * 100) : 0;
         return '' +
-          '<div class="mastery-row">' +
+          '<button type="button" class="mastery-row" data-deck="'+d.id+'">' +
             '<div class="mastery-emoji">'+d.emoji+'</div>' +
             '<div class="mastery-mid">' +
               '<div class="mastery-top"><span>'+esc(d.name)+'</span><span class="pct">'+pct+'% mastered</span></div>' +
               '<div class="mastery-track"><div class="mastery-fill" style="width:'+pct+'%"></div></div>' +
             '</div>' +
-          '</div>';
+            '<span class="mastery-chevron">›</span>' +
+          '</button>';
       }).join('') + '</div>';
     }
 
@@ -2255,6 +2499,8 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
         '</div>';
     }
 
+    var longTermHTML = data ? renderLongTermTrend(data.history) : '<div class="trend-wrap"><div class="trend-empty">Loading…</div></div>';
+
     app.innerHTML = '' +
       '<div class="nav-row">' +
         '<button class="back-btn" data-act="exit-stats">⟵ Lagoon</button>' +
@@ -2262,29 +2508,80 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
       '</div>' +
       '<div class="stats-page">' +
         '<div class="stats-section">'+tilesHTML+'</div>' +
-        '<div class="stats-section"><h3>🎯 Accuracy — last '+trendCount+' round'+(trendCount===1?'':'s')+'</h3>'+trendHTML+'</div>' +
-        '<div class="stats-section"><h3>🐢 Deck mastery</h3>'+masteryHTML+'</div>' +
+        '<div class="stats-section"><h3>📈 Long-term trend</h3>'+longTermHTML+'</div>' +
+        '<div class="stats-section"><h3>🎯 Recent rounds — last '+trendCount+'</h3>'+trendHTML+'</div>' +
+        '<div class="stats-section"><h3>🐢 Deck mastery</h3>'+masteryHTML+'<p class="mastery-hint">Tap a deck to see which topics it knows best.</p></div>' +
       '</div>' +
       '<div class="chart-tip" id="chartTip"></div>';
 
     app.querySelector('[data-act="exit-stats"]').addEventListener('click', goHome);
-
-    var tip = document.getElementById('chartTip');
-    app.querySelectorAll('.trend-bar').forEach(function(b){
-      function show(){
-        tip.textContent = b.dataset.tip;
-        var r = b.getBoundingClientRect();
-        tip.style.left = (r.left + r.width/2) + 'px';
-        tip.style.top = r.top + 'px';
-        tip.classList.add('show');
-      }
-      function hide(){ tip.classList.remove('show'); }
-      b.addEventListener('mouseenter', show);
-      b.addEventListener('mouseleave', hide);
-      b.addEventListener('focus', show);
-      b.addEventListener('blur', hide);
-      b.addEventListener('touchstart', function(){ show(); setTimeout(hide, 1500); }, {passive:true});
+    app.querySelectorAll('.mastery-row').forEach(function(b){
+      b.addEventListener('click', function(){
+        S.statsDeckId = b.dataset.deck;
+        S.view = 'deckStats';
+        render();
+      });
     });
+    wireChartTips();
+  }
+
+  /* ---------- DECK PROGRESS DRILL-DOWN (tap a deck in the mastery list) ---------- */
+  function renderDeckStats(){
+    var data = S.statsData;
+    if(!data){ openStats(); return; } // shouldn't normally happen -- guards against a stale view after e.g. a reload
+    var deckEntry = data.perDeck.find(function(d){ return d.id === S.statsDeckId; });
+    if(!deckEntry){ S.view = 'stats'; render(); return; } // deck was deleted since the list loaded
+    var deckHistory = data.history.filter(function(h){ return h.deckId === S.statsDeckId; });
+    var right = 0, total = 0;
+    deckHistory.forEach(function(h){ right += h.right||0; total += h.total||0; });
+    var accuracy = total > 0 ? Math.round((right/total)*100) : 0;
+    var pctMastered = deckEntry.total > 0 ? Math.round((deckEntry.mastered/deckEntry.total)*100) : 0;
+
+    var tilesHTML = '' +
+      '<div class="stat-tiles">' +
+        '<div class="stat-tile"><div class="num tabular">'+deckEntry.total+'</div><div class="label">Cards</div></div>' +
+        '<div class="stat-tile"><div class="num tabular">'+pctMastered+'%</div><div class="label">Mastered</div></div>' +
+        '<div class="stat-tile"><div class="num tabular">'+accuracy+'%</div><div class="label">Accuracy</div></div>' +
+        '<div class="stat-tile"><div class="num tabular">'+deckHistory.length+'</div><div class="label">Rounds played</div></div>' +
+      '</div>';
+
+    var longTermHTML = renderLongTermTrend(deckHistory);
+
+    var catRows = categoryBreakdown(deckEntry.cards);
+    var catHTML;
+    if(!catRows.length){
+      catHTML = '<div class="trend-empty">Tag this deck\'s cards with a Topic (in the deck editor) to see which topics are strongest here.</div>';
+    } else {
+      catHTML = '<div class="cat-list">' + catRows.map(function(r, i){
+        var barCls = 'cat-fill' + (r.accuracy < 60 ? ' low' : (r.accuracy >= 85 ? ' high' : ''));
+        var tag = '';
+        if(catRows.length > 1){
+          if(i === 0 && r.accuracy >= 70) tag = '<span class="cat-tag strong">💪 Strongest</span>';
+          else if(i === catRows.length-1 && r.accuracy < 70) tag = '<span class="cat-tag weak">🎯 Needs practice</span>';
+        }
+        return '' +
+          '<div class="cat-row">' +
+            '<div class="cat-top"><span>'+esc(r.category)+'</span>'+tag+'<span class="pct">'+r.accuracy+'%</span></div>' +
+            '<div class="cat-track"><div class="'+barCls+'" style="width:'+r.accuracy+'%"></div></div>' +
+            '<div class="cat-meta">'+r.correct+' / '+r.seen+' correct answers</div>' +
+          '</div>';
+      }).join('') + '</div>';
+    }
+
+    app.innerHTML = '' +
+      '<div class="nav-row">' +
+        '<button class="back-btn" data-act="back-to-stats">⟵ Progress</button>' +
+        '<span class="nav-title">'+deckEntry.emoji+' '+esc(deckEntry.name)+'</span>' +
+      '</div>' +
+      '<div class="stats-page">' +
+        '<div class="stats-section">'+tilesHTML+'</div>' +
+        '<div class="stats-section"><h3>📈 Long-term trend</h3>'+longTermHTML+'</div>' +
+        '<div class="stats-section"><h3>🧩 Topics</h3>'+catHTML+'</div>' +
+      '</div>' +
+      '<div class="chart-tip" id="chartTip"></div>';
+
+    app.querySelector('[data-act="back-to-stats"]').addEventListener('click', function(){ S.view = 'stats'; render(); });
+    wireChartTips();
   }
 
   /* ---------- SETTINGS (parent-only, app-wide: difficulty + scheduling algorithm) ---------- */
@@ -2388,6 +2685,7 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
       var isReadRow = c.mode === 'read';
       var isChoiceRow = c.mode === 'choice';
       var modeTag = (isReadRow ? '<span class="mode-tag mode-tag-read">📖 Read</span>' : (isChoiceRow ? '<span class="mode-tag mode-tag-choice">🔢 Choice</span>' : '<span class="mode-tag">🔄 Flip</span>')) +
+        (c.category ? ' <span class="mode-tag mode-tag-category">🏷️ '+esc(c.category)+'</span>' : '') +
         (c.isLeech ? ' <span class="mode-tag mode-tag-leech">🔁 Needs practice</span>' : '');
       var backLine = isReadRow ? (c.note ? esc(c.note) : 'No answer side — just for reading aloud') :
         (isChoiceRow ? (esc(c.back)+' · '+(c.choices||[]).length+' wrong answer'+((c.choices||[]).length===1?'':'s')) :
@@ -2411,8 +2709,8 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
 
     var editingCard = S.editingCardId ? cards.find(function(c){ return c.id === S.editingCardId; }) : null;
     var formTitle = editingCard ? 'Edit card' : 'Add a new card';
-    var draft = S.cardFormDraft || { front:'', back:'', note:'', choices:'' };
-    var fFront = draft.front; var fBack = draft.back; var fNote = draft.note; var fChoices = draft.choices || '';
+    var draft = S.cardFormDraft || { front:'', back:'', note:'', choices:'', category:'' };
+    var fFront = draft.front; var fBack = draft.back; var fNote = draft.note; var fChoices = draft.choices || ''; var fCategory = draft.category || '';
     var formMode = S.cardFormMode || 'flip';
     var isReadMode = formMode === 'read';
     var isChoiceMode = formMode === 'choice';
@@ -2429,11 +2727,19 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
         (isReadMode ? '' : '<div class="field"><label for="cardBack">'+(isChoiceMode?'Correct answer':'Back (answer)')+'</label><input id="cardBack" type="text" value="'+esc(fBack)+'" placeholder="e.g. 13  or  a sentence"></div>') +
         (isChoiceMode ? '<div class="field"><label for="cardChoices">Wrong answers (comma-separated)</label><input id="cardChoices" type="text" value="'+esc(fChoices)+'" placeholder="e.g. 11, 12, 14"></div>' : '') +
         '<div class="field"><label for="cardNote">'+(isReadMode?'Hint (optional, shown small under the word)':'Fun fact / hint (optional)')+'</label><textarea id="cardNote" rows="2" placeholder="'+(isReadMode?'e.g. sounds like OCK-tuh-puss':'e.g. 6 crabs + 7 crabs = 13 crabs!')+'">'+esc(fNote)+'</textarea></div>' +
+        '<div class="field"><label for="cardCategory">Topic (optional — groups cards in Progress, e.g. Addition, Sight words)</label><input id="cardCategory" type="text" maxlength="24" value="'+esc(fCategory)+'" placeholder="e.g. Addition"></div>' +
         '<div class="form-actions">' +
           '<button class="btn btn-primary" data-act="save-card">'+(editingCard?'Save changes':'Add card')+'</button>' +
           '<button class="btn btn-ghost" data-act="cancel-card">Cancel</button>' +
         '</div>' +
       '</div>') : '<button class="btn btn-coral" data-act="open-add-card">＋ Add a card</button>';
+
+    var currentSubject = deck.subject || '';
+    var subjectIsCustom = !!(currentSubject && !SUBJECTS.some(function(s){ return s.id === currentSubject; }));
+    var subjectChipsHTML = '<button type="button" class="subject-chip'+(!currentSubject?' active':'')+'" data-subject-chip="">🚫 None</button>' +
+      SUBJECTS.map(function(s){
+        return '<button type="button" class="subject-chip'+(currentSubject===s.id?' active':'')+'" data-subject-chip="'+s.id+'">'+s.icon+' '+s.label+'</button>';
+      }).join('');
 
     app.innerHTML = '' +
       '<div class="nav-row">' +
@@ -2445,6 +2751,12 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
         '<input id="deckNameInput" class="name-input" type="text" value="'+esc(deck.name)+'" maxlength="40">' +
       '</div>' +
       emojiPicker +
+      '<div class="subject-picker">' +
+        '<label class="subject-picker-label">Subject</label>' +
+        '<div class="subject-chip-row">'+subjectChipsHTML+'</div>' +
+        '<input id="customSubjectInput" class="subject-custom-input" type="text" maxlength="24" placeholder="Or type your own, e.g. Spanish" value="'+(subjectIsCustom?esc(currentSubject):'')+'">' +
+        '<p class="subject-picker-hint">Groups this deck under a tab on the deck screen, like Reading or Math.</p>' +
+      '</div>' +
       '<div class="card-list">'+rows+'</div>' +
       addForm +
       '<div class="danger-zone"><button class="btn btn-danger" data-act="del-deck">Delete this deck</button></div>';
@@ -2468,13 +2780,27 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
       var val = nameInput.value.trim() || 'Untitled Deck';
       S.store.updateDeck(deck.id, { name: val });
     });
+    app.querySelectorAll('[data-subject-chip]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var val = b.dataset.subjectChip;
+        if(val === currentSubject) return;
+        S.store.updateDeck(deck.id, { subject: val ? val : null });
+        render();
+      });
+    });
+    var customSubjectInput = document.getElementById('customSubjectInput');
+    if(customSubjectInput) customSubjectInput.addEventListener('change', function(){
+      var val = customSubjectInput.value.trim();
+      S.store.updateDeck(deck.id, { subject: val ? val : null });
+      render();
+    });
     app.querySelectorAll('[data-act="edit-card"]').forEach(function(b){
       b.addEventListener('click', function(){
         var c = cards.find(function(x){ return x.id === b.dataset.card; });
         S.editingCardId = b.dataset.card;
         S.addCardOpen = false;
         S.cardFormMode = (c && c.mode === 'read') ? 'read' : ((c && c.mode === 'choice') ? 'choice' : 'flip');
-        S.cardFormDraft = { front: c ? c.front : '', back: c ? (c.back||'') : '', note: c ? (c.note||'') : '', choices: c ? (c.choices||[]).join(', ') : '' };
+        S.cardFormDraft = { front: c ? c.front : '', back: c ? (c.back||'') : '', note: c ? (c.note||'') : '', choices: c ? (c.choices||[]).join(', ') : '', category: c ? (c.category||'') : '' };
         render();
       });
     });
@@ -2483,7 +2809,7 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
     });
     var openAdd = app.querySelector('[data-act="open-add-card"]');
     if(openAdd) openAdd.addEventListener('click', function(){
-      S.addCardOpen = true; S.editingCardId = null; S.cardFormMode = 'flip'; S.cardFormDraft = { front:'', back:'', note:'', choices:'' };
+      S.addCardOpen = true; S.editingCardId = null; S.cardFormMode = 'flip'; S.cardFormDraft = { front:'', back:'', note:'', choices:'', category:'' };
       render();
       setTimeout(function(){ var el=document.getElementById('cardFront'); if(el) el.focus(); },0);
     });
@@ -2495,11 +2821,13 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
         var backEl = document.getElementById('cardBack');
         var noteEl = document.getElementById('cardNote');
         var choicesEl = document.getElementById('cardChoices');
+        var categoryEl = document.getElementById('cardCategory');
         S.cardFormDraft = {
           front: frontEl ? frontEl.value : (draft.front||''),
           back: backEl ? backEl.value : (draft.back||''),
           note: noteEl ? noteEl.value : (draft.note||''),
-          choices: choicesEl ? choicesEl.value : (draft.choices||'')
+          choices: choicesEl ? choicesEl.value : (draft.choices||''),
+          category: categoryEl ? categoryEl.value : (draft.category||'')
         };
         S.cardFormMode = b.dataset.mode;
         render();
@@ -2513,11 +2841,12 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
       var note = document.getElementById('cardNote').value.trim();
       var choicesEl = document.getElementById('cardChoices');
       var choicesArr = choicesEl ? choicesEl.value.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : [];
+      var category = document.getElementById('cardCategory').value.trim();
       var mode = S.cardFormMode || 'flip';
       if(!front) return;
       if((mode === 'flip' || mode === 'choice') && !back) return;
       if(mode === 'choice' && choicesArr.length < 1) return;
-      var payload = { front: front, back: back, note: note, mode: mode, choices: mode === 'choice' ? choicesArr : [] };
+      var payload = { front: front, back: back, note: note, mode: mode, choices: mode === 'choice' ? choicesArr : [], category: category };
       if(editingCard){
         S.store.updateCard(deck.id, editingCard.id, payload);
         S.editingCardId = null;
