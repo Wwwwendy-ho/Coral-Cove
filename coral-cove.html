@@ -587,6 +587,12 @@
   ];
 
   function currentDifficulty(){
+    // Adults studying (Dive In from Adult Mode) always get the Hard tier -- a runtime override only,
+    // so it never touches the persisted S.settings.difficulty value that governs the child's own
+    // sessions (and that the child-facing Settings page still edits).
+    if(S.managingDecks){
+      for(var j=0;j<DIFFICULTIES.length;j++){ if(DIFFICULTIES[j].id === 'hard') return DIFFICULTIES[j]; }
+    }
     var id = S.settings.difficulty || 'medium';
     for(var i=0;i<DIFFICULTIES.length;i++){ if(DIFFICULTIES[i].id === id) return DIFFICULTIES[i]; }
     return DIFFICULTIES[1];
@@ -1270,6 +1276,8 @@
     sessionTally: null,
     finishedTally: null,
     managingDecks: false,   // true only while a grown-up has unlocked deck management from the resting screen
+    editMode: false,        // true while the Live/Archived + deck-editing controls are showing -- Adult
+                             // Mode can flip this on freely; Child Mode has to clear the PIN first
     deckFilter: 'all',      // 'all' | 'live' | 'archived' -- which decks the Manage Decks grid shows
     subjectFilter: 'all',   // 'all' | a subject id/custom string -- which subject tab is selected on the deck grid
     statsData: null,        // lazily loaded { perDeck, history } for the Stats page
@@ -1408,7 +1416,7 @@
       '<div class="mascot-wrap">'+mascotSVG('big')+'</div>' +
       '<div class="lock-screen">' +
         '<h2>🌊 Who\'s diving in?</h2>' +
-        '<p>Child Mode starts today\'s study session. Adult Mode is for managing decks, settings, and progress — no PIN needed.</p>' +
+        '<p>Child Mode starts today\'s study session, PIN protected. Adult Mode can study anytime and reach deck editing, settings, and progress — no PIN needed.</p>' +
         '<button type="button" class="btn btn-primary" data-act="choose-child">🧒 Child Mode</button>' +
         '<button type="button" class="btn btn-ghost" data-act="choose-adult" style="margin-top:10px;">🔧 Adult Mode</button>' +
       '</div>';
@@ -1483,7 +1491,7 @@
     if(kind === 'start') return ['🔐 Start Child Mode', 'Ask a grown-up to enter the PIN to begin today\'s session.'];
     if(kind === 'end') return ['🔐 End Session', 'Enter the PIN to finish and lock Coral Cove.'];
     if(kind === 'exit') return ['🔐 Leave This Deck?', 'Ask a grown-up to enter the PIN to head back before finishing.'];
-    return ['🔐 Parent PIN', 'Enter the PIN to edit decks.'];
+    return ['🔐 Parent PIN', 'Enter the PIN to open Edit Mode.'];
   }
 
   function renderPinPad(kind){
@@ -1495,6 +1503,7 @@
   function beginSession(){
     S.sessionTally = defaultTally();
     S.sessionActive = true;
+    S.editMode = false;
     var startSettings = Object.assign({}, S.settings, { sessionActive: true, sessionStartedAt: S.sessionTally.startedAt });
     S.settings = startSettings;
     Promise.all([S.store.setSettings(startSettings), S.store.setSessionTally(S.sessionTally)]).then(function(){
@@ -1520,8 +1529,25 @@
   function enterManageMode(){
     S.pinPromptFor = null;
     S.managingDecks = true;
+    S.editMode = false;
     S.view = 'home';
     refreshDueCounts().then(render);
+  }
+
+  // Turns Edit Mode on/off for the Live/Archived tabs + deck editing/archiving controls, which now
+  // live behind this flag in BOTH Adult Mode and Child Mode. Adult Mode is already unlocked, so this
+  // flips on with no PIN; Child Mode has to clear the PIN first (see requestEditMode below).
+  function toggleEditMode(){
+    if(S.editMode){ S.editMode = false; render(); return; }
+    requestEditMode();
+  }
+
+  function requestEditMode(){
+    if(S.managingDecks){ S.editMode = true; render(); return; }
+    S.pendingEdit = null;
+    S.pinInput = ''; S.pinError = ''; S.pinShake = false;
+    S.pinPromptFor = 'edit';
+    render();
   }
 
   function submitPin(kind){
@@ -1541,7 +1567,8 @@
       S.pinPromptFor = null;
       var pe = S.pendingEdit || {};
       S.pendingEdit = null;
-      openEditorUnlocked(pe.deckId, pe.focusName);
+      S.editMode = true;
+      if(pe.deckId){ openEditorUnlocked(pe.deckId, pe.focusName); } else { render(); }
     } else if(kind === 'exit'){
       S.pinPromptFor = null;
       goHome();
@@ -1559,6 +1586,7 @@
     S.view = 'home';
     S.currentDeckId = null;
     S.finishedTally = null;
+    S.editMode = false;
     if(S.unsubCards){ S.unsubCards(); S.unsubCards = null; }
     render();
   }
@@ -1675,6 +1703,7 @@
 
   function exitManager(){
     S.managingDecks = false;
+    S.editMode = false;
     S.view = 'home';
     S.currentDeckId = null;
     if(S.unsubCards){ S.unsubCards(); S.unsubCards = null; }
@@ -1690,12 +1719,16 @@
 
   function renderHome(){
     var managing = S.managingDecks;
+    // Edit Mode -- not the same as Adult Mode -- is what now shows archived decks and the
+    // Live/Archived tabs, per-deck editing/archiving, and deck creation/import. Adult Mode flips it
+    // on for free; Child Mode has to clear the PIN first (see requestEditMode/toggleEditMode).
+    var editMode = S.editMode;
     var banner = (S.store.live ? '' : '<div class="banner">🌟 Try-it-out mode — your decks won\'t be saved after you close this page.</div>') + errorBannerHTML();
-    // Archived decks are a parent-only concept: a kid in a study session never sees them at all,
-    // not even as a locked/greyed-out tile — they're filtered out before the deck grid is built.
-    var visibleDecks = managing ? S.decks : S.decks.filter(function(d){ return !d.archived; });
+    // Archived decks are only ever shown inside Edit Mode -- everywhere else (including the normal
+    // Adult Mode deck grid now) they're filtered out before the deck grid is built.
+    var visibleDecks = editMode ? S.decks : S.decks.filter(function(d){ return !d.archived; });
     var filterTabsHTML = '';
-    if(managing){
+    if(editMode){
       var filter = S.deckFilter || 'all';
       visibleDecks = visibleDecks.filter(function(d){
         if(filter === 'live') return !d.archived;
@@ -1735,8 +1768,11 @@
       S.subjectFilter = 'all';
     }
     if(managing){
-      // Most recently studied or edited first; decks that have never been opened fall to the back,
-      // ordered among themselves by the deck's original creation order.
+      // Adult Mode's grid is a "most recent decks" format now that the Live/Archived tabs aren't
+      // shown by default (they moved into Edit Mode): most recently studied or edited first, with
+      // never-opened decks falling to the back in their original creation order. Child Mode keeps
+      // its own stable, creation-order grid -- re-sorting a kid's decks after every study session
+      // would just be confusing.
       visibleDecks = visibleDecks.slice().sort(function(a, b){
         var diff = (b.lastOpenedAt || 0) - (a.lastOpenedAt || 0);
         return diff !== 0 ? diff : ((a.order || 0) - (b.order || 0));
@@ -1751,16 +1787,16 @@
           ? '<span class="deck-badge due">'+dc.due+' to review</span>'
           : '<span class="deck-badge">All caught up! 🎉</span>');
       return '' +
-      '<div class="deck-card'+(managing && archived ? ' archived' : '')+'">' +
-        (managing && archived ? '<span class="archived-tag">📦 Archived</span>' : '') +
+      '<div class="deck-card'+(editMode && archived ? ' archived' : '')+'">' +
+        (editMode && archived ? '<span class="archived-tag">📦 Archived</span>' : '') +
         '<div class="deck-emoji">'+d.emoji+'</div>' +
         '<h3 class="deck-name">'+esc(d.name)+'</h3>' +
         '<div class="deck-meta">'+dc.total+' card'+(dc.total===1?'':'s')+'</div>' +
         badge +
         '<div class="deck-actions">' +
           '<button class="btn btn-primary" data-act="study" data-deck="'+d.id+'" '+(dc.total===0?'disabled':'')+'>Dive In</button>' +
-          (managing ? '<button class="icon-btn" data-act="edit-deck" data-deck="'+d.id+'" title="Edit deck" aria-label="Edit '+esc(d.name)+'">✏️</button>' : '') +
-          (managing ? '<button class="icon-btn" data-act="toggle-archive" data-deck="'+d.id+'" title="'+(archived?'Unarchive':'Archive')+' deck" aria-label="'+(archived?'Unarchive':'Archive')+' '+esc(d.name)+'">'+(archived?'📤':'📦')+'</button>' : '') +
+          (editMode ? '<button class="icon-btn" data-act="edit-deck" data-deck="'+d.id+'" title="Edit deck" aria-label="Edit '+esc(d.name)+'">✏️</button>' : '') +
+          (editMode ? '<button class="icon-btn" data-act="toggle-archive" data-deck="'+d.id+'" title="'+(archived?'Unarchive':'Archive')+' deck" aria-label="'+(archived?'Unarchive':'Archive')+' '+esc(d.name)+'">'+(archived?'📤':'📦')+'</button>' : '') +
         '</div>' +
       '</div>';
     }).join('');
@@ -1770,7 +1806,7 @@
         '<div class="brand">' +
           '<div class="brand-block">' +
             '<h1 class="brand-title">Coral Cove</h1>' +
-            '<p class="brand-tag">'+(managing ? '🔧 Adult Mode — kids can\'t see this screen' : 'Dive in and practice!')+'</p>' +
+            '<p class="brand-tag">'+(editMode ? '✏️ Edit Mode — arrange and archive decks' : (managing ? '🔧 Adult Mode — kids can\'t see this screen' : 'Dive in and practice!'))+'</p>' +
           '</div>' +
         '</div>' +
         '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
@@ -1781,6 +1817,7 @@
           '</div>') +
           (managing ? '<button type="button" class="icon-btn" data-act="open-settings" title="Settings" aria-label="Study settings">⚙️</button>' : '') +
           '<button type="button" class="icon-btn" data-act="open-stats" title="Progress" aria-label="View progress">📊</button>' +
+          '<button type="button" class="icon-btn" data-act="toggle-edit-mode" title="'+(editMode?'Exit Edit Mode':'Edit Mode')+'" aria-label="'+(editMode?'Exit Edit Mode':'Enter Edit Mode')+'">'+(editMode?'🔓':'🔒')+'</button>' +
           (managing ? '<button type="button" class="btn btn-ghost" data-act="exit-manager">✅ Done</button>' : ctrlRowHTML()) +
         '</div>' +
       '</div>' +
@@ -1788,11 +1825,13 @@
       banner +
       filterTabsHTML +
       subjectTabsHTML +
-      (!visibleDecks.length ? '<div class="empty-filter-note">'+(managing && S.deckFilter==='archived' ? 'No archived decks.' : (subjectTabs && S.subjectFilter!=='all' ? 'No decks tagged with this subject yet.' : 'No decks here.'))+'</div>' : '') +
+      (!visibleDecks.length ? '<div class="empty-filter-note">'+(editMode && S.deckFilter==='archived' ? 'No archived decks.' : (subjectTabs && S.subjectFilter!=='all' ? 'No decks tagged with this subject yet.' : 'No decks here.'))+'</div>' : '') +
       '<div class="deck-grid">' +
         deckTiles +
-        (managing ? '<button type="button" class="add-deck-card" data-act="new-deck"><span class="plus">＋</span><span>New Deck</span></button>' : '') +
-      '</div>';
+        (editMode ? '<button type="button" class="add-deck-card" data-act="new-deck"><span class="plus">＋</span><span>New Deck</span></button>' : '') +
+        (editMode ? '<button type="button" class="add-deck-card" data-act="import-anki"><span class="plus">📥</span><span>Import Anki deck</span></button>' : '') +
+      '</div>' +
+      (editMode ? '<input type="file" id="ankiImportInput" accept=".txt,.csv,.tsv" style="display:none">' : '');
 
     app.querySelectorAll('[data-act="study"]').forEach(function(b){ b.addEventListener('click', function(){ startStudy(b.dataset.deck); }); });
     app.querySelector('[data-act="open-stats"]').addEventListener('click', openStats);
@@ -1803,7 +1842,9 @@
         render();
       });
     });
-    if(managing){
+    var editModeBtn = app.querySelector('[data-act="toggle-edit-mode"]');
+    if(editModeBtn) editModeBtn.addEventListener('click', toggleEditMode);
+    if(editMode){
       app.querySelectorAll('[data-act="edit-deck"]').forEach(function(b){ b.addEventListener('click', function(){ openEditor(b.dataset.deck); }); });
       app.querySelectorAll('[data-act="toggle-archive"]').forEach(function(b){
         b.addEventListener('click', function(){
@@ -1820,6 +1861,18 @@
       });
       var newBtn = app.querySelector('[data-act="new-deck"]');
       if(newBtn) newBtn.addEventListener('click', createDeck);
+      var ankiInput = app.querySelector('#ankiImportInput');
+      var importBtn = app.querySelector('[data-act="import-anki"]');
+      if(importBtn && ankiInput){
+        importBtn.addEventListener('click', function(){ ankiInput.click(); });
+        ankiInput.addEventListener('change', function(){
+          var file = ankiInput.files && ankiInput.files[0];
+          ankiInput.value = '';
+          if(file) handleAnkiImportFile(file);
+        });
+      }
+    }
+    if(managing){
       var settingsBtn = app.querySelector('[data-act="open-settings"]');
       if(settingsBtn) settingsBtn.addEventListener('click', function(){ S.view = 'settings'; render(); });
       var doneBtn = app.querySelector('[data-act="exit-manager"]');
@@ -1837,12 +1890,75 @@
     });
   }
 
+  /* ---------- ANKI IMPORT ----------
+     Scoped deliberately to Anki's plain-text export (File -> Export -> "Notes in Plain Text"),
+     which is tab- or comma-separated with optional "#"-prefixed header lines -- NOT the zipped
+     .apkg format, which would need a SQLite reader Coral Cove has no way to load. */
+  function stripAnkiHtml(s){
+    s = String(s == null ? '' : s);
+    s = s.replace(/\[sound:[^\]]*\]/gi, '');
+    s = s.replace(/<[^>]+>/g, ' ');
+    var ta = document.createElement('textarea');
+    ta.innerHTML = s;
+    s = ta.value;
+    return s.replace(/\s+/g, ' ').trim();
+  }
+
+  function parseAnkiPlainText(text){
+    var lines = String(text||'').replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+    // "#"-prefixed lines are Anki's own export metadata (#separator:tab, #html:true, ...) -- not data.
+    var dataLines = lines.filter(function(l){ return l.trim() && l.trim().charAt(0) !== '#'; });
+    if(!dataLines.length) return [];
+    var delim = dataLines.some(function(l){ return l.indexOf('\t') !== -1; }) ? '\t' : ',';
+    var cards = [];
+    dataLines.forEach(function(l){
+      var fields = l.split(delim);
+      var front = stripAnkiHtml(fields[0]);
+      var back = stripAnkiHtml(fields[1]);
+      if(front && back) cards.push({ front: front, back: back });
+    });
+    return cards;
+  }
+
+  function handleAnkiImportFile(file){
+    var reader = new FileReader();
+    reader.onload = function(){
+      var parsed = parseAnkiPlainText(String(reader.result || ''));
+      if(!parsed.length){
+        S.storeError = 'Couldn’t find any cards in that file. Coral Cove reads Anki’s plain-text export (File → Export → "Notes in Plain Text") with a Front and Back column — not the .apkg format.';
+        render();
+        return;
+      }
+      var suggested = file.name.replace(/\.(txt|csv|tsv)$/i, '') || 'Imported Deck';
+      var name = window.prompt('Name this new deck:', suggested);
+      if(!name) return;
+      var emoji = DECK_EMOJI[Math.floor(Math.random()*DECK_EMOJI.length)];
+      S.store.addDeck({ name: name.trim() || 'Imported Deck', emoji: emoji, order: S.decks.length }).then(function(deckId){
+        return Promise.all(parsed.map(function(c){
+          return S.store.addCard(deckId, { front: c.front, back: c.back, note: '', mode: 'flip', choices: [], category: '', photoId: '', photoUrl: '' });
+        }));
+      }).then(function(){
+        render();
+      }).catch(function(err){
+        console.error('[Coral Cove] Anki import failed', err);
+        S.storeError = 'That import didn’t finish saving. Check your connection and try again.';
+        render();
+      });
+    };
+    reader.onerror = function(){
+      S.storeError = 'Couldn’t read that file — please try again.';
+      render();
+    };
+    reader.readAsText(file);
+  }
+
   /* ---------- STUDY ---------- */
   // Round length now comes from the parent-set difficulty (Easy 4 / Medium 6 / Hard 10) rather than
   // a fixed constant — see DIFFICULTIES up top.
 
   function startStudy(deckId){
     S.currentDeckId = deckId;
+    S.editMode = false; // Edit Mode is a deck-management concept -- Dive In always leaves it behind
     S.store.updateDeck(deckId, { lastOpenedAt: Date.now() }); // drives the Manage Decks "most recently opened" order
     S.store.getCardsOnce(deckId).then(function(cards){
       var pool = buildStudyPool(cards);
@@ -2380,7 +2496,7 @@
     S.view = 'stats';
     S.statsData = null; // shows the loading state until the fetch below resolves
     render();
-    var deckList = S.managingDecks ? S.decks : S.decks.filter(function(d){ return !d.archived; });
+    var deckList = (S.managingDecks || S.editMode) ? S.decks : S.decks.filter(function(d){ return !d.archived; });
     Promise.all([
       S.store.getHistoryOnce(),
       Promise.all(deckList.map(function(d){
@@ -2717,9 +2833,10 @@
 
   /* ---------- EDITOR ---------- */
   function openEditor(deckId, focusName){
-    // Adult Mode never asks for the PIN, so a deck can only be opened for editing from inside it.
-    if(S.managingDecks){ openEditorUnlocked(deckId, focusName); return; }
-    // Defensive fallback in case this is ever reached outside manager mode.
+    // Adult Mode never asks for the PIN. Child Mode already cleared the PIN once to reach Edit Mode
+    // in the first place, so opening one specific deck from inside it needs no second PIN prompt.
+    if(S.managingDecks || S.editMode){ openEditorUnlocked(deckId, focusName); return; }
+    // Defensive fallback in case this is ever reached outside Edit Mode.
     S.pendingEdit = { deckId: deckId, focusName: focusName };
     S.pinInput = ''; S.pinError = ''; S.pinShake = false;
     S.pinPromptFor = 'edit';
