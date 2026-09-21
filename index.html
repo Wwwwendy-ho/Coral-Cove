@@ -134,6 +134,20 @@
     position:absolute; top:10px; right:-30px; background:var(--sun-dark); color:#4a3300; font-size:.68rem; font-weight:800;
     padding:3px 34px; transform:rotate(38deg); box-shadow:var(--shadow-sm);
   }
+
+  /* Manage Decks filter tabs -- All / Live / Archived, replacing what used to be a separate archive page. */
+  .filter-tabs{ display:flex; gap:8px; flex-wrap:wrap; margin:4px 0 14px; }
+  .filter-tab{
+    border:none; border-radius:999px; background:var(--foam-2); color:var(--ink); font-weight:800;
+    font-size:.85rem; padding:8px 14px; cursor:pointer; transition:transform .12s ease, background .15s ease;
+  }
+  .filter-tab:active{ transform:scale(.96); }
+  .filter-tab.active{ background:var(--lagoon); color:#fff; }
+  .filter-tab .filter-count{ opacity:.75; font-weight:700; margin-left:2px; }
+  .filter-tab.active .filter-count{ opacity:.9; }
+  .empty-filter-note{
+    color:var(--ink-soft); font-weight:700; text-align:center; padding:28px 12px; font-size:.95rem;
+  }
   .btn{
     border:none; border-radius:999px; font-weight:800; cursor:pointer; padding:10px 16px; font-size:.92rem;
     transition: transform .12s ease;
@@ -863,15 +877,76 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
   /* ============ spoken answers (Web Speech API — no audio files to host, works offline) ============ */
   var Speech = (function(){
     var supported = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
-    function speak(text){
-      if(!supported || !Sound.isEnabled() || !text) return;
+    var voices = [];
+    var lastUtter = null; // keep a live reference while speaking -- Chrome has a long-documented bug
+                           // where an utterance with no other reference gets garbage-collected mid-speech,
+                           // silently cutting off audio with no error at all
+
+    function refreshVoices(){
+      if(!supported) return;
+      try { voices = window.speechSynthesis.getVoices() || []; } catch(e){ voices = []; }
+    }
+    if(supported){
+      refreshVoices();
+      // Voices load asynchronously in most browsers -- on first page load getVoices() often comes
+      // back empty even though voices arrive a moment later.
+      try { window.speechSynthesis.onvoiceschanged = refreshVoices; } catch(e){}
+    }
+
+    // Card text with no lang hint stored, so detect it from the actual characters: Hangul -> Korean,
+    // otherwise assume English. Without this, the browser's default voice (almost always English)
+    // tries to read Hangul and many engines produce nothing at all rather than a mispronunciation.
+    function detectLang(text){
+      return /[가-힣ᄀ-ᇿ㄰-㆏]/.test(text) ? 'ko-KR' : 'en-US';
+    }
+
+    function pickVoice(lang){
+      if(!voices.length) refreshVoices();
+      if(!voices.length) return null;
+      var exact = voices.filter(function(v){ return v.lang === lang; });
+      if(exact.length) return exact[0];
+      var prefix = lang.split('-')[0];
+      var loose = voices.filter(function(v){ return v.lang && v.lang.indexOf(prefix) === 0; });
+      return loose.length ? loose[0] : null;
+    }
+
+    function doSpeak(text, lang){
       try {
         window.speechSynthesis.cancel(); // stop anything already talking before starting the new line
         var utter = new SpeechSynthesisUtterance(String(text));
+        utter.lang = lang;
+        var v = pickVoice(lang);
+        if(v) utter.voice = v;
         utter.rate = 0.88;   // a touch slower, easier for an early reader to follow
         utter.pitch = 1.05;
+        lastUtter = utter;
+        utter.onend = utter.onerror = function(){ if(lastUtter === utter) lastUtter = null; };
         window.speechSynthesis.speak(utter);
       } catch(e){}
+    }
+
+    function speak(text){
+      if(!supported || !Sound.isEnabled() || !text) return;
+      var str = String(text);
+      var lang = detectLang(str);
+      if(!voices.length){
+        refreshVoices();
+        if(!voices.length){
+          // Give voices a brief moment to finish loading rather than speaking with whatever the
+          // browser's un-loaded default happens to be (or silently failing if it has none yet).
+          var tries = 0;
+          var wait = setInterval(function(){
+            refreshVoices();
+            tries++;
+            if(voices.length || tries > 10){
+              clearInterval(wait);
+              doSpeak(str, lang);
+            }
+          }, 150);
+          return;
+        }
+      }
+      doSpeak(str, lang);
     }
     return { speak: speak, isSupported: function(){ return supported; } };
   })();
@@ -1065,6 +1140,7 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
     sessionTally: null,
     finishedTally: null,
     managingDecks: false,   // true only while a grown-up has unlocked deck management from the resting screen
+    deckFilter: 'all',      // 'all' | 'live' | 'archived' -- which decks the Manage Decks grid shows
     statsData: null,        // lazily loaded { perDeck, history } for the Stats page
     lastOutcomeWrong: false, // briefly true right after a wrong answer, so the swim-progress critter can frown
     transitioning: false,   // true for the brief window a card is sliding out — locks input until the next card lands
@@ -1078,7 +1154,11 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
     pinSetupStep: 1,
     pinSetupFirst: '',
     pendingEdit: null,
-    booted: false
+    booted: false,
+    adultUnlocked: false   // true once a grown-up has entered the PIN correctly ANY time this visit --
+                            // start/manage/end all skip the PIN pad after that. Reset only on page reload.
+                            // The mid-round "leave this deck?" exit guard never checks this -- it always
+                            // asks, since that's the one prompt meant to stop a kid from bypassing it.
   };
 
   function defaultTally(){
@@ -1122,7 +1202,10 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
     var s = app.querySelector('[data-act="toggle-sound"]');
     if(s) s.addEventListener('click', function(){ Sound.setEnabled(!Sound.isEnabled()); render(); });
     var e = app.querySelector('[data-act="end-session"]');
-    if(e) e.addEventListener('click', function(){ S.pinInput=''; S.pinError=''; S.pinShake=false; S.pinPromptFor='end'; render(); });
+    if(e) e.addEventListener('click', function(){
+      if(S.adultUnlocked){ endSessionNow(); return; }
+      S.pinInput=''; S.pinError=''; S.pinShake=false; S.pinPromptFor='end'; render();
+    });
   }
 
   /* ---------- LOCK SCREEN + PIN PAD ---------- */
@@ -1137,12 +1220,14 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
       '</div>';
     app.querySelector('[data-act="ask-start"]').addEventListener('click', function(){
       Sound.unlock();
+      if(S.adultUnlocked){ beginSession(); return; }
       S.pinInput=''; S.pinError=''; S.pinShake=false;
       S.pinPromptFor = 'start';
       render();
     });
     app.querySelector('[data-act="ask-manage"]').addEventListener('click', function(){
       Sound.unlock();
+      if(S.adultUnlocked){ enterManageMode(); return; }
       S.pinInput=''; S.pinError=''; S.pinShake=false;
       S.pinPromptFor = 'manage';
       render();
@@ -1252,6 +1337,40 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
     wirePinKeys(function(){ submitPin(kind); }, function(){ cancelPinPrompt(kind); });
   }
 
+  // ---- the actual actions each PIN kind unlocks, pulled out so an already-unlocked grown-up can
+  // jump straight here without the PIN pad ever appearing (see S.adultUnlocked). ----
+  function beginSession(){
+    S.sessionTally = defaultTally();
+    S.sessionActive = true;
+    var startSettings = Object.assign({}, S.settings, { sessionActive: true, sessionStartedAt: S.sessionTally.startedAt });
+    S.settings = startSettings;
+    Promise.all([S.store.setSettings(startSettings), S.store.setSessionTally(S.sessionTally)]).then(function(){
+      Sound.sessionStart();
+      S.pinPromptFor = null;
+      S.view = 'home';
+      render();
+    });
+  }
+  function endSessionNow(){
+    var tally = S.sessionTally || defaultTally();
+    S.finishedTally = Object.assign({}, tally, { endedAt: Date.now() });
+    S.sessionActive = false;
+    var endSettings = Object.assign({}, S.settings, { sessionActive: false });
+    S.settings = endSettings;
+    Promise.all([S.store.setSettings(endSettings), S.store.setSessionTally(S.finishedTally)]).then(function(){
+      Sound.sessionEnd();
+      S.pinPromptFor = null;
+      S.view = 'sessionResults';
+      render();
+    });
+  }
+  function enterManageMode(){
+    S.pinPromptFor = null;
+    S.managingDecks = true;
+    S.view = 'home';
+    refreshDueCounts().then(render);
+  }
+
   function submitPin(kind){
     var ok = !!S.settings.pinHash && pinHash(S.pinInput) === S.settings.pinHash;
     if(!ok){
@@ -1259,29 +1378,14 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
       return;
     }
     S.pinInput = ''; S.pinError = ''; S.pinShake = false;
+    // The mid-round exit guard ('exit') deliberately never grants this -- it's the one prompt
+    // that's supposed to keep asking every time, so a kid can't quit a round unsupervised just
+    // because a grown-up unlocked something earlier.
+    if(kind !== 'exit') S.adultUnlocked = true;
     if(kind === 'start'){
-      S.sessionTally = defaultTally();
-      S.sessionActive = true;
-      var startSettings = Object.assign({}, S.settings, { sessionActive: true, sessionStartedAt: S.sessionTally.startedAt });
-      S.settings = startSettings;
-      Promise.all([S.store.setSettings(startSettings), S.store.setSessionTally(S.sessionTally)]).then(function(){
-        Sound.sessionStart();
-        S.pinPromptFor = null;
-        S.view = 'home';
-        render();
-      });
+      beginSession();
     } else if(kind === 'end'){
-      var tally = S.sessionTally || defaultTally();
-      S.finishedTally = Object.assign({}, tally, { endedAt: Date.now() });
-      S.sessionActive = false;
-      var endSettings = Object.assign({}, S.settings, { sessionActive: false });
-      S.settings = endSettings;
-      Promise.all([S.store.setSettings(endSettings), S.store.setSessionTally(S.finishedTally)]).then(function(){
-        Sound.sessionEnd();
-        S.pinPromptFor = null;
-        S.view = 'sessionResults';
-        render();
-      });
+      endSessionNow();
     } else if(kind === 'edit'){
       S.pinPromptFor = null;
       var pe = S.pendingEdit || {};
@@ -1291,10 +1395,7 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
       S.pinPromptFor = null;
       goHome();
     } else if(kind === 'manage'){
-      S.pinPromptFor = null;
-      S.managingDecks = true;
-      S.view = 'home';
-      refreshDueCounts().then(render);
+      enterManageMode();
     }
   }
 
@@ -1432,12 +1533,42 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
   }
 
   /* ---------- HOME ---------- */
+  var DECK_FILTERS = [
+    { id: 'all', label: 'All decks' },
+    { id: 'live', label: 'Live' },
+    { id: 'archived', label: 'Archived' }
+  ];
+
   function renderHome(){
     var managing = S.managingDecks;
     var banner = S.store.live ? '' : '<div class="banner">🌟 Offline copy — starts with your current decks, but new progress here won\'t save once you close this page.</div>';
     // Archived decks are a parent-only concept: a kid in a study session never sees them at all,
     // not even as a locked/greyed-out tile — they're filtered out before the deck grid is built.
     var visibleDecks = managing ? S.decks : S.decks.filter(function(d){ return !d.archived; });
+    var filterTabsHTML = '';
+    if(managing){
+      var filter = S.deckFilter || 'all';
+      visibleDecks = visibleDecks.filter(function(d){
+        if(filter === 'live') return !d.archived;
+        if(filter === 'archived') return !!d.archived;
+        return true;
+      });
+      // Most recently studied or edited first; decks that have never been opened fall to the back,
+      // ordered among themselves by the deck's original creation order.
+      visibleDecks = visibleDecks.slice().sort(function(a, b){
+        var diff = (b.lastOpenedAt || 0) - (a.lastOpenedAt || 0);
+        return diff !== 0 ? diff : ((a.order || 0) - (b.order || 0));
+      });
+      var tabsHTML = DECK_FILTERS.map(function(f){
+        var count = S.decks.filter(function(d){
+          if(f.id === 'live') return !d.archived;
+          if(f.id === 'archived') return !!d.archived;
+          return true;
+        }).length;
+        return '<button type="button" class="filter-tab'+(filter===f.id?' active':'')+'" data-filter="'+f.id+'">'+f.label+' <span class="filter-count">'+count+'</span></button>';
+      }).join('');
+      filterTabsHTML = '<div class="filter-tabs" role="tablist" aria-label="Filter decks">'+tabsHTML+'</div>';
+    }
     var deckTiles = visibleDecks.map(function(d){
       var dc = S.dueCounts[d.id] || { due:0, total:0 };
       var archived = !!d.archived;
@@ -1482,6 +1613,8 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
       '</div>' +
       '<div class="mascot-wrap">'+mascotSVG('')+'</div>' +
       banner +
+      filterTabsHTML +
+      (managing && !visibleDecks.length ? '<div class="empty-filter-note">'+(S.deckFilter==='archived' ? 'No archived decks.' : 'No decks here.')+'</div>' : '') +
       '<div class="deck-grid">' +
         deckTiles +
         (managing ? '<button type="button" class="add-deck-card" data-act="new-deck"><span class="plus">＋</span><span>New Deck</span></button>' : '') +
@@ -1495,6 +1628,13 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
         b.addEventListener('click', function(){
           var d = S.decks.find(function(x){ return x.id === b.dataset.deck; });
           S.store.updateDeck(b.dataset.deck, { archived: !(d && d.archived) });
+        });
+      });
+      app.querySelectorAll('[data-filter]').forEach(function(b){
+        b.addEventListener('click', function(){
+          if(S.deckFilter === b.dataset.filter) return;
+          S.deckFilter = b.dataset.filter;
+          render();
         });
       });
       var newBtn = app.querySelector('[data-act="new-deck"]');
@@ -1521,6 +1661,7 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
 
   function startStudy(deckId){
     S.currentDeckId = deckId;
+    S.store.updateDeck(deckId, { lastOpenedAt: Date.now() }); // drives the Manage Decks "most recently opened" order
     S.store.getCardsOnce(deckId).then(function(cards){
       var pool = buildStudyPool(cards);
       S.studyQueue = shuffle(pool).slice(0, currentDifficulty().roundSize);
@@ -2221,6 +2362,7 @@ var SEED = {"decks": [{"id": "sight-words", "name": "Splash Sight Words", "emoji
 
   function openEditorUnlocked(deckId, focusName){
     S.currentDeckId = deckId;
+    S.store.updateDeck(deckId, { lastOpenedAt: Date.now() }); // drives the Manage Decks "most recently opened" order
     S.view = 'editor';
     S.emojiPickerOpen = false;
     S.addCardOpen = false;
