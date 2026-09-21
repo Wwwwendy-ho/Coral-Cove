@@ -1,0 +1,2105 @@
+<title>Coral Cove</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap">
+<style>
+  :root{
+    --deep:#0a3d4a; --deep-2:#0d5262; --lagoon:#1c8c93; --lagoon-light:#4fb3ba;
+    --foam:#f4fbf9; --foam-2:#e7f4f1; --coral:#ff7a5c; --coral-dark:#e8593c;
+    --sun:#ffc94d; --sun-dark:#e8a716; --seaweed:#2f6d5c;
+    --ink:#0b2b33; --ink-soft:#4a6a70;
+    --surface:#ffffff; --border:#d3ece6;
+    --shadow:0 10px 26px rgba(10,61,74,.14);
+    --shadow-sm:0 4px 12px rgba(10,61,74,.10);
+    --r-lg:28px; --r-md:18px; --r-sm:12px;
+    --ok-bg:#eafaf3; --ok-ink:#1f7a5c; --bad-bg:#fdeceb; --bad-ink:#c65b46;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --foam:#07232a; --foam-2:#0c2e36; --surface:#0f3942; --border:#17515f;
+      --ink:#eaf6f4; --ink-soft:#a9cbc7; --lagoon-light:#5fc2c9; --seaweed:#74d1b3;
+      --shadow:0 10px 26px rgba(0,0,0,.45); --shadow-sm:0 4px 12px rgba(0,0,0,.35);
+      --ok-bg:#123b2d; --ok-ink:#74d1b3; --bad-bg:#3a1f1a; --bad-ink:#ff8a72;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --foam:#07232a; --foam-2:#0c2e36; --surface:#0f3942; --border:#17515f;
+    --ink:#eaf6f4; --ink-soft:#a9cbc7; --lagoon-light:#5fc2c9; --seaweed:#74d1b3;
+    --shadow:0 10px 26px rgba(0,0,0,.45); --shadow-sm:0 4px 12px rgba(0,0,0,.35);
+    --ok-bg:#123b2d; --ok-ink:#74d1b3; --bad-bg:#3a1f1a; --bad-ink:#ff8a72;
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--foam); color:var(--ink);
+    font-family:'Nunito',system-ui,-apple-system,sans-serif;
+    min-height:100%;
+    padding-inline: max(16px, env(safe-area-inset-left,0px)) max(16px, env(safe-area-inset-right,0px));
+  }
+  html,body{height:100%;}
+  h1,h2,h3,.display{ font-family:'Baloo 2', system-ui, sans-serif; text-wrap:balance; }
+  button{ font-family:inherit; }
+  .tabular{ font-variant-numeric: tabular-nums; }
+  [hidden]{ display:none !important; }
+  a{ color:inherit; }
+
+  #app{ max-width:760px; margin:0 auto; padding-block:20px 40px; position:relative; }
+
+  /* ---------- top bar / stats ---------- */
+  .topbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; flex-wrap:wrap; }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand-title{ font-size:1.7rem; font-weight:800; color:var(--deep); margin:0; }
+  :root:not([data-theme="light"]) .brand-title{ }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .brand-title{ color:var(--lagoon-light);} }
+  :root[data-theme="dark"] .brand-title{ color:var(--lagoon-light); }
+  .brand-tag{ margin:0; font-size:.85rem; color:var(--ink-soft); font-weight:600; }
+
+  .stats-row{ display:flex; gap:8px; }
+  .pill{
+    display:flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--border);
+    padding:8px 12px; border-radius:999px; font-weight:800; font-size:.95rem; box-shadow:var(--shadow-sm);
+  }
+  .pill .icon{ font-size:1.05rem; }
+  .pill.streak{ color:var(--coral-dark); }
+  .pill.stars{ color:var(--sun-dark); }
+
+  /* ---------- back nav ---------- */
+  .nav-row{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .back-btn{
+    display:flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--border);
+    color:var(--ink); font-weight:800; padding:9px 14px 9px 10px; border-radius:999px; cursor:pointer; box-shadow:var(--shadow-sm);
+  }
+  .back-btn:hover{ background:var(--foam-2); }
+  .nav-title{ font-weight:800; font-size:1.25rem; color:var(--deep); }
+  :root[data-theme="dark"] .nav-title, @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .nav-title{color:var(--lagoon-light);}}
+
+  /* ---------- mascot ---------- */
+  .mascot-wrap{ display:flex; justify-content:center; margin: 6px 0 10px; }
+  .mascot{ width:104px; height:104px; animation: bob 3.2s ease-in-out infinite; filter: drop-shadow(0 6px 10px rgba(10,61,74,.18)); }
+  .mascot.big{ width:150px; height:150px; }
+  .mascot.celebrate{ animation: wiggle .6s ease-in-out 2; }
+  @keyframes bob{ 0%,100%{ transform: translateY(0) rotate(-2deg);} 50%{ transform: translateY(-8px) rotate(2deg);} }
+  @keyframes wiggle{ 0%,100%{ transform: rotate(0) scale(1);} 25%{ transform: rotate(-8deg) scale(1.05);} 75%{ transform: rotate(8deg) scale(1.05);} }
+  @media (prefers-reduced-motion: reduce){ .mascot, .mascot.celebrate{ animation:none; } }
+
+  /* ---------- decorative bubbles ---------- */
+  .bubbles{ position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0; border-radius:inherit; }
+  .bubble{ position:absolute; bottom:-40px; border-radius:50%; background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.85), rgba(255,255,255,.05) 70%); opacity:.5; animation: rise linear infinite; }
+  @keyframes rise{ 0%{ transform:translateY(0); opacity:.55;} 90%{opacity:.35;} 100%{ transform:translateY(-380px); opacity:0; } }
+  @media (prefers-reduced-motion: reduce){ .bubble{ animation:none; display:none; } }
+
+  /* ---------- banner ---------- */
+  .banner{
+    background:var(--sun); color:#4a3300; font-weight:700; font-size:.88rem;
+    padding:10px 14px; border-radius:var(--r-sm); margin-bottom:16px; box-shadow:var(--shadow-sm);
+  }
+
+  /* ---------- deck grid ---------- */
+  .deck-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(210px,1fr)); gap:14px; }
+  .deck-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg);
+    padding:18px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:10px;
+    position:relative; overflow:hidden;
+  }
+  .deck-emoji{ font-size:2.4rem; line-height:1; }
+  .deck-name{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:1.15rem; margin:0; color:var(--deep); }
+  :root[data-theme="dark"] .deck-name{ color:var(--lagoon-light); }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .deck-name{ color:var(--lagoon-light);} }
+  .deck-meta{ font-size:.85rem; color:var(--ink-soft); font-weight:700; }
+  .deck-badge{
+    align-self:flex-start; font-size:.78rem; font-weight:800; padding:4px 10px; border-radius:999px;
+    background:var(--foam-2); color:var(--seaweed);
+  }
+  .deck-badge.due{ background:var(--coral); color:#fff; }
+  .deck-actions{ display:flex; gap:8px; margin-top:auto; }
+
+  /* Archived decks — visible only in Manage Decks mode, never to a student. */
+  .deck-card.archived{
+    border:2px solid var(--sun-dark);
+    box-shadow:0 0 0 3px rgba(255,201,77,.35), 0 0 18px 2px rgba(255,201,77,.55);
+    animation:archiveGlow 2.6s ease-in-out infinite;
+  }
+  @keyframes archiveGlow{
+    0%,100%{ box-shadow:0 0 0 3px rgba(255,201,77,.30), 0 0 14px 1px rgba(255,201,77,.45); }
+    50%{ box-shadow:0 0 0 3px rgba(255,201,77,.45), 0 0 22px 4px rgba(255,201,77,.75); }
+  }
+  .archived-tag{
+    position:absolute; top:10px; right:-30px; background:var(--sun-dark); color:#4a3300; font-size:.68rem; font-weight:800;
+    padding:3px 34px; transform:rotate(38deg); box-shadow:var(--shadow-sm);
+  }
+  .btn{
+    border:none; border-radius:999px; font-weight:800; cursor:pointer; padding:10px 16px; font-size:.92rem;
+    transition: transform .12s ease;
+  }
+  .btn:active{ transform: scale(.96); }
+  .btn:focus-visible, .back-btn:focus-visible, .icon-btn:focus-visible, input:focus-visible, textarea:focus-visible{
+    outline: 3px solid var(--sun-dark); outline-offset: 2px;
+  }
+  .btn-primary{ background:var(--lagoon); color:#fff; box-shadow:0 4px 0 var(--deep); }
+  .btn-primary:active{ box-shadow:0 2px 0 var(--deep); transform: translateY(2px) scale(.98); }
+  .btn-ghost{ background:var(--foam-2); color:var(--ink); }
+  .btn-coral{ background:var(--coral); color:#fff; box-shadow:0 4px 0 var(--coral-dark); }
+  .btn-coral:active{ box-shadow:0 2px 0 var(--coral-dark); transform: translateY(2px) scale(.98); }
+  .icon-btn{ background:var(--foam-2); border:none; width:38px; height:38px; border-radius:50%; cursor:pointer; font-size:1rem; }
+  .icon-btn:hover{ background:var(--border); }
+
+  .add-deck-card{
+    background:transparent; border:2px dashed var(--border); border-radius:var(--r-lg); min-height:150px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; cursor:pointer; color:var(--ink-soft);
+    font-weight:800; font-family:'Baloo 2',sans-serif;
+  }
+  .add-deck-card:hover{ border-color:var(--lagoon-light); color:var(--lagoon); }
+  .add-deck-card .plus{ font-size:1.8rem; }
+
+  /* ---------- study ---------- */
+  .progress-track{ display:flex; gap:6px; justify-content:center; margin:6px 0 18px; flex-wrap:wrap; }
+  .dot{ width:10px; height:10px; border-radius:50%; background:var(--border); }
+  .dot.done{ background:var(--seaweed); }
+  .dot.current{ background:var(--coral); transform:scale(1.3); }
+
+  /* ---------- swim-progress critter bar ---------- */
+  .critter-label{ text-align:center; font-size:.78rem; font-weight:800; color:var(--ink-soft); margin:4px 0 6px; }
+  .critter-track{ position:relative; height:16px; background:var(--foam-2); border:1px solid var(--border); border-radius:999px; margin:0 26px 34px; }
+  .critter-track-fill{ position:absolute; top:0; left:0; height:100%; border-radius:999px; background:linear-gradient(90deg, var(--lagoon-light), var(--lagoon)); transition:width .5s cubic-bezier(.34,1.4,.64,1); }
+  .critter-swim{ position:absolute; top:50%; left:0; width:44px; height:44px; transform:translate(-50%,-50%); transition:left .5s cubic-bezier(.34,1.4,.64,1); filter:drop-shadow(0 2px 4px rgba(10,61,74,.28)); }
+  .critter-swim svg{ width:100%; height:100%; display:block; }
+  .critter-swim.oops{ animation:critterOops .5s ease; }
+  @keyframes critterOops{
+    0%{ transform:translate(-50%,-50%) rotate(0deg); }
+    25%{ transform:translate(-50%,-50%) rotate(-10deg); }
+    50%{ transform:translate(-50%,-50%) rotate(7deg); }
+    75%{ transform:translate(-50%,-50%) rotate(-4deg); }
+    100%{ transform:translate(-50%,-50%) rotate(0deg); }
+  }
+
+  .stage{
+    position:relative; min-height:320px; border-radius:var(--r-lg); background:linear-gradient(180deg, var(--foam-2), var(--foam));
+    border:1px solid var(--border); padding:26px 16px 30px; overflow:hidden;
+    animation:stageEnter .32s cubic-bezier(.22,1,.36,1) both;
+    /* Swiping/dragging over card text shouldn't start a native text selection or drag — that can
+       steal the pointer gesture from our own swipe handling. */
+    -webkit-user-select:none; user-select:none; -webkit-user-drag:none;
+  }
+  .stage img, .stage *{ -webkit-user-drag:none; }
+  /* TikTok-style vertical feed: each new card whooshes up into place; answering the current one
+     sends it whooshing up and out before the next one arrives — see .stage-exit, toggled in JS. */
+  @keyframes stageEnter{
+    0%{ transform:translateY(38px); opacity:0; }
+    100%{ transform:translateY(0); opacity:1; }
+  }
+  .stage.stage-exit{
+    animation:stageExit .2s cubic-bezier(.4,0,1,1) both;
+    pointer-events:none; /* locked — no further taps land while the card is on its way out */
+  }
+  @keyframes stageExit{
+    0%{ transform:translateY(0); opacity:1; }
+    100%{ transform:translateY(-46px); opacity:0; }
+  }
+  /* Swipe back to review the one card just answered — a mirror-image transition: exits down,
+     enters from above, so "backward" always reads as the opposite motion of "forward". */
+  .stage.stage-exit-down{
+    animation:stageExitDown .2s cubic-bezier(.4,0,1,1) both;
+    pointer-events:none;
+  }
+  @keyframes stageExitDown{
+    0%{ transform:translateY(0); opacity:1; }
+    100%{ transform:translateY(46px); opacity:0; }
+  }
+  .stage.stage-peek{
+    animation:stagePeekEnter .32s cubic-bezier(.22,1,.36,1) both;
+    border:2px solid var(--sun-dark);
+    box-shadow:0 0 0 3px rgba(255,201,77,.28);
+    cursor:pointer;
+  }
+  @keyframes stagePeekEnter{
+    0%{ transform:translateY(-38px); opacity:0; }
+    100%{ transform:translateY(0); opacity:1; }
+  }
+  /* Live drag state: JS drives the transform directly, so no CSS transition should fight it;
+     stage-snapback re-enables one, briefly, purely to animate the release-and-cancel bounce. */
+  .stage.stage-dragging{ transition:none; touch-action:none; }
+  .stage.stage-snapback{ transition:transform .25s cubic-bezier(.34,1.4,.64,1); transform:translateY(0); }
+  .peek-badge{ text-align:center; font-weight:800; font-size:.95rem; margin-top:14px; position:relative; z-index:1; }
+  .peek-badge.peek-right{ color:var(--ok-ink); }
+  .peek-badge.peek-wrong{ color:var(--bad-ink); }
+  @media (prefers-reduced-motion: reduce){
+    .stage{ animation:none; }
+    .stage.stage-exit{ animation:none; }
+    .stage.stage-exit-down{ animation:none; }
+    .stage.stage-peek{ animation:none; }
+  }
+
+  .flip-scene{ perspective: 1200px; width:min(100%,420px); margin:0 auto; }
+  .flip-card{ position:relative; width:100%; min-height:220px; transform-style:preserve-3d; transition: transform .5s cubic-bezier(.4,.2,.2,1); cursor:pointer; }
+  .flip-card.flipped{ transform: rotateY(180deg); }
+  .face{
+    position:absolute; inset:0; backface-visibility:hidden; border-radius:var(--r-md); background:var(--surface);
+    box-shadow:var(--shadow); display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:26px 20px; text-align:center; gap:10px; border:1px solid var(--border);
+  }
+  .face-back{ transform: rotateY(180deg); background:var(--deep); color:#fff; border-color:var(--deep); }
+  .face-front .card-text{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:1.7rem; color:var(--ink); }
+  .face-back .card-text{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:1.5rem; }
+  .card-note{ font-size:.95rem; opacity:.85; font-weight:600; }
+  .card-note.dim{ color:var(--ink-soft); }
+  .replay-audio-btn{
+    margin-top:2px; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.4); color:#fff;
+    font-weight:800; font-size:.8rem; padding:8px 14px; border-radius:999px; cursor:pointer;
+  }
+  .replay-audio-btn:hover{ background:rgba(255,255,255,.28); }
+  .replay-audio-btn:active{ transform:scale(.96); }
+  .read-face{ position:static; box-shadow:var(--shadow); }
+  .read-label{ font-size:.78rem; font-weight:800; letter-spacing:.03em; text-transform:uppercase; color:var(--lagoon); }
+  .flip-hint{ font-size:.82rem; color:var(--ink-soft); font-weight:700; text-align:center; margin-top:12px; }
+
+  .choice-row{ display:flex; flex-direction:column; gap:10px; position:relative; z-index:1; margin-top:16px; max-width:420px; margin-inline:auto; }
+  .choice-btn{
+    background:var(--surface); border:2px solid var(--border); border-radius:var(--r-md); padding:14px 16px;
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:1.05rem; color:var(--ink); cursor:pointer;
+    text-align:left; box-shadow:var(--shadow-sm); transition: transform .12s ease;
+  }
+  .choice-btn:hover{ border-color:var(--lagoon-light); }
+  .choice-btn:active{ transform: scale(.98); }
+  .choice-btn:disabled{ cursor:default; }
+  .choice-btn.correct{ border-color:var(--ok-ink); background:var(--ok-bg); color:var(--ok-ink); }
+  .choice-btn.wrong{ border-color:var(--bad-ink); background:var(--bad-bg); color:var(--bad-ink); }
+
+  .grade-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:20px; }
+  .grade-btn{
+    display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 6px; border-radius:var(--r-md);
+    border:none; cursor:pointer; font-weight:800; font-size:.82rem; color:#fff; box-shadow: 0 4px 0 rgba(0,0,0,.18);
+  }
+  .grade-btn:active{ transform:translateY(2px); box-shadow:0 2px 0 rgba(0,0,0,.18); }
+  .grade-btn .emoji{ font-size:1.5rem; }
+  .grade-again{ background:#c65b46; }
+  .grade-hard{ background:var(--sun-dark); }
+  .grade-good{ background:var(--lagoon); }
+  .grade-easy{ background:var(--seaweed); }
+
+  /* ---------- automatic outcome buttons (right/wrong self-report, replaces manual 4-way grading) ---------- */
+  .grade-row.outcome-row{ grid-template-columns:repeat(2,1fr); max-width:360px; margin-inline:auto; }
+  .grade-row.outcome-row .grade-btn{ padding:16px 6px; font-size:.92rem; }
+  .grade-wrong{ background:#c65b46; }
+  .grade-right{ background:var(--seaweed); }
+  .choice-feedback{ font-size:.9rem; font-weight:800; text-align:center; margin-top:12px; position:relative; z-index:1; }
+  .choice-feedback.ok{ color:var(--ok-ink); }
+  .choice-feedback.no{ color:var(--bad-ink); }
+
+  /* ---------- summary ---------- */
+  .summary-card{
+    text-align:center; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--shadow); padding:32px 20px;
+    animation:stageEnter .38s cubic-bezier(.22,1,.36,1) both;
+  }
+  @media (prefers-reduced-motion: reduce){ .summary-card{ animation:none; } }
+  .summary-card h2{ margin:6px 0 2px; color:var(--deep); font-size:1.6rem; }
+  :root[data-theme="dark"] .summary-card h2{ color:var(--lagoon-light); }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .summary-card h2{ color:var(--lagoon-light);} }
+  .summary-stats{ display:flex; justify-content:center; gap:22px; margin:18px 0; flex-wrap:wrap; }
+  .summary-stat{ display:flex; flex-direction:column; align-items:center; }
+  .summary-stat .num{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.7rem; color:var(--coral-dark); }
+  .summary-stat .label{ font-size:.78rem; font-weight:800; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.04em; }
+
+  /* ---------- stats page ---------- */
+  .stats-page{ display:flex; flex-direction:column; gap:22px; padding-bottom:24px; }
+  .stats-section h3{ margin:0 0 12px; font-size:1.05rem; color:var(--deep); }
+  :root[data-theme="dark"] .stats-section h3{ color:var(--lagoon-light); }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .stats-section h3{ color:var(--lagoon-light);} }
+
+  .stat-tiles{ display:grid; grid-template-columns:repeat(auto-fit, minmax(120px,1fr)); gap:10px; }
+  .stat-tile{ background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); box-shadow:var(--shadow-sm); padding:14px 10px; text-align:center; }
+  .stat-tile .num{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.5rem; color:var(--lagoon); }
+  :root[data-theme="dark"] .stat-tile .num{ color:var(--lagoon-light); }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .stat-tile .num{ color:var(--lagoon-light);} }
+  .stat-tile .label{ font-size:.72rem; font-weight:800; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.03em; margin-top:2px; }
+
+  .mastery-list{ display:flex; flex-direction:column; gap:12px; }
+  .mastery-row{ display:flex; align-items:center; gap:10px; }
+  .mastery-emoji{ font-size:1.3rem; width:28px; text-align:center; flex-shrink:0; }
+  .mastery-mid{ flex:1; min-width:0; }
+  .mastery-top{ display:flex; justify-content:space-between; gap:8px; font-size:.85rem; font-weight:800; color:var(--ink); margin-bottom:4px; }
+  .mastery-top .pct{ color:var(--ink-soft); font-weight:700; flex-shrink:0; }
+  .mastery-track{ height:12px; border-radius:999px; background:var(--foam-2); border:1px solid var(--border); overflow:hidden; position:relative; }
+  .mastery-fill{ height:100%; border-radius:999px; background:linear-gradient(90deg, var(--lagoon-light), var(--lagoon)); transition:width .5s ease; }
+
+  .trend-wrap{ background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); box-shadow:var(--shadow-sm); padding:16px 14px 10px; }
+  .trend-bars{ display:flex; align-items:flex-end; gap:6px; height:120px; }
+  .trend-bar-col{ flex:1; min-width:6px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; position:relative; }
+  .trend-bar{ width:100%; max-width:26px; border-radius:5px 5px 3px 3px; background:var(--lagoon); position:relative; min-height:3px; cursor:pointer; transition:transform .15s ease; }
+  .trend-bar:hover, .trend-bar:focus-visible{ transform:scaleY(1.02); outline:none; filter:brightness(1.08); }
+  .trend-bar.low{ background:var(--coral); }
+  .trend-empty{ text-align:center; color:var(--ink-soft); font-weight:700; padding:20px 10px; }
+  .trend-axis{ display:flex; justify-content:space-between; margin-top:6px; font-size:.68rem; font-weight:700; color:var(--ink-soft); }
+  .chart-tip{
+    position:fixed; pointer-events:none; background:var(--deep); color:#fff; font-size:.78rem; font-weight:700;
+    padding:6px 10px; border-radius:8px; box-shadow:var(--shadow-sm); z-index:50; opacity:0; transform:translate(-50%,-100%) translateY(-8px);
+    transition:opacity .1s ease; white-space:nowrap;
+  }
+  .chart-tip.show{ opacity:1; }
+
+  /* ---------- editor ---------- */
+  .editor-head{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+  .emoji-btn{ font-size:1.8rem; background:var(--foam-2); border:1px solid var(--border); border-radius:var(--r-sm); width:54px; height:54px; cursor:pointer; }
+  .name-input{
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:1.25rem; color:var(--deep); border:1px solid var(--border);
+    background:var(--surface); border-radius:var(--r-sm); padding:10px 12px; flex:1; min-width:160px;
+  }
+  :root[data-theme="dark"] .name-input{ color:var(--lagoon-light); }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .name-input{ color:var(--lagoon-light);} }
+  .emoji-popover{ display:flex; flex-wrap:wrap; gap:6px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-sm); padding:10px; margin-bottom:14px; box-shadow:var(--shadow-sm); }
+  .emoji-opt{ font-size:1.4rem; background:none; border:none; cursor:pointer; border-radius:8px; padding:4px; }
+  .emoji-opt:hover{ background:var(--foam-2); }
+
+  .card-list{ display:flex; flex-direction:column; gap:10px; margin-bottom:18px; }
+  .card-row{ background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:12px 14px; display:flex; gap:10px; align-items:center; box-shadow:var(--shadow-sm); }
+  .card-row .cr-text{ flex:1; min-width:0; }
+  .cr-front{ font-weight:800; color:var(--ink); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .cr-back{ font-size:.88rem; color:var(--ink-soft); font-weight:600; white-space:normal; overflow-wrap:anywhere; }
+  .cr-actions{ display:flex; gap:6px; flex-shrink:0; }
+  .mode-tag{ font-size:.68rem; font-weight:800; padding:2px 8px; border-radius:999px; background:var(--foam-2); color:var(--ink-soft); white-space:nowrap; }
+  .mode-tag-read{ background:var(--sun); color:#4a3300; }
+  .mode-tag-choice{ background:var(--coral); color:#fff; }
+  .mode-tag-leech{ background:var(--bad-bg); color:var(--bad-ink); }
+
+  .mode-toggle{ display:grid; grid-template-columns:repeat(auto-fit, minmax(130px,1fr)); gap:8px; margin-bottom:14px; }
+  .mode-opt{
+    display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:10px 12px; border-radius:var(--r-sm);
+    border:2px solid var(--border); background:var(--foam); color:var(--ink); font-weight:800; font-size:.9rem; cursor:pointer; text-align:left;
+  }
+  .mode-opt .mode-sub{ font-size:.72rem; font-weight:600; color:var(--ink-soft); }
+  .mode-opt.active{ border-color:var(--lagoon); background:var(--foam-2); color:var(--lagoon); }
+  .mode-opt.active .mode-sub{ color:var(--seaweed); }
+
+  .form-card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:16px; box-shadow:var(--shadow-sm); }
+  .form-card h3{ margin:0 0 12px; font-size:1.05rem; color:var(--deep); }
+  :root[data-theme="dark"] .form-card h3{ color:var(--lagoon-light); }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .form-card h3{ color:var(--lagoon-light);} }
+  .field{ display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
+  .field label{ font-size:.78rem; font-weight:800; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.03em; }
+  .field input, .field textarea{
+    font-family:'Nunito',sans-serif; font-size:1rem; padding:10px 12px; border-radius:var(--r-sm); border:1px solid var(--border);
+    background:var(--foam); color:var(--ink); resize:vertical;
+  }
+  .form-actions{ display:flex; gap:8px; margin-top:6px; }
+  .empty-state{ text-align:center; padding:30px 16px; color:var(--ink-soft); font-weight:700; }
+
+  .danger-zone{ margin-top:26px; padding-top:16px; border-top:1px dashed var(--border); display:flex; justify-content:flex-end; }
+  .btn-danger{ background:transparent; color:#c65b46; border:1px solid #e0a698; }
+
+  @media (max-width:480px){
+    .brand-title{ font-size:1.4rem; }
+    .grade-btn{ font-size:.72rem; padding:10px 4px; }
+    .summary-stats{ gap:14px; }
+  }
+
+  /* ---------- grade breakdown chips (session results) ---------- */
+  .grade-breakdown{ display:flex; justify-content:center; gap:8px; margin:4px 0 18px; flex-wrap:wrap; }
+  .gb-chip{ font-weight:800; font-size:.85rem; padding:6px 12px; border-radius:999px; background:var(--foam-2); color:var(--ink); }
+  .session-decklist{ font-size:.85rem; color:var(--ink-soft); font-weight:700; margin:2px 0 4px; }
+
+  /* ---------- lock screen / PIN pad ---------- */
+  .lock-screen{ text-align:center; padding:24px 8px 8px; }
+  .lock-screen h2{ color:var(--deep); font-size:1.45rem; margin:14px 0 6px; }
+  :root[data-theme="dark"] .lock-screen h2{ color:var(--lagoon-light); }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .lock-screen h2{ color:var(--lagoon-light); } }
+  .lock-screen p{ color:var(--ink-soft); font-weight:600; margin:0 0 22px; }
+
+  .pin-wrap{ max-width:300px; margin:0 auto; text-align:center; }
+  .pin-dots{ display:flex; justify-content:center; align-items:center; gap:10px; min-height:26px; margin:4px 0 14px; flex-wrap:wrap; }
+  .pin-dot{ width:16px; height:16px; border-radius:50%; border:2px solid var(--border); background:transparent; flex-shrink:0; }
+  .pin-dot.filled{ background:var(--lagoon); border-color:var(--lagoon); }
+  .pin-dots.shake{ animation: pinshake .4s; }
+  @keyframes pinshake{ 0%,100%{transform:translateX(0);} 20%{transform:translateX(-8px);} 40%{transform:translateX(8px);} 60%{transform:translateX(-6px);} 80%{transform:translateX(6px);} }
+  @media (prefers-reduced-motion: reduce){ .pin-dots.shake{ animation:none; } }
+  .pin-error{ color:var(--bad-ink); font-weight:800; font-size:.86rem; min-height:1.3em; margin-bottom:10px; }
+  .pin-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .pin-key{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:16px 0;
+    font-size:1.3rem; font-weight:800; color:var(--ink); cursor:pointer; box-shadow:var(--shadow-sm);
+  }
+  .pin-key:active{ transform:scale(.94); }
+  .pin-key:disabled{ opacity:.4; cursor:default; }
+  .pin-cancel{ margin-top:16px; background:none; border:none; color:var(--ink-soft); font-weight:700; text-decoration:underline; cursor:pointer; padding:6px; }
+
+  /* ---------- small control buttons (sound / end session) ---------- */
+  .ctrl-row{ display:flex; align-items:center; gap:6px; margin-left:auto; }
+</style>
+
+<div id="app"></div>
+
+<template id="tpl-bubbles">
+  <div class="bubbles" aria-hidden="true"></div>
+</template>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============ scheduler (Anki-style SM-2) ============ */
+  var LEARN_STEPS_MIN = [1, 10];      // new cards step through these (minutes) before graduating
+  var RELEARN_STEPS_MIN = [10];       // a lapsed review card steps through these before returning to review
+  var GRADUATING_DAYS = 1;            // interval a card gets when it finishes the learn steps on "Good"
+  var EASY_GRADUATE_DAYS = 4;         // interval a card gets when "Easy" skips the remaining learn steps
+  var EASE_START = 2.5;
+  var EASE_MIN = 1.3;
+  var HARD_INTERVAL_MULT = 1.2;
+  var EASY_BONUS = 1.3;
+  var LAPSE_MIN_DAYS = 1;             // interval a card gets after relearning from a lapse
+  var LEECH_THRESHOLD = 8;            // lapses at which a card is flagged as a "leech" (needs extra practice)
+
+  function fuzzedDays(days){
+    if(days < 2) return days;
+    var pct = days < 7 ? 0.25 : (days < 30 ? 0.15 : 0.05);
+    var delta = days * pct;
+    return Math.max(1, Math.round(days + (Math.random()*2 - 1) * delta));
+  }
+
+  function gradeCard(card, rating, now){
+    now = now || Date.now();
+    var ease = card.ease || EASE_START;
+    var interval = card.interval || 0;
+    var reps = card.reps || 0;
+    var lapses = card.lapses || 0;
+    var state = card.state || (interval > 0 ? 'review' : 'new');
+    var step = card.learningStep || 0;
+    var isLeech = !!card.isLeech;
+    var due;
+
+    function minutesFromNow(m){ return now + m*60000; }
+    function daysFromNow(d){ return now + d*86400000; }
+
+    if(state === 'new' || state === 'learning'){
+      if(rating === 'again'){
+        step = 0; state = 'learning';
+        due = minutesFromNow(LEARN_STEPS_MIN[0]);
+      } else if(rating === 'hard'){
+        state = 'learning';
+        due = minutesFromNow(LEARN_STEPS_MIN[step] || LEARN_STEPS_MIN[LEARN_STEPS_MIN.length-1]);
+      } else if(rating === 'good'){
+        step += 1;
+        if(step >= LEARN_STEPS_MIN.length){
+          state = 'review'; interval = GRADUATING_DAYS; reps += 1; step = 0;
+          due = daysFromNow(interval);
+        } else {
+          state = 'learning';
+          due = minutesFromNow(LEARN_STEPS_MIN[step]);
+        }
+      } else { // easy — skip remaining steps, graduate now
+        state = 'review'; interval = EASY_GRADUATE_DAYS; reps += 1; step = 0;
+        due = daysFromNow(interval);
+      }
+    } else if(state === 'relearning'){
+      if(rating === 'again'){
+        step = 0; state = 'relearning';
+        due = minutesFromNow(RELEARN_STEPS_MIN[0]);
+      } else if(rating === 'hard'){
+        state = 'relearning';
+        due = minutesFromNow(RELEARN_STEPS_MIN[step] || RELEARN_STEPS_MIN[RELEARN_STEPS_MIN.length-1]);
+      } else {
+        step += 1;
+        if(step >= RELEARN_STEPS_MIN.length || rating === 'easy'){
+          state = 'review'; interval = LAPSE_MIN_DAYS; step = 0;
+          due = daysFromNow(interval);
+        } else {
+          state = 'relearning';
+          due = minutesFromNow(RELEARN_STEPS_MIN[step]);
+        }
+      }
+    } else { // review
+      if(rating === 'again'){
+        lapses += 1;
+        ease = Math.max(EASE_MIN, ease - 0.20);
+        state = 'relearning'; step = 0;
+        due = minutesFromNow(RELEARN_STEPS_MIN[0]);
+        if(lapses >= LEECH_THRESHOLD) isLeech = true;
+      } else if(rating === 'hard'){
+        ease = Math.max(EASE_MIN, ease - 0.15);
+        interval = fuzzedDays(Math.max(interval + 1, Math.round(interval * HARD_INTERVAL_MULT)));
+        reps += 1;
+        due = daysFromNow(interval);
+      } else if(rating === 'good'){
+        interval = fuzzedDays(Math.max(interval + 1, Math.round(interval * ease)));
+        reps += 1;
+        due = daysFromNow(interval);
+      } else { // easy
+        ease = ease + 0.15;
+        interval = fuzzedDays(Math.max(interval + 1, Math.round(interval * ease * EASY_BONUS)));
+        reps += 1;
+        due = daysFromNow(interval);
+      }
+    }
+
+    return { ease: ease, interval: interval, reps: reps, lapses: lapses, due: due, state: state, learningStep: step, isLeech: isLeech };
+  }
+  var STARS = { again: 0, hard: 1, good: 2, easy: 3 };
+
+  /* ============ automatic grading: derive the SM-2 rating from correct/incorrect + time taken ============ */
+  /* No more asking the kid to self-judge "was that easy or hard" — we just need right vs. wrong (still
+     self-reported for flip/read cards, since there's no way to grade an open-ended answer automatically;
+     fully automatic for multiple-choice, since the app already knows). Response time then decides how
+     confidently "right" counts: quick + correct graduates further out than slow + correct, and any wrong
+     answer is always "again" regardless of how long it took. */
+  var TIME_THRESHOLDS = {
+    choice: { fastMs: 3000,  slowMs: 9000  },  // time from seeing the question to tapping an option
+    flip:   { fastMs: 4000,  slowMs: 12000 },  // time from seeing the front to flipping (recall latency)
+    read:   { fastMs: 5000,  slowMs: 15000 }   // time from seeing the word/phrase to marking it read
+  };
+  function autoRating(mode, correct, elapsedMs){
+    if(!correct) return 'again';
+    var t = TIME_THRESHOLDS[mode] || TIME_THRESHOLDS.flip;
+    if(elapsedMs <= t.fastMs) return 'easy';
+    if(elapsedMs <= t.slowMs) return 'good';
+    return 'hard';
+  }
+
+  /* ============ sound + haptics (synthesized, no external files) ============ */
+  var Sound = (function(){
+    var ctx = null;
+    var enabled = true;
+    try {
+      var saved = localStorage.getItem('coralCoveSound');
+      if(saved !== null) enabled = saved === '1';
+    } catch(e){}
+
+    function ensureCtx(){
+      if(!ctx){
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if(AC){ try { ctx = new AC(); } catch(e){ ctx = null; } }
+      }
+      if(ctx && ctx.state === 'suspended'){ ctx.resume().catch(function(){}); }
+      return ctx;
+    }
+
+    function tone(freq, start, dur, type, peak){
+      var c = ensureCtx();
+      if(!c || !enabled) return;
+      try {
+        var osc = c.createOscillator();
+        var gain = c.createGain();
+        osc.type = type || 'sine';
+        osc.frequency.value = freq;
+        var t0 = c.currentTime + start;
+        gain.gain.setValueAtTime(0.0001, t0);
+        gain.gain.linearRampToValueAtTime(peak || 0.16, t0 + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+        osc.connect(gain); gain.connect(c.destination);
+        osc.start(t0); osc.stop(t0 + dur + 0.03);
+      } catch(e){}
+    }
+
+    function slideTone(freqStart, freqEnd, start, dur, type, peak){
+      var c = ensureCtx();
+      if(!c || !enabled) return;
+      try {
+        var osc = c.createOscillator();
+        var gain = c.createGain();
+        osc.type = type || 'sine';
+        var t0 = c.currentTime + start;
+        osc.frequency.setValueAtTime(freqStart, t0);
+        osc.frequency.exponentialRampToValueAtTime(Math.max(1, freqEnd), t0 + dur);
+        gain.gain.setValueAtTime(0.0001, t0);
+        gain.gain.linearRampToValueAtTime(peak || 0.14, t0 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+        osc.connect(gain); gain.connect(c.destination);
+        osc.start(t0); osc.stop(t0 + dur + 0.03);
+      } catch(e){}
+    }
+
+    function vibrate(pattern){
+      if(!enabled) return;
+      try { if(navigator.vibrate) navigator.vibrate(pattern); } catch(e){}
+    }
+
+    // iOS Safari silences Web Audio API tones whenever the physical mute/ring switch is
+    // flipped to silent — this is a long-standing platform quirk, not a bug in this app.
+    // The known workaround: get a real HTML5 <audio> element playing (even near-silent,
+    // looped audio) from the very first tap. That switches the page's audio session into
+    // the "playback" category, which iOS does NOT silence for the mute switch, and Web
+    // Audio tones started afterward inherit that same session. Best-effort — not guaranteed
+    // on every iOS version, but harmless if it doesn't help.
+    var silentUnlockAudio = null;
+    var SILENT_WAV = 'data:audio/wav;base64,UklGRkQDAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YSADAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==';
+    function startSilentUnlock(){
+      if(silentUnlockAudio) return;
+      try {
+        silentUnlockAudio = new Audio(SILENT_WAV);
+        silentUnlockAudio.loop = true;
+        silentUnlockAudio.volume = 0.01;
+        var p = silentUnlockAudio.play();
+        if(p && p.catch) p.catch(function(){});
+      } catch(e){}
+    }
+
+    return {
+      isEnabled: function(){ return enabled; },
+      setEnabled: function(v){
+        enabled = v;
+        try { localStorage.setItem('coralCoveSound', v ? '1' : '0'); } catch(e){}
+      },
+      unlock: function(){ ensureCtx(); startSilentUnlock(); }, // call on first user gesture so mobile browsers allow audio later
+      tap: function(){ tone(520, 0, 0.06, 'sine', 0.10); vibrate(8); },
+      flip: function(){ tone(420, 0, 0.08, 'sine', 0.10); tone(640, 0.05, 0.09, 'sine', 0.09); vibrate(10); },
+      // Playful "ta-da!" — a quick bouncing major arpeggio with a sparkly high glimmer on top.
+      correct: function(){
+        tone(523, 0,    0.08, 'triangle', 0.15);   // C5
+        tone(659, 0.06, 0.08, 'triangle', 0.15);   // E5
+        tone(784, 0.12, 0.10, 'triangle', 0.16);   // G5
+        tone(1047, 0.19, 0.16, 'triangle', 0.15);  // C6 — the "ta-da"
+        tone(1568, 0.20, 0.12, 'sine', 0.05);      // tiny sparkle overlay
+        vibrate([10, 15, 10]);
+      },
+      // Playful cartoon "womp womp" — a comic downward slide instead of a harsh buzzer, so it stays fun, not discouraging.
+      wrong: function(){
+        slideTone(420, 180, 0,    0.24, 'sawtooth', 0.09);
+        slideTone(320, 140, 0.20, 0.22, 'sawtooth', 0.07);
+        vibrate([20, 30, 20]);
+      },
+      sessionStart: function(){ tone(523, 0, 0.10, 'triangle', 0.15); tone(659, 0.09, 0.10, 'triangle', 0.15); tone(784, 0.18, 0.18, 'triangle', 0.16); vibrate([20, 50, 20]); },
+      sessionEnd: function(){ tone(784, 0, 0.12, 'triangle', 0.16); tone(659, 0.11, 0.10, 'triangle', 0.14); tone(523, 0.20, 0.18, 'triangle', 0.15); vibrate([30, 60, 30, 60, 30]); }
+    };
+  })();
+
+  /* ============ spoken answers (Web Speech API — no audio files to host, works offline) ============ */
+  var Speech = (function(){
+    var supported = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+    function speak(text){
+      if(!supported || !Sound.isEnabled() || !text) return;
+      try {
+        window.speechSynthesis.cancel(); // stop anything already talking before starting the new line
+        var utter = new SpeechSynthesisUtterance(String(text));
+        utter.rate = 0.88;   // a touch slower, easier for an early reader to follow
+        utter.pitch = 1.05;
+        window.speechSynthesis.speak(utter);
+      } catch(e){}
+    }
+    return { speak: speak, isSupported: function(){ return supported; } };
+  })();
+
+  /* ============ tiny non-cryptographic PIN hash ============ */
+  /* Not real security — just stops a curious kid from reading the PIN straight out of the saved data. */
+  function pinHash(str){
+    var h = 5381;
+    str = String(str || '');
+    for(var i = 0; i < str.length; i++){ h = ((h * 33) ^ str.charCodeAt(i)) >>> 0; }
+    return h.toString(36);
+  }
+
+  /* ============ store adapter (db capability, with in-memory fallback) ============ */
+  var store = (function(){
+    var mem = { decks: [], cards: {}, stats: { streak:0, stars:0, lastReviewDateISO:null, totalReviews:0 }, settings: { pinHash:null, sessionActive:false, sessionStartedAt:null }, sessionTally: null, history: [], nextId: 1, deckListeners: [], cardListeners: {} };
+    var db = null;
+    var live = false;
+
+    function memId(){ return 'local-' + (mem.nextId++); }
+    function notifyDecks(){ mem.deckListeners.forEach(function(cb){ cb(mem.decks.slice()); }); }
+    function notifyCards(deckId){ (mem.cardListeners[deckId]||[]).forEach(function(cb){ cb((mem.cards[deckId]||[]).slice()); }); }
+
+    function api(){
+      return {
+        live: live,
+        listenDecks: function(cb){
+          if(live){
+            return db.collection('decks').orderBy('order','asc').onSnapshot(function(snap){
+              cb(snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); }));
+            }, function(){ cb(mem.decks.slice()); });
+          }
+          mem.deckListeners.push(cb);
+          cb(mem.decks.slice());
+          return function(){ mem.deckListeners = mem.deckListeners.filter(function(x){ return x!==cb; }); };
+        },
+        addDeck: function(data){
+          data = Object.assign({ createdAt: Date.now() }, data);
+          if(live) return db.collection('decks').add(data).then(function(ref){ return ref.id; });
+          var id = memId();
+          mem.decks.push(Object.assign({id:id}, data));
+          mem.cards[id] = [];
+          notifyDecks();
+          return Promise.resolve(id);
+        },
+        updateDeck: function(id, data){
+          if(live) return db.collection('decks').doc(id).update(data);
+          var d = mem.decks.find(function(x){ return x.id===id; });
+          if(d) Object.assign(d, data);
+          notifyDecks();
+          return Promise.resolve();
+        },
+        deleteDeck: function(id){
+          if(live){
+            return db.collection('decks/'+id+'/cards').get().then(function(snap){
+              return Promise.all(snap.docs.map(function(d){ return d.ref ? d.ref.delete() : db.collection('decks/'+id+'/cards').doc(d.id).delete(); }));
+            }).then(function(){ return db.collection('decks').doc(id).delete(); });
+          }
+          mem.decks = mem.decks.filter(function(x){ return x.id!==id; });
+          delete mem.cards[id];
+          notifyDecks();
+          return Promise.resolve();
+        },
+        getCardsOnce: function(deckId){
+          if(live){
+            return db.collection('decks/'+deckId+'/cards').get().then(function(snap){
+              return snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+            });
+          }
+          return Promise.resolve((mem.cards[deckId]||[]).slice());
+        },
+        listenCards: function(deckId, cb){
+          if(live){
+            return db.collection('decks/'+deckId+'/cards').onSnapshot(function(snap){
+              cb(snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); }));
+            }, function(){ cb((mem.cards[deckId]||[]).slice()); });
+          }
+          if(!mem.cardListeners[deckId]) mem.cardListeners[deckId] = [];
+          mem.cardListeners[deckId].push(cb);
+          cb((mem.cards[deckId]||[]).slice());
+          return function(){ mem.cardListeners[deckId] = (mem.cardListeners[deckId]||[]).filter(function(x){ return x!==cb; }); };
+        },
+        addCard: function(deckId, data){
+          data = Object.assign({ due: Date.now(), interval:0, ease:2.5, reps:0, lapses:0, state:'new', learningStep:0, createdAt: Date.now() }, data);
+          if(live) return db.collection('decks/'+deckId+'/cards').add(data);
+          var id = memId();
+          if(!mem.cards[deckId]) mem.cards[deckId] = [];
+          mem.cards[deckId].push(Object.assign({id:id}, data));
+          notifyCards(deckId);
+          return Promise.resolve();
+        },
+        updateCard: function(deckId, cardId, data){
+          if(live) return db.collection('decks/'+deckId+'/cards').doc(cardId).update(data);
+          var arr = mem.cards[deckId]||[];
+          var c = arr.find(function(x){ return x.id===cardId; });
+          if(c) Object.assign(c, data);
+          notifyCards(deckId);
+          return Promise.resolve();
+        },
+        deleteCard: function(deckId, cardId){
+          if(live) return db.collection('decks/'+deckId+'/cards').doc(cardId).delete();
+          mem.cards[deckId] = (mem.cards[deckId]||[]).filter(function(x){ return x.id!==cardId; });
+          notifyCards(deckId);
+          return Promise.resolve();
+        },
+        getStats: function(){
+          if(live) return db.doc('stats/summary').get().then(function(snap){
+            return snap.exists ? snap.data() : { streak:0, stars:0, lastReviewDateISO:null, totalReviews:0 };
+          });
+          return Promise.resolve(Object.assign({}, mem.stats));
+        },
+        setStats: function(data){
+          if(live) return db.doc('stats/summary').set(data);
+          mem.stats = Object.assign({}, data);
+          return Promise.resolve();
+        },
+        getSettings: function(){
+          if(live) return db.doc('settings/parent').get().then(function(snap){
+            return snap.exists ? snap.data() : { pinHash:null, sessionActive:false, sessionStartedAt:null };
+          });
+          return Promise.resolve(Object.assign({}, mem.settings));
+        },
+        setSettings: function(data){
+          if(live) return db.doc('settings/parent').set(data);
+          mem.settings = Object.assign({}, data);
+          return Promise.resolve();
+        },
+        getSessionTally: function(){
+          if(live) return db.doc('session/current').get().then(function(snap){
+            return snap.exists ? snap.data() : null;
+          });
+          return Promise.resolve(mem.sessionTally ? Object.assign({}, mem.sessionTally) : null);
+        },
+        setSessionTally: function(data){
+          if(live) return db.doc('session/current').set(data);
+          mem.sessionTally = Object.assign({}, data);
+          return Promise.resolve();
+        },
+        // A permanent, append-only log of finished study rounds — this is what powers the
+        // overall Stats page's trend chart. Never overwritten, unlike sessionTally above.
+        addHistoryEntry: function(data){
+          data = Object.assign({ endedAt: Date.now() }, data);
+          if(live) return db.collection('history').add(data);
+          var id = memId();
+          mem.history.push(Object.assign({id:id}, data));
+          return Promise.resolve();
+        },
+        getHistoryOnce: function(){
+          if(live) return db.collection('history').get().then(function(snap){
+            return snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+          });
+          return Promise.resolve(mem.history.slice());
+        }
+      };
+    }
+
+    return {
+      init: function(){
+        if(!(window.claude && window.claude.use)) return Promise.resolve(api());
+        return window.claude.use('db').then(function(handle){
+          if(handle){ db = handle; live = true; }
+          return api();
+        }).catch(function(){ return api(); });
+      }
+    };
+  })();
+
+  /* ============ app state ============ */
+  var S = {
+    store: null,
+    view: 'home',
+    decks: [],
+    dueCounts: {},
+    currentDeckId: null,
+    stats: { streak:0, stars:0, lastReviewDateISO:null, totalReviews:0 },
+    studyQueue: [],
+    studyTotal: 0,
+    sessionReviewed: 0,
+    sessionStars: 0,
+    roundTally: null,
+    unsubDecks: null,
+    unsubCards: null,
+    emojiPickerOpen: false,
+    addCardOpen: false,
+    choiceState: null,
+    currentCardId: null,
+    cardShownAt: null,
+    cardFlippedAt: null,
+    settings: { pinHash:null, sessionActive:false, sessionStartedAt:null },
+    sessionActive: false,
+    sessionTally: null,
+    finishedTally: null,
+    managingDecks: false,   // true only while a grown-up has unlocked deck management from the resting screen
+    statsData: null,        // lazily loaded { perDeck, history } for the Stats page
+    lastOutcomeWrong: false, // briefly true right after a wrong answer, so the swim-progress critter can frown
+    transitioning: false,   // true for the brief window a card is sliding out — locks input until the next card lands
+    peeking: false,         // true while showing the read-only "last answered card" view (swiped back to review it)
+    lastAnsweredCard: null, // { front, back, note, mode, correct, rating, choiceOptions, chosenText } for the ONE card behind the current one — replaced every time a new card is answered
+    pinPromptFor: null,     // null | 'setup' | 'start' | 'end' | 'edit' | 'exit' | 'manage'
+    pinInput: '',
+    pinError: '',
+    pinShake: false,
+    pinSetupStep: 1,
+    pinSetupFirst: '',
+    pendingEdit: null,
+    booted: false
+  };
+
+  function defaultTally(){
+    return { startedAt: Date.now(), endedAt: null, reviewedCount: 0, starsEarned: 0, again: 0, hard: 0, good: 0, easy: 0, decksStudied: [] };
+  }
+
+  var DECK_EMOJI = ['🐢','🐬','🐳','🦀','🐠','🦈','🦞','🐙','🌊','🐚','🦑','⭐'];
+
+  function todayISO(d){ d = d || new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function shuffle(arr){ var a = arr.slice(); for(var i=a.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+
+  /* ============ rendering ============ */
+  var app = document.getElementById('app');
+  app.innerHTML = '<div class="lock-screen"><h2>🌊 Loading Coral Cove…</h2></div>';
+
+  function render(){
+    if(!S.booted) return; // wait for settings to load before showing anything (avoids a lock-screen flash)
+    if(S.pinPromptFor === 'setup') return renderPinSetup();
+    if(S.pinPromptFor) return renderPinPad(S.pinPromptFor);
+    if(!S.settings.pinHash) return renderPinSetup(); // safety net — no PIN saved yet
+    if(S.view === 'sessionResults') return renderSessionResults();
+    if(S.managingDecks) return (S.view === 'editor') ? renderEditor() : (S.view === 'stats' ? renderStats() : renderHome());
+    if(!S.sessionActive) return renderLocked();
+    if(S.view === 'home') return renderHome();
+    if(S.view === 'study') return renderStudy();
+    if(S.view === 'editor') return renderEditor();
+    if(S.view === 'summary') return renderSummary();
+    if(S.view === 'stats') return renderStats();
+  }
+
+  function ctrlRowHTML(){
+    var soundIcon = Sound.isEnabled() ? '🔊' : '🔇';
+    return '' +
+      '<div class="ctrl-row">' +
+        '<button type="button" class="icon-btn" data-act="toggle-sound" aria-label="Turn sound '+(Sound.isEnabled()?'off':'on')+'" title="Sound">'+soundIcon+'</button>' +
+        '<button type="button" class="icon-btn" data-act="end-session" aria-label="End session" title="End session">🔒</button>' +
+      '</div>';
+  }
+  function wireCtrlRow(){
+    var s = app.querySelector('[data-act="toggle-sound"]');
+    if(s) s.addEventListener('click', function(){ Sound.setEnabled(!Sound.isEnabled()); render(); });
+    var e = app.querySelector('[data-act="end-session"]');
+    if(e) e.addEventListener('click', function(){ S.pinInput=''; S.pinError=''; S.pinShake=false; S.pinPromptFor='end'; render(); });
+  }
+
+  /* ---------- LOCK SCREEN + PIN PAD ---------- */
+  function renderLocked(){
+    app.innerHTML = '' +
+      '<div class="mascot-wrap">'+mascotSVG('big')+'</div>' +
+      '<div class="lock-screen">' +
+        '<h2>🔒 Coral Cove is resting</h2>' +
+        '<p>Ask a grown-up to start today\'s session.</p>' +
+        '<button type="button" class="btn btn-primary" data-act="ask-start">I\'m a grown-up — Start Session</button>' +
+        '<button type="button" class="btn btn-ghost" data-act="ask-manage" style="margin-top:10px;">🔧 Manage Decks</button>' +
+      '</div>';
+    app.querySelector('[data-act="ask-start"]').addEventListener('click', function(){
+      Sound.unlock();
+      S.pinInput=''; S.pinError=''; S.pinShake=false;
+      S.pinPromptFor = 'start';
+      render();
+    });
+    app.querySelector('[data-act="ask-manage"]').addEventListener('click', function(){
+      Sound.unlock();
+      S.pinInput=''; S.pinError=''; S.pinShake=false;
+      S.pinPromptFor = 'manage';
+      render();
+    });
+  }
+
+  function pinPadHTML(title, sub, cancelLabel){
+    var dots = '';
+    for(var i=0;i<4;i++){ dots += '<span class="pin-dot '+(i<S.pinInput.length?'filled':'')+'"></span>'; }
+    var keyHTML = [1,2,3,4,5,6,7,8,9].map(function(k){
+      return '<button type="button" class="pin-key" data-digit="'+k+'">'+k+'</button>';
+    }).join('');
+    keyHTML += '<button type="button" class="pin-key" data-act="pin-back" aria-label="Backspace">⌫</button>';
+    keyHTML += '<button type="button" class="pin-key" data-digit="0">0</button>';
+    keyHTML += '<span></span>';
+    return '' +
+      '<div class="lock-screen">' +
+        '<h2>'+title+'</h2>' +
+        '<p>'+sub+'</p>' +
+        '<div class="pin-wrap">' +
+          '<div class="pin-dots '+(S.pinShake?'shake':'')+'">'+dots+'</div>' +
+          '<div class="pin-error">'+(S.pinError||'&nbsp;')+'</div>' +
+          '<div class="pin-grid">'+keyHTML+'</div>' +
+          (cancelLabel ? '<button type="button" class="pin-cancel" data-act="pin-cancel">'+cancelLabel+'</button>' : '') +
+        '</div>' +
+      '</div>';
+  }
+
+  function wirePinKeys(onFilled, onCancel){
+    app.querySelectorAll('[data-digit]').forEach(function(b){
+      b.addEventListener('click', function(){
+        if(S.pinInput.length >= 4) return;
+        Sound.tap();
+        S.pinInput += b.dataset.digit;
+        S.pinError = ''; S.pinShake = false;
+        var filled = S.pinInput.length === 4;
+        render();
+        if(filled) setTimeout(onFilled, 220);
+      });
+    });
+    var back = app.querySelector('[data-act="pin-back"]');
+    if(back) back.addEventListener('click', function(){
+      if(!S.pinInput.length) return;
+      Sound.tap();
+      S.pinInput = S.pinInput.slice(0, -1);
+      S.pinError = '';
+      render();
+    });
+    var cancel = app.querySelector('[data-act="pin-cancel"]');
+    if(cancel && onCancel) cancel.addEventListener('click', onCancel);
+  }
+
+  function shakeAndClear(msg){
+    S.pinError = msg;
+    S.pinShake = true;
+    S.pinInput = '';
+    Sound.wrong();
+    render();
+    setTimeout(function(){ S.pinShake = false; render(); }, 420);
+  }
+
+  function renderPinSetup(){
+    var step = S.pinSetupStep || 1;
+    var title = step === 1 ? '🔐 Create a Parent PIN' : '🔐 Confirm your PIN';
+    var sub = step === 1
+      ? 'Choose 4 digits. You\'ll use this PIN to start and end sessions, and to edit decks.'
+      : 'Enter the same 4 digits again to confirm.';
+    app.innerHTML = pinPadHTML(title, sub, null);
+    wirePinKeys(submitPinSetup, null);
+  }
+
+  function submitPinSetup(){
+    var step = S.pinSetupStep || 1;
+    if(step === 1){
+      S.pinSetupFirst = S.pinInput;
+      S.pinInput = '';
+      S.pinSetupStep = 2;
+      render();
+      return;
+    }
+    if(S.pinInput === S.pinSetupFirst){
+      var newSettings = Object.assign({}, S.settings, { pinHash: pinHash(S.pinInput) });
+      S.settings = newSettings;
+      S.store.setSettings(newSettings).then(function(){
+        S.pinInput = ''; S.pinSetupStep = 1; S.pinSetupFirst = '';
+        S.pinPromptFor = null;
+        render();
+      });
+    } else {
+      S.pinSetupStep = 1;
+      S.pinSetupFirst = '';
+      shakeAndClear('Those don\'t match — let\'s try again.');
+    }
+  }
+
+  function pinPadTitles(kind){
+    if(kind === 'start') return ['🔐 Start Session', 'Ask a grown-up to enter the PIN to begin.'];
+    if(kind === 'end') return ['🔐 End Session', 'Enter the PIN to finish and lock Coral Cove.'];
+    if(kind === 'exit') return ['🔐 Leave This Deck?', 'Ask a grown-up to enter the PIN to head back before finishing.'];
+    if(kind === 'manage') return ['🔐 Manage Decks', 'Enter the PIN to add or edit decks.'];
+    return ['🔐 Parent PIN', 'Enter the PIN to edit decks.'];
+  }
+
+  function renderPinPad(kind){
+    var t = pinPadTitles(kind);
+    app.innerHTML = pinPadHTML(t[0], t[1], 'Cancel');
+    wirePinKeys(function(){ submitPin(kind); }, function(){ cancelPinPrompt(kind); });
+  }
+
+  function submitPin(kind){
+    var ok = !!S.settings.pinHash && pinHash(S.pinInput) === S.settings.pinHash;
+    if(!ok){
+      shakeAndClear('That\'s not it — try again.');
+      return;
+    }
+    S.pinInput = ''; S.pinError = ''; S.pinShake = false;
+    if(kind === 'start'){
+      S.sessionTally = defaultTally();
+      S.sessionActive = true;
+      var startSettings = Object.assign({}, S.settings, { sessionActive: true, sessionStartedAt: S.sessionTally.startedAt });
+      S.settings = startSettings;
+      Promise.all([S.store.setSettings(startSettings), S.store.setSessionTally(S.sessionTally)]).then(function(){
+        Sound.sessionStart();
+        S.pinPromptFor = null;
+        S.view = 'home';
+        render();
+      });
+    } else if(kind === 'end'){
+      var tally = S.sessionTally || defaultTally();
+      S.finishedTally = Object.assign({}, tally, { endedAt: Date.now() });
+      S.sessionActive = false;
+      var endSettings = Object.assign({}, S.settings, { sessionActive: false });
+      S.settings = endSettings;
+      Promise.all([S.store.setSettings(endSettings), S.store.setSessionTally(S.finishedTally)]).then(function(){
+        Sound.sessionEnd();
+        S.pinPromptFor = null;
+        S.view = 'sessionResults';
+        render();
+      });
+    } else if(kind === 'edit'){
+      S.pinPromptFor = null;
+      var pe = S.pendingEdit || {};
+      S.pendingEdit = null;
+      openEditorUnlocked(pe.deckId, pe.focusName);
+    } else if(kind === 'exit'){
+      S.pinPromptFor = null;
+      goHome();
+    } else if(kind === 'manage'){
+      S.pinPromptFor = null;
+      S.managingDecks = true;
+      S.view = 'home';
+      refreshDueCounts().then(render);
+    }
+  }
+
+  function cancelPinPrompt(kind){
+    S.pinInput = ''; S.pinError = ''; S.pinShake = false;
+    if(kind === 'edit') S.pendingEdit = null;
+    S.pinPromptFor = null;
+    render();
+  }
+
+  function goLocked(){
+    S.view = 'home';
+    S.currentDeckId = null;
+    S.finishedTally = null;
+    if(S.unsubCards){ S.unsubCards(); S.unsubCards = null; }
+    render();
+  }
+
+  function renderSessionResults(){
+    var t = S.finishedTally || defaultTally();
+    var mins = t.endedAt ? Math.max(1, Math.round((t.endedAt - t.startedAt) / 60000)) : 0;
+    var total = t.reviewedCount || 0;
+    var right = Math.max(0, total - (t.again || 0));
+    var accuracy = total > 0 ? Math.round((right / total) * 100) : 0;
+    var deckNames = (t.decksStudied || []).map(function(id){
+      var d = S.decks.find(function(x){ return x.id === id; });
+      return d ? (d.emoji + ' ' + esc(d.name)) : null;
+    }).filter(Boolean);
+    app.innerHTML = '' +
+      '<div class="mascot-wrap">'+mascotSVG('big celebrate')+'</div>' +
+      '<div class="summary-card">' +
+        '<h2>🎉 Session complete!</h2>' +
+        '<div class="summary-stats">' +
+          '<div class="summary-stat"><span class="num tabular">'+right+' / '+total+'</span><span class="label">Right</span></div>' +
+          '<div class="summary-stat"><span class="num tabular">'+accuracy+'%</span><span class="label">Accuracy</span></div>' +
+          '<div class="summary-stat"><span class="num tabular">'+mins+'</span><span class="label">Minutes</span></div>' +
+        '</div>' +
+        (deckNames.length ? '<div class="session-decklist">Decks studied: '+deckNames.join(', ')+'</div>' : '') +
+        '<button type="button" class="btn btn-primary" data-act="done">Done</button>' +
+      '</div>';
+    app.querySelector('[data-act="done"]').addEventListener('click', goLocked);
+  }
+
+  function bubblesHTML(n){
+    var out = '<div class="bubbles" aria-hidden="true">';
+    for(var i=0;i<n;i++){
+      var size = 8 + Math.round(Math.random()*22);
+      var left = Math.round(Math.random()*96);
+      var dur = (6 + Math.random()*8).toFixed(1);
+      var delay = (Math.random()*8).toFixed(1);
+      out += '<span class="bubble" style="width:'+size+'px;height:'+size+'px;left:'+left+'%;animation-duration:'+dur+'s;animation-delay:-'+delay+'s;"></span>';
+    }
+    out += '</div>';
+    return out;
+  }
+
+  function mascotSVG(cls){
+    return '' +
+    '<svg class="mascot '+(cls||'')+'" viewBox="0 0 140 140" role="img" aria-label="Coral Cove turtle mascot">' +
+      '<ellipse cx="70" cy="86" rx="16" ry="10" fill="var(--seaweed)" opacity="0.55"/>' +
+      '<ellipse cx="24" cy="70" rx="15" ry="10" fill="var(--lagoon)" transform="rotate(-24 24 70)"/>' +
+      '<ellipse cx="116" cy="70" rx="15" ry="10" fill="var(--lagoon)" transform="rotate(24 116 70)"/>' +
+      '<ellipse cx="34" cy="108" rx="13" ry="9" fill="var(--lagoon)" transform="rotate(20 34 108)"/>' +
+      '<ellipse cx="106" cy="108" rx="13" ry="9" fill="var(--lagoon)" transform="rotate(-20 106 108)"/>' +
+      '<ellipse cx="70" cy="82" rx="44" ry="36" fill="var(--seaweed)"/>' +
+      '<ellipse cx="70" cy="80" rx="37" ry="30" fill="var(--lagoon-light)"/>' +
+      '<path d="M70 54 L92 72 L84 100 L56 100 L48 72 Z" fill="var(--seaweed)" opacity="0.55"/>' +
+      '<circle cx="70" cy="40" r="22" fill="var(--lagoon)"/>' +
+      '<circle cx="61" cy="35" r="4.2" fill="#0b2b33"/>' +
+      '<circle cx="79" cy="35" r="4.2" fill="#0b2b33"/>' +
+      '<circle cx="62.4" cy="33.6" r="1.3" fill="#fff"/>' +
+      '<circle cx="80.4" cy="33.6" r="1.3" fill="#fff"/>' +
+      '<path d="M62 48 Q70 54 78 48" stroke="#0b2b33" stroke-width="2.4" fill="none" stroke-linecap="round"/>' +
+    '</svg>';
+  }
+
+  // Small swimming-turtle avatar for the round progress bar — same face/color language as
+  // mascotSVG above, just simplified to fit a 44px badge, with a frown for a wrong answer.
+  function critterSVG(sad){
+    var mouth = sad
+      ? '<path d="M61 51 Q70 43 79 51" stroke="#0b2b33" stroke-width="2.6" fill="none" stroke-linecap="round"/>'
+      : '<path d="M61 46 Q70 54 79 46" stroke="#0b2b33" stroke-width="2.6" fill="none" stroke-linecap="round"/>';
+    var brows = sad
+      ? '<path d="M55 27 Q60 22 66 26" stroke="#0b2b33" stroke-width="2.2" fill="none" stroke-linecap="round"/>' +
+        '<path d="M85 27 Q80 22 74 26" stroke="#0b2b33" stroke-width="2.2" fill="none" stroke-linecap="round"/>'
+      : '';
+    return '' +
+    '<svg viewBox="0 0 140 140" role="img" aria-hidden="true">' +
+      '<ellipse cx="22" cy="78" rx="16" ry="9" fill="var(--lagoon)" transform="rotate(-18 22 78)"/>' +
+      '<ellipse cx="118" cy="78" rx="16" ry="9" fill="var(--lagoon)" transform="rotate(18 118 78)"/>' +
+      '<ellipse cx="70" cy="94" rx="40" ry="32" fill="var(--seaweed)"/>' +
+      '<ellipse cx="70" cy="92" rx="33" ry="26" fill="var(--lagoon-light)"/>' +
+      '<circle cx="70" cy="42" r="25" fill="var(--lagoon)"/>' +
+      brows +
+      '<circle cx="61" cy="38" r="4.6" fill="#0b2b33"/>' +
+      '<circle cx="79" cy="38" r="4.6" fill="#0b2b33"/>' +
+      '<circle cx="62.6" cy="36.4" r="1.4" fill="#fff"/>' +
+      '<circle cx="80.6" cy="36.4" r="1.4" fill="#fff"/>' +
+      mouth +
+    '</svg>';
+  }
+
+  function subscribeDecks(){
+    if(S.unsubDecks) S.unsubDecks();
+    S.unsubDecks = S.store.listenDecks(function(decks){
+      S.decks = decks;
+      if(!S.booted) return;
+      if(S.view === 'home'){ refreshDueCounts().then(render); } else { render(); }
+    });
+  }
+
+  function refreshDueCounts(){
+    var now = Date.now();
+    return Promise.all(S.decks.map(function(d){
+      return S.store.getCardsOnce(d.id).then(function(cards){
+        var due = cards.filter(function(c){ return (c.due||0) <= now; }).length;
+        S.dueCounts[d.id] = { due: due, total: cards.length };
+      });
+    }));
+  }
+
+  function goHome(){
+    S.view = 'home';
+    S.currentDeckId = null;
+    if(S.unsubCards){ S.unsubCards(); S.unsubCards = null; }
+    refreshDueCounts().then(render);
+  }
+
+  function exitManager(){
+    S.managingDecks = false;
+    S.view = 'home';
+    S.currentDeckId = null;
+    if(S.unsubCards){ S.unsubCards(); S.unsubCards = null; }
+    render();
+  }
+
+  /* ---------- HOME ---------- */
+  function renderHome(){
+    var managing = S.managingDecks;
+    var banner = S.store.live ? '' : '<div class="banner">🌟 Try-it-out mode — your decks won\'t be saved after you close this page.</div>';
+    // Archived decks are a parent-only concept: a kid in a study session never sees them at all,
+    // not even as a locked/greyed-out tile — they're filtered out before the deck grid is built.
+    var visibleDecks = managing ? S.decks : S.decks.filter(function(d){ return !d.archived; });
+    var deckTiles = visibleDecks.map(function(d){
+      var dc = S.dueCounts[d.id] || { due:0, total:0 };
+      var archived = !!d.archived;
+      var badge = dc.total === 0
+        ? '<span class="deck-badge">No cards yet</span>'
+        : (dc.due > 0
+          ? '<span class="deck-badge due">'+dc.due+' to review</span>'
+          : '<span class="deck-badge">All caught up! 🎉</span>');
+      return '' +
+      '<div class="deck-card'+(managing && archived ? ' archived' : '')+'">' +
+        (managing && archived ? '<span class="archived-tag">📦 Archived</span>' : '') +
+        '<div class="deck-emoji">'+d.emoji+'</div>' +
+        '<h3 class="deck-name">'+esc(d.name)+'</h3>' +
+        '<div class="deck-meta">'+dc.total+' card'+(dc.total===1?'':'s')+'</div>' +
+        badge +
+        '<div class="deck-actions">' +
+          '<button class="btn btn-primary" data-act="study" data-deck="'+d.id+'" '+(dc.total===0?'disabled':'')+'>Dive In</button>' +
+          (managing ? '<button class="icon-btn" data-act="edit-deck" data-deck="'+d.id+'" title="Edit deck" aria-label="Edit '+esc(d.name)+'">✏️</button>' : '') +
+          (managing ? '<button class="icon-btn" data-act="toggle-archive" data-deck="'+d.id+'" title="'+(archived?'Unarchive':'Archive')+' deck" aria-label="'+(archived?'Unarchive':'Archive')+' '+esc(d.name)+'">'+(archived?'📤':'📦')+'</button>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    app.innerHTML = '' +
+      '<div class="topbar">' +
+        '<div class="brand">' +
+          '<div class="brand-block">' +
+            '<h1 class="brand-title">Coral Cove</h1>' +
+            '<p class="brand-tag">'+(managing ? '🔧 Managing decks — kids can\'t see this screen' : 'Dive in and practice!')+'</p>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
+          (managing ? '' :
+          '<div class="stats-row">' +
+            '<div class="pill streak"><span class="icon">🌊</span><span class="tabular">'+S.stats.streak+'</span></div>' +
+            '<div class="pill stars"><span class="icon">⭐</span><span class="tabular">'+S.stats.stars+'</span></div>' +
+          '</div>') +
+          '<button type="button" class="icon-btn" data-act="open-stats" title="Progress" aria-label="View progress">📊</button>' +
+          (managing ? '<button type="button" class="btn btn-ghost" data-act="exit-manager">✅ Done</button>' : ctrlRowHTML()) +
+        '</div>' +
+      '</div>' +
+      '<div class="mascot-wrap">'+mascotSVG('')+'</div>' +
+      banner +
+      '<div class="deck-grid">' +
+        deckTiles +
+        (managing ? '<button type="button" class="add-deck-card" data-act="new-deck"><span class="plus">＋</span><span>New Deck</span></button>' : '') +
+      '</div>';
+
+    app.querySelectorAll('[data-act="study"]').forEach(function(b){ b.addEventListener('click', function(){ startStudy(b.dataset.deck); }); });
+    app.querySelector('[data-act="open-stats"]').addEventListener('click', openStats);
+    if(managing){
+      app.querySelectorAll('[data-act="edit-deck"]').forEach(function(b){ b.addEventListener('click', function(){ openEditor(b.dataset.deck); }); });
+      app.querySelectorAll('[data-act="toggle-archive"]').forEach(function(b){
+        b.addEventListener('click', function(){
+          var d = S.decks.find(function(x){ return x.id === b.dataset.deck; });
+          S.store.updateDeck(b.dataset.deck, { archived: !(d && d.archived) });
+        });
+      });
+      var newBtn = app.querySelector('[data-act="new-deck"]');
+      if(newBtn) newBtn.addEventListener('click', createDeck);
+      var doneBtn = app.querySelector('[data-act="exit-manager"]');
+      if(doneBtn) doneBtn.addEventListener('click', exitManager);
+    } else {
+      wireCtrlRow();
+    }
+  }
+
+  function createDeck(){
+    var emoji = DECK_EMOJI[Math.floor(Math.random()*DECK_EMOJI.length)];
+    S.store.addDeck({ name: 'New Deck', emoji: emoji, order: S.decks.length }).then(function(id){
+      openEditor(id, true);
+    });
+  }
+
+  /* ---------- STUDY ---------- */
+  var ROUND_SIZE = 6; // short bursts rather than the whole deck at once — "Play Again" covers the rest
+
+  function startStudy(deckId){
+    S.currentDeckId = deckId;
+    S.store.getCardsOnce(deckId).then(function(cards){
+      var now = Date.now();
+      var due = cards.filter(function(c){ return (c.due||0) <= now; });
+      var pool = due.length ? due : cards;
+      S.studyQueue = shuffle(pool).slice(0, ROUND_SIZE);
+      S.studyTotal = S.studyQueue.length;
+      S.sessionReviewed = 0;
+      S.sessionStars = 0;
+      S.roundTally = { again: 0, hard: 0, good: 0, easy: 0 };
+      S.view = 'study';
+      S.cardFlipped = false;
+      S.choiceState = null;
+      S.currentCardId = null;
+      S.cardShownAt = null;
+      S.cardFlippedAt = null;
+      S.transitioning = false;
+      S.peeking = false;
+      S.lastAnsweredCard = null;
+      render();
+    });
+  }
+
+  var OUTCOME_ROW_HTML = '' +
+    '<div class="grade-row outcome-row" style="position:relative;z-index:1;">' +
+      '<button class="grade-btn grade-wrong" data-outcome="wrong"><span class="emoji">🦀</span>Not quite</button>' +
+      '<button class="grade-btn grade-right" data-outcome="right"><span class="emoji">🐬</span>Got it right!</button>' +
+    '</div>';
+
+  // The read-only "swipe back" view of the one card the kid most recently answered. No inputs are
+  // interactive here — it's a look, not a redo — so there's no route to change a grade already
+  // recorded. Mirrors the live layout for each mode, just frozen in its answered state.
+  function buildPeekInner(rec){
+    var badge = rec.correct
+      ? '<div class="peek-badge peek-right">✅ That one was right!</div>'
+      : '<div class="peek-badge peek-wrong">🦀 That one was marked not quite</div>';
+    var body;
+    if(rec.mode === 'choice'){
+      var optsHTML = (rec.choiceOptions||[]).map(function(opt){
+        var cls = 'choice-btn';
+        if(opt === rec.back) cls += ' correct';
+        else if(opt === rec.chosenText) cls += ' wrong';
+        return '<button type="button" class="'+cls+'" disabled>'+esc(opt)+'</button>';
+      }).join('');
+      body = '' +
+        '<div class="flip-scene" style="position:relative;z-index:1;">' +
+          '<div class="face face-front read-face"><div class="read-label">🔢 Last question</div><div class="card-text">'+esc(rec.front)+'</div></div>' +
+        '</div>' +
+        '<div class="choice-row">'+optsHTML+'</div>';
+    } else if(rec.mode === 'read'){
+      body = '' +
+        '<div class="flip-scene" style="position:relative;z-index:1;">' +
+          '<div class="face face-front read-face">' +
+            '<div class="read-label">📖 Last question</div>' +
+            '<div class="card-text">'+esc(rec.front)+'</div>' +
+            (rec.note?'<div class="card-note dim">'+esc(rec.note)+'</div>':'') +
+          '</div>' +
+        '</div>';
+    } else {
+      body = '' +
+        '<div class="flip-scene" style="position:relative;z-index:1;">' +
+          '<div class="flip-card flipped">' +
+            '<div class="face face-front"><div class="card-text">'+esc(rec.front)+'</div></div>' +
+            '<div class="face face-back"><div class="card-text">'+esc(rec.back)+'</div>'+(rec.note?'<div class="card-note">'+esc(rec.note)+'</div>':'')+'</div>' +
+          '</div>' +
+        '</div>';
+    }
+    return '' +
+      '<div class="peek-wrap">' +
+        body +
+        badge +
+        '<div class="flip-hint" style="position:relative;z-index:1;">⬆️ Swipe up (or tap) to continue</div>' +
+      '</div>';
+  }
+
+  // Drag-to-swipe, TikTok style: live-follows the finger, snaps back if it doesn't clear the
+  // threshold. Direction is asymmetric on purpose — forward is never draggable (answering is the
+  // only way past the current card), backward only reaches the one card just answered.
+  function wireSwipe(stageEl){
+    if(!stageEl) return;
+    var dragging = false, startY = 0, dy = 0, activePointerId = null;
+    var DRAG_MAX = 120, COMMIT = 62;
+    function canPeekBack(){ return !S.peeking && !!S.lastAnsweredCard && !S.transitioning; }
+    function canReturnForward(){ return S.peeking && !S.transitioning; }
+    function pointY(e){ return e.touches && e.touches.length ? e.touches[0].clientY : e.clientY; }
+    // Track the drag on `document` rather than relying on setPointerCapture: this keeps
+    // following the finger/mouse even if it drifts outside the card bounds mid-swipe, and
+    // guarantees onUp always fires (no stuck drag state) regardless of where the release lands.
+    function onDown(e){
+      if(S.transitioning || (!canPeekBack() && !canReturnForward())) return;
+      dragging = true; dy = 0; startY = pointY(e);
+      activePointerId = e.pointerId != null ? e.pointerId : null;
+      stageEl.style.animation = 'none'; // don't fight the entrance animation with a live drag transform
+      stageEl.classList.add('stage-dragging');
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+      document.addEventListener('pointercancel', onUp);
+    }
+    function onMoveRaw(y){
+      dy = y - startY;
+      var t;
+      if(dy >= 0){ t = canPeekBack() ? Math.min(dy, DRAG_MAX) : Math.min(dy, DRAG_MAX) * 0.22; }
+      else { t = canReturnForward() ? Math.max(dy, -DRAG_MAX) : Math.max(dy, -DRAG_MAX) * 0.22; }
+      stageEl.style.transform = 'translateY('+t+'px)';
+    }
+    function onMove(e){
+      if(!dragging) return;
+      if(activePointerId != null && e.pointerId != null && e.pointerId !== activePointerId) return;
+      onMoveRaw(pointY(e));
+      if(e.cancelable) e.preventDefault();
+    }
+    function onUp(e){
+      if(!dragging) return;
+      if(activePointerId != null && e && e.pointerId != null && e.pointerId !== activePointerId) return;
+      dragging = false;
+      activePointerId = null;
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      document.removeEventListener('pointercancel', onUp);
+      stageEl.classList.remove('stage-dragging');
+      var goBack = dy > COMMIT && canPeekBack();
+      var goForward = dy < -COMMIT && canReturnForward();
+      // A real drag (even one that snaps back short of the threshold) shouldn't also be read as
+      // a tap by the peek view's tap-to-return handler, which fires right after via 'click'.
+      stageEl.__justDragged = Math.abs(dy) > 6;
+      stageEl.style.transform = '';
+      if(goBack) peekBack();
+      else if(goForward) returnFromPeek();
+      else {
+        stageEl.classList.add('stage-snapback');
+        setTimeout(function(){ stageEl.classList.remove('stage-snapback'); }, 220);
+      }
+      dy = 0;
+    }
+    stageEl.addEventListener('pointerdown', onDown);
+    // Guard against the browser starting a native text/element drag mid-swipe, which can steal
+    // the gesture and stop delivering further pointer events to us.
+    stageEl.addEventListener('dragstart', function(e){ e.preventDefault(); });
+    // Trackpad/mouse-wheel as a desktop-friendly equivalent to a swipe.
+    stageEl.addEventListener('wheel', function(e){
+      if(S.transitioning) return;
+      if(e.deltaY < -14 && canReturnForward()){ e.preventDefault(); returnFromPeek(); }
+      else if(e.deltaY > 14 && canPeekBack()){ e.preventDefault(); peekBack(); }
+    }, { passive:false });
+  }
+
+  function peekBack(){
+    if(S.transitioning || S.peeking || !S.lastAnsweredCard) return;
+    S.transitioning = true;
+    var stageEl = app.querySelector('.stage');
+    if(stageEl) stageEl.classList.add('stage-exit-down');
+    setTimeout(function(){
+      S.transitioning = false;
+      S.peeking = true;
+      render();
+    }, 200);
+  }
+
+  function returnFromPeek(){
+    if(S.transitioning || !S.peeking) return;
+    S.transitioning = true;
+    var stageEl = app.querySelector('.stage');
+    if(stageEl) stageEl.classList.add('stage-exit');
+    setTimeout(function(){
+      S.transitioning = false;
+      S.peeking = false;
+      render();
+    }, 200);
+  }
+
+  function renderStudy(){
+    var deck = S.decks.find(function(d){ return d.id === S.currentDeckId; }) || {name:'Deck', emoji:'🌊'};
+    if(!S.studyQueue.length){
+      finishStudy();
+      return;
+    }
+    var card = S.studyQueue[0];
+    if(S.currentCardId !== card.id){
+      // A new card is on stage — reset per-card UI state and start the response-time clock.
+      S.currentCardId = card.id;
+      S.cardShownAt = Date.now();
+      S.cardFlippedAt = null;
+      S.cardFlipped = false;
+      S.choiceState = null;
+    }
+    var mode = card.mode === 'read' ? 'read' : (card.mode === 'choice' ? 'choice' : 'flip');
+    var peeking = S.peeking && !!S.lastAnsweredCard;
+    var doneCount = S.sessionReviewed;
+    var labelCount = peeking ? doneCount : (doneCount + 1);
+    var progressBase = peeking ? Math.max(0, doneCount - 1) : doneCount;
+    var progressPct = S.studyTotal > 0 ? Math.min(100, Math.max(0, Math.round((progressBase / S.studyTotal) * 100))) : 0;
+    var critterHTML = '' +
+      '<div class="critter-label">'+(peeking ? 'Reviewing question ' : 'Question ')+labelCount+' of '+S.studyTotal+'</div>' +
+      '<div class="critter-track">' +
+        '<div class="critter-track-fill" style="width:'+progressPct+'%"></div>' +
+        '<div class="critter-swim'+(S.lastOutcomeWrong?' oops':'')+'" style="left:'+progressPct+'%">'+critterSVG(S.lastOutcomeWrong)+'</div>' +
+      '</div>';
+
+    var stageInner;
+    if(peeking){
+      stageInner = buildPeekInner(S.lastAnsweredCard);
+    } else if(mode === 'read'){
+      stageInner = '' +
+        '<div class="flip-scene" style="position:relative;z-index:1;">' +
+          '<div class="face face-front read-face">' +
+            '<div class="read-label">📖 Read it out loud</div>' +
+            '<div class="card-text">'+esc(card.front)+'</div>' +
+            (card.note?'<div class="card-note dim">'+esc(card.note)+'</div>':'') +
+          '</div>' +
+        '</div>' +
+        '<div class="flip-hint" style="position:relative;z-index:1;">Did they read it right?</div>' +
+        OUTCOME_ROW_HTML;
+    } else if(mode === 'choice'){
+      if(!S.choiceState || S.choiceState.cardId !== card.id){
+        S.choiceState = { cardId: card.id, options: shuffle([card.back].concat(card.choices||[])), selected: null };
+      }
+      var cs = S.choiceState;
+      var pickedCorrect = cs.selected != null && cs.options[cs.selected] === card.back;
+      var optsHTML = cs.options.map(function(opt, idx){
+        var cls = 'choice-btn';
+        if(cs.selected != null){
+          if(opt === card.back) cls += ' correct';
+          else if(idx === cs.selected) cls += ' wrong';
+        }
+        return '<button type="button" class="'+cls+'" data-choice-idx="'+idx+'" '+(cs.selected!=null?'disabled':'')+'>'+esc(opt)+'</button>';
+      }).join('');
+      var choiceFeedback = cs.selected == null
+        ? '<div class="flip-hint" style="position:relative;z-index:1;">Tap an answer</div>'
+        : '<div class="choice-feedback '+(pickedCorrect?'ok':'no')+'">'+(pickedCorrect ? 'Nice job! 🎉' : 'Good try — that one\'s tricky!')+'</div>';
+      stageInner = '' +
+        '<div class="flip-scene" style="position:relative;z-index:1;">' +
+          '<div class="face face-front read-face">' +
+            '<div class="read-label">🔢 Pick the answer</div>' +
+            '<div class="card-text">'+esc(card.front)+'</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="choice-row">'+optsHTML+'</div>' +
+        choiceFeedback;
+    } else {
+      stageInner = '' +
+        '<div class="flip-scene" style="position:relative;z-index:1;">' +
+          '<div class="flip-card '+(S.cardFlipped?'flipped':'')+'" id="flipCard">' +
+            '<div class="face face-front"><div class="card-text">'+esc(card.front)+'</div></div>' +
+            '<div class="face face-back"><div class="card-text">'+esc(card.back)+'</div>'+(card.note?'<div class="card-note">'+esc(card.note)+'</div>':'')+(Speech.isSupported()?'<button type="button" class="replay-audio-btn" data-act="replay-audio">🔊 Hear it again</button>':'')+'</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="flip-hint" style="position:relative;z-index:1;">'+(S.cardFlipped ? 'Be honest — did you get it right?' : 'Tap the card to flip it')+'</div>' +
+        (S.cardFlipped ? OUTCOME_ROW_HTML : '');
+    }
+
+    app.innerHTML = '' +
+      '<div class="nav-row">' +
+        '<button class="back-btn" data-act="exit-study">⟵ Lagoon</button>' +
+        '<span class="nav-title">'+deck.emoji+' '+esc(deck.name)+'</span>' +
+        ctrlRowHTML() +
+      '</div>' +
+      critterHTML +
+      '<div class="stage'+(peeking?' stage-peek':'')+'">' +
+        bubblesHTML(8) +
+        stageInner +
+      '</div>';
+
+    app.querySelector('[data-act="exit-study"]').addEventListener('click', function(){
+      // Leaving a deck before finishing the round needs a grown-up's PIN — finishing normally
+      // (via the summary screen's own buttons) does not, so this only guards the early exit.
+      S.pinInput=''; S.pinError=''; S.pinShake=false;
+      S.pinPromptFor = 'exit';
+      render();
+    });
+    wireCtrlRow();
+    var stageEl = app.querySelector('.stage');
+    wireSwipe(stageEl);
+    // A short drag that snaps back (didn't clear the swipe threshold) can still end with
+    // mousedown/up landing on the same tappable element — consumed once so it isn't also read
+    // as a tap that flips the card or picks an answer.
+    function dragJustHappened(){
+      if(stageEl.__justDragged){ stageEl.__justDragged = false; return true; }
+      return false;
+    }
+    if(peeking){
+      // Reviewing the last card is not interactive — tapping it (same as swiping up) just returns
+      // to the live, unanswered card. Ignore the synthetic click that follows a real drag release
+      // (mousedown/up on the same element still fires 'click' even after a big pointer move).
+      stageEl.addEventListener('click', function(){
+        if(dragJustHappened()) return;
+        returnFromPeek();
+      });
+      return;
+    }
+    var flip = document.getElementById('flipCard');
+    if(flip){
+      flip.addEventListener('click', function(){
+        if(dragJustHappened()) return;
+        if(S.cardFlipped || S.transitioning) return;
+        S.cardFlipped = true;
+        S.cardFlippedAt = Date.now();
+        Sound.flip();
+        render();
+        Speech.speak(card.back); // read the revealed answer aloud automatically
+      });
+    }
+    var replayBtn = app.querySelector('[data-act="replay-audio"]');
+    if(replayBtn) replayBtn.addEventListener('click', function(e){ e.stopPropagation(); Speech.speak(card.back); });
+    app.querySelectorAll('[data-choice-idx]').forEach(function(b){
+      b.addEventListener('click', function(){
+        if(dragJustHappened()) return;
+        if(S.choiceState.selected != null || S.transitioning) return;
+        S.choiceState.selected = parseInt(b.dataset.choiceIdx, 10);
+        var chosen = S.choiceState.options[S.choiceState.selected];
+        var correct = chosen === card.back;
+        var elapsed = Date.now() - (S.cardShownAt || Date.now());
+        if(correct) Sound.correct(); else Sound.wrong();
+        render();
+        // Fully automatic: the app already knows right vs. wrong from the tap, so it grades itself —
+        // pause just long enough for the correct/wrong highlight to register, then move on.
+        setTimeout(function(){ grade(autoRating('choice', correct, elapsed), true); }, 1100);
+      });
+    });
+    app.querySelectorAll('[data-outcome]').forEach(function(b){
+      b.addEventListener('click', function(e){
+        e.stopPropagation();
+        if(dragJustHappened()) return;
+        if(S.transitioning) return;
+        var correct = b.dataset.outcome === 'right';
+        var clock = mode === 'flip' ? (S.cardFlippedAt || S.cardShownAt) : S.cardShownAt;
+        var elapsed = Date.now() - (clock || Date.now());
+        grade(autoRating(mode, correct, elapsed));
+      });
+    });
+  }
+
+  // The only entry point that advances a card. Answering (an outcome tap, or a choice pick) is the
+  // sole trigger — there is no swipe-to-skip and no tap-anywhere-to-continue, so a card is locked in
+  // place until it's actually answered. Once answered, this plays the TikTok-style exit slide on the
+  // current card and locks out any further taps for that brief window before the next card lands.
+  function grade(rating, skipSound){
+    if(S.transitioning) return;
+    S.transitioning = true;
+    var stageEl = app.querySelector('.stage');
+    if(stageEl) stageEl.classList.add('stage-exit');
+    setTimeout(function(){
+      S.transitioning = false;
+      commitGrade(rating, skipSound);
+    }, 200);
+  }
+
+  function commitGrade(rating, skipSound){
+    var card = S.studyQueue.shift();
+    var updates = gradeCard(card, rating);
+    S.store.updateCard(S.currentDeckId, card.id, updates);
+    S.sessionReviewed += 1;
+    S.sessionStars += STARS[rating];
+    // Snapshot this card as the one swipe-back target — captured before choiceState/cardFlipped
+    // reset below, and overwritten on every answer, so there's always exactly one card of "undo peek."
+    var gradedMode = card.mode === 'read' ? 'read' : (card.mode === 'choice' ? 'choice' : 'flip');
+    S.lastAnsweredCard = {
+      front: card.front,
+      back: card.back,
+      note: card.note || '',
+      mode: gradedMode,
+      correct: rating !== 'again',
+      rating: rating,
+      choiceOptions: (gradedMode === 'choice' && S.choiceState) ? S.choiceState.options.slice() : null,
+      chosenText: (gradedMode === 'choice' && S.choiceState && S.choiceState.selected != null) ? S.choiceState.options[S.choiceState.selected] : null
+    };
+    S.peeking = false;
+    // The swim-progress critter frowns for a beat right after a miss, then goes back to smiling —
+    // it still swims forward the same step either way, so a wrong answer never looks like no progress.
+    S.lastOutcomeWrong = (rating === 'again');
+    if(S.lastOutcomeWrong){
+      setTimeout(function(){ S.lastOutcomeWrong = false; if(S.view === 'study') render(); }, 900);
+    }
+    if(S.roundTally) S.roundTally[rating] = (S.roundTally[rating] || 0) + 1;
+    if(!skipSound){
+      if(rating === 'again') Sound.wrong();
+      else if(rating === 'hard') Sound.tap();
+      else Sound.correct();
+    }
+    if(S.sessionTally){
+      S.sessionTally.reviewedCount += 1;
+      S.sessionTally.starsEarned += STARS[rating];
+      S.sessionTally[rating] = (S.sessionTally[rating] || 0) + 1;
+      if(S.currentDeckId && S.sessionTally.decksStudied.indexOf(S.currentDeckId) === -1){
+        S.sessionTally.decksStudied.push(S.currentDeckId);
+      }
+      S.store.setSessionTally(S.sessionTally);
+    }
+    // Rounds are meant to be a strict, predictable ROUND_SIZE questions — a missed card is NOT
+    // requeued into the same round (that used to inflate a "6-question" round well past 6). It's
+    // simply due again shortly per the SM-2 schedule and will resurface on the next round/Play Again.
+    var stillLearning = updates.state === 'learning' || updates.state === 'relearning';
+    S.cardFlipped = false;
+    S.choiceState = null;
+    S.currentCardId = null; // forces the next renderStudy() to treat the next card (even a re-queued one) as freshly shown
+    if(S.dueCounts[S.currentDeckId]){
+      S.dueCounts[S.currentDeckId].due = Math.max(0, S.dueCounts[S.currentDeckId].due - (stillLearning?0:1));
+    }
+    render();
+  }
+
+  function finishStudy(){
+    var t = S.roundTally || { again:0, hard:0, good:0, easy:0 };
+    var total = S.sessionReviewed;
+    var right = Math.max(0, total - t.again);
+    var deck = S.decks.find(function(d){ return d.id === S.currentDeckId; });
+    var historyEntry = {
+      deckId: S.currentDeckId,
+      deckName: deck ? deck.name : 'Deck',
+      deckEmoji: deck ? deck.emoji : '🌊',
+      total: total,
+      right: right,
+      accuracy: total > 0 ? Math.round((right / total) * 100) : 0
+    };
+    S.store.getStats().then(function(stats){
+      var today = todayISO();
+      var newStreak = stats.streak || 0;
+      if(stats.lastReviewDateISO !== today){
+        var y = new Date(); y.setDate(y.getDate()-1);
+        newStreak = (stats.lastReviewDateISO === todayISO(y)) ? (stats.streak||0) + 1 : 1;
+      }
+      var newStats = {
+        streak: newStreak,
+        stars: (stats.stars||0) + S.sessionStars,
+        lastReviewDateISO: today,
+        totalReviews: (stats.totalReviews||0) + S.sessionReviewed
+      };
+      return S.store.setStats(newStats).then(function(){ S.stats = newStats; });
+    }).then(function(){
+      return S.store.addHistoryEntry(historyEntry);
+    }).then(function(){
+      S.view = 'summary';
+      render();
+    });
+  }
+
+  function renderSummary(){
+    var deck = S.decks.find(function(d){ return d.id === S.currentDeckId; }) || {name:'Deck', emoji:'🌊'};
+    var t = S.roundTally || { again:0, hard:0, good:0, easy:0 };
+    var total = S.sessionReviewed;
+    var right = Math.max(0, total - t.again);
+    var accuracy = total > 0 ? Math.round((right / total) * 100) : 0;
+    app.innerHTML = '' +
+      '<div class="mascot-wrap">'+mascotSVG('big celebrate')+'</div>' +
+      '<div class="summary-card">' +
+        '<h2>Great swimming!</h2>' +
+        '<div class="deck-meta">'+deck.emoji+' '+esc(deck.name)+'</div>' +
+        '<div class="summary-stats">' +
+          '<div class="summary-stat"><span class="num tabular">'+right+' / '+total+'</span><span class="label">Right</span></div>' +
+          '<div class="summary-stat"><span class="num tabular">'+accuracy+'%</span><span class="label">Accuracy</span></div>' +
+          '<div class="summary-stat"><span class="num tabular">'+S.stats.streak+'</span><span class="label">Day streak</span></div>' +
+        '</div>' +
+        '<div class="form-actions" style="justify-content:center;margin-top:6px;">' +
+          '<button class="btn btn-primary" data-act="play-again">🔁 Play Again</button>' +
+          '<button class="btn btn-ghost" data-act="back-home">Back to the Lagoon</button>' +
+        '</div>' +
+      '</div>';
+    app.querySelector('[data-act="back-home"]').addEventListener('click', goHome);
+    app.querySelector('[data-act="play-again"]').addEventListener('click', function(){ startStudy(deck.id); });
+  }
+
+  /* ---------- STATS PAGE ---------- */
+  function openStats(){
+    S.view = 'stats';
+    S.statsData = null; // shows the loading state until the fetch below resolves
+    render();
+    var deckList = S.managingDecks ? S.decks : S.decks.filter(function(d){ return !d.archived; });
+    Promise.all([
+      S.store.getHistoryOnce(),
+      Promise.all(deckList.map(function(d){
+        return S.store.getCardsOnce(d.id).then(function(cards){
+          var total = cards.length;
+          var mastered = cards.filter(function(c){ return (c.reps||0) > 0 && (c.interval||0) >= 4; }).length;
+          return { id: d.id, name: d.name, emoji: d.emoji, total: total, mastered: mastered };
+        });
+      }))
+    ]).then(function(results){
+      var history = results[0].slice().sort(function(a,b){ return (a.endedAt||0)-(b.endedAt||0); });
+      S.statsData = { history: history, perDeck: results[1] };
+      if(S.view === 'stats') render();
+    });
+  }
+
+  function renderStats(){
+    var managing = S.managingDecks;
+    var data = S.statsData;
+    var allRight = 0, allTotal = 0;
+    ((data && data.history) || []).forEach(function(h){ allRight += h.right||0; allTotal += h.total||0; });
+    var overallAccuracy = allTotal > 0 ? Math.round((allRight/allTotal)*100) : 0;
+
+    var tilesHTML = '' +
+      '<div class="stat-tiles">' +
+        '<div class="stat-tile"><div class="num tabular">'+(S.stats.totalReviews||0)+'</div><div class="label">Cards reviewed</div></div>' +
+        '<div class="stat-tile"><div class="num tabular">'+overallAccuracy+'%</div><div class="label">Overall accuracy</div></div>' +
+        '<div class="stat-tile"><div class="num tabular">'+S.stats.streak+'</div><div class="label">Day streak</div></div>' +
+        '<div class="stat-tile"><div class="num tabular">'+S.stats.stars+'</div><div class="label">Stars earned</div></div>' +
+      '</div>';
+
+    var masteryHTML;
+    if(!data){
+      masteryHTML = '<div class="trend-empty">Loading…</div>';
+    } else if(!data.perDeck.length){
+      masteryHTML = '<div class="trend-empty">No decks yet.</div>';
+    } else {
+      masteryHTML = '<div class="mastery-list">' + data.perDeck.map(function(d){
+        var pct = d.total > 0 ? Math.round((d.mastered / d.total) * 100) : 0;
+        return '' +
+          '<div class="mastery-row">' +
+            '<div class="mastery-emoji">'+d.emoji+'</div>' +
+            '<div class="mastery-mid">' +
+              '<div class="mastery-top"><span>'+esc(d.name)+'</span><span class="pct">'+pct+'% mastered</span></div>' +
+              '<div class="mastery-track"><div class="mastery-fill" style="width:'+pct+'%"></div></div>' +
+            '</div>' +
+          '</div>';
+      }).join('') + '</div>';
+    }
+
+    var trendHTML, trendCount = 0;
+    if(!data){
+      trendHTML = '<div class="trend-wrap"><div class="trend-empty">Loading…</div></div>';
+    } else if(!data.history.length){
+      trendHTML = '<div class="trend-wrap"><div class="trend-empty">Finish a round to start tracking progress! 🌊</div></div>';
+    } else {
+      var recent = data.history.slice(-12);
+      trendCount = recent.length;
+      var bars = recent.map(function(h){
+        var pct = h.accuracy || 0;
+        var barCls = 'trend-bar' + (pct < 60 ? ' low' : '');
+        var d = new Date(h.endedAt);
+        var dateLabel = (d.getMonth()+1)+'/'+d.getDate();
+        var tip = esc((h.deckEmoji||'🌊')+' '+(h.deckName||'Deck')+' — '+h.right+'/'+h.total+' ('+pct+'%) on '+dateLabel);
+        return '<div class="trend-bar-col"><div class="'+barCls+'" style="height:'+Math.max(pct,3)+'%" tabindex="0" data-tip="'+tip+'"></div></div>';
+      }).join('');
+      var firstLabel = (function(){ var dd=new Date(recent[0].endedAt); return (dd.getMonth()+1)+'/'+dd.getDate(); })();
+      var lastLabel = (function(){ var dd=new Date(recent[recent.length-1].endedAt); return (dd.getMonth()+1)+'/'+dd.getDate(); })();
+      trendHTML = '' +
+        '<div class="trend-wrap">' +
+          '<div class="trend-bars">'+bars+'</div>' +
+          (recent.length > 1 ? '<div class="trend-axis"><span>'+firstLabel+'</span><span>'+lastLabel+'</span></div>' : '') +
+        '</div>';
+    }
+
+    app.innerHTML = '' +
+      '<div class="nav-row">' +
+        '<button class="back-btn" data-act="exit-stats">⟵ Lagoon</button>' +
+        '<span class="nav-title">📊 '+(managing ? 'Progress Overview' : 'Your Progress')+'</span>' +
+      '</div>' +
+      '<div class="stats-page">' +
+        '<div class="stats-section">'+tilesHTML+'</div>' +
+        '<div class="stats-section"><h3>🎯 Accuracy — last '+trendCount+' round'+(trendCount===1?'':'s')+'</h3>'+trendHTML+'</div>' +
+        '<div class="stats-section"><h3>🐢 Deck mastery</h3>'+masteryHTML+'</div>' +
+      '</div>' +
+      '<div class="chart-tip" id="chartTip"></div>';
+
+    app.querySelector('[data-act="exit-stats"]').addEventListener('click', goHome);
+
+    var tip = document.getElementById('chartTip');
+    app.querySelectorAll('.trend-bar').forEach(function(b){
+      function show(){
+        tip.textContent = b.dataset.tip;
+        var r = b.getBoundingClientRect();
+        tip.style.left = (r.left + r.width/2) + 'px';
+        tip.style.top = r.top + 'px';
+        tip.classList.add('show');
+      }
+      function hide(){ tip.classList.remove('show'); }
+      b.addEventListener('mouseenter', show);
+      b.addEventListener('mouseleave', hide);
+      b.addEventListener('focus', show);
+      b.addEventListener('blur', hide);
+      b.addEventListener('touchstart', function(){ show(); setTimeout(hide, 1500); }, {passive:true});
+    });
+  }
+
+  /* ---------- EDITOR ---------- */
+  function openEditor(deckId, focusName){
+    // Reaching this point at all already required the "Manage Decks" PIN from the resting
+    // screen, so don't make a grown-up enter the PIN a second time to open one deck's editor.
+    if(S.managingDecks){ openEditorUnlocked(deckId, focusName); return; }
+    // Defensive fallback in case this is ever reached outside manager mode.
+    S.pendingEdit = { deckId: deckId, focusName: focusName };
+    S.pinInput = ''; S.pinError = ''; S.pinShake = false;
+    S.pinPromptFor = 'edit';
+    render();
+  }
+
+  function openEditorUnlocked(deckId, focusName){
+    S.currentDeckId = deckId;
+    S.view = 'editor';
+    S.emojiPickerOpen = false;
+    S.addCardOpen = false;
+    S.editingCardId = null;
+    S.cardFormDraft = null;
+    S.cardFormMode = 'flip';
+    if(S.unsubCards) S.unsubCards();
+    S.editorCards = [];
+    S.unsubCards = S.store.listenCards(deckId, function(cards){
+      S.editorCards = cards.sort(function(a,b){ return (a.createdAt||0)-(b.createdAt||0); });
+      if(S.view === 'editor') render();
+    });
+    render();
+    if(focusName){ setTimeout(function(){ var el = document.getElementById('deckNameInput'); if(el){ el.focus(); el.select(); } }, 0); }
+  }
+
+  function renderEditor(){
+    var deck = S.decks.find(function(d){ return d.id === S.currentDeckId; });
+    if(!deck){ goHome(); return; }
+    var cards = S.editorCards || [];
+
+    var rows = cards.length ? cards.map(function(c){
+      var isReadRow = c.mode === 'read';
+      var isChoiceRow = c.mode === 'choice';
+      var modeTag = (isReadRow ? '<span class="mode-tag mode-tag-read">📖 Read</span>' : (isChoiceRow ? '<span class="mode-tag mode-tag-choice">🔢 Choice</span>' : '<span class="mode-tag">🔄 Flip</span>')) +
+        (c.isLeech ? ' <span class="mode-tag mode-tag-leech">🔁 Needs practice</span>' : '');
+      var backLine = isReadRow ? (c.note ? esc(c.note) : 'No answer side — just for reading aloud') :
+        (isChoiceRow ? (esc(c.back)+' · '+(c.choices||[]).length+' wrong answer'+((c.choices||[]).length===1?'':'s')) :
+        (esc(c.back)+(c.note?' · '+esc(c.note):'')));
+      return '' +
+      '<div class="card-row">' +
+        '<div class="cr-text">' +
+          '<div class="cr-front">'+esc(c.front)+' '+modeTag+'</div>' +
+          '<div class="cr-back">'+backLine+'</div>' +
+        '</div>' +
+        '<div class="cr-actions">' +
+          '<button class="icon-btn" data-act="edit-card" data-card="'+c.id+'" aria-label="Edit card">✏️</button>' +
+          '<button class="icon-btn" data-act="del-card" data-card="'+c.id+'" aria-label="Delete card">🗑️</button>' +
+        '</div>' +
+      '</div>';
+    }).join('') : '<div class="empty-state">No cards yet — add the first one below! 🐚</div>';
+
+    var emojiPicker = S.emojiPickerOpen ? ('<div class="emoji-popover">' + DECK_EMOJI.map(function(e){
+      return '<button class="emoji-opt" data-emoji="'+e+'">'+e+'</button>';
+    }).join('') + '</div>') : '';
+
+    var editingCard = S.editingCardId ? cards.find(function(c){ return c.id === S.editingCardId; }) : null;
+    var formTitle = editingCard ? 'Edit card' : 'Add a new card';
+    var draft = S.cardFormDraft || { front:'', back:'', note:'', choices:'' };
+    var fFront = draft.front; var fBack = draft.back; var fNote = draft.note; var fChoices = draft.choices || '';
+    var formMode = S.cardFormMode || 'flip';
+    var isReadMode = formMode === 'read';
+    var isChoiceMode = formMode === 'choice';
+
+    var addForm = (S.addCardOpen || editingCard) ? ('' +
+      '<div class="form-card">' +
+        '<h3>'+formTitle+'</h3>' +
+        '<div class="mode-toggle">' +
+          '<button type="button" class="mode-opt '+(formMode==='flip'?'active':'')+'" data-mode="flip">🔄 Flip card<span class="mode-sub">question → answer</span></button>' +
+          '<button type="button" class="mode-opt '+(formMode==='read'?'active':'')+'" data-mode="read">📖 Just read it<span class="mode-sub">no answer side</span></button>' +
+          '<button type="button" class="mode-opt '+(formMode==='choice'?'active':'')+'" data-mode="choice">🔢 Multiple choice<span class="mode-sub">pick the answer</span></button>' +
+        '</div>' +
+        '<div class="field"><label for="cardFront">'+(isReadMode?'Word or phrase to read':'Front (question / word)')+'</label><input id="cardFront" type="text" value="'+esc(fFront)+'" placeholder="'+(isReadMode?'e.g. octopus':'e.g. 6 + 7  or  because')+'"></div>' +
+        (isReadMode ? '' : '<div class="field"><label for="cardBack">'+(isChoiceMode?'Correct answer':'Back (answer)')+'</label><input id="cardBack" type="text" value="'+esc(fBack)+'" placeholder="e.g. 13  or  a sentence"></div>') +
+        (isChoiceMode ? '<div class="field"><label for="cardChoices">Wrong answers (comma-separated)</label><input id="cardChoices" type="text" value="'+esc(fChoices)+'" placeholder="e.g. 11, 12, 14"></div>' : '') +
+        '<div class="field"><label for="cardNote">'+(isReadMode?'Hint (optional, shown small under the word)':'Fun fact / hint (optional)')+'</label><textarea id="cardNote" rows="2" placeholder="'+(isReadMode?'e.g. sounds like OCK-tuh-puss':'e.g. 6 crabs + 7 crabs = 13 crabs!')+'">'+esc(fNote)+'</textarea></div>' +
+        '<div class="form-actions">' +
+          '<button class="btn btn-primary" data-act="save-card">'+(editingCard?'Save changes':'Add card')+'</button>' +
+          '<button class="btn btn-ghost" data-act="cancel-card">Cancel</button>' +
+        '</div>' +
+      '</div>') : '<button class="btn btn-coral" data-act="open-add-card">＋ Add a card</button>';
+
+    app.innerHTML = '' +
+      '<div class="nav-row">' +
+        '<button class="back-btn" data-act="exit-editor">⟵ Lagoon</button>' +
+        ctrlRowHTML() +
+      '</div>' +
+      '<div class="editor-head">' +
+        '<button class="emoji-btn" data-act="toggle-emoji">'+deck.emoji+'</button>' +
+        '<input id="deckNameInput" class="name-input" type="text" value="'+esc(deck.name)+'" maxlength="40">' +
+      '</div>' +
+      emojiPicker +
+      '<div class="card-list">'+rows+'</div>' +
+      addForm +
+      '<div class="danger-zone"><button class="btn btn-danger" data-act="del-deck">Delete this deck</button></div>';
+
+    app.querySelector('[data-act="exit-editor"]').addEventListener('click', function(){
+      S.editingCardId = null;
+      S.cardFormDraft = null;
+      goHome();
+    });
+    wireCtrlRow();
+    app.querySelector('[data-act="toggle-emoji"]').addEventListener('click', function(){ S.emojiPickerOpen = !S.emojiPickerOpen; render(); });
+    app.querySelectorAll('.emoji-opt').forEach(function(b){
+      b.addEventListener('click', function(){
+        S.store.updateDeck(deck.id, { emoji: b.dataset.emoji });
+        S.emojiPickerOpen = false;
+        render();
+      });
+    });
+    var nameInput = document.getElementById('deckNameInput');
+    nameInput.addEventListener('change', function(){
+      var val = nameInput.value.trim() || 'Untitled Deck';
+      S.store.updateDeck(deck.id, { name: val });
+    });
+    app.querySelectorAll('[data-act="edit-card"]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var c = cards.find(function(x){ return x.id === b.dataset.card; });
+        S.editingCardId = b.dataset.card;
+        S.addCardOpen = false;
+        S.cardFormMode = (c && c.mode === 'read') ? 'read' : ((c && c.mode === 'choice') ? 'choice' : 'flip');
+        S.cardFormDraft = { front: c ? c.front : '', back: c ? (c.back||'') : '', note: c ? (c.note||'') : '', choices: c ? (c.choices||[]).join(', ') : '' };
+        render();
+      });
+    });
+    app.querySelectorAll('[data-act="del-card"]').forEach(function(b){
+      b.addEventListener('click', function(){ S.store.deleteCard(deck.id, b.dataset.card); });
+    });
+    var openAdd = app.querySelector('[data-act="open-add-card"]');
+    if(openAdd) openAdd.addEventListener('click', function(){
+      S.addCardOpen = true; S.editingCardId = null; S.cardFormMode = 'flip'; S.cardFormDraft = { front:'', back:'', note:'', choices:'' };
+      render();
+      setTimeout(function(){ var el=document.getElementById('cardFront'); if(el) el.focus(); },0);
+    });
+    var cancelBtn = app.querySelector('[data-act="cancel-card"]');
+    if(cancelBtn) cancelBtn.addEventListener('click', function(){ S.addCardOpen = false; S.editingCardId = null; S.cardFormDraft = null; render(); });
+    app.querySelectorAll('[data-mode]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var frontEl = document.getElementById('cardFront');
+        var backEl = document.getElementById('cardBack');
+        var noteEl = document.getElementById('cardNote');
+        var choicesEl = document.getElementById('cardChoices');
+        S.cardFormDraft = {
+          front: frontEl ? frontEl.value : (draft.front||''),
+          back: backEl ? backEl.value : (draft.back||''),
+          note: noteEl ? noteEl.value : (draft.note||''),
+          choices: choicesEl ? choicesEl.value : (draft.choices||'')
+        };
+        S.cardFormMode = b.dataset.mode;
+        render();
+      });
+    });
+    var saveBtn = app.querySelector('[data-act="save-card"]');
+    if(saveBtn) saveBtn.addEventListener('click', function(){
+      var front = document.getElementById('cardFront').value.trim();
+      var backEl = document.getElementById('cardBack');
+      var back = backEl ? backEl.value.trim() : '';
+      var note = document.getElementById('cardNote').value.trim();
+      var choicesEl = document.getElementById('cardChoices');
+      var choicesArr = choicesEl ? choicesEl.value.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : [];
+      var mode = S.cardFormMode || 'flip';
+      if(!front) return;
+      if((mode === 'flip' || mode === 'choice') && !back) return;
+      if(mode === 'choice' && choicesArr.length < 1) return;
+      var payload = { front: front, back: back, note: note, mode: mode, choices: mode === 'choice' ? choicesArr : [] };
+      if(editingCard){
+        S.store.updateCard(deck.id, editingCard.id, payload);
+        S.editingCardId = null;
+      } else {
+        S.store.addCard(deck.id, payload);
+        S.addCardOpen = false;
+      }
+      S.cardFormDraft = null;
+      render();
+    });
+    var delDeckBtn = app.querySelector('[data-act="del-deck"]');
+    if(delDeckBtn) delDeckBtn.addEventListener('click', function(){
+      if(confirm('Delete "'+deck.name+'" and all its cards? This can\'t be undone.')){
+        S.store.deleteDeck(deck.id).then(goHome);
+      }
+    });
+  }
+
+  /* ============ generic tap sound (delegated, covers every button not already voiced) ============ */
+  document.addEventListener('click', function(e){
+    var btn = e.target && e.target.closest ? e.target.closest('button') : null;
+    if(!btn) return;
+    if(btn.hasAttribute('data-outcome') || btn.hasAttribute('data-choice-idx') || btn.hasAttribute('data-digit')) return;
+    if(btn.dataset.act === 'pin-back') return;
+    Sound.tap();
+  }, true);
+
+  /* ============ boot ============ */
+  store.init().then(function(s){
+    S.store = s;
+    Promise.all([S.store.getStats(), S.store.getSettings()]).then(function(results){
+      S.stats = results[0];
+      S.settings = results[1] || S.settings;
+      S.sessionActive = false; // always locked at launch — a grown-up must start each session
+      S.view = 'home';
+      if(!S.settings.pinHash){
+        S.pinPromptFor = 'setup';
+        S.pinSetupStep = 1;
+        S.pinSetupFirst = '';
+      }
+      S.booted = true;
+      refreshDueCounts().then(render);
+    });
+    subscribeDecks();
+  });
+})();
+</script>
