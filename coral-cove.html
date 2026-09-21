@@ -370,6 +370,18 @@
   .mode-opt.active{ border-color:var(--lagoon); background:var(--foam-2); color:var(--lagoon); }
   .mode-opt.active .mode-sub{ color:var(--seaweed); }
 
+  .algo-toggle{ display:flex; flex-direction:column; gap:10px; margin:14px 0; }
+  .algo-opt{
+    display:flex; flex-direction:column; align-items:flex-start; gap:5px; padding:14px 16px; border-radius:var(--r-sm);
+    border:2px solid var(--border); background:var(--foam); cursor:pointer; text-align:left; width:100%;
+  }
+  .algo-opt .algo-name{ font-weight:800; font-size:.95rem; color:var(--ink); }
+  .algo-opt .algo-current{ font-weight:700; font-size:.72rem; color:var(--lagoon); }
+  .algo-opt .algo-blurb{ font-size:.8rem; font-weight:500; color:var(--ink-soft); line-height:1.45; }
+  .algo-opt.active{ border-color:var(--lagoon); background:var(--foam-2); }
+  .algo-opt.active .algo-name{ color:var(--lagoon); }
+  .algo-note{ font-size:.78rem; color:var(--ink-soft); margin-top:2px; }
+
   .form-card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:16px; box-shadow:var(--shadow-sm); }
   .form-card h3{ margin:0 0 12px; font-size:1.05rem; color:var(--deep); }
   :root[data-theme="dark"] .form-card h3{ color:var(--lagoon-light); }
@@ -444,8 +456,133 @@
   var EASE_MIN = 1.3;
   var HARD_INTERVAL_MULT = 1.2;
   var EASY_BONUS = 1.3;
-  var LAPSE_MIN_DAYS = 1;             // interval a card gets after relearning from a lapse
+  var LAPSE_MIN_DAYS = 1;             // interval a card gets after relearning from a lapse — deliberately NOT scaled
+                                       // by difficulty's intervalMult (see DIFFICULTIES below), so a just-recovered
+                                       // card always gets rechecked promptly no matter how hard the deck is set to.
   var LEECH_THRESHOLD = 8;            // lapses at which a card is flagged as a "leech" (needs extra practice)
+
+  // Parents can pick one of these in Manage Decks → ⚙️ Settings. App-wide, not per-deck. Three
+  // dimensions per level, all pulling in the same direction as the level gets harder:
+  //  - roundSize: more questions per sitting.
+  //  - intervalMult: how far out a card gets pushed once it's answered well — a bigger multiplier
+  //    means a longer gap before it's tested again, which is a truer test of real retention rather
+  //    than short-term memorization. (Deliberately NOT applied to the post-lapse recovery interval
+  //    above, or to the struggle-shrink below, so this only stretches cards that are going well.)
+  //  - struggleShrink: when a card is missed several times in a row, each consecutive miss shrinks
+  //    its relearn delay by this factor (struggleShrink^consecutiveMisses) and cuts deeper into its
+  //    ease, so it comes back sooner and more often relative to cards that aren't a struggle — the
+  //    "if it seems like they're struggling, reinforce it more" behavior, strongest on Hard.
+  var DIFFICULTIES = [
+    {
+      id: 'easy',
+      icon: '🌱',
+      name: 'Easy',
+      roundSize: 4,
+      intervalMult: 0.7,
+      strugglePenalty: 0.08,
+      struggleShrink: 0.8,
+      blurb: '4 questions a round, and reviews come back a bit sooner across the board — gentle repetition rather than a real stretch on memory.'
+    },
+    {
+      id: 'medium',
+      icon: '🌊',
+      name: 'Medium',
+      roundSize: 6,
+      intervalMult: 1.0,
+      strugglePenalty: 0.20,
+      struggleShrink: 0.55,
+      blurb: 'The default — 6 questions a round with standard spacing.'
+    },
+    {
+      id: 'hard',
+      icon: '🔥',
+      name: 'Hard',
+      roundSize: 10,
+      intervalMult: 1.4,
+      strugglePenalty: 0.35,
+      struggleShrink: 0.3,
+      blurb: '10 questions a round, and cards you know well get spaced out further — a real test of long-term memory. Cards you keep missing get drilled far more often than the rest.'
+    }
+  ];
+
+  function currentDifficulty(){
+    var id = S.settings.difficulty || 'medium';
+    for(var i=0;i<DIFFICULTIES.length;i++){ if(DIFFICULTIES[i].id === id) return DIFFICULTIES[i]; }
+    return DIFFICULTIES[1];
+  }
+
+  // ---------- gradual new-card introduction ----------
+  // A deck with only a handful of cards (the built-in decks) should behave exactly like before:
+  // every card available right away. A big deck (like a 300-word vocabulary set) should NOT dump
+  // every unseen card into the pool at once — that's overwhelming and defeats spaced repetition,
+  // which relies on a card being reviewed a few times while it's still fresh. Instead, only a
+  // limited number of cards are ever "in flight" (introduced but not yet solidly known) for a
+  // given deck at once; a brand-new card is unlocked only once an earlier one graduates out of
+  // that window by becoming well-established.
+  var NEW_CARD_WINDOW = 15;      // max cards "in flight" (being learned/reviewed, not yet mastered)
+                                  // per deck at any one time. Every built-in deck has well under
+                                  // this many cards total, so this never engages for them — it only
+                                  // kicks in once a deck is bigger than its own natural window.
+  var MASTERY_INTERVAL_DAYS = 7; // a review-state card frees its window slot once its interval
+                                  // reaches this many days — "known well enough" to stop blocking
+                                  // the next unseen card, even though it's still scheduled to come
+                                  // back for review later.
+
+  function cardState(c){ return c.state || ((c.interval||0) > 0 ? 'review' : 'new'); }
+
+  // Builds the pool startStudy() draws a round from: cards already due for review, plus as many
+  // not-yet-seen cards as the deck's new-card window currently allows. Replaces the older "every
+  // card with a due timestamp in the past" pool, which — for a huge deck — meant literally every
+  // unseen card (due defaults to "now") was fair game from the very first round.
+  function buildStudyPool(cards){
+    var now = Date.now();
+    var reviewDue = cards.filter(function(c){
+      var st = cardState(c);
+      return st !== 'new' && (c.due||0) <= now;
+    });
+    var newCards = cards.filter(function(c){ return cardState(c) === 'new'; })
+      .sort(function(a,b){ return (a.createdAt||0) - (b.createdAt||0); }); // deck's own curriculum order
+    var activeUnmastered = cards.filter(function(c){
+      var st = cardState(c);
+      if(st === 'new') return false;
+      if(st === 'review' && (c.interval||0) >= MASTERY_INTERVAL_DAYS) return false;
+      return true;
+    }).length;
+    var slots = Math.max(0, NEW_CARD_WINDOW - activeUnmastered);
+    var pool = reviewDue.concat(newCards.slice(0, slots));
+    if(!pool.length){
+      // Nothing due and no window slot open (rare — everything currently "in flight" is mid-step
+      // between due timestamps). Rather than leave the round empty, let one new card through so
+      // studying never dead-ends; still just one at a time, so the gradual-introduction spirit holds.
+      pool = newCards.length ? newCards.slice(0, 1) : cards;
+    }
+    return pool;
+  }
+
+  // Parents can pick which of these runs in Manage Decks → ⚙️ Scheduling. The choice is stored as
+  // S.settings.algorithm and is app-wide (not per-deck). Two axes differ on purpose: how the
+  // scheduling math works (adaptive SM-2 vs. fixed Leitner boxes), and whether answer speed factors
+  // into grading at all (only 'sm2_speed' looks at elapsed time).
+  var ALGORITHMS = [
+    {
+      id: 'sm2_speed',
+      icon: '⚡',
+      name: 'Standard + Speed',
+      blurb: 'Adaptive scheduling (like Anki) that also factors in how fast an answer came — quick, confident answers get spaced out further than slow, hesitant ones. This is the default.'
+    },
+    {
+      id: 'sm2_plain',
+      icon: '🎯',
+      name: 'Standard (Accuracy Only)',
+      blurb: 'The same adaptive scheduling engine, but only right vs. wrong matters — how long it took to answer has no effect on when a card comes back.'
+    },
+    {
+      id: 'leitner',
+      icon: '🗃️',
+      name: 'Simple Boxes',
+      blurb: 'A simpler, more predictable system — a card moves up one box after a correct answer and back to box 1 after a miss. Easier to see why a card is showing up again.'
+    }
+  ];
 
   function fuzzedDays(days){
     if(days < 2) return days;
@@ -454,8 +591,9 @@
     return Math.max(1, Math.round(days + (Math.random()*2 - 1) * delta));
   }
 
-  function gradeCard(card, rating, now){
+  function gradeCard(card, rating, now, diff){
     now = now || Date.now();
+    diff = diff || currentDifficulty();
     var ease = card.ease || EASE_START;
     var interval = card.interval || 0;
     var reps = card.reps || 0;
@@ -463,41 +601,52 @@
     var state = card.state || (interval > 0 ? 'review' : 'new');
     var step = card.learningStep || 0;
     var isLeech = !!card.isLeech;
+    var priorStreak = card.strugglingStreak || 0; // consecutive misses BEFORE this answer
+    var streak = (rating === 'again') ? priorStreak + 1 : 0; // returned/persisted streak, after this answer
     var due;
 
     function minutesFromNow(m){ return now + m*60000; }
     function daysFromNow(d){ return now + d*86400000; }
+    // Each consecutive miss on this card shrinks its relearn delay further — struggleShrink^priorStreak,
+    // capped so it never collapses to near-zero. A single miss (priorStreak 0 going in) is unaffected —
+    // this only kicks in once a card is already being missed repeatedly, which is the "seems like
+    // they're struggling" signal, not a one-off wrong answer.
+    function struggleMinutes(baseMin){
+      return baseMin * Math.pow(diff.struggleShrink, Math.min(priorStreak, 3));
+    }
 
     if(state === 'new' || state === 'learning'){
       if(rating === 'again'){
         step = 0; state = 'learning';
-        due = minutesFromNow(LEARN_STEPS_MIN[0]);
+        due = minutesFromNow(struggleMinutes(LEARN_STEPS_MIN[0]));
       } else if(rating === 'hard'){
         state = 'learning';
         due = minutesFromNow(LEARN_STEPS_MIN[step] || LEARN_STEPS_MIN[LEARN_STEPS_MIN.length-1]);
       } else if(rating === 'good'){
         step += 1;
         if(step >= LEARN_STEPS_MIN.length){
-          state = 'review'; interval = GRADUATING_DAYS; reps += 1; step = 0;
+          state = 'review'; interval = Math.max(1, Math.round(GRADUATING_DAYS * diff.intervalMult)); reps += 1; step = 0;
           due = daysFromNow(interval);
         } else {
           state = 'learning';
           due = minutesFromNow(LEARN_STEPS_MIN[step]);
         }
       } else { // easy — skip remaining steps, graduate now
-        state = 'review'; interval = EASY_GRADUATE_DAYS; reps += 1; step = 0;
+        state = 'review'; interval = Math.max(1, Math.round(EASY_GRADUATE_DAYS * diff.intervalMult)); reps += 1; step = 0;
         due = daysFromNow(interval);
       }
     } else if(state === 'relearning'){
       if(rating === 'again'){
         step = 0; state = 'relearning';
-        due = minutesFromNow(RELEARN_STEPS_MIN[0]);
+        due = minutesFromNow(struggleMinutes(RELEARN_STEPS_MIN[0]));
       } else if(rating === 'hard'){
         state = 'relearning';
         due = minutesFromNow(RELEARN_STEPS_MIN[step] || RELEARN_STEPS_MIN[RELEARN_STEPS_MIN.length-1]);
       } else {
         step += 1;
         if(step >= RELEARN_STEPS_MIN.length || rating === 'easy'){
+          // Deliberately NOT scaled by intervalMult (see the note by LAPSE_MIN_DAYS above) — a card
+          // that just recovered from a lapse gets rechecked promptly regardless of difficulty.
           state = 'review'; interval = LAPSE_MIN_DAYS; step = 0;
           due = daysFromNow(interval);
         } else {
@@ -508,29 +657,66 @@
     } else { // review
       if(rating === 'again'){
         lapses += 1;
-        ease = Math.max(EASE_MIN, ease - 0.20);
+        ease = Math.max(EASE_MIN, ease - diff.strugglePenalty);
         state = 'relearning'; step = 0;
-        due = minutesFromNow(RELEARN_STEPS_MIN[0]);
+        due = minutesFromNow(struggleMinutes(RELEARN_STEPS_MIN[0]));
         if(lapses >= LEECH_THRESHOLD) isLeech = true;
       } else if(rating === 'hard'){
         ease = Math.max(EASE_MIN, ease - 0.15);
-        interval = fuzzedDays(Math.max(interval + 1, Math.round(interval * HARD_INTERVAL_MULT)));
+        interval = fuzzedDays(Math.max(interval + 1, Math.round(interval * HARD_INTERVAL_MULT * diff.intervalMult)));
         reps += 1;
         due = daysFromNow(interval);
       } else if(rating === 'good'){
-        interval = fuzzedDays(Math.max(interval + 1, Math.round(interval * ease)));
+        interval = fuzzedDays(Math.max(interval + 1, Math.round(interval * ease * diff.intervalMult)));
         reps += 1;
         due = daysFromNow(interval);
       } else { // easy
         ease = ease + 0.15;
-        interval = fuzzedDays(Math.max(interval + 1, Math.round(interval * ease * EASY_BONUS)));
+        interval = fuzzedDays(Math.max(interval + 1, Math.round(interval * ease * EASY_BONUS * diff.intervalMult)));
         reps += 1;
         due = daysFromNow(interval);
       }
     }
 
-    return { ease: ease, interval: interval, reps: reps, lapses: lapses, due: due, state: state, learningStep: step, isLeech: isLeech };
+    return { ease: ease, interval: interval, reps: reps, lapses: lapses, due: due, state: state, learningStep: step, isLeech: isLeech, strugglingStreak: streak };
   }
+
+  /* ============ scheduler (Simple Boxes / Leitner) ============ */
+  // A card starts in box 1. A correct answer moves it up one box (capped at the last box); a miss
+  // sends it straight back to box 1 and becomes due again right away (so it can resurface the same
+  // sitting via "Play Again", the same spirit as SM-2's short relearning steps). No ease factor, no
+  // per-mode timing — just right/wrong and a fixed interval per box, which is the whole appeal of
+  // this option: it's easy for a parent (or a kid) to predict when a card comes back.
+  var LEITNER_BOX_DAYS = [1, 2, 4, 7, 14, 30]; // index 0 = box 1
+
+  function gradeCardLeitner(card, correct, now, diff){
+    now = now || Date.now();
+    diff = diff || currentDifficulty();
+    var box = card.box || 1;
+    var reps = card.reps || 0;
+    var lapses = card.lapses || 0;
+    var streak = card.strugglingStreak || 0;
+    var due;
+    if(correct){
+      streak = 0;
+      box = Math.min(box + 1, LEITNER_BOX_DAYS.length);
+      reps += 1;
+      due = now + Math.max(1, Math.round(LEITNER_BOX_DAYS[box - 1] * diff.intervalMult)) * 86400000;
+    } else {
+      // Already as immediate as reinforcement gets (due right away) — no more room for struggleShrink
+      // to tighten further, so a repeated miss here just keeps the streak counter climbing.
+      streak += 1;
+      box = 1;
+      lapses += 1;
+      due = now; // back in the pool right away, not banished for a full day
+    }
+    return {
+      box: box, interval: LEITNER_BOX_DAYS[box - 1], reps: reps, lapses: lapses, due: due,
+      state: 'review', ease: card.ease || EASE_START, learningStep: 0,
+      isLeech: lapses >= LEECH_THRESHOLD, strugglingStreak: streak
+    };
+  }
+
   var STARS = { again: 0, hard: 1, good: 2, easy: 3 };
 
   /* ============ automatic grading: derive the SM-2 rating from correct/incorrect + time taken ============ */
@@ -546,6 +732,10 @@
   };
   function autoRating(mode, correct, elapsedMs){
     if(!correct) return 'again';
+    // Only the 'sm2_speed' algorithm (the default) weighs response time; the other two options
+    // treat every correct answer the same regardless of how long it took.
+    var algo = S.settings.algorithm || 'sm2_speed';
+    if(algo !== 'sm2_speed') return 'good';
     var t = TIME_THRESHOLDS[mode] || TIME_THRESHOLDS.flip;
     if(elapsedMs <= t.fastMs) return 'easy';
     if(elapsedMs <= t.slowMs) return 'good';
@@ -686,7 +876,7 @@
 
   /* ============ store adapter (db capability, with in-memory fallback) ============ */
   var store = (function(){
-    var mem = { decks: [], cards: {}, stats: { streak:0, stars:0, lastReviewDateISO:null, totalReviews:0 }, settings: { pinHash:null, sessionActive:false, sessionStartedAt:null }, sessionTally: null, history: [], nextId: 1, deckListeners: [], cardListeners: {} };
+    var mem = { decks: [], cards: {}, stats: { streak:0, stars:0, lastReviewDateISO:null, totalReviews:0 }, settings: { pinHash:null, sessionActive:false, sessionStartedAt:null, algorithm:'sm2_speed', difficulty:'medium' }, sessionTally: null, history: [], nextId: 1, deckListeners: [], cardListeners: {} };
     var db = null;
     var live = false;
 
@@ -789,7 +979,7 @@
         },
         getSettings: function(){
           if(live) return db.doc('settings/parent').get().then(function(snap){
-            return snap.exists ? snap.data() : { pinHash:null, sessionActive:false, sessionStartedAt:null };
+            return snap.exists ? snap.data() : { pinHash:null, sessionActive:false, sessionStartedAt:null, algorithm:'sm2_speed', difficulty:'medium' };
           });
           return Promise.resolve(Object.assign({}, mem.settings));
         },
@@ -859,7 +1049,7 @@
     currentCardId: null,
     cardShownAt: null,
     cardFlippedAt: null,
-    settings: { pinHash:null, sessionActive:false, sessionStartedAt:null },
+    settings: { pinHash:null, sessionActive:false, sessionStartedAt:null, algorithm:'sm2_speed', difficulty:'medium' },
     sessionActive: false,
     sessionTally: null,
     finishedTally: null,
@@ -869,6 +1059,7 @@
     transitioning: false,   // true for the brief window a card is sliding out — locks input until the next card lands
     peeking: false,         // true while showing the read-only "last answered card" view (swiped back to review it)
     lastAnsweredCard: null, // { front, back, note, mode, correct, rating, choiceOptions, chosenText } for the ONE card behind the current one — replaced every time a new card is answered
+    critterPrevPct: 0,      // progress % the critter bar last visually landed on — renderStudy() starts the bar there and animates to the new %, since a fresh app.innerHTML render can't transition on its own
     pinPromptFor: null,     // null | 'setup' | 'start' | 'end' | 'edit' | 'exit' | 'manage'
     pinInput: '',
     pinError: '',
@@ -899,7 +1090,7 @@
     if(S.pinPromptFor) return renderPinPad(S.pinPromptFor);
     if(!S.settings.pinHash) return renderPinSetup(); // safety net — no PIN saved yet
     if(S.view === 'sessionResults') return renderSessionResults();
-    if(S.managingDecks) return (S.view === 'editor') ? renderEditor() : (S.view === 'stats' ? renderStats() : renderHome());
+    if(S.managingDecks) return (S.view === 'editor') ? renderEditor() : (S.view === 'stats' ? renderStats() : (S.view === 'settings' ? renderSettingsPage() : renderHome()));
     if(!S.sessionActive) return renderLocked();
     if(S.view === 'home') return renderHome();
     if(S.view === 'study') return renderStudy();
@@ -1273,6 +1464,7 @@
             '<div class="pill streak"><span class="icon">🌊</span><span class="tabular">'+S.stats.streak+'</span></div>' +
             '<div class="pill stars"><span class="icon">⭐</span><span class="tabular">'+S.stats.stars+'</span></div>' +
           '</div>') +
+          (managing ? '<button type="button" class="icon-btn" data-act="open-settings" title="Settings" aria-label="Study settings">⚙️</button>' : '') +
           '<button type="button" class="icon-btn" data-act="open-stats" title="Progress" aria-label="View progress">📊</button>' +
           (managing ? '<button type="button" class="btn btn-ghost" data-act="exit-manager">✅ Done</button>' : ctrlRowHTML()) +
         '</div>' +
@@ -1296,6 +1488,8 @@
       });
       var newBtn = app.querySelector('[data-act="new-deck"]');
       if(newBtn) newBtn.addEventListener('click', createDeck);
+      var settingsBtn = app.querySelector('[data-act="open-settings"]');
+      if(settingsBtn) settingsBtn.addEventListener('click', function(){ S.view = 'settings'; render(); });
       var doneBtn = app.querySelector('[data-act="exit-manager"]');
       if(doneBtn) doneBtn.addEventListener('click', exitManager);
     } else {
@@ -1311,15 +1505,14 @@
   }
 
   /* ---------- STUDY ---------- */
-  var ROUND_SIZE = 6; // short bursts rather than the whole deck at once — "Play Again" covers the rest
+  // Round length now comes from the parent-set difficulty (Easy 4 / Medium 6 / Hard 10) rather than
+  // a fixed constant — see DIFFICULTIES up top.
 
   function startStudy(deckId){
     S.currentDeckId = deckId;
     S.store.getCardsOnce(deckId).then(function(cards){
-      var now = Date.now();
-      var due = cards.filter(function(c){ return (c.due||0) <= now; });
-      var pool = due.length ? due : cards;
-      S.studyQueue = shuffle(pool).slice(0, ROUND_SIZE);
+      var pool = buildStudyPool(cards);
+      S.studyQueue = shuffle(pool).slice(0, currentDifficulty().roundSize);
       S.studyTotal = S.studyQueue.length;
       S.sessionReviewed = 0;
       S.sessionStars = 0;
@@ -1333,6 +1526,7 @@
       S.transitioning = false;
       S.peeking = false;
       S.lastAnsweredCard = null;
+      S.critterPrevPct = 0;
       render();
     });
   }
@@ -1342,6 +1536,22 @@
       '<button class="grade-btn grade-wrong" data-outcome="wrong"><span class="emoji">🦀</span>Not quite</button>' +
       '<button class="grade-btn grade-right" data-outcome="right"><span class="emoji">🐬</span>Got it right!</button>' +
     '</div>';
+
+  // On Hard difficulty, the simple right/wrong self-report is replaced with real Anki-style
+  // self-grading — four options describing how hard the card actually was, same spirit as Anki's
+  // own Again/Hard/Good/Easy buttons. The child's own tap IS the rating here, so it also bypasses
+  // autoRating()'s response-time guesswork for these two modes (flip and read) while Hard is on.
+  var ANKI_ROW_HTML = '' +
+    '<div class="grade-row" style="position:relative;z-index:1;">' +
+      '<button class="grade-btn grade-again" data-rating="again"><span class="emoji">🦀</span>Again</button>' +
+      '<button class="grade-btn grade-hard" data-rating="hard"><span class="emoji">🐢</span>Hard</button>' +
+      '<button class="grade-btn grade-good" data-rating="good"><span class="emoji">🐬</span>Good</button>' +
+      '<button class="grade-btn grade-easy" data-rating="easy"><span class="emoji">🐳</span>Easy</button>' +
+    '</div>';
+
+  function outcomeRowHTML(){
+    return currentDifficulty().id === 'hard' ? ANKI_ROW_HTML : OUTCOME_ROW_HTML;
+  }
 
   // The read-only "swipe back" view of the one card the kid most recently answered. No inputs are
   // interactive here — it's a look, not a redo — so there's no route to change a grade already
@@ -1505,11 +1715,17 @@
     var labelCount = peeking ? doneCount : (doneCount + 1);
     var progressBase = peeking ? Math.max(0, doneCount - 1) : doneCount;
     var progressPct = S.studyTotal > 0 ? Math.min(100, Math.max(0, Math.round((progressBase / S.studyTotal) * 100))) : 0;
+    // The critter bar/fill are recreated from scratch on every render() (this whole screen is one
+    // big innerHTML replace), so a plain CSS width/left transition never has a "before" state to
+    // animate from — it just snaps. To make it travel smoothly instead, paint the bar at wherever
+    // it last visually landed, then nudge it to the real value a frame later so the CSS transition
+    // (already defined on .critter-track-fill / .critter-swim) has something to interpolate between.
+    var startPct = S.critterPrevPct || 0;
     var critterHTML = '' +
       '<div class="critter-label">'+(peeking ? 'Reviewing question ' : 'Question ')+labelCount+' of '+S.studyTotal+'</div>' +
       '<div class="critter-track">' +
-        '<div class="critter-track-fill" style="width:'+progressPct+'%"></div>' +
-        '<div class="critter-swim'+(S.lastOutcomeWrong?' oops':'')+'" style="left:'+progressPct+'%">'+critterSVG(S.lastOutcomeWrong)+'</div>' +
+        '<div class="critter-track-fill" style="width:'+startPct+'%"></div>' +
+        '<div class="critter-swim'+(S.lastOutcomeWrong?' oops':'')+'" style="left:'+startPct+'%">'+critterSVG(S.lastOutcomeWrong)+'</div>' +
       '</div>';
 
     var stageInner;
@@ -1524,8 +1740,8 @@
             (card.note?'<div class="card-note dim">'+esc(card.note)+'</div>':'') +
           '</div>' +
         '</div>' +
-        '<div class="flip-hint" style="position:relative;z-index:1;">Did they read it right?</div>' +
-        OUTCOME_ROW_HTML;
+        '<div class="flip-hint" style="position:relative;z-index:1;">'+(currentDifficulty().id === 'hard' ? 'How well did they know it?' : 'Did they read it right?')+'</div>' +
+        outcomeRowHTML();
     } else if(mode === 'choice'){
       if(!S.choiceState || S.choiceState.cardId !== card.id){
         S.choiceState = { cardId: card.id, options: shuffle([card.back].concat(card.choices||[])), selected: null };
@@ -1560,8 +1776,8 @@
             '<div class="face face-back"><div class="card-text">'+esc(card.back)+'</div>'+(card.note?'<div class="card-note">'+esc(card.note)+'</div>':'')+(Speech.isSupported()?'<button type="button" class="replay-audio-btn" data-act="replay-audio">🔊 Hear it again</button>':'')+'</div>' +
           '</div>' +
         '</div>' +
-        '<div class="flip-hint" style="position:relative;z-index:1;">'+(S.cardFlipped ? 'Be honest — did you get it right?' : 'Tap the card to flip it')+'</div>' +
-        (S.cardFlipped ? OUTCOME_ROW_HTML : '');
+        '<div class="flip-hint" style="position:relative;z-index:1;">'+(S.cardFlipped ? (currentDifficulty().id === 'hard' ? 'How well did you know it?' : 'Be honest — did you get it right?') : 'Tap the card to flip it')+'</div>' +
+        (S.cardFlipped ? outcomeRowHTML() : '');
     }
 
     app.innerHTML = '' +
@@ -1575,6 +1791,22 @@
         bubblesHTML(8) +
         stageInner +
       '</div>';
+
+    // Now that the bar exists in the DOM at startPct, bump it to the real value on the next frame
+    // so the CSS transition actually plays instead of the value just appearing already-set. Double
+    // rAF (rather than one) makes sure the browser has painted the starting position first — a
+    // single rAF can land in the same paint as the innerHTML write and skip straight to the target.
+    (function(){
+      var fillEl = app.querySelector('.critter-track-fill');
+      var swimEl = app.querySelector('.critter-swim');
+      requestAnimationFrame(function(){
+        requestAnimationFrame(function(){
+          if(fillEl) fillEl.style.width = progressPct + '%';
+          if(swimEl) swimEl.style.left = progressPct + '%';
+        });
+      });
+    })();
+    S.critterPrevPct = progressPct;
 
     app.querySelector('[data-act="exit-study"]').addEventListener('click', function(){
       // Leaving a deck before finishing the round needs a grown-up's PIN — finishing normally
@@ -1643,6 +1875,16 @@
         grade(autoRating(mode, correct, elapsed));
       });
     });
+    // Hard-difficulty Anki-style grading buttons (Again/Hard/Good/Easy) — the child's own tap IS
+    // the rating, so this skips autoRating()'s response-time guesswork entirely.
+    app.querySelectorAll('[data-rating]').forEach(function(b){
+      b.addEventListener('click', function(e){
+        e.stopPropagation();
+        if(dragJustHappened()) return;
+        if(S.transitioning) return;
+        grade(b.dataset.rating);
+      });
+    });
   }
 
   // The only entry point that advances a card. Answering (an outcome tap, or a choice pick) is the
@@ -1662,7 +1904,13 @@
 
   function commitGrade(rating, skipSound){
     var card = S.studyQueue.shift();
-    var updates = gradeCard(card, rating);
+    // 'leitner' uses its own fixed-box engine; the other two options share the SM-2 engine and only
+    // differ upstream, in whether autoRating() let response time influence the rating at all. Either
+    // way, the parent-set difficulty (round size aside) shapes how far a good answer is spaced out
+    // and how hard a struggling card gets reinforced — see DIFFICULTIES up top.
+    var algo = S.settings.algorithm || 'sm2_speed';
+    var diff = currentDifficulty();
+    var updates = (algo === 'leitner') ? gradeCardLeitner(card, rating !== 'again', Date.now(), diff) : gradeCard(card, rating, Date.now(), diff);
     S.store.updateCard(S.currentDeckId, card.id, updates);
     S.sessionReviewed += 1;
     S.sessionStars += STARS[rating];
@@ -1701,9 +1949,9 @@
       }
       S.store.setSessionTally(S.sessionTally);
     }
-    // Rounds are meant to be a strict, predictable ROUND_SIZE questions — a missed card is NOT
-    // requeued into the same round (that used to inflate a "6-question" round well past 6). It's
-    // simply due again shortly per the SM-2 schedule and will resurface on the next round/Play Again.
+    // Rounds are meant to be a strict, predictable length (the chosen difficulty's roundSize) — a
+    // missed card is NOT requeued into the same round (that used to inflate a round past its size).
+    // It's simply due again shortly per the schedule and will resurface on the next round/Play Again.
     var stillLearning = updates.state === 'learning' || updates.state === 'relearning';
     S.cardFlipped = false;
     S.choiceState = null;
@@ -1884,6 +2132,67 @@
       b.addEventListener('focus', show);
       b.addEventListener('blur', hide);
       b.addEventListener('touchstart', function(){ show(); setTimeout(hide, 1500); }, {passive:true});
+    });
+  }
+
+  /* ---------- SETTINGS (parent-only, app-wide: difficulty + scheduling algorithm) ---------- */
+  function renderSettingsPage(){
+    var currentDiff = S.settings.difficulty || 'medium';
+    var diffOptsHTML = DIFFICULTIES.map(function(d){
+      return '' +
+        '<button type="button" class="algo-opt'+(d.id===currentDiff?' active':'')+'" data-diff="'+d.id+'">' +
+          '<span class="algo-name">'+d.icon+' '+d.name+(d.id===currentDiff?' <span class="algo-current">— current</span>':'')+'</span>' +
+          '<span class="algo-blurb">'+d.blurb+'</span>' +
+        '</button>';
+    }).join('');
+
+    var currentAlgo = S.settings.algorithm || 'sm2_speed';
+    var algoOptsHTML = ALGORITHMS.map(function(a){
+      return '' +
+        '<button type="button" class="algo-opt'+(a.id===currentAlgo?' active':'')+'" data-algo="'+a.id+'">' +
+          '<span class="algo-name">'+a.icon+' '+a.name+(a.id===currentAlgo?' <span class="algo-current">— current</span>':'')+'</span>' +
+          '<span class="algo-blurb">'+a.blurb+'</span>' +
+        '</button>';
+    }).join('');
+
+    app.innerHTML = '' +
+      '<div class="nav-row">' +
+        '<button class="back-btn" data-act="exit-settings">⟵ Lagoon</button>' +
+        '<span class="nav-title">⚙️ Settings</span>' +
+      '</div>' +
+      '<div class="stats-page">' +
+        '<div class="stats-section">' +
+          '<h3>🎯 Study difficulty</h3>' +
+          '<div class="algo-toggle">'+diffOptsHTML+'</div>' +
+          '<p class="algo-note">Changes round length and how far apart reviews get spaced right away. Applies to every deck.</p>' +
+        '</div>' +
+        '<div class="stats-section">' +
+          '<h3>⚙️ Scheduling algorithm</h3>' +
+          '<div class="algo-toggle">'+algoOptsHTML+'</div>' +
+          '<p class="algo-note">This applies to every deck too. Switching only changes how future answers are scheduled — cards already due keep their current date.</p>' +
+        '</div>' +
+      '</div>';
+
+    app.querySelector('[data-act="exit-settings"]').addEventListener('click', goHome);
+    app.querySelectorAll('[data-diff]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var id = b.dataset.diff;
+        if(id === currentDiff) return;
+        var newSettings = Object.assign({}, S.settings, { difficulty: id });
+        S.settings = newSettings;
+        S.store.setSettings(newSettings);
+        render();
+      });
+    });
+    app.querySelectorAll('[data-algo]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var id = b.dataset.algo;
+        if(id === currentAlgo) return;
+        var newSettings = Object.assign({}, S.settings, { algorithm: id });
+        S.settings = newSettings;
+        S.store.setSettings(newSettings);
+        render();
+      });
     });
   }
 
@@ -2078,7 +2387,7 @@
   document.addEventListener('click', function(e){
     var btn = e.target && e.target.closest ? e.target.closest('button') : null;
     if(!btn) return;
-    if(btn.hasAttribute('data-outcome') || btn.hasAttribute('data-choice-idx') || btn.hasAttribute('data-digit')) return;
+    if(btn.hasAttribute('data-outcome') || btn.hasAttribute('data-rating') || btn.hasAttribute('data-choice-idx') || btn.hasAttribute('data-digit')) return;
     if(btn.dataset.act === 'pin-back') return;
     Sound.tap();
   }, true);
@@ -2088,7 +2397,7 @@
     S.store = s;
     Promise.all([S.store.getStats(), S.store.getSettings()]).then(function(results){
       S.stats = results[0];
-      S.settings = results[1] || S.settings;
+      S.settings = Object.assign({ algorithm: 'sm2_speed', difficulty: 'medium' }, S.settings, results[1] || {});
       S.sessionActive = false; // always locked at launch — a grown-up must start each session
       S.view = 'home';
       if(!S.settings.pinHash){
