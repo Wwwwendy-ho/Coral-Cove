@@ -94,6 +94,15 @@
     background:var(--sun); color:#4a3300; font-weight:700; font-size:.88rem;
     padding:10px 14px; border-radius:var(--r-sm); margin-bottom:16px; box-shadow:var(--shadow-sm);
   }
+  .banner-error{
+    background:#ffe1e1; color:#7a1c1c; font-weight:700; font-size:.88rem;
+    padding:10px 14px; border-radius:var(--r-sm); margin-bottom:16px; box-shadow:var(--shadow-sm);
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .banner-error button{
+    background:none; border:none; color:#7a1c1c; font-weight:800; font-size:1.05rem; line-height:1;
+    cursor:pointer; padding:2px 6px; flex-shrink:0;
+  }
 
   /* ---------- deck grid ---------- */
   .deck-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(210px,1fr)); gap:14px; }
@@ -268,6 +277,7 @@
   .face-back .card-text{ font-family:'Baloo 2',sans-serif; font-weight:700; font-size:1.5rem; }
   .card-note{ font-size:.95rem; opacity:.85; font-weight:600; }
   .card-note.dim{ color:var(--ink-soft); }
+  .card-photo{ display:block; width:100%; max-width:260px; max-height:170px; object-fit:contain; border-radius:var(--r-sm); margin-bottom:4px; }
   .replay-audio-btn{
     margin-top:2px; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.4); color:#fff;
     font-weight:800; font-size:.8rem; padding:8px 14px; border-radius:999px; cursor:pointer;
@@ -419,6 +429,12 @@
   .card-row .cr-text{ flex:1; min-width:0; }
   .cr-front{ font-weight:800; color:var(--ink); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   .cr-back{ font-size:.88rem; color:var(--ink-soft); font-weight:600; white-space:normal; overflow-wrap:anywhere; }
+  .cr-thumb{ width:44px; height:44px; border-radius:var(--r-sm); overflow:hidden; flex-shrink:0; background:var(--foam-2); }
+  .cr-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .photo-field-wrap{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .photo-preview{ width:76px; height:76px; object-fit:cover; border-radius:var(--r-sm); border:1px solid var(--border); flex-shrink:0; }
+  .photo-field-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .photo-uploading-note{ font-size:.82rem; color:var(--ink-soft); font-weight:700; }
   .cr-actions{ display:flex; gap:6px; flex-shrink:0; }
   .mode-tag{ font-size:.68rem; font-weight:800; padding:2px 8px; border-radius:999px; background:var(--foam-2); color:var(--ink-soft); white-space:nowrap; }
   .mode-tag-read{ background:var(--sun); color:#4a3300; }
@@ -1001,6 +1017,19 @@
   }
 
   /* ============ store adapter (db capability, with in-memory fallback) ============ */
+  // A save/delete that fails against the live db capability used to fail SILENTLY -- the edit/trash
+  // buttons in the deck editor looked like they "just didn't work" because nothing told the grown-up
+  // anything went wrong. Every live write below is now wrapped with reportStoreError() so a failure
+  // surfaces as a small dismissible banner instead of doing nothing.
+  function reportStoreError(action){
+    return function(err){
+      console.error('[Coral Cove] '+action+' failed', err);
+      S.storeError = (action.charAt(0).toUpperCase()+action.slice(1)) + ' didn\'t save. Check your connection and try again.';
+      render();
+      throw err;
+    };
+  }
+
   var store = (function(){
     var mem = { decks: [], cards: {}, stats: { streak:0, stars:0, lastReviewDateISO:null, totalReviews:0 }, settings: { pinHash:null, sessionActive:false, sessionStartedAt:null, algorithm:'sm2_speed', difficulty:'medium' }, sessionTally: null, history: [], nextId: 1, deckListeners: [], cardListeners: {} };
     var db = null;
@@ -1017,7 +1046,14 @@
           if(live){
             return db.collection('decks').orderBy('order','asc').onSnapshot(function(snap){
               cb(snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); }));
-            }, function(){ cb(mem.decks.slice()); });
+            }, function(err){
+              // onSnapshot errors are terminal -- this listener is now dead and will never fire again.
+              // Falling back to the (always-empty, in live mode) in-memory store used to silently wipe
+              // every deck from the screen. Keep whatever was last shown instead, and tell the grown-up.
+              console.error('[Coral Cove] deck sync lost', err);
+              S.storeError = 'Lost connection while syncing your decks — please reload the page.';
+              render();
+            });
           }
           mem.deckListeners.push(cb);
           cb(mem.decks.slice());
@@ -1025,7 +1061,7 @@
         },
         addDeck: function(data){
           data = Object.assign({ createdAt: Date.now() }, data);
-          if(live) return db.collection('decks').add(data).then(function(ref){ return ref.id; });
+          if(live) return db.collection('decks').add(data).then(function(ref){ return ref.id; }).catch(reportStoreError('create deck'));
           var id = memId();
           mem.decks.push(Object.assign({id:id}, data));
           mem.cards[id] = [];
@@ -1033,7 +1069,7 @@
           return Promise.resolve(id);
         },
         updateDeck: function(id, data){
-          if(live) return db.collection('decks').doc(id).update(data);
+          if(live) return db.collection('decks').doc(id).update(data).catch(reportStoreError('save deck'));
           var d = mem.decks.find(function(x){ return x.id===id; });
           if(d) Object.assign(d, data);
           notifyDecks();
@@ -1043,7 +1079,7 @@
           if(live){
             return db.collection('decks/'+id+'/cards').get().then(function(snap){
               return Promise.all(snap.docs.map(function(d){ return d.ref ? d.ref.delete() : db.collection('decks/'+id+'/cards').doc(d.id).delete(); }));
-            }).then(function(){ return db.collection('decks').doc(id).delete(); });
+            }).then(function(){ return db.collection('decks').doc(id).delete(); }).catch(reportStoreError('delete deck'));
           }
           mem.decks = mem.decks.filter(function(x){ return x.id!==id; });
           delete mem.cards[id];
@@ -1062,7 +1098,13 @@
           if(live){
             return db.collection('decks/'+deckId+'/cards').onSnapshot(function(snap){
               cb(snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); }));
-            }, function(){ cb((mem.cards[deckId]||[]).slice()); });
+            }, function(err){
+              // Same terminal-error issue as listenDecks above: don't blank the real card list with
+              // an always-empty in-memory fallback -- keep showing the last-known cards and surface it.
+              console.error('[Coral Cove] card sync lost', err);
+              S.storeError = 'Lost connection while syncing this deck\'s cards — please reload the page.';
+              render();
+            });
           }
           if(!mem.cardListeners[deckId]) mem.cardListeners[deckId] = [];
           mem.cardListeners[deckId].push(cb);
@@ -1071,7 +1113,7 @@
         },
         addCard: function(deckId, data){
           data = Object.assign({ due: Date.now(), interval:0, ease:2.5, reps:0, lapses:0, state:'new', learningStep:0, createdAt: Date.now() }, data);
-          if(live) return db.collection('decks/'+deckId+'/cards').add(data);
+          if(live) return db.collection('decks/'+deckId+'/cards').add(data).catch(reportStoreError('save card'));
           var id = memId();
           if(!mem.cards[deckId]) mem.cards[deckId] = [];
           mem.cards[deckId].push(Object.assign({id:id}, data));
@@ -1079,7 +1121,7 @@
           return Promise.resolve();
         },
         updateCard: function(deckId, cardId, data){
-          if(live) return db.collection('decks/'+deckId+'/cards').doc(cardId).update(data);
+          if(live) return db.collection('decks/'+deckId+'/cards').doc(cardId).update(data).catch(reportStoreError('save card'));
           var arr = mem.cards[deckId]||[];
           var c = arr.find(function(x){ return x.id===cardId; });
           if(c) Object.assign(c, data);
@@ -1087,7 +1129,7 @@
           return Promise.resolve();
         },
         deleteCard: function(deckId, cardId){
-          if(live) return db.collection('decks/'+deckId+'/cards').doc(cardId).delete();
+          if(live) return db.collection('decks/'+deckId+'/cards').doc(cardId).delete().catch(reportStoreError('delete card'));
           mem.cards[deckId] = (mem.cards[deckId]||[]).filter(function(x){ return x.id!==cardId; });
           notifyCards(deckId);
           return Promise.resolve();
@@ -1154,6 +1196,54 @@
     };
   })();
 
+  /* ============ photo uploads (assets capability) ============ */
+  // Only available inside the live published app (claude.ai) -- the offline export and any old
+  // in-memory "try it out" preview never get a handle here, so photo upload is hidden there and
+  // existing photos still just display fine (they're plain https image URLs once uploaded).
+  var Assets = (function(){
+    var handle = null;
+    return {
+      init: function(){
+        if(!(window.claude && window.claude.use)) return Promise.resolve(null);
+        return window.claude.use('assets').then(function(h){ handle = h; return h; }).catch(function(){ handle = null; return null; });
+      },
+      available: function(){ return !!handle; },
+      upload: function(blob){ return handle ? handle.upload(blob) : Promise.reject(new Error('Photo uploads are only available in the live app.')); },
+      remove: function(id){
+        if(!handle || !id) return Promise.resolve();
+        // Best-effort: an old/abandoned photo failing to delete just leaves a harmless orphan in
+        // the artifact's asset storage -- never worth surfacing an error banner for.
+        return handle.delete(id).catch(function(err){ console.warn('[Coral Cove] could not delete photo asset', err); });
+      }
+    };
+  })();
+
+  // Shrinks a photo to a reasonable size before upload (most phone photos are far larger than a
+  // flashcard ever needs to display). Images already smaller than the cap are uploaded untouched.
+  // PNG stays PNG (keeps transparency); anything else becomes a JPEG to keep storage/light.
+  function downscalePhoto(file, maxDim){
+    return new Promise(function(resolve){
+      var img = new Image();
+      var url = URL.createObjectURL(file);
+      img.onload = function(){
+        URL.revokeObjectURL(url);
+        var w = img.naturalWidth, h = img.naturalHeight;
+        if(!w || !h || Math.max(w, h) <= maxDim){ resolve(file); return; }
+        var scale = maxDim / Math.max(w, h);
+        var outW = Math.max(1, Math.round(w*scale)), outH = Math.max(1, Math.round(h*scale));
+        var canvas = document.createElement('canvas');
+        canvas.width = outW; canvas.height = outH;
+        var ctx = canvas.getContext('2d');
+        if(!ctx){ resolve(file); return; }
+        ctx.drawImage(img, 0, 0, outW, outH);
+        var outType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+        canvas.toBlob(function(blob){ resolve(blob || file); }, outType, 0.85);
+      };
+      img.onerror = function(){ URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    });
+  }
+
   /* ============ app state ============ */
   var S = {
     store: null,
@@ -1189,18 +1279,21 @@
     peeking: false,         // true while showing the read-only "last answered card" view (swiped back to review it)
     lastAnsweredCard: null, // { front, back, note, mode, correct, rating, choiceOptions, chosenText } for the ONE card behind the current one — replaced every time a new card is answered
     critterPrevPct: 0,      // progress % the critter bar last visually landed on — renderStudy() starts the bar there and animates to the new %, since a fresh app.innerHTML render can't transition on its own
-    pinPromptFor: null,     // null | 'setup' | 'start' | 'end' | 'edit' | 'exit' | 'manage'
+    pinPromptFor: null,     // null | 'start' | 'end' | 'edit' | 'exit'
     pinInput: '',
     pinError: '',
     pinShake: false,
-    pinSetupStep: 1,
-    pinSetupFirst: '',
     pendingEdit: null,
     booted: false,
-    adultUnlocked: false   // true once a grown-up has entered the PIN correctly ANY time this visit --
-                            // start/manage/end all skip the PIN pad after that. Reset only on page reload.
-                            // The mid-round "leave this deck?" exit guard never checks this -- it always
-                            // asks, since that's the one prompt meant to stop a kid from bypassing it.
+    storeError: null,      // set when a live save/sync fails, so the grown-up sees WHY a button seemed to do nothing
+    assetsAvailable: false, // true once the `assets` capability resolves -- gates the photo-upload UI
+    photoUploading: false,  // true while a picked photo is being downscaled + uploaded
+    cardFormOriginalPhotoId: '' // the photoId the card had (or '') when the current add/edit form opened --
+                                 // lets Save/Cancel know which photo, if any, is now an orphan to clean up
+    // No "PIN setup" and no "unlock once per visit" flag anymore -- the PIN is a fixed 3207 and
+    // Adult Mode (Manage Decks / Settings / Progress) never asks for it at all. Only Child Mode --
+    // starting a session, ending one, and the mid-round "leave this deck?" guard -- ever prompts,
+    // and it prompts every single time on purpose, since that's the one thing the PIN is for now.
   };
 
   function defaultTally(){
@@ -1258,18 +1351,30 @@
   var app = document.getElementById('app');
   app.innerHTML = '<div class="lock-screen"><h2>🌊 Loading Coral Cove…</h2></div>';
 
+  // Small dismissible banner for S.storeError, dropped into any Adult Mode screen where a save/sync
+  // failure would otherwise look like a button silently doing nothing (deck editor, deck grid, ...).
+  function errorBannerHTML(){
+    if(!S.storeError) return '';
+    return '<div class="banner-error"><span>⚠️ '+esc(S.storeError)+'</span><button type="button" data-act="dismiss-store-error" aria-label="Dismiss">✕</button></div>';
+  }
+  function wireErrorBanner(){
+    var b = app.querySelector('[data-act="dismiss-store-error"]');
+    if(b) b.addEventListener('click', function(){ S.storeError = null; render(); });
+  }
+
   function render(){
     if(!S.booted) return; // wait for settings to load before showing anything (avoids a lock-screen flash)
-    if(S.pinPromptFor === 'setup') return renderPinSetup();
     if(S.pinPromptFor) return renderPinPad(S.pinPromptFor);
-    if(!S.settings.pinHash) return renderPinSetup(); // safety net — no PIN saved yet
     if(S.view === 'sessionResults') return renderSessionResults();
+    // 'study'/'summary' are checked before the managingDecks branch below so that "Dive In" from
+    // within Adult Mode (Manage Decks) actually opens the deck instead of silently falling through
+    // to renderHome() -- previously the managingDecks branch had no case for these two views at all.
+    if(S.view === 'study') return renderStudy();
+    if(S.view === 'summary') return renderSummary();
     if(S.managingDecks) return (S.view === 'editor') ? renderEditor() : (S.view === 'stats' ? renderStats() : (S.view === 'deckStats' ? renderDeckStats() : (S.view === 'settings' ? renderSettingsPage() : renderHome())));
     if(!S.sessionActive) return renderLocked();
     if(S.view === 'home') return renderHome();
-    if(S.view === 'study') return renderStudy();
     if(S.view === 'editor') return renderEditor();
-    if(S.view === 'summary') return renderSummary();
     if(S.view === 'stats') return renderStats();
     if(S.view === 'deckStats') return renderDeckStats();
   }
@@ -1287,34 +1392,35 @@
     if(s) s.addEventListener('click', function(){ Sound.setEnabled(!Sound.isEnabled()); render(); });
     var e = app.querySelector('[data-act="end-session"]');
     if(e) e.addEventListener('click', function(){
-      if(S.adultUnlocked){ endSessionNow(); return; }
+      // In Adult Mode there's no child "session" to lock/end -- a grown-up playing a deck to try it
+      // out just heads back to Manage Decks, no PIN needed (they were never asked for one to get here).
+      if(S.managingDecks){ goHome(); return; }
       S.pinInput=''; S.pinError=''; S.pinShake=false; S.pinPromptFor='end'; render();
     });
   }
 
-  /* ---------- LOCK SCREEN + PIN PAD ---------- */
+  /* ---------- LOCK SCREEN (Adult Mode / Child Mode choice) + PIN PAD ---------- */
+  // The very first choice, every time the app is at rest: Adult Mode (manage decks, settings,
+  // progress -- never asks for the PIN) or Child Mode (today's study session -- always asks for
+  // the PIN to start, since that's the one thing the PIN still gates).
   function renderLocked(){
     app.innerHTML = '' +
       '<div class="mascot-wrap">'+mascotSVG('big')+'</div>' +
       '<div class="lock-screen">' +
-        '<h2>🔒 Coral Cove is resting</h2>' +
-        '<p>Ask a grown-up to start today\'s session.</p>' +
-        '<button type="button" class="btn btn-primary" data-act="ask-start">I\'m a grown-up — Start Session</button>' +
-        '<button type="button" class="btn btn-ghost" data-act="ask-manage" style="margin-top:10px;">🔧 Manage Decks</button>' +
+        '<h2>🌊 Who\'s diving in?</h2>' +
+        '<p>Child Mode starts today\'s study session. Adult Mode is for managing decks, settings, and progress — no PIN needed.</p>' +
+        '<button type="button" class="btn btn-primary" data-act="choose-child">🧒 Child Mode</button>' +
+        '<button type="button" class="btn btn-ghost" data-act="choose-adult" style="margin-top:10px;">🔧 Adult Mode</button>' +
       '</div>';
-    app.querySelector('[data-act="ask-start"]').addEventListener('click', function(){
+    app.querySelector('[data-act="choose-child"]').addEventListener('click', function(){
       Sound.unlock();
-      if(S.adultUnlocked){ beginSession(); return; }
       S.pinInput=''; S.pinError=''; S.pinShake=false;
       S.pinPromptFor = 'start';
       render();
     });
-    app.querySelector('[data-act="ask-manage"]').addEventListener('click', function(){
+    app.querySelector('[data-act="choose-adult"]').addEventListener('click', function(){
       Sound.unlock();
-      if(S.adultUnlocked){ enterManageMode(); return; }
-      S.pinInput=''; S.pinError=''; S.pinShake=false;
-      S.pinPromptFor = 'manage';
-      render();
+      enterManageMode();
     });
   }
 
@@ -1373,45 +1479,10 @@
     setTimeout(function(){ S.pinShake = false; render(); }, 420);
   }
 
-  function renderPinSetup(){
-    var step = S.pinSetupStep || 1;
-    var title = step === 1 ? '🔐 Create a Parent PIN' : '🔐 Confirm your PIN';
-    var sub = step === 1
-      ? 'Choose 4 digits. You\'ll use this PIN to start and end sessions, and to edit decks.'
-      : 'Enter the same 4 digits again to confirm.';
-    app.innerHTML = pinPadHTML(title, sub, null);
-    wirePinKeys(submitPinSetup, null);
-  }
-
-  function submitPinSetup(){
-    var step = S.pinSetupStep || 1;
-    if(step === 1){
-      S.pinSetupFirst = S.pinInput;
-      S.pinInput = '';
-      S.pinSetupStep = 2;
-      render();
-      return;
-    }
-    if(S.pinInput === S.pinSetupFirst){
-      var newSettings = Object.assign({}, S.settings, { pinHash: pinHash(S.pinInput) });
-      S.settings = newSettings;
-      S.store.setSettings(newSettings).then(function(){
-        S.pinInput = ''; S.pinSetupStep = 1; S.pinSetupFirst = '';
-        S.pinPromptFor = null;
-        render();
-      });
-    } else {
-      S.pinSetupStep = 1;
-      S.pinSetupFirst = '';
-      shakeAndClear('Those don\'t match — let\'s try again.');
-    }
-  }
-
   function pinPadTitles(kind){
-    if(kind === 'start') return ['🔐 Start Session', 'Ask a grown-up to enter the PIN to begin.'];
+    if(kind === 'start') return ['🔐 Start Child Mode', 'Ask a grown-up to enter the PIN to begin today\'s session.'];
     if(kind === 'end') return ['🔐 End Session', 'Enter the PIN to finish and lock Coral Cove.'];
     if(kind === 'exit') return ['🔐 Leave This Deck?', 'Ask a grown-up to enter the PIN to head back before finishing.'];
-    if(kind === 'manage') return ['🔐 Manage Decks', 'Enter the PIN to add or edit decks.'];
     return ['🔐 Parent PIN', 'Enter the PIN to edit decks.'];
   }
 
@@ -1421,8 +1492,6 @@
     wirePinKeys(function(){ submitPin(kind); }, function(){ cancelPinPrompt(kind); });
   }
 
-  // ---- the actual actions each PIN kind unlocks, pulled out so an already-unlocked grown-up can
-  // jump straight here without the PIN pad ever appearing (see S.adultUnlocked). ----
   function beginSession(){
     S.sessionTally = defaultTally();
     S.sessionActive = true;
@@ -1462,10 +1531,8 @@
       return;
     }
     S.pinInput = ''; S.pinError = ''; S.pinShake = false;
-    // The mid-round exit guard ('exit') deliberately never grants this -- it's the one prompt
-    // that's supposed to keep asking every time, so a kid can't quit a round unsupervised just
-    // because a grown-up unlocked something earlier.
-    if(kind !== 'exit') S.adultUnlocked = true;
+    // Every kind below prompts for the PIN every single time it comes up -- there's no "unlock
+    // once per visit" anymore. Adult Mode is the thing that's always free now (see renderLocked).
     if(kind === 'start'){
       beginSession();
     } else if(kind === 'end'){
@@ -1478,8 +1545,6 @@
     } else if(kind === 'exit'){
       S.pinPromptFor = null;
       goHome();
-    } else if(kind === 'manage'){
-      enterManageMode();
     }
   }
 
@@ -1625,7 +1690,7 @@
 
   function renderHome(){
     var managing = S.managingDecks;
-    var banner = S.store.live ? '' : '<div class="banner">🌟 Try-it-out mode — your decks won\'t be saved after you close this page.</div>';
+    var banner = (S.store.live ? '' : '<div class="banner">🌟 Try-it-out mode — your decks won\'t be saved after you close this page.</div>') + errorBannerHTML();
     // Archived decks are a parent-only concept: a kid in a study session never sees them at all,
     // not even as a locked/greyed-out tile — they're filtered out before the deck grid is built.
     var visibleDecks = managing ? S.decks : S.decks.filter(function(d){ return !d.archived; });
@@ -1705,7 +1770,7 @@
         '<div class="brand">' +
           '<div class="brand-block">' +
             '<h1 class="brand-title">Coral Cove</h1>' +
-            '<p class="brand-tag">'+(managing ? '🔧 Managing decks — kids can\'t see this screen' : 'Dive in and practice!')+'</p>' +
+            '<p class="brand-tag">'+(managing ? '🔧 Adult Mode — kids can\'t see this screen' : 'Dive in and practice!')+'</p>' +
           '</div>' +
         '</div>' +
         '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
@@ -1762,6 +1827,7 @@
     } else {
       wireCtrlRow();
     }
+    wireErrorBanner();
   }
 
   function createDeck(){
@@ -1829,6 +1895,7 @@
       ? '<div class="peek-badge peek-right">✅ That one was right!</div>'
       : '<div class="peek-badge peek-wrong">🦀 That one was marked not quite</div>';
     var body;
+    var photoHTML = rec.photoUrl ? '<img class="card-photo" src="'+esc(rec.photoUrl)+'" alt="">' : '';
     if(rec.mode === 'choice'){
       var optsHTML = (rec.choiceOptions||[]).map(function(opt){
         var cls = 'choice-btn';
@@ -1838,7 +1905,7 @@
       }).join('');
       body = '' +
         '<div class="flip-scene" style="position:relative;z-index:1;">' +
-          '<div class="face face-front read-face"><div class="read-label">🔢 Last question</div><div class="card-text">'+esc(rec.front)+'</div></div>' +
+          '<div class="face face-front read-face"><div class="read-label">🔢 Last question</div>'+photoHTML+'<div class="card-text">'+esc(rec.front)+'</div></div>' +
         '</div>' +
         '<div class="choice-row">'+optsHTML+'</div>';
     } else if(rec.mode === 'read'){
@@ -1846,6 +1913,7 @@
         '<div class="flip-scene" style="position:relative;z-index:1;">' +
           '<div class="face face-front read-face">' +
             '<div class="read-label">📖 Last question</div>' +
+            photoHTML +
             '<div class="card-text">'+esc(rec.front)+'</div>' +
             (rec.note?'<div class="card-note dim">'+esc(rec.note)+'</div>':'') +
           '</div>' +
@@ -1854,7 +1922,7 @@
       body = '' +
         '<div class="flip-scene" style="position:relative;z-index:1;">' +
           '<div class="flip-card flipped">' +
-            '<div class="face face-front"><div class="card-text">'+esc(rec.front)+'</div></div>' +
+            '<div class="face face-front">'+photoHTML+'<div class="card-text">'+esc(rec.front)+'</div></div>' +
             '<div class="face face-back"><div class="card-text">'+esc(rec.back)+'</div>'+(rec.note?'<div class="card-note">'+esc(rec.note)+'</div>':'')+'</div>' +
           '</div>' +
         '</div>';
@@ -2004,6 +2072,7 @@
         '<div class="flip-scene" style="position:relative;z-index:1;">' +
           '<div class="face face-front read-face">' +
             '<div class="read-label">📖 Read it out loud</div>' +
+            (card.photoUrl?'<img class="card-photo" src="'+esc(card.photoUrl)+'" alt="">':'') +
             '<div class="card-text">'+esc(card.front)+'</div>' +
             (card.note?'<div class="card-note dim">'+esc(card.note)+'</div>':'') +
           '</div>' +
@@ -2031,6 +2100,7 @@
         '<div class="flip-scene" style="position:relative;z-index:1;">' +
           '<div class="face face-front read-face">' +
             '<div class="read-label">🔢 Pick the answer</div>' +
+            (card.photoUrl?'<img class="card-photo" src="'+esc(card.photoUrl)+'" alt="">':'') +
             '<div class="card-text">'+esc(card.front)+'</div>' +
           '</div>' +
         '</div>' +
@@ -2040,7 +2110,7 @@
       stageInner = '' +
         '<div class="flip-scene" style="position:relative;z-index:1;">' +
           '<div class="flip-card '+(S.cardFlipped?'flipped':'')+'" id="flipCard">' +
-            '<div class="face face-front"><div class="card-text">'+esc(card.front)+'</div></div>' +
+            '<div class="face face-front">'+(card.photoUrl?'<img class="card-photo" src="'+esc(card.photoUrl)+'" alt="">':'')+'<div class="card-text">'+esc(card.front)+'</div></div>' +
             '<div class="face face-back"><div class="card-text">'+esc(card.back)+'</div>'+(card.note?'<div class="card-note">'+esc(card.note)+'</div>':'')+(Speech.isSupported()?'<button type="button" class="replay-audio-btn" data-act="replay-audio">🔊 Hear it again</button>':'')+'</div>' +
           '</div>' +
         '</div>' +
@@ -2077,6 +2147,10 @@
     S.critterPrevPct = progressPct;
 
     app.querySelector('[data-act="exit-study"]').addEventListener('click', function(){
+      // In Adult Mode a grown-up is already in (no PIN was needed to get here), so backing out of a
+      // deck early just returns to Manage Decks. The PIN guard below is a Child Mode-only protection
+      // against a kid quitting a round early without a grown-up's say-so.
+      if(S.managingDecks){ goHome(); return; }
       // Leaving a deck before finishing the round needs a grown-up's PIN — finishing normally
       // (via the summary screen's own buttons) does not, so this only guards the early exit.
       S.pinInput=''; S.pinError=''; S.pinShake=false;
@@ -2199,6 +2273,7 @@
       front: card.front,
       back: card.back,
       note: card.note || '',
+      photoUrl: card.photoUrl || '',
       mode: gradedMode,
       correct: rating !== 'again',
       rating: rating,
@@ -2642,8 +2717,7 @@
 
   /* ---------- EDITOR ---------- */
   function openEditor(deckId, focusName){
-    // Reaching this point at all already required the "Manage Decks" PIN from the resting
-    // screen, so don't make a grown-up enter the PIN a second time to open one deck's editor.
+    // Adult Mode never asks for the PIN, so a deck can only be opened for editing from inside it.
     if(S.managingDecks){ openEditorUnlocked(deckId, focusName); return; }
     // Defensive fallback in case this is ever reached outside manager mode.
     S.pendingEdit = { deckId: deckId, focusName: focusName };
@@ -2687,6 +2761,7 @@
         (esc(c.back)+(c.note?' · '+esc(c.note):'')));
       return '' +
       '<div class="card-row">' +
+        (c.photoUrl ? '<div class="cr-thumb"><img src="'+esc(c.photoUrl)+'" alt=""></div>' : '') +
         '<div class="cr-text">' +
           '<div class="cr-front">'+esc(c.front)+' '+modeTag+'</div>' +
           '<div class="cr-back">'+backLine+'</div>' +
@@ -2704,11 +2779,33 @@
 
     var editingCard = S.editingCardId ? cards.find(function(c){ return c.id === S.editingCardId; }) : null;
     var formTitle = editingCard ? 'Edit card' : 'Add a new card';
-    var draft = S.cardFormDraft || { front:'', back:'', note:'', choices:'', category:'' };
+    var draft = S.cardFormDraft || { front:'', back:'', note:'', choices:'', category:'', photoId:'', photoUrl:'' };
     var fFront = draft.front; var fBack = draft.back; var fNote = draft.note; var fChoices = draft.choices || ''; var fCategory = draft.category || '';
+    var fPhotoUrl = draft.photoUrl || '';
     var formMode = S.cardFormMode || 'flip';
     var isReadMode = formMode === 'read';
     var isChoiceMode = formMode === 'choice';
+
+    var photoFieldHTML;
+    if(S.photoUploading){
+      photoFieldHTML = '<div class="field"><label>Photo (optional)</label><div class="photo-field-wrap"><span class="photo-uploading-note">📤 Uploading…</span></div></div>';
+    } else if(S.assetsAvailable){
+      photoFieldHTML = '' +
+        '<div class="field"><label>Photo (optional, shown with the question)</label>' +
+          '<div class="photo-field-wrap">' +
+            (fPhotoUrl ? '<img class="photo-preview" src="'+esc(fPhotoUrl)+'" alt="">' : '') +
+            '<div class="photo-field-actions">' +
+              '<button type="button" class="btn btn-ghost" data-act="'+(fPhotoUrl?'replace-photo':'add-photo')+'">'+(fPhotoUrl?'🔄 Replace photo':'🖼️ Add a photo')+'</button>' +
+              (fPhotoUrl ? '<button type="button" class="btn btn-ghost" data-act="remove-photo">Remove</button>' : '') +
+            '</div>' +
+          '</div>' +
+          '<input type="file" id="cardPhotoInput" accept="image/*" style="display:none">' +
+        '</div>';
+    } else {
+      photoFieldHTML = fPhotoUrl
+        ? '<div class="field"><label>Photo</label><div class="photo-field-wrap"><img class="photo-preview" src="'+esc(fPhotoUrl)+'" alt=""><span class="photo-uploading-note">Photos can only be added or changed from the live app.</span></div></div>'
+        : '<div class="field"><label>Photo</label><p class="algo-note">Photos can be added from the live app (not this offline copy).</p></div>';
+    }
 
     var addForm = (S.addCardOpen || editingCard) ? ('' +
       '<div class="form-card">' +
@@ -2719,6 +2816,7 @@
           '<button type="button" class="mode-opt '+(formMode==='choice'?'active':'')+'" data-mode="choice">🔢 Multiple choice<span class="mode-sub">pick the answer</span></button>' +
         '</div>' +
         '<div class="field"><label for="cardFront">'+(isReadMode?'Word or phrase to read':'Front (question / word)')+'</label><input id="cardFront" type="text" value="'+esc(fFront)+'" placeholder="'+(isReadMode?'e.g. octopus':'e.g. 6 + 7  or  because')+'"></div>' +
+        photoFieldHTML +
         (isReadMode ? '' : '<div class="field"><label for="cardBack">'+(isChoiceMode?'Correct answer':'Back (answer)')+'</label><input id="cardBack" type="text" value="'+esc(fBack)+'" placeholder="e.g. 13  or  a sentence"></div>') +
         (isChoiceMode ? '<div class="field"><label for="cardChoices">Wrong answers (comma-separated)</label><input id="cardChoices" type="text" value="'+esc(fChoices)+'" placeholder="e.g. 11, 12, 14"></div>' : '') +
         '<div class="field"><label for="cardNote">'+(isReadMode?'Hint (optional, shown small under the word)':'Fun fact / hint (optional)')+'</label><textarea id="cardNote" rows="2" placeholder="'+(isReadMode?'e.g. sounds like OCK-tuh-puss':'e.g. 6 crabs + 7 crabs = 13 crabs!')+'">'+esc(fNote)+'</textarea></div>' +
@@ -2737,6 +2835,7 @@
       }).join('');
 
     app.innerHTML = '' +
+      errorBannerHTML() +
       '<div class="nav-row">' +
         '<button class="back-btn" data-act="exit-editor">⟵ Lagoon</button>' +
         ctrlRowHTML() +
@@ -2762,6 +2861,7 @@
       goHome();
     });
     wireCtrlRow();
+    wireErrorBanner();
     app.querySelector('[data-act="toggle-emoji"]').addEventListener('click', function(){ S.emojiPickerOpen = !S.emojiPickerOpen; render(); });
     app.querySelectorAll('.emoji-opt').forEach(function(b){
       b.addEventListener('click', function(){
@@ -2795,21 +2895,33 @@
         S.editingCardId = b.dataset.card;
         S.addCardOpen = false;
         S.cardFormMode = (c && c.mode === 'read') ? 'read' : ((c && c.mode === 'choice') ? 'choice' : 'flip');
-        S.cardFormDraft = { front: c ? c.front : '', back: c ? (c.back||'') : '', note: c ? (c.note||'') : '', choices: c ? (c.choices||[]).join(', ') : '', category: c ? (c.category||'') : '' };
+        S.cardFormDraft = { front: c ? c.front : '', back: c ? (c.back||'') : '', note: c ? (c.note||'') : '', choices: c ? (c.choices||[]).join(', ') : '', category: c ? (c.category||'') : '', photoId: c ? (c.photoId||'') : '', photoUrl: c ? (c.photoUrl||'') : '' };
+        S.cardFormOriginalPhotoId = c ? (c.photoId||'') : '';
         render();
       });
     });
     app.querySelectorAll('[data-act="del-card"]').forEach(function(b){
-      b.addEventListener('click', function(){ S.store.deleteCard(deck.id, b.dataset.card); });
+      b.addEventListener('click', function(){
+        var c = cards.find(function(x){ return x.id === b.dataset.card; });
+        var photoId = c && c.photoId;
+        S.store.deleteCard(deck.id, b.dataset.card).then(function(){ if(photoId) Assets.remove(photoId); });
+      });
     });
     var openAdd = app.querySelector('[data-act="open-add-card"]');
     if(openAdd) openAdd.addEventListener('click', function(){
-      S.addCardOpen = true; S.editingCardId = null; S.cardFormMode = 'flip'; S.cardFormDraft = { front:'', back:'', note:'', choices:'', category:'' };
+      S.addCardOpen = true; S.editingCardId = null; S.cardFormMode = 'flip'; S.cardFormDraft = { front:'', back:'', note:'', choices:'', category:'', photoId:'', photoUrl:'' };
+      S.cardFormOriginalPhotoId = '';
       render();
       setTimeout(function(){ var el=document.getElementById('cardFront'); if(el) el.focus(); },0);
     });
     var cancelBtn = app.querySelector('[data-act="cancel-card"]');
-    if(cancelBtn) cancelBtn.addEventListener('click', function(){ S.addCardOpen = false; S.editingCardId = null; S.cardFormDraft = null; render(); });
+    if(cancelBtn) cancelBtn.addEventListener('click', function(){
+      // A photo picked during this add/edit session that was never actually saved onto the card
+      // is now an orphan -- clean it up. The card's ORIGINAL photo (if any) is left untouched.
+      var draftPhotoId = S.cardFormDraft ? S.cardFormDraft.photoId : '';
+      if(draftPhotoId && draftPhotoId !== S.cardFormOriginalPhotoId) Assets.remove(draftPhotoId);
+      S.addCardOpen = false; S.editingCardId = null; S.cardFormDraft = null; S.cardFormOriginalPhotoId = ''; render();
+    });
     app.querySelectorAll('[data-mode]').forEach(function(b){
       b.addEventListener('click', function(){
         var frontEl = document.getElementById('cardFront');
@@ -2822,9 +2934,50 @@
           back: backEl ? backEl.value : (draft.back||''),
           note: noteEl ? noteEl.value : (draft.note||''),
           choices: choicesEl ? choicesEl.value : (draft.choices||''),
-          category: categoryEl ? categoryEl.value : (draft.category||'')
+          category: categoryEl ? categoryEl.value : (draft.category||''),
+          photoId: draft.photoId || '',
+          photoUrl: draft.photoUrl || ''
         };
         S.cardFormMode = b.dataset.mode;
+        render();
+      });
+    });
+    function pickPhoto(){
+      var input = document.getElementById('cardPhotoInput');
+      if(input) input.click();
+    }
+    var addPhotoBtn = app.querySelector('[data-act="add-photo"]');
+    if(addPhotoBtn) addPhotoBtn.addEventListener('click', pickPhoto);
+    var replacePhotoBtn = app.querySelector('[data-act="replace-photo"]');
+    if(replacePhotoBtn) replacePhotoBtn.addEventListener('click', pickPhoto);
+    var removePhotoBtn = app.querySelector('[data-act="remove-photo"]');
+    if(removePhotoBtn) removePhotoBtn.addEventListener('click', function(){
+      var removedId = S.cardFormDraft ? S.cardFormDraft.photoId : '';
+      S.cardFormDraft = Object.assign({}, draft, { photoId:'', photoUrl:'' });
+      render();
+      // Only an unsaved-this-session upload is safe to delete immediately -- if it's the card's
+      // original saved photo, it stays valid until Save actually commits the removal.
+      if(removedId && removedId !== S.cardFormOriginalPhotoId) Assets.remove(removedId);
+    });
+    var photoInput = document.getElementById('cardPhotoInput');
+    if(photoInput) photoInput.addEventListener('change', function(){
+      var file = photoInput.files && photoInput.files[0];
+      if(!file) return;
+      var priorDraftPhotoId = S.cardFormDraft ? S.cardFormDraft.photoId : '';
+      S.photoUploading = true;
+      render();
+      downscalePhoto(file, 1600).then(function(blob){
+        return Assets.upload(blob);
+      }).then(function(res){
+        S.cardFormDraft = Object.assign({}, draft, { photoId: res.id, photoUrl: res.url });
+        S.photoUploading = false;
+        render();
+        // An earlier unsaved upload from this same form session, now superseded, is a clean orphan.
+        if(priorDraftPhotoId && priorDraftPhotoId !== S.cardFormOriginalPhotoId) Assets.remove(priorDraftPhotoId);
+      }).catch(function(err){
+        console.error('[Coral Cove] photo upload failed', err);
+        S.photoUploading = false;
+        S.storeError = 'That photo didn\'t upload. Check your connection and try again.';
         render();
       });
     });
@@ -2841,21 +2994,35 @@
       if(!front) return;
       if((mode === 'flip' || mode === 'choice') && !back) return;
       if(mode === 'choice' && choicesArr.length < 1) return;
-      var payload = { front: front, back: back, note: note, mode: mode, choices: mode === 'choice' ? choicesArr : [], category: category };
+      var photoId = draft.photoId || '';
+      var photoUrl = draft.photoUrl || '';
+      var payload = { front: front, back: back, note: note, mode: mode, choices: mode === 'choice' ? choicesArr : [], category: category, photoId: photoId, photoUrl: photoUrl };
+      var origPhotoId = S.cardFormOriginalPhotoId;
+      var savePromise;
       if(editingCard){
-        S.store.updateCard(deck.id, editingCard.id, payload);
+        savePromise = S.store.updateCard(deck.id, editingCard.id, payload);
         S.editingCardId = null;
       } else {
-        S.store.addCard(deck.id, payload);
+        savePromise = S.store.addCard(deck.id, payload);
         S.addCardOpen = false;
       }
+      // Only once the save actually succeeds is the old photo (if replaced or removed) safe to
+      // clean up -- if the save failed, the card still points at it and it must stay valid.
+      if(origPhotoId && origPhotoId !== photoId){
+        savePromise.then(function(){ Assets.remove(origPhotoId); }).catch(function(){});
+      }
       S.cardFormDraft = null;
+      S.cardFormOriginalPhotoId = '';
       render();
     });
     var delDeckBtn = app.querySelector('[data-act="del-deck"]');
     if(delDeckBtn) delDeckBtn.addEventListener('click', function(){
       if(confirm('Delete "'+deck.name+'" and all its cards? This can\'t be undone.')){
-        S.store.deleteDeck(deck.id).then(goHome);
+        var photoIds = cards.map(function(c){ return c.photoId; }).filter(Boolean);
+        S.store.deleteDeck(deck.id).then(function(){
+          photoIds.forEach(function(id){ Assets.remove(id); });
+          goHome();
+        });
       }
     });
   }
@@ -2870,6 +3037,10 @@
   }, true);
 
   /* ============ boot ============ */
+  // The PIN is baked in as a fixed 3207 -- there's no "create your PIN" setup screen anymore.
+  // If the stored settings don't already carry that PIN's hash (fresh app, or a PIN set before
+  // this change), it's forced to 3207 and re-saved right away so it stays that way from then on.
+  var BAKED_PIN_HASH = pinHash('3207');
   store.init().then(function(s){
     S.store = s;
     Promise.all([S.store.getStats(), S.store.getSettings()]).then(function(results){
@@ -2877,15 +3048,20 @@
       S.settings = Object.assign({ algorithm: 'sm2_speed', difficulty: 'medium' }, S.settings, results[1] || {});
       S.sessionActive = false; // always locked at launch — a grown-up must start each session
       S.view = 'home';
-      if(!S.settings.pinHash){
-        S.pinPromptFor = 'setup';
-        S.pinSetupStep = 1;
-        S.pinSetupFirst = '';
+      if(S.settings.pinHash !== BAKED_PIN_HASH){
+        S.settings = Object.assign({}, S.settings, { pinHash: BAKED_PIN_HASH });
+        S.store.setSettings(S.settings);
       }
       S.booted = true;
       refreshDueCounts().then(render);
     });
     subscribeDecks();
+  });
+  // Independent of the main boot chain above -- photo upload should light up whenever it resolves
+  // rather than holding up the rest of the app, and it's fine for it to arrive a beat later.
+  Assets.init().then(function(){
+    S.assetsAvailable = Assets.available();
+    if(S.booted && S.view === 'editor') render();
   });
 })();
 </script>
