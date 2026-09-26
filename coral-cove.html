@@ -1,3 +1,4 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Coral Cove</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap">
 <style>
@@ -321,6 +322,47 @@
   .choice-feedback.ok{ color:var(--ok-ink); }
   .choice-feedback.no{ color:var(--bad-ink); }
 
+  /* ---------- timed multiple choice ("Timed choice" mode) ---------- */
+  .tc-timer-row{ display:flex; align-items:center; gap:10px; position:relative; z-index:1; margin-top:16px; max-width:420px; margin-inline:auto; }
+  .tc-timer-track{ flex:1; height:14px; border-radius:999px; background:var(--foam-2); border:2px solid var(--border); overflow:hidden; }
+  .tc-timer-fill{ height:100%; border-radius:999px; background:linear-gradient(90deg, var(--seaweed), var(--lagoon-light)); transition:width .1s linear, background .3s ease; }
+  .tc-timer-fill.tc-low{ background:linear-gradient(90deg, var(--coral), var(--coral-dark)); }
+  .tc-addtime-btn{ flex-shrink:0; padding:8px 12px; font-size:.82rem; white-space:nowrap; }
+
+  /* ---------- drag-to-answer (matching / fill-in-the-blank) ---------- */
+  .drop-zone{
+    display:flex; align-items:center; justify-content:center; min-height:52px; margin-top:14px; padding:10px 16px;
+    border:2px dashed var(--lagoon-light); border-radius:var(--r-md); background:var(--foam-2); color:var(--ink-soft);
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.02rem; text-align:center; transition: transform .12s ease, background .15s ease;
+  }
+  .drop-zone.drag-over{ background:var(--foam); border-color:var(--lagoon); transform:scale(1.03); }
+  .drop-zone.dropped{ border-style:solid; color:var(--ink); }
+  .drop-zone.correct{ border-color:var(--ok-ink); background:var(--ok-bg); color:var(--ok-ink); }
+  .drop-zone.wrong{ border-color:var(--bad-ink); background:var(--bad-bg); color:var(--bad-ink); animation: dropshake .4s; }
+  @keyframes dropshake{ 0%,100%{transform:translateX(0);} 20%{transform:translateX(-6px);} 40%{transform:translateX(6px);} 60%{transform:translateX(-4px);} 80%{transform:translateX(4px);} }
+  @media (prefers-reduced-motion: reduce){ .drop-zone.wrong{ animation:none; } }
+
+  .blank-sentence{ display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:4px; line-height:1.8; }
+  .blank-slot{
+    display:inline-flex; align-items:center; justify-content:center; min-width:90px; min-height:38px; margin:0 2px;
+    padding:4px 12px; border:2px dashed var(--lagoon-light); border-radius:var(--r-sm); background:var(--foam-2);
+    color:var(--ink-soft); font-weight:800; vertical-align:middle;
+  }
+  .blank-slot.drag-over{ background:var(--foam); border-color:var(--lagoon); transform:scale(1.06); }
+  .blank-slot.dropped{ border-style:solid; color:var(--ink); }
+  .blank-slot.correct{ border-color:var(--ok-ink); background:var(--ok-bg); color:var(--ok-ink); }
+  .blank-slot.wrong{ border-color:var(--bad-ink); background:var(--bad-bg); color:var(--bad-ink); animation: dropshake .4s; }
+
+  .drag-tile-row{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:18px; position:relative; z-index:1; }
+  .drag-tile{
+    background:var(--surface); border:2px solid var(--border); border-radius:var(--r-md); padding:12px 18px;
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:1rem; color:var(--ink); cursor:grab;
+    box-shadow:var(--shadow-sm); touch-action:none; user-select:none; transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .drag-tile:hover{ border-color:var(--lagoon-light); }
+  .drag-tile:active{ cursor:grabbing; }
+  .drag-tile.dragging{ position:relative; z-index:5; box-shadow:var(--shadow); cursor:grabbing; transition:none; }
+
   /* ---------- summary ---------- */
   .summary-card{
     text-align:center; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:var(--shadow); padding:32px 20px;
@@ -516,6 +558,204 @@
 
   /* ---------- small control buttons (sound / end session) ---------- */
   .ctrl-row{ display:flex; align-items:center; gap:6px; margin-left:auto; }
+
+  /* ---------- profiles ---------- */
+  .profile-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(96px,1fr)); gap:16px; margin:8px 0 4px; }
+  .profile-tile{
+    display:flex; flex-direction:column; align-items:center; gap:8px; padding:14px 8px; background:var(--surface);
+    border:1px solid var(--border); border-radius:var(--r-lg); cursor:pointer; box-shadow:var(--shadow-sm); position:relative;
+  }
+  .profile-tile:hover{ border-color:var(--lagoon); }
+  .profile-tile:active{ transform:scale(.97); }
+  .profile-tile-manage{ cursor:default; }
+  .profile-tile-add{ justify-content:center; color:var(--ink-soft); border-style:dashed; }
+  .profile-add-icon{ font-size:1.6rem; }
+  .profile-avatar{ border-radius:50%; object-fit:cover; background:var(--foam-2); display:flex; align-items:center; justify-content:center; }
+  .avatar-lg{ width:76px; height:76px; font-size:1.9rem; }
+  .avatar-md{ width:56px; height:56px; font-size:1.3rem; }
+  .avatar-fallback{ font-weight:800; color:var(--lagoon); }
+  .profile-name{ font-weight:800; font-size:.9rem; color:var(--ink); text-align:center; word-break:break-word; }
+  .profile-mode-badge{ font-size:.72rem; font-weight:700; color:var(--ink-soft); }
+  .profile-tile-manage [data-del]{ position:absolute; top:6px; right:6px; width:28px; height:28px; font-size:.85rem; }
+  .new-profile-form{ max-width:360px; margin:0 auto; }
+  .profile-photo-picker{ display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:18px; }
+  .profile-photo-label{ cursor:pointer; }
+  .field-label{ display:block; font-size:.78rem; font-weight:800; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.03em; margin-bottom:6px; }
+
+  /* ---------- badge gallery: an immersive ocean-themed "Hall of Fame", each badge a trophy on its
+     own pedestal rather than a flat icon tile. Earned trophies are gold and glowing; not-yet-earned
+     ones sit on the same pedestal but dim, grey, and padlocked -- so the whole shelf is visible from
+     day one (nothing pops into existence later), it just lights up piece by piece. ---------- */
+  .hof-wrap{
+    position:relative; overflow:hidden; border-radius:var(--r-lg); padding:26px 16px 22px;
+    background:
+      radial-gradient(ellipse 120% 60% at 50% -12%, rgba(255,255,255,.20), transparent 60%),
+      linear-gradient(180deg, #062230 0%, #0a3d4a 32%, #0d5262 68%, #124a56 100%);
+    box-shadow:var(--shadow);
+  }
+  .hof-wrap .bubbles{ opacity:.55; }
+  .hof-header{ position:relative; z-index:1; text-align:center; margin-bottom:20px; }
+  .hof-title{
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.3rem; color:#fff; margin:0 0 3px;
+    text-shadow:0 2px 10px rgba(0,0,0,.4);
+  }
+  .hof-sub{ font-size:.82rem; font-weight:700; color:rgba(255,255,255,.72); }
+  .trophy-grid{
+    position:relative; z-index:1; display:grid; grid-template-columns:repeat(auto-fill, minmax(128px,1fr));
+    gap:22px 10px;
+  }
+  .trophy-stand{ display:flex; flex-direction:column; align-items:center; text-align:center; cursor:default; }
+  .trophy-cup{
+    width:60px; height:52px; margin-bottom:-8px; position:relative; z-index:2;
+    border-radius:50% 50% 44% 44% / 62% 62% 38% 38%;
+    display:flex; align-items:center; justify-content:center; font-size:1.7rem;
+    background:linear-gradient(160deg,#fff2cf,#ffc94d 55%,#e8a716);
+    border:2px solid #c98a10;
+    box-shadow:0 0 0 3px rgba(255,201,77,.18), 0 0 20px 3px rgba(255,201,77,.55), 0 5px 10px rgba(0,0,0,.3),
+      inset 0 -4px 6px rgba(0,0,0,.16), inset 0 3px 4px rgba(255,255,255,.55);
+    animation: trophyShine 3.4s ease-in-out infinite;
+  }
+  @keyframes trophyShine{
+    0%,100%{ filter:brightness(1); } 50%{ filter:brightness(1.12); }
+  }
+  .trophy-stand.locked .trophy-cup{
+    background:linear-gradient(160deg,#4d6971,#37525a 55%,#263d43); border-color:#1c2f34;
+    box-shadow:0 4px 8px rgba(0,0,0,.35), inset 0 -4px 6px rgba(0,0,0,.25), inset 0 3px 4px rgba(255,255,255,.08);
+    animation:none; filter:grayscale(.25); opacity:.82;
+  }
+  .trophy-cup-icon{ filter:drop-shadow(0 1px 2px rgba(0,0,0,.3)); }
+  .trophy-pedestal{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; }
+  .pedestal-top{
+    width:52px; height:9px; border-radius:3px 3px 0 0;
+    background:linear-gradient(180deg,#f3d78a,#c98a10);
+  }
+  .pedestal-body{
+    width:74px; height:30px; border-radius:0 0 7px 7px; position:relative;
+    background:linear-gradient(180deg,#c98a10,#8a5d0a);
+    box-shadow:0 5px 9px rgba(0,0,0,.35), inset 0 2px 3px rgba(255,255,255,.25);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .trophy-stand.locked .pedestal-top{ background:linear-gradient(180deg,#5c6f74,#3c4d51); }
+  .trophy-stand.locked .pedestal-body{
+    background:linear-gradient(180deg,#3c4d51,#252f32);
+    box-shadow:0 5px 9px rgba(0,0,0,.35), inset 0 2px 3px rgba(255,255,255,.06);
+  }
+  .pedestal-star{ color:#fff2cf; font-size:.85rem; text-shadow:0 1px 2px rgba(0,0,0,.4); }
+  .trophy-plaque{ margin-top:9px; max-width:130px; }
+  .plaque-name{
+    font-family:'Baloo 2',sans-serif; font-weight:800; font-size:.82rem; color:#ffe9b8;
+    text-shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+  .trophy-stand.locked .plaque-name{ color:rgba(255,255,255,.6); }
+  .plaque-desc{ font-size:.68rem; font-weight:600; color:rgba(255,255,255,.62); line-height:1.35; margin-top:2px; }
+  @media (prefers-reduced-motion: reduce){ .trophy-cup{ animation:none; } }
+  .badge-earned-banner{ display:flex; flex-direction:column; gap:6px; margin:10px 0; }
+  .badge-earned-item{
+    display:flex; align-items:center; gap:8px; background:var(--foam-2); border:1px solid var(--lagoon);
+    border-radius:var(--r-md); padding:8px 12px; font-weight:700; font-size:.88rem; color:var(--deep);
+  }
+  .badge-earned-icon{ font-size:1.3rem; }
+
+  /* ---------- reading support (dyslexia-friendly display) ---------- */
+  /* Deliberately NOT a font swap -- dyslexia-specific fonts (OpenDyslexic, Dyslexie) aren't backed by
+     controlled research. Generous spacing, a larger base size, and TTS on every tap are. */
+  body.reading-support{ font-size:1.08em; }
+  body.reading-support, body.reading-support input, body.reading-support textarea, body.reading-support button{
+    letter-spacing:.02em; word-spacing:.12em; line-height:1.65;
+  }
+  body.reading-support .card-text{ letter-spacing:.03em; word-spacing:.16em; line-height:1.7; }
+
+  /* ---------- Word Feed (TikTok-style swipe browser) ---------- */
+  .deck-badge.feed{ background:var(--lagoon); color:#fff; }
+  .feed-topbar{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:6px 2px 2px; }
+  .feed-topbar-spacer{ width:38px; flex-shrink:0; }
+  .feed-deck-label{ font-weight:800; color:var(--ink-soft); font-size:.92rem; text-align:center; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .feed-stage{
+    position:relative; overflow:hidden; touch-action:none; -webkit-user-select:none; user-select:none;
+    height:min(64vh,540px); margin:12px 0 8px; border-radius:var(--r-lg);
+    background:linear-gradient(160deg, var(--deep), var(--lagoon)); border:1px solid var(--border);
+    box-shadow:var(--shadow);
+  }
+  .feed-card{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    padding:32px; text-align:center; cursor:pointer;
+  }
+  /* Resting positions -- WITHOUT these, a freshly-rendered card has no inline transform yet (JS only
+     sets one during an active drag/settle), so all three would sit stacked exactly on top of each
+     other at inset:0 the instant a swipe commits and the screen re-renders: the next/prev words would
+     visibly cover the current one. These match the drag math in wireVerticalSwipeFeed() at delta 0. */
+  .feed-card-current{ transform:translateY(0); }
+  .feed-card-next{ transform:translateY(100%); }
+  .feed-card-prev{ transform:translateY(-100%); }
+  .feed-card-next, .feed-card-prev{ pointer-events:none; }
+  .feed-word{
+    font-family:'Baloo 2', 'Nunito', sans-serif;
+    font-size:clamp(2.1rem, 10vw, 3.6rem); font-weight:800; color:#fff;
+    text-shadow:0 4px 18px rgba(0,0,0,.22); word-break:break-word; line-height:1.15;
+  }
+  .feed-hint{ text-align:center; color:var(--ink-soft); font-size:.85rem; margin:0 0 6px; }
+
+  /* ---------- Equation Feed (addition facts -- answer bounces in right after it's spoken) ---------- */
+  .eq-prompt{ display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:.2em; }
+  .eq-answer{ display:inline-block; min-width:1em; }
+  .eq-blank{ opacity:.5; }
+  .eq-bounce{ animation:eqBounceIn .6s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes eqBounceIn{
+    0%{ transform:translateY(-42px) scale(.35); opacity:0; }
+    55%{ transform:translateY(8px) scale(1.15); opacity:1; }
+    78%{ transform:translateY(-4px) scale(.95); }
+    100%{ transform:translateY(0) scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce){ .eq-bounce{ animation:none; } }
+
+  /* ---------- Language Feed (a few new words at a time -- translation fades in after ~1s) ---------- */
+  .lang-word-wrap{ display:flex; flex-direction:column; align-items:center; gap:.5em; }
+  .lang-translation{
+    font-family:'Nunito', sans-serif; font-weight:700; color:rgba(255,255,255,.92);
+    font-size:clamp(1.1rem, 4.5vw, 1.6rem); text-shadow:0 2px 10px rgba(0,0,0,.2);
+  }
+  .lang-fade-in{ animation:langFadeIn .7s ease-out; }
+  @keyframes langFadeIn{
+    0%{ opacity:0; transform:translateY(14px); }
+    100%{ opacity:1; transform:translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce){ .lang-fade-in{ animation:none; } }
+  .lang-unlock-toast{
+    position:absolute; left:50%; bottom:14px; transform:translateX(-50%);
+    background:rgba(6,34,42,.82); color:#fff; font-weight:800; font-size:.85rem;
+    padding:8px 16px; border-radius:999px; box-shadow:var(--shadow); pointer-events:none;
+    animation:langFadeIn .5s ease-out;
+  }
+
+  /* ---------- Word Feed sound shop ---------- */
+  .sound-panel-backdrop{
+    position:fixed; inset:0; background:rgba(6,34,42,.55); backdrop-filter:blur(2px);
+    display:flex; align-items:flex-end; justify-content:center; z-index:40; padding:0;
+  }
+  .sound-panel{
+    width:100%; max-width:460px; background:var(--surface); border-radius:24px 24px 0 0;
+    padding:18px 18px max(18px, env(safe-area-inset-bottom,0px)); box-shadow:0 -10px 30px rgba(0,0,0,.3);
+    max-height:80vh; overflow-y:auto;
+  }
+  .sound-panel-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .sound-panel-title{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:1.1rem; color:var(--deep); }
+  :root[data-theme="dark"] .sound-panel-title{ color:var(--lagoon-light); }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .sound-panel-title{ color:var(--lagoon-light);} }
+  .sound-list{ display:grid; grid-template-columns:repeat(auto-fill, minmax(130px,1fr)); gap:10px; margin-bottom:12px; }
+  .sound-tile{
+    display:flex; flex-direction:column; align-items:center; gap:3px; text-align:center; padding:14px 8px;
+    border-radius:var(--r-md); border:2px solid var(--border); background:var(--foam); cursor:pointer;
+  }
+  .sound-tile-icon{ font-size:1.6rem; }
+  .sound-tile-name{ font-weight:800; font-size:.85rem; color:var(--ink); }
+  .sound-tile-sub{ font-size:.72rem; font-weight:700; color:var(--ink-soft); }
+  .sound-tile.active{ border-color:var(--lagoon); background:var(--foam-2); }
+  .sound-tile.active .sound-tile-sub{ color:var(--lagoon); }
+  .sound-tile.locked{ opacity:.85; }
+  .sound-tile.locked .sound-tile-sub{ color:var(--sun-dark); }
+  .sound-tile.shake{ animation:dropshake .4s; border-color:var(--bad-ink); }
+  .sound-panel-hint{ font-size:.76rem; color:var(--ink-soft); text-align:center; margin-bottom:12px; }
+  .sound-panel-close{ width:100%; }
 </style>
 
 <div id="app"></div>
@@ -585,6 +825,84 @@
       blurb: '10 questions a round, and cards you know well get spaced out further — a real test of long-term memory. Cards you keep missing get drilled far more often than the rest.'
     }
   ];
+
+  // Badge gallery milestones -- each badge is earned once and stays earned forever (S.badges maps
+  // badgeId -> earnedAt ms, persisted per-profile via store.getBadges/setBadges). check(ctx) is only
+  // ever called with ctx built fresh right after a round finishes (see evaluateAndAwardBadges), never
+  // during render, so it can lean on a couple of small async lookups the caller already made.
+  var BADGES = [
+    { id:'first-steps', icon:'🐣', name:'First Steps', desc:'Answer your very first flashcard.', check: function(ctx){ return ctx.stats.totalReviews >= 1; } },
+    { id:'century', icon:'💯', name:'Century Club', desc:'Review 100 cards in all.', check: function(ctx){ return ctx.stats.totalReviews >= 100; } },
+    { id:'streak-3', icon:'🔥', name:'On a Roll', desc:'Study 3 days in a row.', check: function(ctx){ return ctx.stats.streak >= 3; } },
+    { id:'streak-7', icon:'🌟', name:'Week Streak', desc:'Study 7 days in a row.', check: function(ctx){ return ctx.stats.streak >= 7; } },
+    { id:'perfect-round', icon:'🎯', name:'Perfect Round', desc:'Finish a round with every card right.', check: function(ctx){ return ctx.perfectRound; } },
+    { id:'deck-master', icon:'🏆', name:'Deck Master', desc:'Master every card in a deck.', check: function(ctx){ return ctx.deckMastered; } },
+    { id:'star-collector', icon:'⭐', name:'Star Collector', desc:'Earn 50 stars.', check: function(ctx){ return ctx.stats.stars >= 50; } },
+    { id:'explorer', icon:'🗺️', name:'Explorer', desc:'Study 3 different decks.', check: function(ctx){ return ctx.decksStudiedCount >= 3; } }
+  ];
+
+  // An ocean-themed "Hall of Fame" -- every badge sits on its own trophy pedestal from the very
+  // start (nothing is hidden until earned), earned ones gold and glowing, the rest dim, grey, and
+  // padlocked. bubblesHTML() (defined further down, but function declarations are hoisted so the
+  // call site here doesn't care about source order) supplies the same rising-bubble backdrop used
+  // on the study stage, for the "standing in an aquarium" feel.
+  function badgeGalleryHTML(){
+    var earnedCount = BADGES.filter(function(b){ return !!S.badges[b.id]; }).length;
+    var stands = BADGES.map(function(b){
+      var earned = !!S.badges[b.id];
+      return '' +
+        '<div class="trophy-stand'+(earned?' earned':' locked')+'" title="'+esc(b.desc)+'">' +
+          '<div class="trophy-cup"><span class="trophy-cup-icon">'+(earned?b.icon:'🔒')+'</span></div>' +
+          '<div class="trophy-pedestal">' +
+            '<div class="pedestal-top"></div>' +
+            '<div class="pedestal-body">'+(earned?'<span class="pedestal-star">★</span>':'')+'</div>' +
+          '</div>' +
+          '<div class="trophy-plaque">' +
+            '<div class="plaque-name">'+esc(b.name)+'</div>' +
+            '<div class="plaque-desc">'+esc(b.desc)+'</div>' +
+          '</div>' +
+        '</div>';
+    }).join('');
+    return '' +
+      '<div class="hof-wrap">' +
+        bubblesHTML(16) +
+        '<div class="hof-header">' +
+          '<div class="hof-title">🏆 Hall of Fame</div>' +
+          '<div class="hof-sub">'+earnedCount+' of '+BADGES.length+' trophies earned</div>' +
+        '</div>' +
+        '<div class="trophy-grid">'+stands+'</div>' +
+      '</div>';
+  }
+
+  // Runs right after a round's stats/history are saved -- checks every not-yet-earned badge against
+  // freshly-loaded context, persists any newly earned ones, and leaves S.justEarnedBadges populated
+  // so renderSummary can show a quick "new badge!" celebration for this specific round.
+  function evaluateAndAwardBadges(newStats, historyEntry){
+    var perfectRound = historyEntry.total > 0 && historyEntry.right === historyEntry.total;
+    return Promise.all([
+      S.store.getCardsOnce(S.currentDeckId),
+      S.store.getHistoryOnce()
+    ]).then(function(results){
+      var deckCards = results[0] || [];
+      var history = results[1] || [];
+      var deckMastered = deckCards.length > 0 && deckCards.every(function(c){ return (c.reps||0) > 0 && (c.interval||0) >= 4; });
+      var deckIds = {};
+      history.forEach(function(h){ if(h.deckId) deckIds[h.deckId] = true; });
+      var ctx = { stats: newStats, perfectRound: perfectRound, deckMastered: deckMastered, decksStudiedCount: Object.keys(deckIds).length };
+      var updated = Object.assign({}, S.badges);
+      var newlyEarned = [];
+      BADGES.forEach(function(b){
+        if(!updated[b.id] && b.check(ctx)){
+          updated[b.id] = Date.now();
+          newlyEarned.push(b.id);
+        }
+      });
+      S.justEarnedBadges = newlyEarned;
+      if(!newlyEarned.length) return Promise.resolve();
+      S.badges = updated;
+      return S.store.setBadges(updated);
+    });
+  }
 
   function currentDifficulty(){
     // Adults studying (Dive In from Adult Mode) always get the Hard tier -- a runtime override only,
@@ -815,7 +1133,10 @@
   var TIME_THRESHOLDS = {
     choice: { fastMs: 3000,  slowMs: 9000  },  // time from seeing the question to tapping an option
     flip:   { fastMs: 4000,  slowMs: 12000 },  // time from seeing the front to flipping (recall latency)
-    read:   { fastMs: 5000,  slowMs: 15000 }   // time from seeing the word/phrase to marking it read
+    read:   { fastMs: 5000,  slowMs: 15000 },  // time from seeing the word/phrase to marking it read
+    match:  { fastMs: 4000,  slowMs: 11000 },  // time from seeing the card to dropping a tile on the target
+    blank:  { fastMs: 4000,  slowMs: 11000 },  // time from seeing the sentence to dropping a tile in the blank
+    timedchoice: { fastMs: 2500, slowMs: 6000 } // a correct answer under real time pressure counts as "fast" sooner than plain choice mode's thresholds -- the countdown itself already does most of the pressuring
   };
   function autoRating(mode, correct, elapsedMs){
     if(!correct) return 'again';
@@ -914,6 +1235,10 @@
         try { localStorage.setItem('coralCoveSound', v ? '1' : '0'); } catch(e){}
       },
       unlock: function(){ ensureCtx(); startSilentUnlock(); }, // call on first user gesture so mobile browsers allow audio later
+      // Shares this one AudioContext with the Ambience module below, rather than each spinning up
+      // its own -- browsers cap how many contexts can run at once, and there's no reason for a sound
+      // effect and a looping background track to fight over separate audio graphs.
+      getCtx: function(){ return ensureCtx(); },
       tap: function(){ tone(520, 0, 0.06, 'sine', 0.10); vibrate(8); },
       flip: function(){ tone(420, 0, 0.08, 'sine', 0.10); tone(640, 0.05, 0.09, 'sine', 0.09); vibrate(10); },
       // Playful "ta-da!" — a quick bouncing major arpeggio with a sparkly high glimmer on top.
@@ -937,6 +1262,71 @@
   })();
 
   /* ============ spoken answers (Web Speech API — no audio files to host, works offline) ============ */
+  /* ============ real pronunciation clips (db-backed) ============ */
+  // A small, growing library of real recorded word audio -- not synthesized -- lives in the
+  // artifact's database as one document per word (collection "audio-clips", doc id = the word
+  // lowercased with spaces turned into hyphens, e.g. "field trip" -> "field-trip"). Speech.speak()
+  // below checks here first and only falls back to the synthesized voice when a word has no real
+  // clip yet. Most words still don't -- this covers whatever's been supplied so far.
+  var AudioClips = (function(){
+    var db = null;
+    var cache = {};   // slug -> HTMLAudioElement, or null once confirmed there's no clip for it
+    var pending = {}; // slug -> in-flight lookup promise, so a fast double-tap doesn't double-fetch
+    function slugify(text){
+      var base = String(text).trim().toLowerCase().replace(/\s+/g, '-');
+      // Doc ids in this artifact's database only allow plain ASCII (letters, digits, and a handful
+      // of punctuation marks) -- any other character (accented letters, Hangul, emoji, ...) has to
+      // be encoded into something ASCII-safe rather than passed through as-is. Passing an invalid
+      // character straight to db.doc() throws synchronously, which used to break the ENTIRE speak()
+      // call for that word (Korean vocabulary especially) -- not just the real-clip lookup, but the
+      // synthesized-voice fallback too, since the exception happened before that fallback ever ran.
+      // No real clip is keyed this way today (all 43 are plain English words), so this is mostly a
+      // forward-compatible safety net, but it's what makes Korean cards speak at all.
+      return base.replace(/[^a-z0-9_\-.~:@+]/g, function(ch){
+        return '_u' + ch.charCodeAt(0).toString(16);
+      });
+    }
+    function get(text){
+      if(!db) return Promise.resolve(null);
+      var slug = slugify(text);
+      if(!slug) return Promise.resolve(null);
+      if(Object.prototype.hasOwnProperty.call(cache, slug)) return Promise.resolve(cache[slug]);
+      if(pending[slug]) return pending[slug];
+      var lookup;
+      try {
+        lookup = db.doc('audio-clips/' + slug).get();
+      } catch(e){
+        // Belt-and-suspenders: even with slugify() sanitizing every character above, don't let a
+        // future edge case (an empty slug, a doc-id length limit, ...) take down Speech.speak()
+        // entirely -- fall straight through to the synthesized-voice fallback instead.
+        cache[slug] = null;
+        return Promise.resolve(null);
+      }
+      pending[slug] = lookup.then(function(snap){
+        var audio = null;
+        if(snap && snap.exists){
+          var data = snap.data();
+          if(data && data.audio) audio = new Audio(data.audio);
+        }
+        cache[slug] = audio;
+        delete pending[slug];
+        return audio;
+      }).catch(function(){
+        cache[slug] = null;
+        delete pending[slug];
+        return null;
+      });
+      return pending[slug];
+    }
+    return {
+      init: function(){
+        if(!(window.claude && window.claude.use)) return Promise.resolve(null);
+        return window.claude.use('db').then(function(handle){ db = handle; return db; }).catch(function(){ db = null; return null; });
+      },
+      get: get
+    };
+  })();
+
   var Speech = (function(){
     var supported = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
     var voices = [];
@@ -962,24 +1352,46 @@
       return /[가-힣ᄀ-ᇿ㄰-㆏]/.test(text) ? 'ko-KR' : 'en-US';
     }
 
+    // Rank same-language voice candidates by likely audio quality rather than just taking whichever
+    // one the browser happened to list first -- on most devices that's an arbitrary/alphabetical
+    // order, and the first entry is often a low-quality local/offline synthesizer even when a much
+    // better cloud-backed voice is sitting right next to it in the list.
+    function voiceQualityScore(v){
+      var name = (v.name || '') + ' ' + (v.voiceURI || '');
+      var score = 0;
+      if(v.localService === false) score += 10; // network/cloud voices are near-universally the nicer-sounding ones
+      if(/neural|natural|premium|enhanced|wavenet/i.test(name)) score += 8;
+      if(/google/i.test(name)) score += 4;
+      if(/espeak|compact|robot/i.test(name)) score -= 6; // known low-quality/novelty engines some platforms ship
+      return score;
+    }
+    function pickBest(list){
+      if(!list.length) return null;
+      var best = list[0], bestScore = voiceQualityScore(list[0]);
+      for(var i=1;i<list.length;i++){
+        var s = voiceQualityScore(list[i]);
+        if(s > bestScore){ best = list[i]; bestScore = s; }
+      }
+      return best;
+    }
     function pickVoice(lang){
       if(!voices.length) refreshVoices();
       if(!voices.length) return null;
       var exact = voices.filter(function(v){ return v.lang === lang; });
-      if(exact.length) return exact[0];
+      if(exact.length) return pickBest(exact);
       var prefix = lang.split('-')[0];
       var loose = voices.filter(function(v){ return v.lang && v.lang.indexOf(prefix) === 0; });
-      return loose.length ? loose[0] : null;
+      return loose.length ? pickBest(loose) : null;
     }
 
-    function doSpeak(text, lang){
+    function doSpeak(text, lang, rate){
       try {
         window.speechSynthesis.cancel(); // stop anything already talking before starting the new line
         var utter = new SpeechSynthesisUtterance(String(text));
         utter.lang = lang;
         var v = pickVoice(lang);
         if(v) utter.voice = v;
-        utter.rate = 0.88;   // a touch slower, easier for an early reader to follow
+        utter.rate = rate || 0.88;   // a touch slower by default, easier for an early reader to follow
         utter.pitch = 1.05;
         lastUtter = utter;
         utter.onend = utter.onerror = function(){ if(lastUtter === utter) lastUtter = null; };
@@ -987,9 +1399,8 @@
       } catch(e){}
     }
 
-    function speak(text){
-      if(!supported || !Sound.isEnabled() || !text) return;
-      var str = String(text);
+    function speakSynth(str, rate){
+      if(!supported) return;
       var lang = detectLang(str);
       if(!voices.length){
         refreshVoices();
@@ -1002,15 +1413,296 @@
             tries++;
             if(voices.length || tries > 10){
               clearInterval(wait);
-              doSpeak(str, lang);
+              doSpeak(str, lang, rate);
             }
           }, 150);
           return;
         }
       }
-      doSpeak(str, lang);
+      doSpeak(str, lang, rate);
     }
-    return { speak: speak, isSupported: function(){ return supported; } };
+
+    // `opts.rate` lets a caller ask for a slower-than-default reading speed (e.g. Equation Feed
+    // reading a whole equation aloud) without touching the speed everything else speaks at.
+    function speak(text, opts){
+      if(!Sound.isEnabled() || !text) return;
+      var str = String(text);
+      var rate = opts && opts.rate;
+      // Prefer a real recorded clip when this word has one; otherwise fall back to the
+      // synthesized voice exactly as before. A rate override only affects the synthesized voice --
+      // a real recorded clip always plays back at its own natural speed.
+      AudioClips.get(str).then(function(clip){
+        if(clip){
+          try {
+            clip.currentTime = 0;
+            var p = clip.play();
+            if(p && p.catch) p.catch(function(){ speakSynth(str, rate); });
+          } catch(e){ speakSynth(str, rate); }
+          return;
+        }
+        speakSynth(str, rate);
+      });
+    }
+    // Equation Feed needs to know exactly when a spoken line actually finishes (real clip or
+    // synthesized fallback) so the bounced-in answer can land right after it, not before or during.
+    // Deliberately a separate function from speak() above rather than adding a callback parameter
+    // there -- speak() is called everywhere else in the app and this keeps that path completely
+    // unchanged. onEnd always fires exactly once, even on error, even when nothing plays at all
+    // (sound off, or speech unsupported) -- so a caller can safely wait on it instead of guessing a
+    // fixed delay.
+    function doSpeakCb(text, lang, onEnd){
+      try {
+        window.speechSynthesis.cancel();
+        var utter = new SpeechSynthesisUtterance(String(text));
+        utter.lang = lang;
+        var v = pickVoice(lang);
+        if(v) utter.voice = v;
+        utter.rate = 0.88;
+        utter.pitch = 1.05;
+        lastUtter = utter;
+        var fired = false;
+        function done(){ if(fired) return; fired = true; if(lastUtter === utter) lastUtter = null; if(onEnd) onEnd(); }
+        utter.onend = done;
+        utter.onerror = done;
+        window.speechSynthesis.speak(utter);
+      } catch(e){ if(onEnd) onEnd(); }
+    }
+    function speakSynthCb(str, onEnd){
+      if(!supported){ if(onEnd) onEnd(); return; }
+      var lang = detectLang(str);
+      if(!voices.length){
+        refreshVoices();
+        if(!voices.length){
+          var tries = 0;
+          var wait = setInterval(function(){
+            refreshVoices();
+            tries++;
+            if(voices.length || tries > 10){
+              clearInterval(wait);
+              doSpeakCb(str, lang, onEnd);
+            }
+          }, 150);
+          return;
+        }
+      }
+      doSpeakCb(str, lang, onEnd);
+    }
+    // Speaks `text` exactly like speak() above (real clip first, synthesized fallback), but calls
+    // onEnd() once playback actually finishes.
+    function speakThen(text, onEnd){
+      if(!Sound.isEnabled() || !text){ if(onEnd) onEnd(); return; }
+      var str = String(text);
+      AudioClips.get(str).then(function(clip){
+        if(clip){
+          try {
+            clip.currentTime = 0;
+            var fired = false;
+            function done(){ if(fired) return; fired = true; if(onEnd) onEnd(); }
+            clip.onended = done;
+            clip.onerror = done;
+            var p = clip.play();
+            if(p && p.catch) p.catch(function(){ speakSynthCb(str, onEnd); });
+          } catch(e){ speakSynthCb(str, onEnd); }
+          return;
+        }
+        speakSynthCb(str, onEnd);
+      }).catch(function(){ speakSynthCb(str, onEnd); });
+    }
+    return { speak: speak, speakThen: speakThen, isSupported: function(){ return supported; } };
+  })();
+
+  /* ============ Word Feed ambience -- looping background sound/music ============ */
+  // Six looping ambient tracks, procedurally generated with the Web Audio API -- same "no audio
+  // files to host, works offline" reasoning as the Sound module above, and it shares that module's
+  // one AudioContext (Sound.getCtx()) rather than opening a second. Three are free forever; the
+  // other three cost SOUND_PRICE stars each to unlock, once, per profile (tracked in
+  // S.stats.unlockedSounds -- see the WORD FEED section further down for the shop UI).
+  var SOUND_PRICE = 5;
+  var SOUND_TRACKS = [
+    { id:'waves',   icon:'🌊', name:'Ocean Waves',     free:true,  kind:'noise-waves' },
+    { id:'tune',    icon:'🎵', name:'Bouncy Tune',     free:true,  kind:'music-bouncy' },
+    { id:'rain',    icon:'🌧️', name:'Rainy Day',       free:true,  kind:'noise-rain' },
+    { id:'chimes',  icon:'🐚', name:'Seashell Chimes', free:false, kind:'music-chimes' },
+    { id:'dolphin', icon:'🐬', name:'Dolphin Pop',     free:false, kind:'music-pop' },
+    { id:'deepsea', icon:'🫧', name:'Deep Sea Hum',    free:false, kind:'noise-hum' }
+  ];
+
+  var Ambience = (function(){
+    var master = null;   // this track's own fade-in/out gain, sitting in front of everything else
+    var nodes = [];       // every node this track created, so stop() can tear them all down
+    var timers = [];       // pending setTimeout ids (note-loop scheduling, random blips) to cancel on stop
+    var currentId = null;
+
+    function makeNoiseBuffer(c, seconds){
+      var len = Math.max(1, Math.floor(c.sampleRate * seconds));
+      var buf = c.createBuffer(1, len, c.sampleRate);
+      var data = buf.getChannelData(0);
+      for(var i=0;i<len;i++) data[i] = Math.random()*2 - 1;
+      return buf;
+    }
+
+    // One short, decaying tone burst into a given destination node -- the same shape as Sound's own
+    // tone() helper above, just parameterized on where it connects instead of always going straight
+    // to the speakers, so melody loops can route through this track's fade-able master gain.
+    function burst(c, dest, freq, dur, type, peak){
+      try {
+        var osc = c.createOscillator();
+        var g = c.createGain();
+        osc.type = type || 'triangle';
+        osc.frequency.value = freq;
+        var t0 = c.currentTime;
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.linearRampToValueAtTime(peak || 0.5, t0 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + Math.max(0.05, dur * 0.92));
+        osc.connect(g); g.connect(dest);
+        osc.start(t0); osc.stop(t0 + dur + 0.03);
+      } catch(e){}
+    }
+
+    // Repeats `notes` (each { freq, dur, type, gain }, freq falsy = a rest) forever into `dest`,
+    // scheduling one note at a time with setTimeout -- fine-grained sample-accurate scheduling isn't
+    // needed for a background loop a kid is swiping words over, not conducting.
+    function loopNotes(c, dest, notes){
+      var i = 0;
+      function playNext(){
+        var n = notes[i % notes.length];
+        i++;
+        if(n.freq) burst(c, dest, n.freq, n.dur, n.type, n.gain);
+        timers.push(setTimeout(playNext, n.dur * 1000));
+      }
+      playNext();
+    }
+
+    function playWaves(c, dest){
+      var noise = c.createBufferSource();
+      noise.buffer = makeNoiseBuffer(c, 4);
+      noise.loop = true;
+      var filter = c.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 450; // swept by lfo1 below, between roughly 100-800Hz
+      var gain = c.createGain();
+      gain.gain.value = 0.35; // swept by lfo2 below, between roughly 0.10-0.60 -- the "swell"
+      noise.connect(filter); filter.connect(gain); gain.connect(dest);
+      var lfo1 = c.createOscillator(); lfo1.frequency.value = 0.11; // ~9s wash-in/wash-out cycle
+      var lfoGain1 = c.createGain(); lfoGain1.gain.value = 350;
+      lfo1.connect(lfoGain1); lfoGain1.connect(filter.frequency);
+      var lfo2 = c.createOscillator(); lfo2.frequency.value = 0.11;
+      var lfoGain2 = c.createGain(); lfoGain2.gain.value = 0.25;
+      lfo2.connect(lfoGain2); lfoGain2.connect(gain.gain);
+      noise.start(); lfo1.start(); lfo2.start();
+      nodes.push(noise, filter, gain, lfo1, lfoGain1, lfo2, lfoGain2);
+    }
+
+    function playRain(c, dest){
+      var noise = c.createBufferSource();
+      noise.buffer = makeNoiseBuffer(c, 4);
+      noise.loop = true;
+      var filter = c.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.value = 1800; // a steady hiss-y patter, no swell -- rain doesn't breathe like waves do
+      var gain = c.createGain();
+      gain.gain.value = 0.22;
+      noise.connect(filter); filter.connect(gain); gain.connect(dest);
+      noise.start();
+      nodes.push(noise, filter, gain);
+    }
+
+    function playHum(c, dest){
+      var o1 = c.createOscillator(); o1.type = 'sine'; o1.frequency.value = 68;
+      var o2 = c.createOscillator(); o2.type = 'sine'; o2.frequency.value = 71; // slightly detuned -> a slow warm "beat"
+      var gain = c.createGain(); gain.gain.value = 0.22;
+      var lfo = c.createOscillator(); lfo.frequency.value = 0.08;
+      var lfoGain = c.createGain(); lfoGain.gain.value = 0.10;
+      lfo.connect(lfoGain); lfoGain.connect(gain.gain);
+      o1.connect(gain); o2.connect(gain); gain.connect(dest);
+      o1.start(); o2.start(); lfo.start();
+      nodes.push(o1, o2, gain, lfo, lfoGain);
+      // Occasional random "bubble" blips rising up through the deep hum.
+      function bubble(){
+        burst(c, dest, 260 + Math.random()*160, 0.18, 'sine', 0.10);
+        timers.push(setTimeout(bubble, 900 + Math.random()*1600));
+      }
+      timers.push(setTimeout(bubble, 700));
+    }
+
+    function playBouncyTune(c, dest){
+      // A short, catchy, very repetitive 4-note loop -- the "children's-song" feel the tune is for.
+      loopNotes(c, dest, [
+        { freq:523, dur:0.26, type:'triangle', gain:0.5 },
+        { freq:659, dur:0.26, type:'triangle', gain:0.5 },
+        { freq:784, dur:0.26, type:'triangle', gain:0.5 },
+        { freq:659, dur:0.26, type:'triangle', gain:0.5 }
+      ]);
+    }
+
+    function playChimes(c, dest){
+      // Sparser, higher, bell-like -- sine tones with rests, so it reads as chimes rather than a tune.
+      loopNotes(c, dest, [
+        { freq:1568, dur:0.55, type:'sine', gain:0.28 },
+        { freq:0,    dur:0.30 },
+        { freq:1047, dur:0.55, type:'sine', gain:0.26 },
+        { freq:0,    dur:0.30 },
+        { freq:1319, dur:0.55, type:'sine', gain:0.27 },
+        { freq:0,    dur:0.45 }
+      ]);
+    }
+
+    function playPop(c, dest){
+      // Bouncy, syncopated "pop" blips -- square-ish and playful, a bit bubblier than the chimes.
+      loopNotes(c, dest, [
+        { freq:392, dur:0.18, type:'square', gain:0.22 },
+        { freq:0,   dur:0.10 },
+        { freq:587, dur:0.16, type:'square', gain:0.22 },
+        { freq:784, dur:0.20, type:'square', gain:0.24 },
+        { freq:0,   dur:0.14 },
+        { freq:523, dur:0.18, type:'square', gain:0.22 }
+      ]);
+    }
+
+    function clearTimers(){
+      timers.forEach(function(id){ clearTimeout(id); });
+      timers = [];
+    }
+
+    function stop(){
+      clearTimers();
+      var oldMaster = master, oldNodes = nodes;
+      master = null; nodes = []; currentId = null;
+      if(!oldMaster) return;
+      try {
+        var c = Sound.getCtx();
+        var now = c ? c.currentTime : 0;
+        oldMaster.gain.cancelScheduledValues(now);
+        oldMaster.gain.setValueAtTime(oldMaster.gain.value, now);
+        oldMaster.gain.linearRampToValueAtTime(0.0001, now + 0.15); // quick fade -- avoids a click on stop
+      } catch(e){}
+      setTimeout(function(){
+        oldNodes.forEach(function(n){ try{ n.stop && n.stop(); }catch(e){} try{ n.disconnect && n.disconnect(); }catch(e){} });
+        try { oldMaster.disconnect(); } catch(e){}
+      }, 200);
+    }
+
+    function play(id){
+      var track = SOUND_TRACKS.filter(function(t){ return t.id === id; })[0];
+      if(!track) return;
+      stop();
+      var c = Sound.getCtx();
+      if(!c) return;
+      master = c.createGain();
+      master.gain.value = 0.0001;
+      master.connect(c.destination);
+      master.gain.linearRampToValueAtTime(1, c.currentTime + 0.5);
+      nodes = [];
+      currentId = id;
+      if(track.kind === 'noise-waves') playWaves(c, master);
+      else if(track.kind === 'noise-rain') playRain(c, master);
+      else if(track.kind === 'noise-hum') playHum(c, master);
+      else if(track.kind === 'music-bouncy') playBouncyTune(c, master);
+      else if(track.kind === 'music-chimes') playChimes(c, master);
+      else if(track.kind === 'music-pop') playPop(c, master);
+    }
+
+    return { play: play, stop: stop, current: function(){ return currentId; } };
   })();
 
   /* ============ tiny non-cryptographic PIN hash ============ */
@@ -1037,20 +1729,110 @@
   }
 
   var store = (function(){
-    var mem = { decks: [], cards: {}, stats: { streak:0, stars:0, lastReviewDateISO:null, totalReviews:0 }, settings: { pinHash:null, sessionActive:false, sessionStartedAt:null, algorithm:'sm2_speed', difficulty:'medium' }, sessionTally: null, history: [], nextId: 1, deckListeners: [], cardListeners: {} };
+    // Profiles are top-level; everything else (decks/cards/stats/settings/session/history/badges) is
+    // scoped under 'profiles/<id>/...' so each profile has its own fully separate deck library and
+    // progress. `pid` is the currently active profile -- set once via setActiveProfile() whenever a
+    // profile is entered, then read by every scoped method below at call time (not bound in a closure),
+    // so switching profiles mid-session (after a full sign-out through the picker) just works.
+    var mem = { profiles: [], profileListeners: [], pinHash: null, byProfile: {}, nextId: 1 };
     var db = null;
     var live = false;
+    var pid = null;
 
     function memId(){ return 'local-' + (mem.nextId++); }
-    function notifyDecks(){ mem.deckListeners.forEach(function(cb){ cb(mem.decks.slice()); }); }
-    function notifyCards(deckId){ (mem.cardListeners[deckId]||[]).forEach(function(cb){ cb((mem.cards[deckId]||[]).slice()); }); }
+    function notifyProfiles(){ mem.profileListeners.forEach(function(cb){ cb(mem.profiles.slice()); }); }
+    function ensureProfileMem(id){
+      if(!mem.byProfile[id]) mem.byProfile[id] = {
+        decks: [], cards: {}, deckListeners: [], cardListeners: {},
+        stats: { streak:0, stars:0, lastReviewDateISO:null, totalReviews:0, unlockedSounds:[] },
+        settings: { sessionActive:false, sessionStartedAt:null, algorithm:'sm2_speed', difficulty:'medium' },
+        sessionTally: null, history: [], badges: {}
+      };
+      return mem.byProfile[id];
+    }
+    function notifyDecks(m){ m.deckListeners.forEach(function(cb){ cb(m.decks.slice()); }); }
+    function notifyCards(m, deckId){ (m.cardListeners[deckId]||[]).forEach(function(cb){ cb((m.cards[deckId]||[]).slice()); }); }
 
     function api(){
       return {
         live: live,
-        listenDecks: function(cb){
+        setActiveProfile: function(id){ pid = id; },
+        /* ---------- profiles (top-level, never profile-scoped) ---------- */
+        listenProfiles: function(cb){
           if(live){
-            return db.collection('decks').orderBy('order','asc').onSnapshot(function(snap){
+            return db.collection('profiles').orderBy('order','asc').onSnapshot(function(snap){
+              cb(snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); }));
+            }, function(err){
+              console.error('[Coral Cove] profile sync lost', err);
+              S.storeError = 'Lost connection while syncing profiles — please reload the page.';
+              render();
+            });
+          }
+          mem.profileListeners.push(cb);
+          cb(mem.profiles.slice());
+          return function(){ mem.profileListeners = mem.profileListeners.filter(function(x){ return x!==cb; }); };
+        },
+        addProfile: function(data){
+          data = Object.assign({ createdAt: Date.now() }, data);
+          if(live) return db.collection('profiles').add(data).then(function(ref){ return ref.id; }).catch(reportStoreError('create profile'));
+          var id = memId();
+          mem.profiles.push(Object.assign({id:id}, data));
+          notifyProfiles();
+          return Promise.resolve(id);
+        },
+        updateProfile: function(id, data){
+          if(live) return db.collection('profiles').doc(id).update(data).catch(reportStoreError('save profile'));
+          var p = mem.profiles.find(function(x){ return x.id===id; });
+          if(p) Object.assign(p, data);
+          notifyProfiles();
+          return Promise.resolve();
+        },
+        // Cascades through every scoped collection/doc a profile owns before removing the profile
+        // doc itself -- there's no server-side recursive delete here, so each piece is enumerated
+        // and removed by hand. Best-effort on the scoped docs (a doc that was never created is fine
+        // to "fail" deleting); the deck/card sweep and the final profile-doc delete report errors.
+        deleteProfile: function(id){
+          if(live){
+            var base = 'profiles/'+id;
+            function safeDoc(path){ return db.doc(path).delete().catch(function(){}); }
+            return db.collection(base+'/decks').get().then(function(snap){
+              return Promise.all(snap.docs.map(function(d){
+                var deckId = d.id;
+                var cardsPath = base+'/decks/'+deckId+'/cards';
+                return db.collection(cardsPath).get().then(function(cardSnap){
+                  return Promise.all(cardSnap.docs.map(function(c){ return db.collection(cardsPath).doc(c.id).delete(); }));
+                }).then(function(){ return db.collection(base+'/decks').doc(deckId).delete(); });
+              }));
+            }).then(function(){
+              return db.collection(base+'/history').get().then(function(snap){
+                return Promise.all(snap.docs.map(function(d){ return db.collection(base+'/history').doc(d.id).delete(); }));
+              });
+            }).then(function(){
+              return Promise.all([ safeDoc(base+'/stats/summary'), safeDoc(base+'/settings/study'), safeDoc(base+'/session/current'), safeDoc(base+'/badges/summary') ]);
+            }).then(function(){
+              return db.collection('profiles').doc(id).delete();
+            }).catch(reportStoreError('delete profile'));
+          }
+          mem.profiles = mem.profiles.filter(function(x){ return x.id!==id; });
+          delete mem.byProfile[id];
+          notifyProfiles();
+          return Promise.resolve();
+        },
+        /* ---------- app-wide parent PIN (not per-profile) ---------- */
+        getPin: function(){
+          if(live) return db.doc('settings/pin').get().then(function(snap){ return snap.exists ? (snap.data().pinHash||null) : null; });
+          return Promise.resolve(mem.pinHash);
+        },
+        setPin: function(hash){
+          if(live) return db.doc('settings/pin').set({ pinHash: hash });
+          mem.pinHash = hash;
+          return Promise.resolve();
+        },
+        /* ---------- everything below is scoped to the active profile (pid) ---------- */
+        listenDecks: function(cb){
+          var scope = pid;
+          if(live){
+            return db.collection('profiles/'+scope+'/decks').orderBy('order','asc').onSnapshot(function(snap){
               cb(snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); }));
             }, function(err){
               // onSnapshot errors are terminal -- this listener is now dead and will never fire again.
@@ -1061,48 +1843,54 @@
               render();
             });
           }
-          mem.deckListeners.push(cb);
-          cb(mem.decks.slice());
-          return function(){ mem.deckListeners = mem.deckListeners.filter(function(x){ return x!==cb; }); };
+          var m = ensureProfileMem(scope);
+          m.deckListeners.push(cb);
+          cb(m.decks.slice());
+          return function(){ m.deckListeners = m.deckListeners.filter(function(x){ return x!==cb; }); };
         },
         addDeck: function(data){
           data = Object.assign({ createdAt: Date.now() }, data);
-          if(live) return db.collection('decks').add(data).then(function(ref){ return ref.id; }).catch(reportStoreError('create deck'));
+          if(live) return db.collection('profiles/'+pid+'/decks').add(data).then(function(ref){ return ref.id; }).catch(reportStoreError('create deck'));
+          var m = ensureProfileMem(pid);
           var id = memId();
-          mem.decks.push(Object.assign({id:id}, data));
-          mem.cards[id] = [];
-          notifyDecks();
+          m.decks.push(Object.assign({id:id}, data));
+          m.cards[id] = [];
+          notifyDecks(m);
           return Promise.resolve(id);
         },
         updateDeck: function(id, data){
-          if(live) return db.collection('decks').doc(id).update(data).catch(reportStoreError('save deck'));
-          var d = mem.decks.find(function(x){ return x.id===id; });
+          if(live) return db.collection('profiles/'+pid+'/decks').doc(id).update(data).catch(reportStoreError('save deck'));
+          var m = ensureProfileMem(pid);
+          var d = m.decks.find(function(x){ return x.id===id; });
           if(d) Object.assign(d, data);
-          notifyDecks();
+          notifyDecks(m);
           return Promise.resolve();
         },
         deleteDeck: function(id){
           if(live){
-            return db.collection('decks/'+id+'/cards').get().then(function(snap){
-              return Promise.all(snap.docs.map(function(d){ return d.ref ? d.ref.delete() : db.collection('decks/'+id+'/cards').doc(d.id).delete(); }));
-            }).then(function(){ return db.collection('decks').doc(id).delete(); }).catch(reportStoreError('delete deck'));
+            var cardsPath = 'profiles/'+pid+'/decks/'+id+'/cards';
+            return db.collection(cardsPath).get().then(function(snap){
+              return Promise.all(snap.docs.map(function(d){ return d.ref ? d.ref.delete() : db.collection(cardsPath).doc(d.id).delete(); }));
+            }).then(function(){ return db.collection('profiles/'+pid+'/decks').doc(id).delete(); }).catch(reportStoreError('delete deck'));
           }
-          mem.decks = mem.decks.filter(function(x){ return x.id!==id; });
-          delete mem.cards[id];
-          notifyDecks();
+          var m = ensureProfileMem(pid);
+          m.decks = m.decks.filter(function(x){ return x.id!==id; });
+          delete m.cards[id];
+          notifyDecks(m);
           return Promise.resolve();
         },
         getCardsOnce: function(deckId){
           if(live){
-            return db.collection('decks/'+deckId+'/cards').get().then(function(snap){
+            return db.collection('profiles/'+pid+'/decks/'+deckId+'/cards').get().then(function(snap){
               return snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
             });
           }
-          return Promise.resolve((mem.cards[deckId]||[]).slice());
+          return Promise.resolve((ensureProfileMem(pid).cards[deckId]||[]).slice());
         },
         listenCards: function(deckId, cb){
+          var scope = pid;
           if(live){
-            return db.collection('decks/'+deckId+'/cards').onSnapshot(function(snap){
+            return db.collection('profiles/'+scope+'/decks/'+deckId+'/cards').onSnapshot(function(snap){
               cb(snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); }));
             }, function(err){
               // Same terminal-error issue as listenDecks above: don't blank the real card list with
@@ -1112,81 +1900,100 @@
               render();
             });
           }
-          if(!mem.cardListeners[deckId]) mem.cardListeners[deckId] = [];
-          mem.cardListeners[deckId].push(cb);
-          cb((mem.cards[deckId]||[]).slice());
-          return function(){ mem.cardListeners[deckId] = (mem.cardListeners[deckId]||[]).filter(function(x){ return x!==cb; }); };
+          var m = ensureProfileMem(scope);
+          if(!m.cardListeners[deckId]) m.cardListeners[deckId] = [];
+          m.cardListeners[deckId].push(cb);
+          cb((m.cards[deckId]||[]).slice());
+          return function(){ m.cardListeners[deckId] = (m.cardListeners[deckId]||[]).filter(function(x){ return x!==cb; }); };
         },
         addCard: function(deckId, data){
           data = Object.assign({ due: Date.now(), interval:0, ease:2.5, reps:0, lapses:0, state:'new', learningStep:0, createdAt: Date.now() }, data);
-          if(live) return db.collection('decks/'+deckId+'/cards').add(data).catch(reportStoreError('save card'));
+          if(live) return db.collection('profiles/'+pid+'/decks/'+deckId+'/cards').add(data).catch(reportStoreError('save card'));
+          var m = ensureProfileMem(pid);
           var id = memId();
-          if(!mem.cards[deckId]) mem.cards[deckId] = [];
-          mem.cards[deckId].push(Object.assign({id:id}, data));
-          notifyCards(deckId);
+          if(!m.cards[deckId]) m.cards[deckId] = [];
+          m.cards[deckId].push(Object.assign({id:id}, data));
+          notifyCards(m, deckId);
           return Promise.resolve();
         },
         updateCard: function(deckId, cardId, data){
-          if(live) return db.collection('decks/'+deckId+'/cards').doc(cardId).update(data).catch(reportStoreError('save card'));
-          var arr = mem.cards[deckId]||[];
+          if(live) return db.collection('profiles/'+pid+'/decks/'+deckId+'/cards').doc(cardId).update(data).catch(reportStoreError('save card'));
+          var m = ensureProfileMem(pid);
+          var arr = m.cards[deckId]||[];
           var c = arr.find(function(x){ return x.id===cardId; });
           if(c) Object.assign(c, data);
-          notifyCards(deckId);
+          notifyCards(m, deckId);
           return Promise.resolve();
         },
         deleteCard: function(deckId, cardId){
-          if(live) return db.collection('decks/'+deckId+'/cards').doc(cardId).delete().catch(reportStoreError('delete card'));
-          mem.cards[deckId] = (mem.cards[deckId]||[]).filter(function(x){ return x.id!==cardId; });
-          notifyCards(deckId);
+          if(live) return db.collection('profiles/'+pid+'/decks/'+deckId+'/cards').doc(cardId).delete().catch(reportStoreError('delete card'));
+          var m = ensureProfileMem(pid);
+          m.cards[deckId] = (m.cards[deckId]||[]).filter(function(x){ return x.id!==cardId; });
+          notifyCards(m, deckId);
           return Promise.resolve();
         },
         getStats: function(){
-          if(live) return db.doc('stats/summary').get().then(function(snap){
-            return snap.exists ? snap.data() : { streak:0, stars:0, lastReviewDateISO:null, totalReviews:0 };
+          if(live) return db.doc('profiles/'+pid+'/stats/summary').get().then(function(snap){
+            return snap.exists ? snap.data() : { streak:0, stars:0, lastReviewDateISO:null, totalReviews:0, unlockedSounds:[] };
           });
-          return Promise.resolve(Object.assign({}, mem.stats));
+          return Promise.resolve(Object.assign({}, ensureProfileMem(pid).stats));
         },
         setStats: function(data){
-          if(live) return db.doc('stats/summary').set(data);
-          mem.stats = Object.assign({}, data);
+          if(live) return db.doc('profiles/'+pid+'/stats/summary').set(data);
+          ensureProfileMem(pid).stats = Object.assign({}, data);
           return Promise.resolve();
         },
         getSettings: function(){
-          if(live) return db.doc('settings/parent').get().then(function(snap){
-            return snap.exists ? snap.data() : { pinHash:null, sessionActive:false, sessionStartedAt:null, algorithm:'sm2_speed', difficulty:'medium' };
+          if(live) return db.doc('profiles/'+pid+'/settings/study').get().then(function(snap){
+            return snap.exists ? snap.data() : { sessionActive:false, sessionStartedAt:null, algorithm:'sm2_speed', difficulty:'medium' };
           });
-          return Promise.resolve(Object.assign({}, mem.settings));
+          return Promise.resolve(Object.assign({}, ensureProfileMem(pid).settings));
         },
         setSettings: function(data){
-          if(live) return db.doc('settings/parent').set(data);
-          mem.settings = Object.assign({}, data);
+          if(live) return db.doc('profiles/'+pid+'/settings/study').set(data);
+          ensureProfileMem(pid).settings = Object.assign({}, data);
           return Promise.resolve();
         },
         getSessionTally: function(){
-          if(live) return db.doc('session/current').get().then(function(snap){
+          if(live) return db.doc('profiles/'+pid+'/session/current').get().then(function(snap){
             return snap.exists ? snap.data() : null;
           });
-          return Promise.resolve(mem.sessionTally ? Object.assign({}, mem.sessionTally) : null);
+          var t = ensureProfileMem(pid).sessionTally;
+          return Promise.resolve(t ? Object.assign({}, t) : null);
         },
         setSessionTally: function(data){
-          if(live) return db.doc('session/current').set(data);
-          mem.sessionTally = Object.assign({}, data);
+          if(live) return db.doc('profiles/'+pid+'/session/current').set(data);
+          ensureProfileMem(pid).sessionTally = Object.assign({}, data);
           return Promise.resolve();
         },
         // A permanent, append-only log of finished study rounds — this is what powers the
         // overall Stats page's trend chart. Never overwritten, unlike sessionTally above.
         addHistoryEntry: function(data){
           data = Object.assign({ endedAt: Date.now() }, data);
-          if(live) return db.collection('history').add(data);
+          if(live) return db.collection('profiles/'+pid+'/history').add(data);
+          var m = ensureProfileMem(pid);
           var id = memId();
-          mem.history.push(Object.assign({id:id}, data));
+          m.history.push(Object.assign({id:id}, data));
           return Promise.resolve();
         },
         getHistoryOnce: function(){
-          if(live) return db.collection('history').get().then(function(snap){
+          if(live) return db.collection('profiles/'+pid+'/history').get().then(function(snap){
             return snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
           });
-          return Promise.resolve(mem.history.slice());
+          return Promise.resolve(ensureProfileMem(pid).history.slice());
+        },
+        // Badge gallery -- a single doc per profile mapping badgeId -> earnedAt (ms timestamp).
+        // Absent/false-y entries just mean "not earned yet", so the doc only ever grows.
+        getBadges: function(){
+          if(live) return db.doc('profiles/'+pid+'/badges/summary').get().then(function(snap){
+            return snap.exists ? snap.data() : {};
+          });
+          return Promise.resolve(Object.assign({}, ensureProfileMem(pid).badges));
+        },
+        setBadges: function(data){
+          if(live) return db.doc('profiles/'+pid+'/badges/summary').set(data);
+          ensureProfileMem(pid).badges = Object.assign({}, data);
+          return Promise.resolve();
         }
       };
     }
@@ -1257,7 +2064,7 @@
     decks: [],
     dueCounts: {},
     currentDeckId: null,
-    stats: { streak:0, stars:0, lastReviewDateISO:null, totalReviews:0 },
+    stats: { streak:0, stars:0, lastReviewDateISO:null, totalReviews:0, unlockedSounds:[] },
     studyQueue: [],
     studyTotal: 0,
     sessionReviewed: 0,
@@ -1268,10 +2075,52 @@
     emojiPickerOpen: false,
     addCardOpen: false,
     choiceState: null,
+    dragState: null,        // { cardId, options, dropped, correct } -- 'match'/'blank' mode's drag-to-answer state, parallel to choiceState above
+    timedChoiceState: null, // { cardId, direction, prompt, answer, options, selected, totalSeconds, deadline, secondsAdded, expired } -- 'timedchoice' mode's per-card round state
+    timedChoiceAllCards: [], // every card in the deck currently being studied, used to source cross-card distractor options for 'timedchoice' mode when a card has no manual `choices` of its own
+    timedChoiceDirection: null, // 'fwd' (front shown as the question, back-side text as the answer/options) | 'rev' (back shown as the question, front-side text as the answer/options) -- re-rolled every TIMED_CHOICE_GROUP_SIZE cards
+    timedChoiceGroupLeft: 0, // cards left in the current direction "streak" before the next reroll
+    timedChoiceTimerHandle: null, // setInterval id driving the on-screen countdown bar for 'timedchoice' mode
+    feedQueue: [],           // shuffled card list for the current Word Feed session (S.view === 'feed')
+    feedIndex: 0,            // unbounded, wrapped with modulo at render time so swiping loops forever
+    feedLastSpokenId: null,  // the card id last spoken aloud, so a re-render doesn't repeat the same word
+    storyQueue: [],          // ordered { id, front } word tokens for the current Story Mode session (S.view === 'story')
+    storyIndex: 0,           // unbounded, wrapped with modulo at render time so swiping loops back to the start
+    storyLastSpokenId: null, // the token id last spoken aloud, so a re-render doesn't repeat the same word
+    equationQueue: [],       // shuffled card list for the current Equation Feed session (S.view === 'equationFeed')
+    equationIndex: 0,        // unbounded, wrapped with modulo at render time, same as feedIndex/storyIndex above
+    equationSettledId: null, // the card id the reveal timer is currently scheduled/fired for, so a re-render doesn't restart it
+    equationRevealed: false, // true once the current card's answer has been spoken + bounced onto the screen
+    langQueue: [],           // shuffled queue of the currently-unlocked cards for Language Feed (S.view === 'langFeed')
+    langIndex: 0,            // unbounded, wrapped with modulo at render time, same as feedIndex/equationIndex above
+    langSettledId: null,     // the card id the reveal timer is currently scheduled/fired for, so a re-render doesn't restart it
+    langRevealed: false,     // true once the current card's translation has faded in
+    langSeenIds: null,       // Set of card ids seen at least once THIS SESSION, used only to decide when to unlock the next batch -- reset every startLangFeed(), never persisted
+    langSorted: [],          // every card in the deck, sorted by its `order` field, oldest/introduced-first -- the full pool batches are drawn from
+    langUnlockedCount: 0,    // mirrors deck.langUnlockedCount for the active session; bumped (and persisted back) as batches unlock
+    langBatchSize: 5,        // mirrors deck.langBatchSize for the active session
+    langTotalCards: 0,       // langSorted.length, cached for convenience
+    langJustUnlocked: false, // true for one render right after a new batch unlocks, to show the little toast
+    feedSoundId: null,       // the ambient sound/music track currently playing over Word Feed, or null for none -- session-only, never persisted (so the feed always opens quiet, not autoplaying whatever was picked last time)
+    soundPickerOpen: false,  // true while the Word Feed sound-shop panel is showing
+    soundBuyError: null,     // a locked track's id, briefly, right after tapping it without enough stars -- drives that one tile's shake
     currentCardId: null,
     cardShownAt: null,
     cardFlippedAt: null,
-    settings: { pinHash:null, sessionActive:false, sessionStartedAt:null, algorithm:'sm2_speed', difficulty:'medium' },
+    settings: { sessionActive:false, sessionStartedAt:null, algorithm:'sm2_speed', difficulty:'medium', readingSupport:false },
+    pinHash: null,          // app-wide parent PIN hash -- no longer nested inside per-profile settings
+    profiles: [],           // every profile's top-level metadata (name/mode/photo/order), loaded once at boot
+    unsubProfiles: null,
+    activeProfileId: null,  // null = showing the profile picker; otherwise the id of the profile in use
+    profile: null,          // the active profile's own record (kept in sync with S.profiles)
+    profileLoading: false,  // true for the brief window between choosing a profile and its data arriving
+    managingProfiles: false,// true while the PIN-unlocked "add/remove profiles" screen is showing
+    creatingProfile: false, // true while the new-profile form is showing
+    newProfileDraft: null,  // { name, mode, photoId, photoUrl } while creatingProfile is true
+    profilePhotoUploading: false, // true while a picked profile photo is being downscaled + uploaded
+    pendingModeSwitch: null,// the mode a child-initial profile is about to switch to, once its PIN clears
+    badges: {},             // { badgeId: earnedAtMs } for the active profile, loaded on enterProfile
+    justEarnedBadges: [],   // badge ids earned by the round just finished, so the summary screen can celebrate them
     sessionActive: false,
     sessionTally: null,
     finishedTally: null,
@@ -1287,7 +2136,7 @@
     peeking: false,         // true while showing the read-only "last answered card" view (swiped back to review it)
     lastAnsweredCard: null, // { front, back, note, mode, correct, rating, choiceOptions, chosenText } for the ONE card behind the current one — replaced every time a new card is answered
     critterPrevPct: 0,      // progress % the critter bar last visually landed on — renderStudy() starts the bar there and animates to the new %, since a fresh app.innerHTML render can't transition on its own
-    pinPromptFor: null,     // null | 'start' | 'end' | 'edit' | 'exit'
+    pinPromptFor: null,     // null | 'start' | 'end' | 'edit' | 'exit' | 'switch' | 'manageProfiles' | 'modeSwitch'
     pinInput: '',
     pinError: '',
     pinShake: false,
@@ -1351,6 +2200,15 @@
     return ids.map(function(id){ return present[id]; });
   }
 
+  // Reading-support accommodation (Settings toggle): wider letter/word spacing and a larger base
+  // font, driven entirely by CSS via this one class -- deliberately NOT a dyslexia-specific font
+  // swap (OpenDyslexic/Dyslexie aren't backed by controlled research; plain legible fonts plus
+  // generous spacing and text-to-speech are). Called once on boot/profile-enter and again any time
+  // S.settings.readingSupport changes.
+  function applyReadingSupport(){
+    document.body.classList.toggle('reading-support', !!(S.settings && S.settings.readingSupport));
+  }
+
   function todayISO(d){ d = d || new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
   function shuffle(arr){ var a = arr.slice(); for(var i=a.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
@@ -1373,18 +2231,44 @@
   function render(){
     if(!S.booted) return; // wait for settings to load before showing anything (avoids a lock-screen flash)
     if(S.pinPromptFor) return renderPinPad(S.pinPromptFor);
+    // Profile gate: nothing profile-scoped renders until a profile is chosen. Manage/new-profile
+    // screens sit outside any profile (they touch S.profiles, the top-level list) so they're checked
+    // first, ahead of even the "which profile is active" check.
+    if(S.creatingProfile) return renderNewProfileForm();
+    if(S.managingProfiles) return renderManageProfiles();
+    if(!S.activeProfileId) return renderProfilePicker();
+    if(S.profileLoading) return renderProfileLoading();
     if(S.view === 'sessionResults') return renderSessionResults();
     // 'study'/'summary' are checked before the managingDecks branch below so that "Dive In" from
     // within Adult Mode (Manage Decks) actually opens the deck instead of silently falling through
     // to renderHome() -- previously the managingDecks branch had no case for these two views at all.
     if(S.view === 'study') return renderStudy();
     if(S.view === 'summary') return renderSummary();
-    if(S.managingDecks) return (S.view === 'editor') ? renderEditor() : (S.view === 'stats' ? renderStats() : (S.view === 'deckStats' ? renderDeckStats() : (S.view === 'settings' ? renderSettingsPage() : renderHome())));
+    if(S.view === 'feed') return renderFeed();   // Word Feed -- same "works from either Manage Decks or
+                                                   // Child Mode home" reasoning as study/summary above
+    if(S.view === 'story') return renderStory();  // Story Mode -- same reasoning, see the STORY MODE
+                                                   // section below WORD FEED
+    if(S.view === 'equationFeed') return renderEquationFeed(); // Equation Feed -- same reasoning again,
+                                                                 // see the EQUATION FEED section below STORY MODE
+    if(S.view === 'langFeed') return renderLangFeed();          // Language Feed -- same reasoning again,
+                                                                  // see the LANGUAGE FEED section below EQUATION FEED
+    if(S.managingDecks){
+      if(S.view === 'editor') return renderEditor();
+      if(S.view === 'stats') return renderStats();
+      if(S.view === 'deckStats') return renderDeckStats();
+      if(S.view === 'settings') return renderSettingsPage();
+      return renderHome();
+    }
     if(!S.sessionActive) return renderLocked();
-    if(S.view === 'home') return renderHome();
     if(S.view === 'editor') return renderEditor();
     if(S.view === 'stats') return renderStats();
     if(S.view === 'deckStats') return renderDeckStats();
+    if(S.view === 'settings') return renderSettingsPage();
+    return renderHome();
+  }
+
+  function renderProfileLoading(){
+    app.innerHTML = '<div class="lock-screen"><h2>🌊 Loading…</h2></div>';
   }
 
   function ctrlRowHTML(){
@@ -1392,12 +2276,15 @@
     return '' +
       '<div class="ctrl-row">' +
         '<button type="button" class="icon-btn" data-act="toggle-sound" aria-label="Turn sound '+(Sound.isEnabled()?'off':'on')+'" title="Sound">'+soundIcon+'</button>' +
+        '<button type="button" class="icon-btn" data-act="switch-profile" aria-label="Switch profile" title="Switch profile">🔀</button>' +
         '<button type="button" class="icon-btn" data-act="end-session" aria-label="End session" title="End session">🔒</button>' +
       '</div>';
   }
   function wireCtrlRow(){
     var s = app.querySelector('[data-act="toggle-sound"]');
     if(s) s.addEventListener('click', function(){ Sound.setEnabled(!Sound.isEnabled()); render(); });
+    var p = app.querySelector('[data-act="switch-profile"]');
+    if(p) p.addEventListener('click', exitToPicker);
     var e = app.querySelector('[data-act="end-session"]');
     if(e) e.addEventListener('click', function(){
       // In Adult Mode there's no child "session" to lock/end -- a grown-up playing a deck to try it
@@ -1411,14 +2298,19 @@
   // The very first choice, every time the app is at rest: Adult Mode (manage decks, settings,
   // progress -- never asks for the PIN) or Child Mode (today's study session -- always asks for
   // the PIN to start, since that's the one thing the PIN still gates).
+  // The per-profile "resting" screen for a Child Mode profile -- Adult Mode profiles skip this
+  // entirely (enterProfile drops them straight into Manage Decks, since Adult Mode has never asked
+  // for the PIN). Mode itself isn't chosen here anymore; it's a property of the profile, changed
+  // only from Settings -> requestModeSwitch.
   function renderLocked(){
+    var name = S.profile ? S.profile.name : '';
     app.innerHTML = '' +
       '<div class="mascot-wrap">'+mascotSVG('big')+'</div>' +
       '<div class="lock-screen">' +
-        '<h2>🌊 Who\'s diving in?</h2>' +
-        '<p>Child Mode starts today\'s study session, PIN protected. Adult Mode can study anytime and reach deck editing, settings, and progress — no PIN needed.</p>' +
-        '<button type="button" class="btn btn-primary" data-act="choose-child">🧒 Child Mode</button>' +
-        '<button type="button" class="btn btn-ghost" data-act="choose-adult" style="margin-top:10px;">🔧 Adult Mode</button>' +
+        '<h2>🌊 '+esc(name)+' is resting</h2>' +
+        '<p>Ask a grown-up to enter the PIN to start today\'s study session.</p>' +
+        '<button type="button" class="btn btn-primary" data-act="choose-child">🧒 Start Session</button>' +
+        '<button type="button" class="btn btn-ghost" data-act="switch-profile" style="margin-top:10px;">🔀 Switch Profile</button>' +
       '</div>';
     app.querySelector('[data-act="choose-child"]').addEventListener('click', function(){
       Sound.unlock();
@@ -1426,9 +2318,281 @@
       S.pinPromptFor = 'start';
       render();
     });
-    app.querySelector('[data-act="choose-adult"]').addEventListener('click', function(){
+    app.querySelector('[data-act="switch-profile"]').addEventListener('click', function(){
       Sound.unlock();
-      enterManageMode();
+      goToPicker();
+    });
+  }
+
+  /* ---------- PROFILES ---------- */
+  function profileAvatarHTML(p, size){
+    size = size || 'lg';
+    if(p && p.photoUrl) return '<img class="profile-avatar avatar-'+size+'" src="'+esc(p.photoUrl)+'" alt="">';
+    var initial = (p && p.name) ? esc(p.name.trim().charAt(0).toUpperCase()) : '🐬';
+    return '<div class="profile-avatar avatar-'+size+' avatar-fallback">'+initial+'</div>';
+  }
+
+  function subscribeProfiles(){
+    if(S.unsubProfiles) S.unsubProfiles();
+    S.unsubProfiles = S.store.listenProfiles(function(profiles){
+      S.profiles = profiles;
+      if(S.activeProfileId){
+        var updated = profiles.find(function(p){ return p.id === S.activeProfileId; });
+        if(updated) S.profile = updated;
+      }
+      if(!S.booted) return;
+      render();
+    });
+  }
+
+  // Enters a chosen profile: points the store at it, resets every piece of transient per-profile
+  // state left over from whoever was active before, then loads that profile's own stats/settings/
+  // session/badges and subscribes to its decks before letting render() show anything real (the brief
+  // gap is covered by renderProfileLoading so the old profile's screen never flashes stale data).
+  function enterProfile(profile){
+    S.activeProfileId = profile.id;
+    S.profile = profile;
+    S.store.setActiveProfile(profile.id);
+    S.profileLoading = true;
+    S.decks = []; S.dueCounts = {}; S.currentDeckId = null;
+    S.statsData = null; S.statsDeckId = null; S.deckFilter = 'all'; S.subjectFilter = 'all';
+    S.view = 'home';
+    S.managingDecks = profile.mode === 'adult';
+    S.editMode = false;
+    S.sessionActive = false;
+    S.finishedTally = null;
+    S.pendingEdit = null;
+    S.justEarnedBadges = [];
+    render();
+    Promise.all([S.store.getStats(), S.store.getSettings(), S.store.getSessionTally(), S.store.getBadges()]).then(function(results){
+      // unlockedSounds defaults to [] for any stats doc saved before the Word Feed sound shop existed.
+      S.stats = Object.assign({ unlockedSounds: [] }, results[0]);
+      S.settings = Object.assign({ algorithm:'sm2_speed', difficulty:'medium', readingSupport:false }, results[1] || {});
+      S.sessionTally = results[2] || null;
+      S.badges = results[3] || {};
+      applyReadingSupport();
+      // A session never resumes automatically across a profile switch or page reload -- Child Mode
+      // always comes back to the resting screen and has to be started again on purpose.
+      S.sessionActive = false;
+      S.profileLoading = false;
+      subscribeDecks();
+      refreshDueCounts().then(render);
+    });
+  }
+
+  // Actually flips the active profile's mode (called either straight from Settings, for a profile
+  // that didn't start as Child, or after the 'modeSwitch' PIN clears for one that did). Drops the
+  // profile right into whichever home screen the new mode implies.
+  function applyModeSwitch(newMode){
+    var p = S.profile;
+    if(!p || p.mode === newMode) return;
+    S.store.updateProfile(p.id, { mode: newMode }).catch(function(){});
+    S.profile = Object.assign({}, p, { mode: newMode });
+    S.profiles = S.profiles.map(function(x){ return x.id === p.id ? S.profile : x; });
+    S.managingDecks = newMode === 'adult';
+    S.editMode = false;
+    S.view = 'home';
+    render();
+  }
+
+  // Tears down the active profile's subscriptions/state and drops back to the profile picker.
+  function goToPicker(){
+    if(S.unsubDecks){ S.unsubDecks(); S.unsubDecks = null; }
+    if(S.unsubCards){ S.unsubCards(); S.unsubCards = null; }
+    S.activeProfileId = null;
+    S.profile = null;
+    S.managingDecks = false;
+    S.editMode = false;
+    S.sessionActive = false;
+    S.view = 'home';
+    S.decks = []; S.dueCounts = {};
+    render();
+  }
+
+  // The "Switch Profile" control shown during an active Child Mode session -- ending a session is
+  // already PIN-gated (kind 'end'), so leaving one early to switch profiles is gated the same way.
+  // Adult Mode and a not-yet-started Child Mode profile have nothing to protect, so those go straight
+  // through goToPicker().
+  function exitToPicker(){
+    if(S.sessionActive){
+      S.pinInput=''; S.pinError=''; S.pinShake=false;
+      S.pinPromptFor = 'switch';
+      render();
+      return;
+    }
+    goToPicker();
+  }
+
+  function renderProfilePicker(){
+    var tiles = S.profiles.map(function(p){
+      return '<button type="button" class="profile-tile" data-profile="'+p.id+'">' +
+          profileAvatarHTML(p) +
+          '<span class="profile-name">'+esc(p.name)+'</span>' +
+        '</button>';
+    }).join('');
+    app.innerHTML = '' +
+      '<div class="mascot-wrap">'+mascotSVG('big')+'</div>' +
+      '<div class="lock-screen">' +
+        '<h2>🌊 Who\'s diving in?</h2>' +
+        '<p>Pick a profile to get started.</p>' +
+        '<div class="profile-grid">'+tiles+'</div>' +
+        '<button type="button" class="btn btn-ghost" data-act="manage-profiles" style="margin-top:14px;">⚙️ Manage Profiles</button>' +
+      '</div>';
+    app.querySelectorAll('[data-profile]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var p = S.profiles.find(function(x){ return x.id === b.dataset.profile; });
+        if(!p) return;
+        Sound.unlock();
+        enterProfile(p);
+      });
+    });
+    app.querySelector('[data-act="manage-profiles"]').addEventListener('click', function(){
+      Sound.unlock();
+      S.pinInput=''; S.pinError=''; S.pinShake=false;
+      S.pinPromptFor = 'manageProfiles';
+      render();
+    });
+  }
+
+  function renderManageProfiles(){
+    var tiles = S.profiles.map(function(p){
+      return '' +
+        '<div class="profile-tile profile-tile-manage">' +
+          profileAvatarHTML(p) +
+          '<span class="profile-name">'+esc(p.name)+'</span>' +
+          '<span class="profile-mode-badge">'+(p.mode==='adult'?'🔧 Adult':'🧒 Child')+'</span>' +
+          '<button type="button" class="icon-btn" data-del="'+p.id+'" aria-label="Delete '+esc(p.name)+'\'s profile" title="Delete profile">🗑️</button>' +
+        '</div>';
+    }).join('');
+    app.innerHTML = '' +
+      '<div class="nav-row">' +
+        '<button class="back-btn" data-act="exit-manage-profiles">⟵ Lagoon</button>' +
+        '<span class="nav-title">⚙️ Manage Profiles</span>' +
+      '</div>' +
+      '<div class="stats-page">' +
+        errorBannerHTML() +
+        '<div class="profile-grid">' + tiles +
+          '<button type="button" class="profile-tile profile-tile-add" data-act="new-profile"><span class="profile-add-icon">➕</span><span class="profile-name">Add Profile</span></button>' +
+        '</div>' +
+      '</div>';
+    wireErrorBanner();
+    app.querySelector('[data-act="exit-manage-profiles"]').addEventListener('click', function(){ S.managingProfiles = false; render(); });
+    app.querySelector('[data-act="new-profile"]').addEventListener('click', function(){
+      S.newProfileDraft = { name:'', mode:'child', photoId:'', photoUrl:'' };
+      S.managingProfiles = false;
+      S.creatingProfile = true;
+      render();
+    });
+    app.querySelectorAll('[data-del]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var id = b.dataset.del;
+        var p = S.profiles.find(function(x){ return x.id === id; });
+        if(!p) return;
+        if(S.profiles.length <= 1){ S.storeError = 'You need at least one profile.'; render(); return; }
+        if(!window.confirm('Delete '+p.name+'\'s profile? This removes all of their decks and progress for good.')) return;
+        S.store.deleteProfile(id).then(function(){
+          if(p.photoId) Assets.remove(p.photoId);
+          render();
+        });
+      });
+    });
+  }
+
+  function handleProfilePhotoFile(file){
+    if(!file || !S.newProfileDraft) return;
+    var draft = S.newProfileDraft;
+    S.profilePhotoUploading = true;
+    render();
+    var uploaded = null;
+    downscalePhoto(file, 480).then(function(blob){
+      return Assets.upload(blob);
+    }).then(function(res){
+      uploaded = res;
+      // Browsers generally can't decode HEIC/HEIF via <img>, so confirm the uploaded photo actually
+      // renders before keeping it -- otherwise a "successful" upload would silently show as a broken
+      // image everywhere the avatar appears.
+      return new Promise(function(resolve, reject){
+        var img = new Image();
+        img.onload = function(){ resolve(); };
+        img.onerror = function(){ reject(new Error('decode-failed')); };
+        img.src = res.url;
+      });
+    }).then(function(){
+      draft.photoId = uploaded.id;
+      draft.photoUrl = uploaded.url;
+      S.profilePhotoUploading = false;
+      render();
+    }).catch(function(){
+      if(uploaded) Assets.remove(uploaded.id);
+      S.profilePhotoUploading = false;
+      S.storeError = 'That photo couldn\'t be used here — try a JPG or PNG instead.';
+      render();
+    });
+  }
+
+  function renderNewProfileForm(){
+    var d = S.newProfileDraft || (S.newProfileDraft = { name:'', mode:'child', photoId:'', photoUrl:'' });
+    var photoBlock = d.photoUrl
+      ? '<img class="profile-avatar avatar-lg" src="'+esc(d.photoUrl)+'" alt="">'
+      : '<div class="profile-avatar avatar-lg avatar-fallback">'+(d.name.trim() ? esc(d.name.trim().charAt(0).toUpperCase()) : '🐬')+'</div>';
+    var modeBtn = function(m, label, blurb){
+      return '<button type="button" class="algo-opt'+(d.mode===m?' active':'')+'" data-new-mode="'+m+'">' +
+          '<span class="algo-name">'+label+(d.mode===m?' <span class="algo-current">— selected</span>':'')+'</span>' +
+          '<span class="algo-blurb">'+blurb+'</span>' +
+        '</button>';
+    };
+    app.innerHTML = '' +
+      '<div class="nav-row">' +
+        '<button class="back-btn" data-act="cancel-new-profile">⟵ Cancel</button>' +
+        '<span class="nav-title">➕ New Profile</span>' +
+      '</div>' +
+      '<div class="stats-page">' +
+        errorBannerHTML() +
+        '<div class="new-profile-form">' +
+          '<div class="profile-photo-picker">' +
+            photoBlock +
+            (S.assetsAvailable ?
+              '<label class="btn btn-ghost profile-photo-label">'+(S.profilePhotoUploading?'Uploading…':'📷 Choose Photo')+
+                '<input type="file" accept="image/png,image/jpeg,image/heic,image/heif,.heic,.heif" data-inp="profile-photo" style="display:none;" '+(S.profilePhotoUploading?'disabled':'')+'>' +
+              '</label>'
+              : '<p class="algo-note">Photo uploads are only available in the live app.</p>') +
+          '</div>' +
+          '<div class="field"><label for="profileNameInput">Name</label><input type="text" id="profileNameInput" placeholder="Profile name" value="'+esc(d.name)+'" maxlength="24"></div>' +
+          '<label class="field-label" style="margin-top:14px;">Mode</label>' +
+          '<div class="algo-toggle">' +
+            modeBtn('child', '🧒 Child Mode', 'PIN-protected study sessions; deck editing needs the PIN too.') +
+            modeBtn('adult', '🔧 Adult Mode', 'Study and manage decks anytime — no PIN needed.') +
+          '</div>' +
+          '<button type="button" class="btn btn-primary" data-act="save-new-profile" style="margin-top:18px;" '+(!d.name.trim()?'disabled':'')+'>Create Profile</button>' +
+        '</div>' +
+      '</div>';
+    wireErrorBanner();
+    app.querySelector('[data-act="cancel-new-profile"]').addEventListener('click', function(){
+      if(d.photoId) Assets.remove(d.photoId);
+      S.newProfileDraft = null;
+      S.creatingProfile = false;
+      S.managingProfiles = true;
+      render();
+    });
+    var nameInp = app.querySelector('#profileNameInput');
+    var saveBtn = app.querySelector('[data-act="save-new-profile"]');
+    nameInp.addEventListener('input', function(){ d.name = nameInp.value; saveBtn.disabled = !d.name.trim(); });
+    app.querySelectorAll('[data-new-mode]').forEach(function(b){
+      b.addEventListener('click', function(){ d.mode = b.dataset.newMode; render(); });
+    });
+    var fileInp = app.querySelector('[data-inp="profile-photo"]');
+    if(fileInp) fileInp.addEventListener('change', function(){
+      var f = fileInp.files && fileInp.files[0];
+      if(f) handleProfilePhotoFile(f);
+    });
+    saveBtn.addEventListener('click', function(){
+      var name = d.name.trim();
+      if(!name) return;
+      S.store.addProfile({ name: name, mode: d.mode, initialMode: d.mode, photoId: d.photoId||'', photoUrl: d.photoUrl||'', order: S.profiles.length }).then(function(){
+        S.newProfileDraft = null;
+        S.creatingProfile = false;
+        render();
+      });
     });
   }
 
@@ -1491,6 +2655,9 @@
     if(kind === 'start') return ['🔐 Start Child Mode', 'Ask a grown-up to enter the PIN to begin today\'s session.'];
     if(kind === 'end') return ['🔐 End Session', 'Enter the PIN to finish and lock Coral Cove.'];
     if(kind === 'exit') return ['🔐 Leave This Deck?', 'Ask a grown-up to enter the PIN to head back before finishing.'];
+    if(kind === 'switch') return ['🔐 Switch Profile', 'Enter the PIN to end this session and switch profiles.'];
+    if(kind === 'manageProfiles') return ['🔐 Manage Profiles', 'Enter the PIN to add or remove profiles.'];
+    if(kind === 'modeSwitch') return ['🔐 Change Mode', 'Enter the PIN to switch this profile\'s mode.'];
     return ['🔐 Parent PIN', 'Enter the PIN to open Edit Mode.'];
   }
 
@@ -1551,7 +2718,7 @@
   }
 
   function submitPin(kind){
-    var ok = !!S.settings.pinHash && pinHash(S.pinInput) === S.settings.pinHash;
+    var ok = !!S.pinHash && pinHash(S.pinInput) === S.pinHash;
     if(!ok){
       shakeAndClear('That\'s not it — try again.');
       return;
@@ -1572,12 +2739,28 @@
     } else if(kind === 'exit'){
       S.pinPromptFor = null;
       goHome();
+    } else if(kind === 'switch'){
+      S.pinPromptFor = null;
+      var endSettings = Object.assign({}, S.settings, { sessionActive:false });
+      S.settings = endSettings;
+      S.store.setSettings(endSettings).catch(function(){});
+      goToPicker();
+    } else if(kind === 'manageProfiles'){
+      S.pinPromptFor = null;
+      S.managingProfiles = true;
+      render();
+    } else if(kind === 'modeSwitch'){
+      S.pinPromptFor = null;
+      var nm = S.pendingModeSwitch;
+      S.pendingModeSwitch = null;
+      if(nm) applyModeSwitch(nm); else render();
     }
   }
 
   function cancelPinPrompt(kind){
     S.pinInput = ''; S.pinError = ''; S.pinShake = false;
     if(kind === 'edit') S.pendingEdit = null;
+    if(kind === 'modeSwitch') S.pendingModeSwitch = null;
     S.pinPromptFor = null;
     render();
   }
@@ -1695,19 +2878,25 @@
   }
 
   function goHome(){
+    // A single choke point for leaving ANY screen back to the deck grid -- covers Word Feed's sound
+    // player too, so it always stops here no matter which path led out (the exit button, a PIN
+    // clearing, Adult Mode's no-PIN early exit, ...) rather than needing its own cleanup on each one.
+    Ambience.stop();
+    S.feedSoundId = null;
+    S.soundPickerOpen = false;
     S.view = 'home';
     S.currentDeckId = null;
     if(S.unsubCards){ S.unsubCards(); S.unsubCards = null; }
     refreshDueCounts().then(render);
   }
 
+  // Adult Mode's "✅ Done" button -- there's no "choose child/adult" screen to fall back to anymore
+  // (mode lives on the profile, not chosen per visit), so leaving Manage Decks now means leaving the
+  // profile entirely, back to the picker. Adult Mode was always PIN-free, so this asks for nothing.
   function exitManager(){
-    S.managingDecks = false;
-    S.editMode = false;
-    S.view = 'home';
     S.currentDeckId = null;
     if(S.unsubCards){ S.unsubCards(); S.unsubCards = null; }
-    render();
+    goToPicker();
   }
 
   /* ---------- HOME ---------- */
@@ -1781,11 +2970,27 @@
     var deckTiles = visibleDecks.map(function(d){
       var dc = S.dueCounts[d.id] || { due:0, total:0 };
       var archived = !!d.archived;
-      var badge = dc.total === 0
-        ? '<span class="deck-badge">No cards yet</span>'
-        : (dc.due > 0
-          ? '<span class="deck-badge due">'+dc.due+' to review</span>'
-          : '<span class="deck-badge">All caught up! 🎉</span>');
+      var isFeed = !!d.feedMode;
+      var isStory = !isFeed && !!d.storyMode;
+      var isEquation = !isFeed && !isStory && !!d.equationMode;
+      var isLang = !isFeed && !isStory && !isEquation && !!d.langFeedMode;
+      // Word Feed, Story Mode, Equation Feed and Language Feed decks are pure browsing, not
+      // spaced-repetition -- "due" is meaningless for them, so they get their own simple badge
+      // instead of the due/all-caught-up language.
+      var badge = isFeed
+        ? '<span class="deck-badge feed">🎬 Word Feed</span>'
+        : (isStory
+          ? '<span class="deck-badge feed">📜 Story Mode</span>'
+          : (isEquation
+            ? '<span class="deck-badge feed">➕ Equation Feed</span>'
+            : (isLang
+              ? '<span class="deck-badge feed">🌐 Language Feed</span>'
+              : (dc.total === 0
+                ? '<span class="deck-badge">No cards yet</span>'
+                : (dc.due > 0
+                  ? '<span class="deck-badge due">'+dc.due+' to review</span>'
+                  : '<span class="deck-badge">All caught up! 🎉</span>')))));
+      var diveLabel = isFeed ? '▶️ Watch & Listen' : (isStory ? '📖 Read the Story' : (isEquation ? '🧮 Solve & Listen' : (isLang ? '🌐 Learn Words' : 'Dive In')));
       return '' +
       '<div class="deck-card'+(editMode && archived ? ' archived' : '')+'">' +
         (editMode && archived ? '<span class="archived-tag">📦 Archived</span>' : '') +
@@ -1794,7 +2999,7 @@
         '<div class="deck-meta">'+dc.total+' card'+(dc.total===1?'':'s')+'</div>' +
         badge +
         '<div class="deck-actions">' +
-          '<button class="btn btn-primary" data-act="study" data-deck="'+d.id+'" '+(dc.total===0?'disabled':'')+'>Dive In</button>' +
+          '<button class="btn btn-primary" data-act="study" data-deck="'+d.id+'" '+(dc.total===0?'disabled':'')+'>'+diveLabel+'</button>' +
           (editMode ? '<button class="icon-btn" data-act="edit-deck" data-deck="'+d.id+'" title="Edit deck" aria-label="Edit '+esc(d.name)+'">✏️</button>' : '') +
           (editMode ? '<button class="icon-btn" data-act="toggle-archive" data-deck="'+d.id+'" title="'+(archived?'Unarchive':'Archive')+' deck" aria-label="'+(archived?'Unarchive':'Archive')+' '+esc(d.name)+'">'+(archived?'📤':'📦')+'</button>' : '') +
         '</div>' +
@@ -1815,9 +3020,9 @@
             '<div class="pill streak"><span class="icon">🌊</span><span class="tabular">'+S.stats.streak+'</span></div>' +
             '<div class="pill stars"><span class="icon">⭐</span><span class="tabular">'+S.stats.stars+'</span></div>' +
           '</div>') +
-          (managing ? '<button type="button" class="icon-btn" data-act="open-settings" title="Settings" aria-label="Study settings">⚙️</button>' : '') +
+          ((managing || editMode) ? '<button type="button" class="icon-btn" data-act="open-settings" title="Settings" aria-label="Study settings">⚙️</button>' : '') +
           '<button type="button" class="icon-btn" data-act="open-stats" title="Progress" aria-label="View progress">📊</button>' +
-          '<button type="button" class="icon-btn" data-act="toggle-edit-mode" title="'+(editMode?'Exit Edit Mode':'Edit Mode')+'" aria-label="'+(editMode?'Exit Edit Mode':'Enter Edit Mode')+'">'+(editMode?'🔓':'🔒')+'</button>' +
+          '<button type="button" class="icon-btn" data-act="toggle-edit-mode" title="'+(editMode?'Exit Edit Mode':'Edit Mode')+'" aria-label="'+(editMode?'Exit Edit Mode':'Enter Edit Mode')+'">'+(editMode?'🔓':'✏️')+'</button>' +
           (managing ? '<button type="button" class="btn btn-ghost" data-act="exit-manager">✅ Done</button>' : ctrlRowHTML()) +
         '</div>' +
       '</div>' +
@@ -1833,7 +3038,16 @@
       '</div>' +
       (editMode ? '<input type="file" id="ankiImportInput" accept=".txt,.csv,.tsv" style="display:none">' : '');
 
-    app.querySelectorAll('[data-act="study"]').forEach(function(b){ b.addEventListener('click', function(){ startStudy(b.dataset.deck); }); });
+    app.querySelectorAll('[data-act="study"]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var d = S.decks.find(function(x){ return x.id === b.dataset.deck; });
+        if(d && d.feedMode) startFeed(b.dataset.deck);
+        else if(d && d.storyMode) startStory(b.dataset.deck);
+        else if(d && d.equationMode) startEquationFeed(b.dataset.deck);
+        else if(d && d.langFeedMode) startLangFeed(b.dataset.deck);
+        else startStudy(b.dataset.deck);
+      });
+    });
     app.querySelector('[data-act="open-stats"]').addEventListener('click', openStats);
     app.querySelectorAll('[data-subject-filter]').forEach(function(b){
       b.addEventListener('click', function(){
@@ -1970,6 +3184,12 @@
       S.view = 'study';
       S.cardFlipped = false;
       S.choiceState = null;
+      S.dragState = null;
+      S.timedChoiceState = null;
+      S.timedChoiceAllCards = cards; // full deck pool (not just this round's queue) -- gives 'timedchoice' mode enough sibling cards to draw distractors from even on a short round
+      S.timedChoiceDirection = null;
+      S.timedChoiceGroupLeft = 0;
+      clearTimedChoiceTimer();
       S.currentCardId = null;
       S.cardShownAt = null;
       S.cardFlippedAt = null;
@@ -1979,6 +3199,586 @@
       S.critterPrevPct = 0;
       render();
     });
+  }
+
+  /* ---------- WORD FEED ---------- */
+  // A deck-level mode (deck.feedMode === true, toggled in the deck editor), not a per-card mode like
+  // flip/read/choice/match/blank. A "Dive In" on a Word Feed deck skips renderStudy() entirely for a
+  // full-screen, TikTok-style vertical swipe browser: one word centered per screen, spoken aloud as it
+  // settles, swipe up/down to move through the deck with no fixed direction and no end -- it loops.
+  // Deliberately fun-only: no grading, no SRS fields touched, no stats/history/streak writes, no
+  // summary screen. See startStudy() just above for the equivalent entry point into a graded round.
+  function startFeed(deckId){
+    S.currentDeckId = deckId;
+    S.editMode = false;
+    S.store.updateDeck(deckId, { lastOpenedAt: Date.now() }); // same "recently opened" bookkeeping as every other deck entry point
+    S.store.getCardsOnce(deckId).then(function(cards){
+      if(!cards.length) return; // the Dive In button is disabled at 0 cards already; this is just a guard
+      S.feedQueue = shuffle(cards);
+      S.feedIndex = 0;
+      S.feedLastSpokenId = null;
+      Ambience.stop();          // always opens quiet -- see feedSoundId's comment up in the S state object
+      S.feedSoundId = null;
+      S.soundPickerOpen = false;
+      S.view = 'feed';
+      render();
+    });
+  }
+
+  function renderFeed(){
+    var deck = S.decks.find(function(d){ return d.id === S.currentDeckId; }) || { name:'Word Feed', emoji:'🎬' };
+    var queue = S.feedQueue;
+    if(!queue.length){ goHome(); return; }
+    var n = queue.length;
+    var idx = ((S.feedIndex % n) + n) % n;
+    var curCard = queue[idx];
+    var nextCard = queue[(idx + 1) % n];
+    var prevCard = queue[(idx - 1 + n) % n];
+
+    // Speak exactly once per settled card, including the very first one -- guarded so a re-render for
+    // an unrelated reason (there shouldn't be many, but it's cheap insurance) never repeats a word.
+    // Deliberately NOT gated behind "Child Mode only" the way choice/match/blank's tap-to-speak is --
+    // this mirrors flip mode's auto-speak-on-reveal instead, which plays for a grown-up too, since the
+    // entire point of Word Feed is the word-plus-sound pairing regardless of who's browsing it.
+    if(S.feedLastSpokenId !== curCard.id){
+      S.feedLastSpokenId = curCard.id;
+      Speech.speak(curCard.front);
+    }
+
+    function feedCardHTML(c, pos){
+      return '<div class="feed-card feed-card-'+pos+'" data-feed-pos="'+pos+'"><div class="feed-word">'+esc(c.front)+'</div></div>';
+    }
+
+    app.innerHTML = '' +
+      '<div class="feed-topbar">' +
+        '<button type="button" class="icon-btn" data-act="exit-feed" aria-label="Close Word Feed" title="Close">✕</button>' +
+        '<div class="feed-deck-label">'+deck.emoji+' '+esc(deck.name)+'</div>' +
+        '<button type="button" class="icon-btn" data-act="feed-sounds" aria-label="Feed sounds" title="Sounds">'+(S.feedSoundId?'🎧':'🔈')+'</button>' +
+      '</div>' +
+      '<div class="feed-stage" id="feedStage">' +
+        feedCardHTML(prevCard, 'prev') +
+        feedCardHTML(curCard, 'current') +
+        feedCardHTML(nextCard, 'next') +
+      '</div>' +
+      '<div class="feed-hint">↕ Swipe for another word</div>' +
+      (S.soundPickerOpen ? soundPanelHTML() : '');
+
+    app.querySelector('[data-act="exit-feed"]').addEventListener('click', function(){
+      try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch(e){}
+      Ambience.stop();
+      // In Adult Mode a grown-up is already in (no PIN was needed to get here), so backing out of
+      // Word Feed just returns to Manage Decks -- same rule as exit-study just above. In Child Mode,
+      // a kid backing out of Word Feed on their own needs a grown-up's PIN, same as leaving a study
+      // round early (this used to skip the PIN entirely, which meant a kid could freely wander out
+      // of a session mid-swipe with no grown-up involved).
+      if(S.managingDecks){ goHome(); return; }
+      S.pinInput=''; S.pinError=''; S.pinShake=false;
+      S.pinPromptFor = 'exit';
+      render();
+    });
+
+    app.querySelector('[data-act="feed-sounds"]').addEventListener('click', function(){
+      S.soundPickerOpen = !S.soundPickerOpen;
+      render();
+    });
+
+    if(S.soundPickerOpen) wireSoundPanel(); else wireFeedSwipe(curCard.front);
+  }
+
+  // The Word Feed sound shop -- six looping ambient tracks (see the Ambience module up top), three
+  // free and three bought once with stars. Rendered as a bottom-sheet over the feed stage rather than
+  // navigating away, so picking a sound (or closing the panel) never interrupts the swipe session.
+  function soundPanelHTML(){
+    var stats = S.stats || {};
+    var unlocked = stats.unlockedSounds || [];
+    var tiles = SOUND_TRACKS.map(function(t){
+      var isUnlocked = t.free || unlocked.indexOf(t.id) !== -1;
+      var active = S.feedSoundId === t.id;
+      var shaking = S.soundBuyError === t.id;
+      var sub = !isUnlocked ? ('🔒 '+SOUND_PRICE+'⭐') : (active ? '▶ Playing' : 'Tap to play');
+      return '' +
+        '<button type="button" class="sound-tile'+(active?' active':'')+(isUnlocked?'':' locked')+(shaking?' shake':'')+'" data-sound-id="'+t.id+'">' +
+          '<span class="sound-tile-icon">'+t.icon+'</span>' +
+          '<span class="sound-tile-name">'+esc(t.name)+'</span>' +
+          '<span class="sound-tile-sub">'+sub+'</span>' +
+        '</button>';
+    }).join('');
+    return '' +
+      '<div class="sound-panel-backdrop">' +
+        '<div class="sound-panel">' +
+          '<div class="sound-panel-head">' +
+            '<span class="sound-panel-title">🎧 Feed Sounds</span>' +
+            '<span class="pill stars"><span class="icon">⭐</span><span class="tabular">'+(stats.stars||0)+'</span></span>' +
+          '</div>' +
+          '<div class="sound-list">' +
+            '<button type="button" class="sound-tile off-tile'+(!S.feedSoundId?' active':'')+'" data-sound-off>' +
+              '<span class="sound-tile-icon">🔇</span><span class="sound-tile-name">No Sound</span>' +
+              '<span class="sound-tile-sub">'+(!S.feedSoundId?'▶ Selected':'Tap to mute')+'</span>' +
+            '</button>' +
+            tiles +
+          '</div>' +
+          '<div class="sound-panel-hint">Unlock more sounds for '+SOUND_PRICE+'⭐ each — earn stars by studying decks!</div>' +
+          '<button type="button" class="btn btn-ghost sound-panel-close" data-act="close-sound-panel">Done</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function wireSoundPanel(){
+    var backdrop = app.querySelector('.sound-panel-backdrop');
+    if(backdrop) backdrop.addEventListener('click', function(e){
+      if(e.target === backdrop){ S.soundPickerOpen = false; render(); }
+    });
+    app.querySelectorAll('[data-act="close-sound-panel"]').forEach(function(b){
+      b.addEventListener('click', function(){ S.soundPickerOpen = false; render(); });
+    });
+    var offBtn = app.querySelector('[data-sound-off]');
+    if(offBtn) offBtn.addEventListener('click', function(){
+      Ambience.stop();
+      S.feedSoundId = null;
+      render();
+    });
+    app.querySelectorAll('[data-sound-id]').forEach(function(btn){
+      btn.addEventListener('click', function(){ handleSoundTileTap(btn.dataset.soundId); });
+    });
+  }
+
+  // Tapping an unlocked (or free) tile toggles it on/off; tapping a locked one spends
+  // SOUND_PRICE stars to unlock it forever for this profile (once bought, always available from
+  // then on) and immediately starts playing it -- or, without enough stars, gives that one tile a
+  // brief shake instead of silently doing nothing.
+  function handleSoundTileTap(id){
+    var track = SOUND_TRACKS.filter(function(t){ return t.id === id; })[0];
+    if(!track) return;
+    var unlocked = track.free || (S.stats.unlockedSounds || []).indexOf(id) !== -1;
+    if(unlocked){
+      if(S.feedSoundId === id){
+        Ambience.stop();
+        S.feedSoundId = null;
+      } else {
+        Ambience.play(id);
+        S.feedSoundId = id;
+      }
+      render();
+      return;
+    }
+    if((S.stats.stars || 0) < SOUND_PRICE){
+      S.soundBuyError = id;
+      render();
+      setTimeout(function(){ if(S.soundBuyError === id){ S.soundBuyError = null; render(); } }, 650);
+      return;
+    }
+    var newStats = Object.assign({}, S.stats, {
+      stars: (S.stats.stars || 0) - SOUND_PRICE,
+      unlockedSounds: (S.stats.unlockedSounds || []).concat([id])
+    });
+    S.store.setStats(newStats).then(function(){
+      S.stats = newStats;
+      Ambience.play(id);
+      S.feedSoundId = id;
+      render();
+    }).catch(function(){});
+  }
+
+  // Pointer-Events-based vertical swipe, same touch-and-mouse-compatible approach as wireDragTiles()
+  // above: the active card follows the pointer while dragging (no CSS transition), then either
+  // animates the rest of the way past the stage edge (transition re-enabled) once a distance threshold
+  // is cleared, swapping in the neighboring card underneath, or springs back to center if it wasn't.
+  // Generic so both Word Feed and Story Mode below share the exact same swipe feel -- only the stage's
+  // element id and what "advance"/"go back" mean (shuffled deck vs. a story's word order) differ.
+  function wireVerticalSwipeFeed(stageId, onCommitNext, onCommitPrev, onTap){
+    var stage = document.getElementById(stageId);
+    if(!stage) return;
+    var cur = stage.querySelector('.feed-card-current');
+    var nxt = stage.querySelector('.feed-card-next');
+    var prv = stage.querySelector('.feed-card-prev');
+    if(!cur || !nxt || !prv) return;
+    var THRESHOLD = 60; // px of vertical drag before a swipe counts as committed
+    var TAP_SLOP = 8;   // px of accidental finger drift that still counts as a tap, not an aborted swipe
+    var TAP_MS = 500;   // a press held longer than this isn't a tap even if the finger didn't move
+    var SETTLE_MS = 300;
+    var startY = 0, dy = 0, dragging = false, settling = false, activePid = null, downTime = 0;
+
+    function setDragTransforms(delta){
+      cur.style.transform = 'translateY('+delta+'px)';
+      nxt.style.transform = 'translateY(calc(100% + '+delta+'px))';
+      prv.style.transform = 'translateY(calc(-100% + '+delta+'px))';
+    }
+    function setTransitions(on){
+      var t = on ? 'transform .3s cubic-bezier(.22,.8,.32,1)' : 'none';
+      cur.style.transition = t; nxt.style.transition = t; prv.style.transition = t;
+    }
+
+    stage.addEventListener('pointerdown', function(e){
+      if(settling) return;
+      activePid = e.pointerId;
+      startY = e.clientY; dy = 0; dragging = true; downTime = Date.now();
+      setTransitions(false);
+      try { stage.setPointerCapture(activePid); } catch(err){}
+    });
+    stage.addEventListener('pointermove', function(e){
+      if(!dragging || e.pointerId !== activePid) return;
+      dy = e.clientY - startY;
+      setDragTransforms(dy);
+    });
+    function endDrag(e){
+      if(!dragging || (e && e.pointerId !== activePid)) return;
+      dragging = false; activePid = null; settling = true;
+      setTransitions(true);
+      if(dy <= -THRESHOLD){
+        cur.style.transform = 'translateY(-100%)';
+        nxt.style.transform = 'translateY(0)';
+        setTimeout(function(){ settling = false; onCommitNext(); }, SETTLE_MS);
+      } else if(dy >= THRESHOLD){
+        cur.style.transform = 'translateY(100%)';
+        prv.style.transform = 'translateY(0)';
+        setTimeout(function(){ settling = false; onCommitPrev(); }, SETTLE_MS);
+      } else {
+        setDragTransforms(0);
+        // Barely moved and released quickly -- that's a tap on the card, not an aborted swipe.
+        if(onTap && Math.abs(dy) < TAP_SLOP && (Date.now() - downTime) < TAP_MS) onTap();
+        setTimeout(function(){ settling = false; }, SETTLE_MS);
+      }
+    }
+    stage.addEventListener('pointerup', endDrag);
+    stage.addEventListener('pointercancel', endDrag);
+  }
+
+  function wireFeedSwipe(word){
+    wireVerticalSwipeFeed('feedStage',
+      function(){ S.feedIndex = S.feedIndex + 1; if(S.view === 'feed') render(); },
+      function(){ S.feedIndex = S.feedIndex - 1; if(S.view === 'feed') render(); },
+      // Tapping the card replays its word on demand -- deliberately calling Speech.speak directly
+      // (bypassing the settle-once-per-card guard up in renderFeed) so it repeats every tap, same as
+      // the "Hear it again" replay button on a flipped study card.
+      function(){ Speech.speak(word); });
+  }
+
+  /* ---------- STORY MODE ---------- */
+  // A deck-level mode (deck.storyMode === true, toggled in the deck editor -- mutually exclusive with
+  // Word Feed's deck.feedMode above), sharing Word Feed's exact swipe UI and .feed-* markup/CSS, just
+  // with different content and ordering: instead of the deck's cards shuffled into a word soup, Story
+  // Mode reconstructs a single passage from the deck's own cards (their "note"/hint field, which for
+  // the built-in reading decks already carries one story sentence per card) and reads it one word at a
+  // time, IN ORDER, swiping forward through the story and looping back to the first word at the end --
+  // same wraparound as Word Feed. Rebuilt fresh from the deck's current cards every time it's opened
+  // (nothing extra is stored), so editing a card's note updates the story the next time it's read.
+  // Deliberately fun-only, same as Word Feed: no grading, no SRS fields touched, no stats/history
+  // writes.
+  function buildStoryWords(cards){
+    var ordered = cards.slice().sort(function(a,b){ return (a.createdAt||0) - (b.createdAt||0); });
+    var sentences = [];
+    ordered.forEach(function(c){
+      var note = String(c.note||'').trim();
+      // Skip blanks and immediate repeats -- several of the built-in decks have two cards drawn from
+      // the same sentence (one for each of two vocab words in it), which would otherwise double up
+      // that whole sentence back-to-back in the reconstructed passage.
+      if(note && sentences[sentences.length-1] !== note) sentences.push(note);
+    });
+    return sentences.join(' ').split(/\s+/).filter(Boolean);
+  }
+
+  function startStory(deckId){
+    S.currentDeckId = deckId;
+    S.editMode = false;
+    S.store.updateDeck(deckId, { lastOpenedAt: Date.now() }); // same "recently opened" bookkeeping as every other deck entry point
+    S.store.getCardsOnce(deckId).then(function(cards){
+      var words = buildStoryWords(cards);
+      if(!words.length){
+        // No note/hint text to build a story from yet -- rather than open onto a blank swipe screen,
+        // stay put and explain why, the same way a failed save surfaces (see errorBannerHTML).
+        S.storeError = 'This deck doesn\'t have a story to read yet — add a sentence to each card\'s hint/note field in the editor to build one.';
+        render();
+        return;
+      }
+      S.storyQueue = words.map(function(w, i){ return { id: 'story-'+i, front: w }; });
+      S.storyIndex = 0;
+      S.storyLastSpokenId = null;
+      S.view = 'story';
+      render();
+    });
+  }
+
+  function renderStory(){
+    var deck = S.decks.find(function(d){ return d.id === S.currentDeckId; }) || { name:'Story', emoji:'📜' };
+    var queue = S.storyQueue;
+    if(!queue.length){ goHome(); return; }
+    var n = queue.length;
+    var idx = ((S.storyIndex % n) + n) % n;
+    var curWord = queue[idx];
+    var nextWord = queue[(idx + 1) % n];
+    var prevWord = queue[(idx - 1 + n) % n];
+
+    // Same speak-exactly-once-per-settled-word guard as Word Feed's renderFeed().
+    if(S.storyLastSpokenId !== curWord.id){
+      S.storyLastSpokenId = curWord.id;
+      Speech.speak(curWord.front);
+    }
+
+    function storyCardHTML(w, pos){
+      return '<div class="feed-card feed-card-'+pos+'" data-feed-pos="'+pos+'"><div class="feed-word">'+esc(w.front)+'</div></div>';
+    }
+
+    app.innerHTML = '' +
+      '<div class="feed-topbar">' +
+        '<button type="button" class="icon-btn" data-act="exit-story" aria-label="Close Story Mode" title="Close">✕</button>' +
+        '<div class="feed-deck-label">'+deck.emoji+' '+esc(deck.name)+'</div>' +
+        '<span class="feed-topbar-spacer" aria-hidden="true"></span>' +
+      '</div>' +
+      '<div class="feed-stage" id="storyStage">' +
+        storyCardHTML(prevWord, 'prev') +
+        storyCardHTML(curWord, 'current') +
+        storyCardHTML(nextWord, 'next') +
+      '</div>' +
+      '<div class="feed-hint">↕ Word '+(idx+1)+' of '+n+'</div>';
+
+    app.querySelector('[data-act="exit-story"]').addEventListener('click', function(){
+      try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch(e){}
+      // Same Child Mode PIN guard as exit-feed above -- see that comment for why.
+      if(S.managingDecks){ goHome(); return; }
+      S.pinInput=''; S.pinError=''; S.pinShake=false;
+      S.pinPromptFor = 'exit';
+      render();
+    });
+
+    wireVerticalSwipeFeed('storyStage',
+      function(){ S.storyIndex = S.storyIndex + 1; if(S.view === 'story') render(); },
+      function(){ S.storyIndex = S.storyIndex - 1; if(S.view === 'story') render(); });
+  }
+
+  /* ---------- EQUATION FEED ---------- */
+  // A deck-level mode (deck.equationMode === true, toggled in the deck editor -- mutually exclusive
+  // with Word Feed's feedMode and Story Mode's storyMode above), sharing their exact swipe UI and
+  // .feed-* markup/CSS. The content and timing are different though: each card is an addition
+  // equation ("3 + 4") with NO answer shown at first. The card settles, the full equation is spoken
+  // aloud right away WITH the answer ("3 plus 4 equals 7", read slower than the app's normal speaking
+  // rate) and the answer itself bounces onto the screen in place of the "?" a flat delay later.
+  // Deliberately fun-only, same as Word Feed/Story Mode: no grading, no SRS fields touched, no
+  // stats/history writes.
+  var EQUATION_SPEECH_RATE = 0.7;     // slower than the app-wide default (0.88) -- easier to follow
+  var EQUATION_REVEAL_DELAY_MS = 3200; // flat delay from settle to the answer bouncing in
+  function equationSpeech(front, back){
+    var m = String(front||'').match(/^\s*(-?\d+)\s*\+\s*(-?\d+)\s*$/);
+    if(m) return m[1]+' plus '+m[2]+' equals '+back;
+    return front+' equals '+back; // fallback for any oddly-formatted card
+  }
+
+  function startEquationFeed(deckId){
+    S.currentDeckId = deckId;
+    S.editMode = false;
+    S.store.updateDeck(deckId, { lastOpenedAt: Date.now() }); // same "recently opened" bookkeeping as every other deck entry point
+    S.store.getCardsOnce(deckId).then(function(cards){
+      if(!cards.length) return; // the Dive In button is disabled at 0 cards already; this is just a guard
+      S.equationQueue = shuffle(cards);
+      S.equationIndex = 0;
+      S.equationSettledId = null;
+      S.equationRevealed = false;
+      S.view = 'equationFeed';
+      render();
+    });
+  }
+
+  function renderEquationFeed(){
+    var deck = S.decks.find(function(d){ return d.id === S.currentDeckId; }) || { name:'Equation Feed', emoji:'➕' };
+    var queue = S.equationQueue;
+    if(!queue.length){ goHome(); return; }
+    var n = queue.length;
+    var idx = ((S.equationIndex % n) + n) % n;
+    var curCard = queue[idx];
+    var nextCard = queue[(idx + 1) % n];
+    var prevCard = queue[(idx - 1 + n) % n];
+
+    // Settle-once-per-card guard, same spirit as Word Feed/Story Mode's: the equation shows with no
+    // answer the instant it settles, the full equation-plus-answer is spoken right away (slower than
+    // the app's normal speaking rate -- easier to follow along with while doing the math), and the
+    // answer bounces onto the screen on a flat timer -- deliberately NOT synced to when the speech
+    // finishes (that used to be the case; a flat delay is more predictable regardless of how long a
+    // given equation takes to say out loud), same flat-timer approach as Language Feed's translation
+    // reveal below.
+    if(S.equationSettledId !== curCard.id){
+      S.equationSettledId = curCard.id;
+      S.equationRevealed = false;
+      var settledId = curCard.id;
+      Speech.speak(equationSpeech(curCard.front, curCard.back), { rate: EQUATION_SPEECH_RATE });
+      setTimeout(function(){
+        // The child may have already swiped away before this timer fired -- only reveal if this is
+        // still the card actually on screen.
+        if(S.view !== 'equationFeed' || S.equationSettledId !== settledId) return;
+        S.equationRevealed = true;
+        render();
+      }, EQUATION_REVEAL_DELAY_MS);
+    }
+
+    function eqCardHTML(c, pos){
+      var showAnswer = pos === 'current' && S.equationRevealed;
+      return '<div class="feed-card feed-card-'+pos+'" data-feed-pos="'+pos+'">' +
+        '<div class="feed-word eq-prompt">' +
+          '<span>'+esc(c.front)+' =</span>' +
+          (showAnswer
+            ? '<span class="eq-answer eq-bounce">'+esc(c.back)+'</span>'
+            : '<span class="eq-answer eq-blank">?</span>') +
+        '</div></div>';
+    }
+
+    app.innerHTML = '' +
+      '<div class="feed-topbar">' +
+        '<button type="button" class="icon-btn" data-act="exit-equation" aria-label="Close Equation Feed" title="Close">✕</button>' +
+        '<div class="feed-deck-label">'+deck.emoji+' '+esc(deck.name)+'</div>' +
+        '<span class="feed-topbar-spacer" aria-hidden="true"></span>' +
+      '</div>' +
+      '<div class="feed-stage" id="equationStage">' +
+        eqCardHTML(prevCard, 'prev') +
+        eqCardHTML(curCard, 'current') +
+        eqCardHTML(nextCard, 'next') +
+      '</div>' +
+      '<div class="feed-hint">↕ Swipe for another equation</div>';
+
+    app.querySelector('[data-act="exit-equation"]').addEventListener('click', function(){
+      try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch(e){}
+      // Same Child Mode PIN guard as exit-feed/exit-story above -- see that comment for why.
+      if(S.managingDecks){ goHome(); return; }
+      S.pinInput=''; S.pinError=''; S.pinShake=false;
+      S.pinPromptFor = 'exit';
+      render();
+    });
+
+    wireVerticalSwipeFeed('equationStage',
+      function(){ S.equationIndex = S.equationIndex + 1; if(S.view === 'equationFeed') render(); },
+      function(){ S.equationIndex = S.equationIndex - 1; if(S.view === 'equationFeed') render(); },
+      // Tapping the settled card replays the equation-plus-answer on demand, same "Hear it again"
+      // spirit as Word Feed's tap-to-replay -- only once the answer has actually been revealed once,
+      // so an early tap can't spoil the surprise ahead of the timer.
+      function(){ if(S.equationRevealed) Speech.speak(equationSpeech(curCard.front, curCard.back), { rate: EQUATION_SPEECH_RATE }); });
+  }
+
+  /* ---------- LANGUAGE FEED ---------- */
+  // A deck-level mode (deck.langFeedMode === true, toggled in the deck editor -- mutually exclusive
+  // with Word Feed/Story Mode/Equation Feed above), sharing their exact swipe UI and .feed-* markup/
+  // CSS. Built for vocabulary decks (e.g. Korean Word Feed): instead of dumping the whole deck into
+  // the swipe queue at once like Word Feed does, only a few words are "unlocked" at a time
+  // (deck.langBatchSize, default 5) -- deck.langUnlockedCount tracks how many of the deck's cards
+  // (sorted by their `order` field, oldest-first) are in play. Once every currently-unlocked card has
+  // been swiped to at least once THIS SESSION, the next batch unlocks automatically and its cards join
+  // the swipe rotation, persisted back to the deck doc so the next visit picks up where this one left
+  // off. Each card shows its target-language word (spoken aloud as it settles, same as Word Feed) with
+  // the English translation hidden; about a second later the translation fades in under it. Same
+  // fun-only rules as Word Feed/Story Mode/Equation Feed: no grading, no SRS fields touched, no
+  // stats/history writes.
+  function startLangFeed(deckId){
+    S.currentDeckId = deckId;
+    S.editMode = false;
+    S.store.updateDeck(deckId, { lastOpenedAt: Date.now() }); // same "recently opened" bookkeeping as every other deck entry point
+    S.store.getCardsOnce(deckId).then(function(cards){
+      if(!cards.length) return; // the Dive In button is disabled at 0 cards already; this is just a guard
+      var deck = S.decks.find(function(d){ return d.id === deckId; }) || {};
+      var sorted = cards.slice().sort(function(a, b){ return (a.order||0) - (b.order||0); });
+      var batchSize = deck.langBatchSize || 5;
+      var unlockedCount = Math.min(deck.langUnlockedCount || batchSize, sorted.length);
+      S.langSorted = sorted;
+      S.langBatchSize = batchSize;
+      S.langUnlockedCount = unlockedCount;
+      S.langTotalCards = sorted.length;
+      S.langQueue = shuffle(sorted.slice(0, unlockedCount));
+      S.langIndex = 0;
+      S.langSettledId = null;
+      S.langRevealed = false;
+      S.langSeenIds = new Set();
+      S.langJustUnlocked = false;
+      S.view = 'langFeed';
+      render();
+    });
+  }
+
+  // Called once a card has settled on screen -- marks it seen this session, and unlocks the next
+  // batch (if any remain, and every card in the current rotation has now been seen at least once)
+  // by appending the newly-unlocked cards to the live queue rather than rebuilding it, so a batch
+  // unlocking mid-swipe never disturbs the card already on screen.
+  function unlockNextLangBatchIfNeeded(deckId){
+    if(S.langUnlockedCount >= S.langTotalCards) return;
+    if(S.langSeenIds.size < S.langQueue.length) return;
+    var newCount = Math.min(S.langUnlockedCount + S.langBatchSize, S.langTotalCards);
+    if(newCount === S.langUnlockedCount) return;
+    var newlyAdded = S.langSorted.slice(S.langUnlockedCount, newCount);
+    S.langUnlockedCount = newCount;
+    S.langQueue = S.langQueue.concat(shuffle(newlyAdded));
+    S.langJustUnlocked = true;
+    S.store.updateDeck(deckId, { langUnlockedCount: newCount });
+  }
+
+  function renderLangFeed(){
+    var deck = S.decks.find(function(d){ return d.id === S.currentDeckId; }) || { name:'Language Feed', emoji:'🌐' };
+    var queue = S.langQueue;
+    if(!queue.length){ goHome(); return; }
+    var n = queue.length;
+    var idx = ((S.langIndex % n) + n) % n;
+    var curCard = queue[idx];
+    var nextCard = queue[(idx + 1) % n];
+    var prevCard = queue[(idx - 1 + n) % n];
+
+    // Settle-once-per-card guard, same spirit as Equation Feed's: the target word shows (and is
+    // spoken) the instant it settles, with the translation hidden; about a second later the
+    // translation fades in. Speech.speak auto-detects Hangul vs. Latin script (detectLang), so no
+    // extra plumbing is needed for Korean vs. English target words here.
+    if(S.langSettledId !== curCard.id){
+      S.langSettledId = curCard.id;
+      S.langRevealed = false;
+      S.langSeenIds.add(curCard.id);
+      S.langJustUnlocked = false;
+      unlockNextLangBatchIfNeeded(S.currentDeckId);
+      var settledId = curCard.id;
+      Speech.speak(curCard.front);
+      setTimeout(function(){
+        // The child may have already swiped away before this timer fired -- only reveal if this is
+        // still the card actually on screen.
+        if(S.view !== 'langFeed' || S.langSettledId !== settledId) return;
+        S.langRevealed = true;
+        render();
+      }, 1000);
+    }
+
+    function langCardHTML(c, pos){
+      if(pos !== 'current'){
+        return '<div class="feed-card feed-card-'+pos+'" data-feed-pos="'+pos+'">' +
+          '<div class="lang-word-wrap"><div class="feed-word">'+esc(c.front)+'</div></div>' +
+        '</div>';
+      }
+      var showTranslation = S.langRevealed;
+      return '<div class="feed-card feed-card-'+pos+'" data-feed-pos="'+pos+'">' +
+        '<div class="lang-word-wrap">' +
+          '<div class="feed-word">'+esc(c.front)+'</div>' +
+          '<div class="lang-translation'+(showTranslation?' lang-fade-in':'')+'"'+(showTranslation?'':' style="visibility:hidden"')+'>'+esc(c.back)+'</div>' +
+        '</div>' +
+      '</div>';
+    }
+
+    app.innerHTML = '' +
+      '<div class="feed-topbar">' +
+        '<button type="button" class="icon-btn" data-act="exit-lang" aria-label="Close Language Feed" title="Close">✕</button>' +
+        '<div class="feed-deck-label">'+deck.emoji+' '+esc(deck.name)+'</div>' +
+        '<span class="feed-topbar-spacer" aria-hidden="true"></span>' +
+      '</div>' +
+      '<div class="feed-stage" id="langStage">' +
+        langCardHTML(prevCard, 'prev') +
+        langCardHTML(curCard, 'current') +
+        langCardHTML(nextCard, 'next') +
+        (S.langJustUnlocked ? '<div class="lang-unlock-toast">🎉 New words unlocked!</div>' : '') +
+      '</div>' +
+      '<div class="feed-hint">↕ Swipe for another word'+(S.langUnlockedCount < S.langTotalCards ? ' · '+S.langUnlockedCount+' of '+S.langTotalCards+' words so far' : '')+'</div>';
+
+    app.querySelector('[data-act="exit-lang"]').addEventListener('click', function(){
+      try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch(e){}
+      // Same Child Mode PIN guard as exit-feed/exit-story/exit-equation above -- see that comment for why.
+      if(S.managingDecks){ goHome(); return; }
+      S.pinInput=''; S.pinError=''; S.pinShake=false;
+      S.pinPromptFor = 'exit';
+      render();
+    });
+
+    wireVerticalSwipeFeed('langStage',
+      function(){ S.langIndex = S.langIndex + 1; if(S.view === 'langFeed') render(); },
+      function(){ S.langIndex = S.langIndex - 1; if(S.view === 'langFeed') render(); },
+      // Tapping the settled card replays the target word on demand, same "Hear it again" spirit as
+      // Word Feed/Equation Feed's tap-to-replay.
+      function(){ Speech.speak(curCard.front); });
   }
 
   var OUTCOME_ROW_HTML = '' +
@@ -2012,16 +3812,17 @@
       : '<div class="peek-badge peek-wrong">🦀 That one was marked not quite</div>';
     var body;
     var photoHTML = rec.photoUrl ? '<img class="card-photo" src="'+esc(rec.photoUrl)+'" alt="">' : '';
-    if(rec.mode === 'choice'){
+    if(rec.mode === 'choice' || rec.mode === 'match' || rec.mode === 'blank' || rec.mode === 'timedchoice'){
       var optsHTML = (rec.choiceOptions||[]).map(function(opt){
         var cls = 'choice-btn';
         if(opt === rec.back) cls += ' correct';
         else if(opt === rec.chosenText) cls += ' wrong';
         return '<button type="button" class="'+cls+'" disabled>'+esc(opt)+'</button>';
       }).join('');
+      var peekLabel = rec.mode === 'blank' ? '✏️ Last question' : (rec.mode === 'match' ? '🧲 Last question' : (rec.mode === 'timedchoice' ? '⏱️ Last question' : '🔢 Last question'));
       body = '' +
         '<div class="flip-scene" style="position:relative;z-index:1;">' +
-          '<div class="face face-front read-face"><div class="read-label">🔢 Last question</div>'+photoHTML+'<div class="card-text">'+esc(rec.front)+'</div></div>' +
+          '<div class="face face-front read-face"><div class="read-label">'+peekLabel+'</div>'+photoHTML+'<div class="card-text">'+esc(rec.front)+'</div></div>' +
         '</div>' +
         '<div class="choice-row">'+optsHTML+'</div>';
     } else if(rec.mode === 'read'){
@@ -2146,6 +3947,215 @@
     }, 200);
   }
 
+  function pointInRect(rect, x, y){
+    return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+  }
+
+  // Drag-to-answer interaction shared by 'match' and 'blank' card modes. Built on Pointer Events
+  // (not native HTML5 drag/drop, which touch browsers support inconsistently) so the same code
+  // handles mouse and touch alike: a tile follows the pointer via a CSS transform while held, and
+  // on release either snaps into the drop zone (grading the card) or springs back to the tile row.
+  // A plain tap (no real movement) drops the tile directly too, both for accessibility and so the
+  // whole interaction stays usable with a simple click in automated tests.
+  function wireDragTiles(card, cardMode){
+    var ds = S.dragState;
+    if(!ds) return;
+    var dropZone = app.querySelector('[data-drop-zone]');
+    if(!dropZone) return;
+
+    function commitDrop(idx){
+      if(ds.dropped != null || S.transitioning) return;
+      ds.dropped = idx;
+      var chosen = ds.options[idx];
+      var correct = chosen === card.back;
+      ds.correct = correct;
+      var elapsed = Date.now() - (S.cardShownAt || Date.now());
+      if(correct) Sound.correct(); else Sound.wrong();
+      // Child Mode: read the tile that was just dropped aloud, right or wrong -- same rule as choice mode.
+      if(!S.managingDecks) Speech.speak(chosen);
+      render();
+      setTimeout(function(){ grade(autoRating(cardMode, correct, elapsed), true); }, 1100);
+    }
+
+    app.querySelectorAll('[data-drag-idx]').forEach(function(tile){
+      var idx = parseInt(tile.dataset.dragIdx, 10);
+      var startX = 0, startY = 0, dragging = false, activePid = null;
+
+      tile.addEventListener('click', function(){
+        if(tile.__justDragged){ tile.__justDragged = false; return; }
+        commitDrop(idx);
+      });
+
+      tile.addEventListener('pointerdown', function(e){
+        if(ds.dropped != null) return;
+        activePid = e.pointerId;
+        startX = e.clientX; startY = e.clientY;
+        dragging = false;
+      });
+      tile.addEventListener('pointermove', function(e){
+        if(activePid == null || e.pointerId !== activePid || ds.dropped != null) return;
+        var dx = e.clientX - startX, dy = e.clientY - startY;
+        if(!dragging && Math.sqrt(dx*dx + dy*dy) > 6){
+          dragging = true;
+          tile.__justDragged = true;
+          tile.classList.add('dragging');
+          try { tile.setPointerCapture(activePid); } catch(err){}
+        }
+        if(dragging){
+          tile.style.transform = 'translate('+dx+'px,'+dy+'px)';
+          dropZone.classList.toggle('drag-over', pointInRect(dropZone.getBoundingClientRect(), e.clientX, e.clientY));
+        }
+      });
+      function endDrag(e){
+        if(activePid == null || (e && e.pointerId !== activePid)) return;
+        var wasDragging = dragging;
+        activePid = null; dragging = false;
+        tile.classList.remove('dragging');
+        dropZone.classList.remove('drag-over');
+        if(wasDragging){
+          var overZone = e && pointInRect(dropZone.getBoundingClientRect(), e.clientX, e.clientY);
+          tile.style.transform = '';
+          if(overZone) commitDrop(idx);
+          // Missed the zone -- the transform reset above springs the tile back to its place in the
+          // (still-flowing) tile row; nothing else to do until the next attempt.
+        }
+      }
+      tile.addEventListener('pointerup', endDrag);
+      tile.addEventListener('pointercancel', endDrag);
+    });
+  }
+
+  /* ---------- timed multiple choice ("Timed choice" mode) ----------
+     A sixth per-card mode, alongside flip/read/choice/match/blank: same multiple-choice interaction
+     as 'choice' mode, but a visible countdown bar forces an answer before time runs out (at which
+     point the correct option highlights itself and the card is graded as a miss), plus a "+time"
+     button that adds a few more seconds without penalty. Built with Korean vocab practice in mind
+     (see the "Korean Speed Quiz" decks), but it's a generic mode any deck can use.
+
+     Direction alternates in groups rather than being fixed or fully random per card: every
+     TIMED_CHOICE_GROUP_SIZE cards, a coin flip decides whether the next stretch of cards asks
+     "front as the question, back-side text as the answer" (fwd -- e.g. "How do you say ___ in
+     Korean?" with Korean options) or the reverse (rev -- e.g. shows the Korean word, English
+     options). A card's own `choices` field (if the deck author filled one in) is only used for the
+     forward direction, since it was written as alternatives to `back`; the reverse direction, and
+     any card with no manual choices at all, draws its wrong answers from OTHER cards in the same
+     deck instead -- which is also what lets a plain flip-mode deck (like Wendy's Korean Vocabulary,
+     with no choices authored at all) be quizzed as multiple choice with zero extra data entry. */
+  var TIMED_CHOICE_GROUP_SIZE = 3;   // how many cards in a row share the same question direction before re-rolling
+  var TIMED_CHOICE_BASE_SECONDS = 6; // starting point before the length/difficulty adjustments below
+  var TIMED_CHOICE_MIN_SECONDS = 5;
+  var TIMED_CHOICE_MAX_SECONDS = 15;
+  var TIMED_CHOICE_ADD_SECONDS = 5;  // how much the "+time" button adds, per tap
+  var TIMED_CHOICE_MAX_ADDS = 2;      // the "+time" button can only be used twice per card
+
+  // Longer text to read (either side) earns more time to scan the options, and a card the learner
+  // has actually struggled with (per the SM-2 stats every card already tracks -- lapses, leech
+  // status, learning state, and the plain timesCorrect/timesSeen accuracy ratio) earns more too.
+  // A short, well-known word gets the tightest timer; a long phrase the learner keeps missing gets
+  // the most breathing room. Always clamped to a sane range so it never feels impossibly short or
+  // pointlessly long.
+  function timedChoiceSeconds(card, promptText, answerText){
+    var textLen = Math.max(String(promptText||'').length, String(answerText||'').length);
+    var readingBonus = Math.max(0, (textLen - 6) * 0.22);
+    var struggleBonus = 0;
+    if(card.isLeech) struggleBonus = 4;
+    else if((card.lapses||0) >= 2 || card.state === 'learning') struggleBonus = 2;
+    else if(card.timesSeen){
+      var acc = (card.timesCorrect||0) / card.timesSeen;
+      if(acc < 0.5) struggleBonus = 3;
+      else if(acc < 0.8) struggleBonus = 1;
+    }
+    var seconds = TIMED_CHOICE_BASE_SECONDS + readingBonus + struggleBonus;
+    return Math.max(TIMED_CHOICE_MIN_SECONDS, Math.min(TIMED_CHOICE_MAX_SECONDS, Math.round(seconds)));
+  }
+
+  // Builds a fresh { direction, prompt, answer, options } for a card just entering 'timedchoice'
+  // mode -- re-rolling the shared direction every TIMED_CHOICE_GROUP_SIZE cards, then sourcing wrong
+  // answers from the card's own `choices` (forward direction only) or, failing that, from sibling
+  // cards' opposite field in S.timedChoiceAllCards.
+  function buildTimedChoiceRound(card){
+    if(S.timedChoiceGroupLeft <= 0){
+      S.timedChoiceDirection = Math.random() < 0.5 ? 'fwd' : 'rev';
+      S.timedChoiceGroupLeft = TIMED_CHOICE_GROUP_SIZE;
+    }
+    S.timedChoiceGroupLeft -= 1;
+    var direction = S.timedChoiceDirection;
+    var promptText = direction === 'fwd' ? card.front : card.back;
+    var answerText = direction === 'fwd' ? card.back : card.front;
+    var siblingField = direction === 'fwd' ? 'back' : 'front';
+    var wrongOpts = (direction === 'fwd' && card.choices && card.choices.length) ? card.choices.slice() : null;
+    if(!wrongOpts || !wrongOpts.length){
+      var siblings = (S.timedChoiceAllCards || []).filter(function(c){ return c.id !== card.id; });
+      wrongOpts = shuffle(siblings).map(function(c){ return c[siblingField]; })
+        .filter(function(v, idx, arr){ return v && v !== answerText && arr.indexOf(v) === idx; })
+        .slice(0, 3);
+    }
+    var seconds = timedChoiceSeconds(card, promptText, answerText);
+    return {
+      cardId: card.id,
+      direction: direction,
+      prompt: promptText,
+      answer: answerText,
+      options: shuffle([answerText].concat(wrongOpts)),
+      selected: null,
+      totalSeconds: seconds,
+      deadline: Date.now() + seconds*1000,
+      secondsAdded: 0,
+      timesAdded: 0,
+      expired: false
+    };
+  }
+
+  function timedChoiceTimerHTML(tc){
+    var remaining = Math.max(0, tc.deadline - Date.now());
+    var totalMs = (tc.totalSeconds + tc.secondsAdded) * 1000;
+    var pct = totalMs > 0 ? Math.max(0, Math.min(100, (remaining/totalMs)*100)) : 0;
+    var addsLeft = TIMED_CHOICE_MAX_ADDS - (tc.timesAdded||0);
+    var addBtnHTML = addsLeft > 0 ?
+      '<button type="button" class="btn btn-ghost tc-addtime-btn" data-act="tc-add-time">⏱️ +'+TIMED_CHOICE_ADD_SECONDS+'s</button>' :
+      '<button type="button" class="btn btn-ghost tc-addtime-btn" disabled>⏱️ No more time</button>';
+    return '' +
+      '<div class="tc-timer-row" style="position:relative;z-index:1;">' +
+        '<div class="tc-timer-track"><div class="tc-timer-fill'+(pct < 30 ? ' tc-low' : '')+'" id="tcTimerFill" style="width:'+pct+'%"></div></div>' +
+        addBtnHTML +
+      '</div>';
+  }
+
+  function clearTimedChoiceTimer(){
+    if(S.timedChoiceTimerHandle){ clearInterval(S.timedChoiceTimerHandle); S.timedChoiceTimerHandle = null; }
+  }
+
+  // Drives the countdown bar via direct DOM updates (not render()) every 100ms so it animates
+  // smoothly without re-rendering the whole screen every tick. Self-cancels the moment anything
+  // about the situation has changed underneath it (a different card, an answer already picked, the
+  // view navigated away) rather than relying on every possible exit path to clear it explicitly.
+  function wireTimedChoiceTimer(card){
+    clearTimedChoiceTimer();
+    S.timedChoiceTimerHandle = setInterval(function(){
+      var tc = S.timedChoiceState;
+      if(S.view !== 'study' || !tc || tc.cardId !== card.id || tc.selected != null || tc.expired){
+        clearTimedChoiceTimer();
+        return;
+      }
+      var remaining = tc.deadline - Date.now();
+      var totalMs = (tc.totalSeconds + tc.secondsAdded) * 1000;
+      var fillEl = document.getElementById('tcTimerFill');
+      if(fillEl){
+        var pct = totalMs > 0 ? Math.max(0, Math.min(100, (remaining/totalMs)*100)) : 0;
+        fillEl.style.width = pct + '%';
+        fillEl.classList.toggle('tc-low', pct < 30);
+      }
+      if(remaining <= 0){
+        clearTimedChoiceTimer();
+        tc.expired = true;
+        Sound.wrong();
+        render();
+        var elapsed = (tc.totalSeconds + tc.secondsAdded) * 1000;
+        setTimeout(function(){ grade(autoRating('timedchoice', false, elapsed), true); }, 1400);
+      }
+    }, 100);
+  }
+
   function renderStudy(){
     var deck = S.decks.find(function(d){ return d.id === S.currentDeckId; }) || {name:'Deck', emoji:'🌊'};
     if(!S.studyQueue.length){
@@ -2160,8 +4170,11 @@
       S.cardFlippedAt = null;
       S.cardFlipped = false;
       S.choiceState = null;
+      S.dragState = null;
+      S.timedChoiceState = null;
+      clearTimedChoiceTimer();
     }
-    var mode = card.mode === 'read' ? 'read' : (card.mode === 'choice' ? 'choice' : 'flip');
+    var mode = (card.mode === 'read' || card.mode === 'choice' || card.mode === 'match' || card.mode === 'blank' || card.mode === 'timedchoice') ? card.mode : 'flip';
     var peeking = S.peeking && !!S.lastAnsweredCard;
     var doneCount = S.sessionReviewed;
     var labelCount = peeking ? doneCount : (doneCount + 1);
@@ -2222,12 +4235,80 @@
         '</div>' +
         '<div class="choice-row">'+optsHTML+'</div>' +
         choiceFeedback;
+    } else if(mode === 'timedchoice'){
+      if(!S.timedChoiceState || S.timedChoiceState.cardId !== card.id){
+        S.timedChoiceState = buildTimedChoiceRound(card);
+      }
+      var tc = S.timedChoiceState;
+      var tcDone = tc.selected != null || tc.expired;
+      var tcPickedCorrect = tc.selected != null && tc.options[tc.selected] === tc.answer;
+      var tcOptsHTML = tc.options.map(function(opt, idx){
+        var cls = 'choice-btn';
+        if(tcDone){
+          if(opt === tc.answer) cls += ' correct';
+          else if(idx === tc.selected) cls += ' wrong';
+        }
+        return '<button type="button" class="'+cls+'" data-tc-idx="'+idx+'" '+(tcDone?'disabled':'')+'>'+esc(opt)+'</button>';
+      }).join('');
+      var tcFeedback = !tcDone
+        ? '<div class="flip-hint" style="position:relative;z-index:1;">Tap an answer before time runs out!</div>'
+        : '<div class="choice-feedback '+(tc.expired ? 'no' : (tcPickedCorrect?'ok':'no'))+'">'+(tc.expired ? 'Time\'s up! ⏰' : (tcPickedCorrect ? 'Nice job! 🎉' : 'Good try — that one\'s tricky!'))+'</div>';
+      stageInner = '' +
+        '<div class="flip-scene" style="position:relative;z-index:1;">' +
+          '<div class="face face-front read-face">' +
+            '<div class="read-label">⏱️ Beat the clock</div>' +
+            (card.photoUrl?'<img class="card-photo" src="'+esc(card.photoUrl)+'" alt="">':'') +
+            '<div class="card-text">'+esc(tc.prompt)+'</div>' +
+          '</div>' +
+        '</div>' +
+        (!tcDone ? timedChoiceTimerHTML(tc) : '') +
+        '<div class="choice-row">'+tcOptsHTML+'</div>' +
+        tcFeedback;
+    } else if(mode === 'match' || mode === 'blank'){
+      // 'match' and 'blank' share one drag-a-tile-onto-a-target interaction -- the only real
+      // difference is how the target is dressed (a standalone drop zone vs. an inline blank in a
+      // sentence). Reuses card.back as the correct answer and card.choices as the distractor tiles,
+      // exactly like 'choice' mode, just answered by dragging (or tapping) instead of tapping a row.
+      if(!S.dragState || S.dragState.cardId !== card.id){
+        S.dragState = { cardId: card.id, options: shuffle([card.back].concat(card.choices||[])), dropped: null, correct: null };
+      }
+      var ds = S.dragState;
+      var tilesHTML = ds.options.map(function(opt, idx){
+        if(ds.dropped === idx) return ''; // this tile is now sitting in the drop zone -- shown there instead
+        return '<button type="button" class="drag-tile" data-drag-idx="'+idx+'">'+esc(opt)+'</button>';
+      }).join('');
+      var droppedText = ds.dropped != null ? esc(ds.options[ds.dropped]) : '';
+      var dropStateCls = ds.dropped != null ? (ds.correct ? ' correct dropped' : ' wrong dropped') : '';
+      var dragFeedback = ds.dropped == null
+        ? '<div class="flip-hint" style="position:relative;z-index:1;">Drag or tap a tile onto the blank</div>'
+        : '<div class="choice-feedback '+(ds.correct?'ok':'no')+'">'+(ds.correct ? 'Nice job! 🎉' : 'Good try — that one\'s tricky!')+'</div>';
+      var promptHTML;
+      if(mode === 'blank'){
+        var parts = String(card.front||'').split('___');
+        var dropInner = '<span class="drop-zone blank-slot'+dropStateCls+'" data-drop-zone>'+(droppedText || '＿＿＿')+'</span>';
+        promptHTML = parts.length > 1
+          ? '<div class="card-text blank-sentence">'+esc(parts[0])+dropInner+esc(parts.slice(1).join('___'))+'</div>'
+          : '<div class="card-text blank-sentence">'+esc(card.front)+' '+dropInner+'</div>';
+      } else {
+        promptHTML = '<div class="card-text">'+esc(card.front)+'</div>' +
+          '<div class="drop-zone'+dropStateCls+'" data-drop-zone>'+(droppedText || 'Drag the match here')+'</div>';
+      }
+      stageInner = '' +
+        '<div class="flip-scene" style="position:relative;z-index:1;">' +
+          '<div class="face face-front read-face">' +
+            '<div class="read-label">'+(mode==='blank'?'✏️ Fill in the blank':'🧲 Drag the match')+'</div>' +
+            (card.photoUrl?'<img class="card-photo" src="'+esc(card.photoUrl)+'" alt="">':'') +
+            promptHTML +
+          '</div>' +
+        '</div>' +
+        '<div class="drag-tile-row" data-tile-row>'+tilesHTML+'</div>' +
+        dragFeedback;
     } else {
       stageInner = '' +
         '<div class="flip-scene" style="position:relative;z-index:1;">' +
           '<div class="flip-card '+(S.cardFlipped?'flipped':'')+'" id="flipCard">' +
             '<div class="face face-front">'+(card.photoUrl?'<img class="card-photo" src="'+esc(card.photoUrl)+'" alt="">':'')+'<div class="card-text">'+esc(card.front)+'</div></div>' +
-            '<div class="face face-back"><div class="card-text">'+esc(card.back)+'</div>'+(card.note?'<div class="card-note">'+esc(card.note)+'</div>':'')+(Speech.isSupported()?'<button type="button" class="replay-audio-btn" data-act="replay-audio">🔊 Hear it again</button>':'')+'</div>' +
+            '<div class="face face-back"><div class="card-text">'+esc(card.back)+'</div>'+(card.note?'<div class="card-note">'+esc(card.note)+'</div>':'')+(Speech.isSupported()?'<button type="button" class="replay-audio-btn" data-act="replay-audio">🔁 Hear it again</button>':'')+'</div>' +
           '</div>' +
         '</div>' +
         '<div class="flip-hint" style="position:relative;z-index:1;">'+(S.cardFlipped ? (currentDifficulty().id === 'hard' ? 'How well did you know it?' : 'Be honest — did you get it right?') : 'Tap the card to flip it')+'</div>' +
@@ -2322,12 +4403,48 @@
         var correct = chosen === card.back;
         var elapsed = Date.now() - (S.cardShownAt || Date.now());
         if(correct) Sound.correct(); else Sound.wrong();
+        // Child Mode: read whichever option was just tapped aloud, right or wrong -- reinforces the
+        // text/sound link either way. Adult Mode (S.managingDecks) stays quiet, same as everywhere else.
+        if(!S.managingDecks) Speech.speak(chosen);
         render();
         // Fully automatic: the app already knows right vs. wrong from the tap, so it grades itself —
         // pause just long enough for the correct/wrong highlight to register, then move on.
         setTimeout(function(){ grade(autoRating('choice', correct, elapsed), true); }, 1100);
       });
     });
+    if(mode === 'match' || mode === 'blank') wireDragTiles(card, mode);
+    if(mode === 'timedchoice'){
+      app.querySelectorAll('[data-tc-idx]').forEach(function(b){
+        b.addEventListener('click', function(){
+          if(dragJustHappened()) return;
+          var tcNow = S.timedChoiceState;
+          if(!tcNow || tcNow.cardId !== card.id || tcNow.selected != null || tcNow.expired || S.transitioning) return;
+          clearTimedChoiceTimer();
+          tcNow.selected = parseInt(b.dataset.tcIdx, 10);
+          var chosen = tcNow.options[tcNow.selected];
+          var correct = chosen === tcNow.answer;
+          var elapsed = (tcNow.totalSeconds + tcNow.secondsAdded) * 1000 - Math.max(0, tcNow.deadline - Date.now());
+          if(correct) Sound.correct(); else Sound.wrong();
+          if(!S.managingDecks) Speech.speak(chosen);
+          render();
+          setTimeout(function(){ grade(autoRating('timedchoice', correct, elapsed), true); }, 1100);
+        });
+      });
+      var addTimeBtn = app.querySelector('[data-act="tc-add-time"]');
+      if(addTimeBtn) addTimeBtn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var tcNow = S.timedChoiceState;
+        if(!tcNow || tcNow.cardId !== card.id || tcNow.selected != null || tcNow.expired) return;
+        if((tcNow.timesAdded||0) >= TIMED_CHOICE_MAX_ADDS) return;
+        tcNow.deadline += TIMED_CHOICE_ADD_SECONDS * 1000;
+        tcNow.secondsAdded += TIMED_CHOICE_ADD_SECONDS;
+        tcNow.timesAdded = (tcNow.timesAdded||0) + 1;
+        Sound.tap();
+        render();
+      });
+      var tcLive = S.timedChoiceState;
+      if(tcLive && tcLive.cardId === card.id && tcLive.selected == null && !tcLive.expired) wireTimedChoiceTimer(card);
+    }
     app.querySelectorAll('[data-outcome]').forEach(function(b){
       b.addEventListener('click', function(e){
         e.stopPropagation();
@@ -2384,17 +4501,21 @@
     S.sessionStars += STARS[rating];
     // Snapshot this card as the one swipe-back target — captured before choiceState/cardFlipped
     // reset below, and overwritten on every answer, so there's always exactly one card of "undo peek."
-    var gradedMode = card.mode === 'read' ? 'read' : (card.mode === 'choice' ? 'choice' : 'flip');
+    var gradedMode = (card.mode === 'read' || card.mode === 'choice' || card.mode === 'match' || card.mode === 'blank' || card.mode === 'timedchoice') ? card.mode : 'flip';
+    var isDragGraded = gradedMode === 'match' || gradedMode === 'blank';
+    var tcGraded = gradedMode === 'timedchoice' ? S.timedChoiceState : null;
+    // 'timedchoice' can ask in either direction (see buildTimedChoiceRound), so the peek-back view
+    // needs the actual prompt/answer text that was shown, not always card.front/card.back verbatim.
     S.lastAnsweredCard = {
-      front: card.front,
-      back: card.back,
+      front: tcGraded ? tcGraded.prompt : card.front,
+      back: tcGraded ? tcGraded.answer : card.back,
       note: card.note || '',
       photoUrl: card.photoUrl || '',
       mode: gradedMode,
       correct: rating !== 'again',
       rating: rating,
-      choiceOptions: (gradedMode === 'choice' && S.choiceState) ? S.choiceState.options.slice() : null,
-      chosenText: (gradedMode === 'choice' && S.choiceState && S.choiceState.selected != null) ? S.choiceState.options[S.choiceState.selected] : null
+      choiceOptions: (gradedMode === 'choice' && S.choiceState) ? S.choiceState.options.slice() : (isDragGraded && S.dragState ? S.dragState.options.slice() : (tcGraded ? tcGraded.options.slice() : null)),
+      chosenText: (gradedMode === 'choice' && S.choiceState && S.choiceState.selected != null) ? S.choiceState.options[S.choiceState.selected] : (isDragGraded && S.dragState && S.dragState.dropped != null ? S.dragState.options[S.dragState.dropped] : (tcGraded && tcGraded.selected != null ? tcGraded.options[tcGraded.selected] : null))
     };
     S.peeking = false;
     // The swim-progress critter frowns for a beat right after a miss, then goes back to smiling —
@@ -2424,6 +4545,7 @@
     var stillLearning = updates.state === 'learning' || updates.state === 'relearning';
     S.cardFlipped = false;
     S.choiceState = null;
+    S.dragState = null;
     S.currentCardId = null; // forces the next renderStudy() to treat the next card (even a re-queued one) as freshly shown
     if(S.dueCounts[S.currentDeckId]){
       S.dueCounts[S.currentDeckId].due = Math.max(0, S.dueCounts[S.currentDeckId].due - (stillLearning?0:1));
@@ -2444,6 +4566,7 @@
       right: right,
       accuracy: total > 0 ? Math.round((right / total) * 100) : 0
     };
+    var newStatsRef = null;
     S.store.getStats().then(function(stats){
       var today = todayISO();
       var newStreak = stats.streak || 0;
@@ -2457,9 +4580,12 @@
         lastReviewDateISO: today,
         totalReviews: (stats.totalReviews||0) + S.sessionReviewed
       };
+      newStatsRef = newStats;
       return S.store.setStats(newStats).then(function(){ S.stats = newStats; });
     }).then(function(){
       return S.store.addHistoryEntry(historyEntry);
+    }).then(function(){
+      return evaluateAndAwardBadges(newStatsRef, historyEntry);
     }).then(function(){
       S.view = 'summary';
       render();
@@ -2472,11 +4598,19 @@
     var total = S.sessionReviewed;
     var right = Math.max(0, total - t.again);
     var accuracy = total > 0 ? Math.round((right / total) * 100) : 0;
+    var earnedHTML = '';
+    if(S.justEarnedBadges && S.justEarnedBadges.length){
+      var earnedBadges = BADGES.filter(function(b){ return S.justEarnedBadges.indexOf(b.id) !== -1; });
+      earnedHTML = '<div class="badge-earned-banner">' + earnedBadges.map(function(b){
+        return '<div class="badge-earned-item"><span class="badge-earned-icon">'+b.icon+'</span><span>New badge: <strong>'+esc(b.name)+'</strong></span></div>';
+      }).join('') + '</div>';
+    }
     app.innerHTML = '' +
       '<div class="mascot-wrap">'+mascotSVG('big celebrate')+'</div>' +
       '<div class="summary-card">' +
         '<h2>Great swimming!</h2>' +
         '<div class="deck-meta">'+deck.emoji+' '+esc(deck.name)+'</div>' +
+        earnedHTML +
         '<div class="summary-stats">' +
           '<div class="summary-stat"><span class="num tabular">'+right+' / '+total+'</span><span class="label">Right</span></div>' +
           '<div class="summary-stat"><span class="num tabular">'+accuracy+'%</span><span class="label">Accuracy</span></div>' +
@@ -2694,6 +4828,7 @@
       '</div>' +
       '<div class="stats-page">' +
         '<div class="stats-section">'+tilesHTML+'</div>' +
+        '<div class="stats-section">'+badgeGalleryHTML()+'</div>' +
         '<div class="stats-section"><h3>📈 Long-term trend</h3>'+longTermHTML+'</div>' +
         '<div class="stats-section"><h3>🎯 Recent rounds — last '+trendCount+'</h3>'+trendHTML+'</div>' +
         '<div class="stats-section"><h3>🐢 Deck mastery</h3>'+masteryHTML+'<p class="mastery-hint">Tap a deck to see which topics it knows best.</p></div>' +
@@ -2790,12 +4925,42 @@
         '</button>';
     }).join('');
 
+    var profile = S.profile;
+    var pmode = profile ? profile.mode : 'child';
+    var modeSectionHTML = profile ? ('' +
+      '<div class="stats-section">' +
+        '<h3>👤 '+esc(profile.name)+'\'s mode</h3>' +
+        '<div class="algo-toggle">' +
+          '<button type="button" class="algo-opt'+(pmode==='child'?' active':'')+'" data-mode-switch="child">' +
+            '<span class="algo-name">🧒 Child Mode'+(pmode==='child'?' <span class="algo-current">— current</span>':'')+'</span>' +
+            '<span class="algo-blurb">PIN-protected study sessions; deck editing needs the PIN too.</span>' +
+          '</button>' +
+          '<button type="button" class="algo-opt'+(pmode==='adult'?' active':'')+'" data-mode-switch="adult">' +
+            '<span class="algo-name">🔧 Adult Mode'+(pmode==='adult'?' <span class="algo-current">— current</span>':'')+'</span>' +
+            '<span class="algo-blurb">Study and manage decks anytime — no PIN needed.</span>' +
+          '</button>' +
+        '</div>' +
+        (profile.initialMode === 'child' ? '<p class="algo-note">This profile started as Child Mode, so changing its mode always asks for the PIN.</p>' : '') +
+      '</div>') : '';
+
+    var readingSupportOn = !!S.settings.readingSupport;
+    var readingSupportHTML = '' +
+      '<div class="stats-section">' +
+        '<h3>📖 Reading support</h3>' +
+        '<button type="button" class="algo-opt'+(readingSupportOn?' active':'')+'" data-act="toggle-reading-support">' +
+          '<span class="algo-name">'+(readingSupportOn ? '✅ On' : '⬜ Off')+'</span>' +
+          '<span class="algo-blurb">Wider letter and word spacing and a larger base font throughout Coral Cove. (Every option is already read aloud on tap in Child Mode — that\'s not tied to this toggle.) Research doesn\'t back special "dyslexia fonts", so this sticks to what the evidence actually supports.</span>' +
+        '</button>' +
+      '</div>';
+
     app.innerHTML = '' +
       '<div class="nav-row">' +
         '<button class="back-btn" data-act="exit-settings">⟵ Lagoon</button>' +
         '<span class="nav-title">⚙️ Settings</span>' +
       '</div>' +
       '<div class="stats-page">' +
+        errorBannerHTML() +
+        modeSectionHTML +
         '<div class="stats-section">' +
           '<h3>🎯 Study difficulty</h3>' +
           '<div class="algo-toggle">'+diffOptsHTML+'</div>' +
@@ -2806,8 +4971,10 @@
           '<div class="algo-toggle">'+algoOptsHTML+'</div>' +
           '<p class="algo-note">This applies to every deck too. Switching only changes how future answers are scheduled — cards already due keep their current date.</p>' +
         '</div>' +
+        readingSupportHTML +
       '</div>';
 
+    wireErrorBanner();
     app.querySelector('[data-act="exit-settings"]').addEventListener('click', goHome);
     app.querySelectorAll('[data-diff]').forEach(function(b){
       b.addEventListener('click', function(){
@@ -2828,6 +4995,28 @@
         S.store.setSettings(newSettings);
         render();
       });
+    });
+    app.querySelectorAll('[data-mode-switch]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var id = b.dataset.modeSwitch;
+        if(!S.profile || id === S.profile.mode) return;
+        if(S.profile.initialMode === 'child'){
+          S.pendingModeSwitch = id;
+          S.pinInput=''; S.pinError=''; S.pinShake=false;
+          S.pinPromptFor = 'modeSwitch';
+          render();
+        } else {
+          applyModeSwitch(id);
+        }
+      });
+    });
+    var rs = app.querySelector('[data-act="toggle-reading-support"]');
+    if(rs) rs.addEventListener('click', function(){
+      var newSettings = Object.assign({}, S.settings, { readingSupport: !readingSupportOn });
+      S.settings = newSettings;
+      S.store.setSettings(newSettings);
+      applyReadingSupport();
+      render();
     });
   }
 
@@ -2870,11 +5059,18 @@
     var rows = cards.length ? cards.map(function(c){
       var isReadRow = c.mode === 'read';
       var isChoiceRow = c.mode === 'choice';
-      var modeTag = (isReadRow ? '<span class="mode-tag mode-tag-read">📖 Read</span>' : (isChoiceRow ? '<span class="mode-tag mode-tag-choice">🔢 Choice</span>' : '<span class="mode-tag">🔄 Flip</span>')) +
+      var isMatchRow = c.mode === 'match';
+      var isBlankRow = c.mode === 'blank';
+      var isTimedChoiceRow = c.mode === 'timedchoice';
+      var modeTag = (isReadRow ? '<span class="mode-tag mode-tag-read">📖 Read</span>' :
+          (isChoiceRow ? '<span class="mode-tag mode-tag-choice">🔢 Choice</span>' :
+          (isMatchRow ? '<span class="mode-tag mode-tag-choice">🧲 Match</span>' :
+          (isBlankRow ? '<span class="mode-tag mode-tag-choice">✏️ Fill blank</span>' :
+          (isTimedChoiceRow ? '<span class="mode-tag mode-tag-choice">⏱️ Timed choice</span>' : '<span class="mode-tag">🔄 Flip</span>'))))) +
         (c.category ? ' <span class="mode-tag mode-tag-category">🏷️ '+esc(c.category)+'</span>' : '') +
         (c.isLeech ? ' <span class="mode-tag mode-tag-leech">🔁 Needs practice</span>' : '');
       var backLine = isReadRow ? (c.note ? esc(c.note) : 'No answer side — just for reading aloud') :
-        (isChoiceRow ? (esc(c.back)+' · '+(c.choices||[]).length+' wrong answer'+((c.choices||[]).length===1?'':'s')) :
+        ((isChoiceRow || isMatchRow || isBlankRow || isTimedChoiceRow) ? (esc(c.back)+' · '+((c.choices||[]).length ? ((c.choices||[]).length+' wrong answer'+((c.choices||[]).length===1?'':'s')) : 'auto distractors')) :
         (esc(c.back)+(c.note?' · '+esc(c.note):'')));
       return '' +
       '<div class="card-row">' +
@@ -2902,6 +5098,10 @@
     var formMode = S.cardFormMode || 'flip';
     var isReadMode = formMode === 'read';
     var isChoiceMode = formMode === 'choice';
+    var isMatchMode = formMode === 'match';
+    var isBlankMode = formMode === 'blank';
+    var isTimedChoiceMode = formMode === 'timedchoice';
+    var needsChoicesField = isChoiceMode || isMatchMode || isBlankMode || isTimedChoiceMode; // shown for all four; only the first three actually require it (see requiresChoices at save time) -- 'timedchoice' can fall back to auto-picked distractors from sibling cards
 
     var photoFieldHTML;
     if(S.photoUploading){
@@ -2931,11 +5131,14 @@
           '<button type="button" class="mode-opt '+(formMode==='flip'?'active':'')+'" data-mode="flip">🔄 Flip card<span class="mode-sub">question → answer</span></button>' +
           '<button type="button" class="mode-opt '+(formMode==='read'?'active':'')+'" data-mode="read">📖 Just read it<span class="mode-sub">no answer side</span></button>' +
           '<button type="button" class="mode-opt '+(formMode==='choice'?'active':'')+'" data-mode="choice">🔢 Multiple choice<span class="mode-sub">pick the answer</span></button>' +
+          '<button type="button" class="mode-opt '+(formMode==='match'?'active':'')+'" data-mode="match">🧲 Matching<span class="mode-sub">drag the answer over</span></button>' +
+          '<button type="button" class="mode-opt '+(formMode==='blank'?'active':'')+'" data-mode="blank">✏️ Fill in the blank<span class="mode-sub">drag a word into ___</span></button>' +
+          '<button type="button" class="mode-opt '+(formMode==='timedchoice'?'active':'')+'" data-mode="timedchoice">⏱️ Timed choice<span class="mode-sub">beat the clock</span></button>' +
         '</div>' +
-        '<div class="field"><label for="cardFront">'+(isReadMode?'Word or phrase to read':'Front (question / word)')+'</label><input id="cardFront" type="text" value="'+esc(fFront)+'" placeholder="'+(isReadMode?'e.g. octopus':'e.g. 6 + 7  or  because')+'"></div>' +
+        '<div class="field"><label for="cardFront">'+(isReadMode?'Word or phrase to read':(isBlankMode?'Sentence (use ___ for the blank)':'Front (question / word)'))+'</label><input id="cardFront" type="text" value="'+esc(fFront)+'" placeholder="'+(isReadMode?'e.g. octopus':(isBlankMode?'e.g. The cat sat on the ___.':'e.g. 6 + 7  or  because'))+'"></div>' +
         photoFieldHTML +
-        (isReadMode ? '' : '<div class="field"><label for="cardBack">'+(isChoiceMode?'Correct answer':'Back (answer)')+'</label><input id="cardBack" type="text" value="'+esc(fBack)+'" placeholder="e.g. 13  or  a sentence"></div>') +
-        (isChoiceMode ? '<div class="field"><label for="cardChoices">Wrong answers (comma-separated)</label><input id="cardChoices" type="text" value="'+esc(fChoices)+'" placeholder="e.g. 11, 12, 14"></div>' : '') +
+        (isReadMode ? '' : '<div class="field"><label for="cardBack">'+(needsChoicesField?'Correct answer':'Back (answer)')+'</label><input id="cardBack" type="text" value="'+esc(fBack)+'" placeholder="e.g. 13  or  a sentence"></div>') +
+        (needsChoicesField ? '<div class="field"><label for="cardChoices">'+(isTimedChoiceMode?'Wrong answers (comma-separated, optional — leave blank to auto-pick from other cards in this deck)':'Wrong answers / other tiles (comma-separated)')+'</label><input id="cardChoices" type="text" value="'+esc(fChoices)+'" placeholder="e.g. 11, 12, 14"></div>' : '') +
         '<div class="field"><label for="cardNote">'+(isReadMode?'Hint (optional, shown small under the word)':'Fun fact / hint (optional)')+'</label><textarea id="cardNote" rows="2" placeholder="'+(isReadMode?'e.g. sounds like OCK-tuh-puss':'e.g. 6 crabs + 7 crabs = 13 crabs!')+'">'+esc(fNote)+'</textarea></div>' +
         '<div class="field"><label for="cardCategory">Topic (optional — groups cards in Progress, e.g. Addition, Sight words)</label><input id="cardCategory" type="text" maxlength="24" value="'+esc(fCategory)+'" placeholder="e.g. Addition"></div>' +
         '<div class="form-actions">' +
@@ -2950,6 +5153,38 @@
       SUBJECTS.map(function(s){
         return '<button type="button" class="subject-chip'+(currentSubject===s.id?' active':'')+'" data-subject-chip="'+s.id+'">'+s.icon+' '+s.label+'</button>';
       }).join('');
+
+    // Deck type: a deck-level toggle, not a per-card mode -- five mutually exclusive options.
+    // "Word Feed", "Story Mode", "Equation Feed" and "Language Feed" all open the same full-screen
+    // TikTok-style swipe browser (see the WORD FEED, STORY MODE, EQUATION FEED and LANGUAGE FEED
+    // sections above renderStudy()) instead of a graded study round (startStudy); they differ in
+    // content, order, and timing. Any deck can be flipped into any mode, existing or new.
+    // `data-deck-type` keeps the old `on`/`off` values Word Feed shipped with, for one type ('feed'),
+    // plus 'story', 'equation', 'lang' and 'regular'.
+    var feedOn = !!deck.feedMode;
+    var storyOn = !feedOn && !!deck.storyMode;
+    var equationOn = !feedOn && !storyOn && !!deck.equationMode;
+    var langOn = !feedOn && !storyOn && !equationOn && !!deck.langFeedMode;
+    var deckTypeHTML = '' +
+      '<div class="subject-picker">' +
+        '<label class="subject-picker-label">Deck type</label>' +
+        '<div class="subject-chip-row">' +
+          '<button type="button" class="subject-chip'+(!feedOn && !storyOn && !equationOn && !langOn?' active':'')+'" data-deck-type="regular">📚 Regular study deck</button>' +
+          '<button type="button" class="subject-chip'+(feedOn?' active':'')+'" data-deck-type="feed">🎬 Word Feed</button>' +
+          '<button type="button" class="subject-chip'+(storyOn?' active':'')+'" data-deck-type="story">📜 Story Mode</button>' +
+          '<button type="button" class="subject-chip'+(equationOn?' active':'')+'" data-deck-type="equation">➕ Equation Feed</button>' +
+          '<button type="button" class="subject-chip'+(langOn?' active':'')+'" data-deck-type="lang">🌐 Language Feed</button>' +
+        '</div>' +
+        '<p class="subject-picker-hint">' +
+          (storyOn
+            ? 'Story Mode reads this deck\'s cards as one story, one word at a time, in the same swipeable TikTok-style browser as Word Feed — built automatically from each card\'s hint/note field, in the order the cards were added. Just-for-fun: no grading, no effect on stats or streaks.'
+            : (equationOn
+              ? 'Equation Feed shows each card\'s front (e.g. "3 + 4") with no answer. The full equation is spoken aloud slowly with the answer right away, and the answer bounces onto the screen a few seconds later. Swipe up or down for another. Just-for-fun: no grading, no effect on stats or streaks.'
+              : (langOn
+                ? 'Language Feed introduces only a few words at a time (starting with the first '+(deck.langBatchSize||5)+') in the same swipeable browser as Word Feed — the target word is spoken aloud, with the English translation fading in about a second later. Once every word in the current batch has been seen, the next batch unlocks automatically. Just-for-fun: no grading, no effect on stats or streaks.'
+                : 'Word Feed turns "Dive In" into a swipeable, TikTok-style word browser — one word per screen, read aloud, swipe up or down for another. It\'s just-for-fun: no grading, no effect on stats or streaks.'))) +
+        '</p>' +
+      '</div>';
 
     app.innerHTML = '' +
       errorBannerHTML() +
@@ -2968,6 +5203,7 @@
         '<input id="customSubjectInput" class="subject-custom-input" type="text" maxlength="24" placeholder="Or type your own, e.g. Spanish" value="'+(subjectIsCustom?esc(currentSubject):'')+'">' +
         '<p class="subject-picker-hint">Groups this deck under a tab on the deck screen, like Reading or Math.</p>' +
       '</div>' +
+      deckTypeHTML +
       '<div class="card-list">'+rows+'</div>' +
       addForm +
       '<div class="danger-zone"><button class="btn btn-danger" data-act="del-deck">Delete this deck</button></div>';
@@ -2992,6 +5228,21 @@
       var val = nameInput.value.trim() || 'Untitled Deck';
       S.store.updateDeck(deck.id, { name: val });
     });
+    app.querySelectorAll('[data-deck-type]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var type = b.dataset.deckType; // 'regular' | 'feed' | 'story' | 'equation' | 'lang'
+        var current = feedOn ? 'feed' : (storyOn ? 'story' : (equationOn ? 'equation' : (langOn ? 'lang' : 'regular')));
+        if(type === current) return;
+        // The five types are mutually exclusive, so every switch clears all four flags and then sets
+        // whichever one applies -- never leaves a stale feedMode/storyMode/equationMode/langFeedMode
+        // true from a prior choice. Switching a deck into Language Feed for the first time seeds its
+        // pacing fields (batch size 5, first batch already unlocked) if they aren't set yet.
+        var patch = { feedMode: type === 'feed', storyMode: type === 'story', equationMode: type === 'equation', langFeedMode: type === 'lang' };
+        if(type === 'lang' && !deck.langBatchSize){ patch.langBatchSize = 5; patch.langUnlockedCount = 5; }
+        S.store.updateDeck(deck.id, patch);
+        render();
+      });
+    });
     app.querySelectorAll('[data-subject-chip]').forEach(function(b){
       b.addEventListener('click', function(){
         var val = b.dataset.subjectChip;
@@ -3011,7 +5262,7 @@
         var c = cards.find(function(x){ return x.id === b.dataset.card; });
         S.editingCardId = b.dataset.card;
         S.addCardOpen = false;
-        S.cardFormMode = (c && c.mode === 'read') ? 'read' : ((c && c.mode === 'choice') ? 'choice' : 'flip');
+        S.cardFormMode = (c && (c.mode === 'read' || c.mode === 'choice' || c.mode === 'match' || c.mode === 'blank' || c.mode === 'timedchoice')) ? c.mode : 'flip';
         S.cardFormDraft = { front: c ? c.front : '', back: c ? (c.back||'') : '', note: c ? (c.note||'') : '', choices: c ? (c.choices||[]).join(', ') : '', category: c ? (c.category||'') : '', photoId: c ? (c.photoId||'') : '', photoUrl: c ? (c.photoUrl||'') : '' };
         S.cardFormOriginalPhotoId = c ? (c.photoId||'') : '';
         render();
@@ -3108,12 +5359,14 @@
       var choicesArr = choicesEl ? choicesEl.value.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : [];
       var category = document.getElementById('cardCategory').value.trim();
       var mode = S.cardFormMode || 'flip';
+      var requiresChoices = mode === 'choice' || mode === 'match' || mode === 'blank'; // 'timedchoice' can fall back to auto-picked distractors, so it's the one mode that saves fine with zero manual choices
+      var savesChoices = requiresChoices || mode === 'timedchoice';
       if(!front) return;
-      if((mode === 'flip' || mode === 'choice') && !back) return;
-      if(mode === 'choice' && choicesArr.length < 1) return;
+      if(mode !== 'read' && !back) return;
+      if(requiresChoices && choicesArr.length < 1) return;
       var photoId = draft.photoId || '';
       var photoUrl = draft.photoUrl || '';
-      var payload = { front: front, back: back, note: note, mode: mode, choices: mode === 'choice' ? choicesArr : [], category: category, photoId: photoId, photoUrl: photoUrl };
+      var payload = { front: front, back: back, note: note, mode: mode, choices: savesChoices ? choicesArr : [], category: category, photoId: photoId, photoUrl: photoUrl };
       var origPhotoId = S.cardFormOriginalPhotoId;
       var savePromise;
       if(editingCard){
@@ -3153,6 +5406,27 @@
     Sound.tap();
   }, true);
 
+  /* ============ keyboard PIN entry ============ */
+  // Wired once, globally, at boot -- NOT inside wirePinKeys/renderPinPad, since that function re-runs
+  // on every keystroke (each digit re-renders the whole PIN screen) and a listener added there would
+  // stack up a new one every time, firing a single keypress multiple times over. Guarding on
+  // S.pinPromptFor and simply clicking the matching on-screen button reuses every bit of existing
+  // logic (Sound.tap, error clearing, the auto-submit-at-4-digits timer, backspace, cancel) instead of
+  // duplicating it -- a real keyboard press behaves exactly like tapping the pad by hand.
+  document.addEventListener('keydown', function(e){
+    if(!S.pinPromptFor) return;
+    if(e.key >= '0' && e.key <= '9'){
+      var digitBtn = app.querySelector('[data-digit="'+e.key+'"]');
+      if(digitBtn && !digitBtn.disabled){ e.preventDefault(); digitBtn.click(); }
+    } else if(e.key === 'Backspace'){
+      var backBtn = app.querySelector('[data-act="pin-back"]');
+      if(backBtn){ e.preventDefault(); backBtn.click(); }
+    } else if(e.key === 'Escape'){
+      var cancelBtn = app.querySelector('[data-act="pin-cancel"]');
+      if(cancelBtn){ e.preventDefault(); cancelBtn.click(); }
+    }
+  });
+
   /* ============ boot ============ */
   // The PIN is baked in as a fixed 3207 -- there's no "create your PIN" setup screen anymore.
   // If the stored settings don't already carry that PIN's hash (fresh app, or a PIN set before
@@ -3160,19 +5434,19 @@
   var BAKED_PIN_HASH = pinHash('3207');
   store.init().then(function(s){
     S.store = s;
-    Promise.all([S.store.getStats(), S.store.getSettings()]).then(function(results){
-      S.stats = results[0];
-      S.settings = Object.assign({ algorithm: 'sm2_speed', difficulty: 'medium' }, S.settings, results[1] || {});
-      S.sessionActive = false; // always locked at launch — a grown-up must start each session
-      S.view = 'home';
-      if(S.settings.pinHash !== BAKED_PIN_HASH){
-        S.settings = Object.assign({}, S.settings, { pinHash: BAKED_PIN_HASH });
-        S.store.setSettings(S.settings);
+    // The PIN is app-wide now (not nested in any one profile's settings) -- load/seed it, then
+    // subscribe to the profile list. Nothing profile-scoped (decks, stats, settings…) loads until a
+    // profile is actually chosen; render() shows the profile picker in the meantime.
+    S.store.getPin().then(function(hash){
+      S.pinHash = BAKED_PIN_HASH;
+      if(hash !== BAKED_PIN_HASH){
+        S.store.setPin(BAKED_PIN_HASH);
       }
+      S.view = 'home';
       S.booted = true;
-      refreshDueCounts().then(render);
+      subscribeProfiles();
+      render();
     });
-    subscribeDecks();
   });
   // Independent of the main boot chain above -- photo upload should light up whenever it resolves
   // rather than holding up the rest of the app, and it's fine for it to arrive a beat later.
@@ -3180,5 +5454,11 @@
     S.assetsAvailable = Assets.available();
     if(S.booted && S.view === 'editor') render();
   });
+  // Also independent of the main boot chain -- real pronunciation clips just light up whenever
+  // the db handle resolves; nothing needs to wait on it, since Speech.speak() falls back to the
+  // synthesized voice until then anyway.
+  AudioClips.init();
 })();
 </script>
+
+</body></html>
