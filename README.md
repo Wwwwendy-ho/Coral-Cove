@@ -1,37 +1,46 @@
 # Coral Cove
 
-A marine-themed, Anki-style flashcard app built for a 7–9 year old learner. Kids study decks of cards (sight words, math facts, vocabulary, etc.) using spaced repetition, and a parent PIN gates anything administrative — starting a session, editing decks, or leaving mid-round — so the app can be handed to a child directly.
+Coral Cove flashcards, set up to run on GitHub Pages and as an iPad Home Screen app.
 
-## What's in this repo
+## Files
 
-This is a single self-contained web page — there's no build step, no server, and no dependencies to install.
+| File | What it is |
+|---|---|
+| `index.html` | The Coral Cove app |
+| `seed-data.js` | Starting decks, cards and progress, exported from Claude on Oct 7, 2026 |
+| `audio-clips.js` | Recorded pronunciation clips |
+| `storage.js` | Saves decks and progress on the device itself |
+| `manifest.webmanifest`, `icon-*.png` | Home Screen app name and icon |
+| `sw.js` | Lets the app open without Wi-Fi |
+| `.nojekyll` | Tells GitHub Pages to serve the files as they are |
 
-- **`index.html`** — the entire app: markup, styling, and logic all in one file, with a starting set of decks and cards baked in. This is the file to deploy.
-- **`build_offline.py`** and **`seed_data.json`** — the tooling used to *produce* `index.html` from the live version of the app plus a snapshot of deck/card data. You only need these if you want to regenerate `index.html` yourself (see "Updating content" below). They aren't needed to run or host the site.
-## Using the app
+## Upload to GitHub
 
-**First launch:** the app asks you to create a 4-digit parent PIN. This PIN is required for anything a kid shouldn't be able to do on their own.
+1. Sign in at github.com and click **New repository**. Name it `coral-cove`.
+2. Click **uploading an existing file**, drag in every file from this folder, and click **Commit changes**.
+   - `.nojekyll` starts with a dot, so your computer may hide it. If it's missing, click
+     **Add file → Create new file**, name it `.nojekyll`, leave it empty and commit.
+3. Go to **Settings → Pages**. Under "Build and deployment", choose **Deploy from a branch**,
+   pick `main` and `/ (root)`, and click **Save**.
+4. After a minute or two the site is live at `https://YOUR-USERNAME.github.io/coral-cove/`.
 
-**Starting a study session:** from the locked "Coral Cove is resting" screen, tap **"I'm a grown-up — Start Session"**, enter the PIN, and pick a deck. Once a session is active, the child can study without needing the PIN again — except to leave a round early (finishing a round normally doesn't require the PIN).
+## Set up the iPad
 
-**Admin / Manage Decks mode:** tap **"🔧 Manage Decks"** on the same locked screen and enter the PIN. From here you can create decks, add/edit/delete cards, and archive decks you don't want showing up for the child right now (archived decks are completely hidden from the study view). Tap **"✅ Done"** to leave.
+1. Open the link in Safari, tap **Share → Add to Home Screen**, keep **Open as Web App** on, tap **Add**.
+2. Settings → Screen Time → Content & Privacy Restrictions → App Store, Media, Web & Games →
+   Web Content → **Only Approved Websites**. Remove the defaults and add
+   `https://YOUR-USERNAME.github.io`.
+3. Open Coral Cove from its Home Screen icon and triple-click the top button to start Guided Access.
 
-**Stats:** the 📊 button on the home screen (visible in both modes) shows cards reviewed, accuracy, streaks, and a per-deck mastery breakdown.
+## Good to know
 
-**Studying:** cards support three modes — flip (tap to reveal the answer), multiple choice, or read-aloud. Swipe down on the current card to peek back at the one you just answered (read-only, to check what you got); swipe up or tap to return. You can't swipe forward past an unanswered card — answering is the only way ahead.
-
-## Locking it down for a child
-
-**Use your device's built-in kiosk mode** — iOS Guided Access (triple-click the side button once it's enabled in Settings → Accessibility) locks the screen to a single app, so a child can't switch away even within the browser.
-
-## Updating content
-
-**Easiest — do it in the app itself:** use Manage Decks mode to add, edit, archive, or delete cards and decks directly. This works for the live artifact version right away. For the GitHub Pages copy, you'll periodically want to pull a fresh snapshot into `index.html` (ask for a rebuilt copy any time your decks change and you want the hosted version to match).
-
-**Manually, via the build script:** if you're regenerating `index.html` yourself, you need three things in the same folder: the app's source HTML (named `coral-cove.html`), `build_offline.py`, and `seed_data.json` (your current deck/card data as JSON). Run:
-
-```
-python3 build_offline.py
-```
-
-This writes a fresh standalone HTML file with `seed_data.json`'s content baked in as the starting point.
+- **Progress stays on the iPad.** Each device keeps its own copy. Changes made in the Claude
+  version don't appear here, and changes here don't go back to Claude.
+- **Always open it from the Home Screen icon**, not Safari. Safari can clear a website's saved data
+  after a week without visits; Home Screen apps keep theirs.
+- **Photo uploads are turned off** in this version, since they need Claude's online storage.
+- **Fonts:** if Screen Time blocks `fonts.googleapis.com`, Coral Cove uses the iPad's built-in font
+  instead. Approve `https://fonts.googleapis.com` and `https://fonts.gstatic.com` to keep the
+  rounded Coral Cove fonts.
+- **Updating later:** upload changed files over the old ones. Decks already saved on the iPad are
+  kept; new starting data in `seed-data.js` only applies on a device that has never opened the app.
