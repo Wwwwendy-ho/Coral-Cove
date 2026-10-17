@@ -40,6 +40,7 @@
     }
     var meta = docs[META] || {};
     if (meta.seedVersion !== seedVersion) {
+      moveRenamedProfiles();
       // Add every starting document this device doesn't have yet; keep everything it does have.
       Object.keys(seed).forEach(function (p) {
         if (!Object.prototype.hasOwnProperty.call(docs, p)) docs[p] = clone(seed[p]);
@@ -47,6 +48,32 @@
       docs[META] = { seedVersion: seedVersion, mergedAt: Date.now() };
       writeNow();
     }
+  }
+
+  // A profile whose id changed in the starting data (for example after a rename) would otherwise
+  // show up twice: the device's old copy with all its progress, and a fresh empty one. Match them
+  // on what doesn't change (created time, order, starting mode), move the device's documents to
+  // the new id, and take the new display name.
+  function moveRenamedProfiles() {
+    var isProfile = function (p) { return /^profiles\/[^\/]+$/.test(p); };
+    Object.keys(seed).filter(isProfile).forEach(function (to) {
+      if (Object.prototype.hasOwnProperty.call(docs, to)) return;
+      var s = seed[to];
+      var from = Object.keys(docs).filter(function (p) {
+        var d = docs[p];
+        return isProfile(p) && !Object.prototype.hasOwnProperty.call(seed, p) && d &&
+          d.createdAt === s.createdAt && d.order === s.order && d.initialMode === s.initialMode;
+      });
+      if (from.length !== 1) return;
+      from = from[0];
+      Object.keys(docs).forEach(function (p) {
+        if (p === from || p.indexOf(from + '/') === 0) {
+          docs[to + p.slice(from.length)] = docs[p];
+          delete docs[p];
+        }
+      });
+      docs[to].name = s.name;
+    });
   }
 
   // Ask the browser not to clear this site's storage on its own (Home Screen apps already keep it).

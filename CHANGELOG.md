@@ -22,3 +22,6 @@ Look, sound and access:
 - Updated recorded pronunciation clips.
 
 Data: decks, cards and progress were re-exported from Claude on October 17. Devices keep their own progress and pick up the new decks the next time they open the app.
+
+### Privacy update (October 17, 2026)
+- The student's name is replaced with "Child" in this public copy, and earlier versions in this repository's history were changed the same way. iPads that already have her profile move it, with all its progress, to the new name the next time Coral Cove opens.

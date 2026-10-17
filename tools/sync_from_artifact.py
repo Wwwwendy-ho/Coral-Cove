@@ -1,11 +1,13 @@
 """Turn a download of the Coral Cove artifact into the GitHub Pages site.
 
-Usage: python3 tools/sync_from_artifact.py <artifact-download-dir> <db-export-dir> <seed-date>
+Usage: python3 tools/sync_from_artifact.py <artifact-download-dir> <db-export-dir> <seed-date> [Old=New]
 
 - artifact-download-dir: the artifact's published files (index.html, voice/...).
 - db-export-dir: the artifact database exported as JSON, one file per document at
   <collection path>/<doc id>.json (the layout ArtifactData's out_dir writes).
 - seed-date: YYYY-MM-DD, used as the seed version so devices pick up new decks.
+- Old=New (optional): replace a name everywhere in the published copy (Old, old and OLD), including
+  profile ids. Pass it on the command line so the original name is never stored in the repo.
 
 Writes the site to the repo root and mirrors it into coral-cove/, because devices may have
 either URL saved. storage.js (the on-device database) is kept as is.
@@ -43,7 +45,13 @@ def load_db(root):
     return docs
 
 
-def main(src, dbdir, date):
+def rename(text, old, new):
+    for a, b in [(old, new), (old.lower(), new.lower()), (old.upper(), new.upper())]:
+        text = text.replace(a, b)
+    return text
+
+
+def main(src, dbdir, date, swap=None):
     src, dbdir = pathlib.Path(src), pathlib.Path(dbdir)
     html = (src / "index.html").read_text(encoding="utf-8")
     if "</head>" not in html or "seed-data.js" in html:
@@ -67,6 +75,14 @@ def main(src, dbdir, date):
                     f"var FILES = ['./', 'index.html', 'seed-data.js?v={v}', 'audio-clips.js?v={v}', 'storage.js?v={v}',\n"
                     "             'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];\n\n")
 
+    if swap:
+        old, _, new = swap.partition("=")
+        if not old or not new:
+            sys.exit("The rename must look like Old=New")
+        html, seed_js = rename(html, old, new), rename(seed_js, old, new)
+        if old.lower() in (html + seed_js + audio_js).lower():
+            sys.exit(f"{old} is still in the build; not writing it.")
+
     for t in TARGETS:
         t.mkdir(exist_ok=True)
         (t / "index.html").write_text(html, encoding="utf-8")
@@ -82,6 +98,6 @@ def main(src, dbdir, date):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
+    if len(sys.argv) not in (4, 5):
         sys.exit(__doc__)
     main(*sys.argv[1:])
