@@ -1,7 +1,7 @@
 /* Coral Cove offline support: keeps a copy of the app's files so it still opens without Wi-Fi.
    Network first, so a new upload to GitHub shows up the next time the iPad is online. */
-var CACHE = 'coral-cove-v1';
-var FILES = ['./', 'index.html', 'seed-data.js', 'audio-clips.js', 'storage.js',
+var CACHE = 'coral-cove-20261017';
+var FILES = ['./', 'index.html', 'seed-data.js?v=20261017', 'audio-clips.js?v=20261017', 'storage.js?v=20261017',
              'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', function (e) {

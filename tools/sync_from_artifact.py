@@ -1,0 +1,87 @@
+"""Turn a download of the Coral Cove artifact into the GitHub Pages site.
+
+Usage: python3 tools/sync_from_artifact.py <artifact-download-dir> <db-export-dir> <seed-date>
+
+- artifact-download-dir: the artifact's published files (index.html, voice/...).
+- db-export-dir: the artifact database exported as JSON, one file per document at
+  <collection path>/<doc id>.json (the layout ArtifactData's out_dir writes).
+- seed-date: YYYY-MM-DD, used as the seed version so devices pick up new decks.
+
+Writes the site to the repo root and mirrors it into coral-cove/, because devices may have
+either URL saved. storage.js (the on-device database) is kept as is.
+"""
+import json
+import pathlib
+import shutil
+import sys
+
+REPO = pathlib.Path(__file__).resolve().parent.parent
+TARGETS = [REPO, REPO / "coral-cove"]
+SHARED = ["storage.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png", ".nojekyll"]
+HEAD_TAGS = """<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Coral Cove">
+<meta name="theme-color" content="#1c8c93">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<script src="seed-data.js?v={v}"></script>
+<script src="audio-clips.js?v={v}"></script>
+<script src="storage.js?v={v}"></script>
+<script>if('serviceWorker' in navigator){{addEventListener('load',function(){{navigator.serviceWorker.register('sw.js?v={v}').catch(function(){{}});}});}}</script>
+"""
+
+
+def load_db(root):
+    docs = {}
+    for f in sorted(root.rglob("*.json")):
+        path = f.relative_to(root).with_suffix("").as_posix()
+        docs[path] = json.loads(f.read_text(encoding="utf-8"))
+    if not any(p.startswith("profiles/") for p in docs):
+        sys.exit("The database export has no profiles; refusing to publish an empty app.")
+    return docs
+
+
+def main(src, dbdir, date):
+    src, dbdir = pathlib.Path(src), pathlib.Path(dbdir)
+    html = (src / "index.html").read_text(encoding="utf-8")
+    if "</head>" not in html or "seed-data.js" in html:
+        sys.exit("index.html isn't a plain artifact download (no </head>, or already built).")
+    # The cache-busting version changes with every sync so iPads fetch the new files.
+    v = date.replace("-", "")
+    html = html.replace("</head>", HEAD_TAGS.format(v=v) + "</head>", 1)
+
+    docs = load_db(dbdir)
+    audio = {p: d for p, d in docs.items() if p.startswith("audio-clips/")}
+    seed = {p: d for p, d in docs.items() if not p.startswith("audio-clips/")}
+    seed_js = (f"/* Coral Cove starting data, exported from the Claude artifact on {date}. */\n"
+               f"window.CORAL_COVE_SEED_VERSION = {json.dumps(date)};\n"
+               f"window.CORAL_COVE_SEED = {json.dumps(seed, ensure_ascii=False, separators=(',', ':'))};\n")
+    audio_js = ("/* Recorded pronunciation clips (read-only). */\n"
+                f"window.CORAL_COVE_AUDIO = {json.dumps(audio, separators=(',', ':'))};\n")
+
+    sw = (REPO / "sw.js").read_text(encoding="utf-8")
+    sw = sw.replace(sw[sw.index("var CACHE"):sw.index("self.addEventListener")],
+                    f"var CACHE = 'coral-cove-{v}';\n"
+                    f"var FILES = ['./', 'index.html', 'seed-data.js?v={v}', 'audio-clips.js?v={v}', 'storage.js?v={v}',\n"
+                    "             'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];\n\n")
+
+    for t in TARGETS:
+        t.mkdir(exist_ok=True)
+        (t / "index.html").write_text(html, encoding="utf-8")
+        (t / "seed-data.js").write_text(seed_js, encoding="utf-8")
+        (t / "audio-clips.js").write_text(audio_js, encoding="utf-8")
+        (t / "sw.js").write_text(sw, encoding="utf-8")
+        shutil.rmtree(t / "voice", ignore_errors=True)
+        shutil.copytree(src / "voice", t / "voice")
+        if t != REPO:
+            for name in SHARED:
+                shutil.copy2(REPO / name, t / name)
+    print(f"Synced {len(seed)} documents and {len(audio)} clips into {', '.join(str(t) for t in TARGETS)}")
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 4:
+        sys.exit(__doc__)
+    main(*sys.argv[1:])

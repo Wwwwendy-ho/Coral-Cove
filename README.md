@@ -7,12 +7,15 @@ Coral Cove flashcards, set up to run on GitHub Pages and as an iPad Home Screen 
 | File | What it is |
 |---|---|
 | `index.html` | The Coral Cove app |
-| `seed-data.js` | Starting decks, cards and progress, exported from Claude on Oct 7, 2026 |
+| `seed-data.js` | Starting decks, cards and progress, exported from Claude on Oct 17, 2026 |
 | `audio-clips.js` | Recorded pronunciation clips |
+| `voice/` | Natural-voice speech packs (English, Korean, Chinese) used to read cards aloud |
 | `storage.js` | Saves decks and progress on the device itself |
 | `manifest.webmanifest`, `icon-*.png` | Home Screen app name and icon |
 | `sw.js` | Lets the app open without Wi-Fi |
 | `.nojekyll` | Tells GitHub Pages to serve the files as they are |
+| `tools/sync_from_artifact.py` | Rebuilds this site from a download of the Claude artifact |
+| `CHANGELOG.md` | What changed in each version |
 
 ## Upload to GitHub
 
@@ -43,4 +46,5 @@ Coral Cove flashcards, set up to run on GitHub Pages and as an iPad Home Screen 
   instead. Approve `https://fonts.googleapis.com` and `https://fonts.gstatic.com` to keep the
   rounded Coral Cove fonts.
 - **Updating later:** upload changed files over the old ones. Decks already saved on the iPad are
-  kept; new starting data in `seed-data.js` only applies on a device that has never opened the app.
+  kept; new decks and cards in `seed-data.js` are added the next time the app opens, without changing
+  progress already saved on that device.
