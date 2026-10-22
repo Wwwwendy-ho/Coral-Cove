@@ -11894,6 +11894,156 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   // the db handle resolves; nothing needs to wait on it, since Speech.speak() falls back to the
   // synthesized voice until then anyway.
   coveIdle(function(){ AudioClips.init(); VoicePack.warm(); });
+  /* ---------- Ask Shelly (Lumi at night): what a word or sentence means and how it's built ---------- */
+  // Needs Claude (the `sample` capability). Where it isn't available (GitHub copy, a view without it)
+  // the button never appears. Only the question and the card on screen are sent: no profile data.
+  var Ask = { ns: undefined, open: false, busy: false, q: '', res: null, err: '' };
+  function askNS(){
+    if(Ask.ns !== undefined) return Promise.resolve(Ask.ns);
+    if(!(window.claude && window.claude.use)){ Ask.ns = null; return Promise.resolve(null); }
+    return window.claude.use('sample').then(function(ns){ Ask.ns = ns || null; return Ask.ns; }).catch(function(){ Ask.ns = null; return null; });
+  }
+  function askName(){ try { return coveSwimName() || 'Shelly'; } catch(e){ return 'Shelly'; } }
+  function askPlain(s){ var d = document.createElement('div'); d.innerHTML = String(s == null ? '' : s); return (d.textContent || '').replace(/\s+/g, ' ').trim(); }
+  // The card on screen right now, if there is one.
+  function askCard(){
+    var c = null;
+    try {
+      if(S.view === 'study') c = S.studyQueue[0];
+      else {
+        var f = { feed:['feedQueue','feedIndex'], langFeed:['langQueue','langIndex'], flashFeed:['flashQueue','flashIndex'] }[S.view];
+        var q = f && S[f[0]], n = q ? q.length : 0;
+        if(n) c = q[(((S[f[1]] || 0) % n) + n) % n];
+      }
+    } catch(e){ c = null; }
+    if(!c) return null;
+    var front = askPlain(c.front).slice(0, 120), back = askPlain(c.back).slice(0, 200);
+    return front ? { front: front, back: back } : null;
+  }
+  function askShowable(){
+    return !!(S.booted && S.activeProfileId && !S.pinPromptFor && !S.creatingProfile && !S.managingProfiles && !S.profileLoading);
+  }
+  function askSyncBtn(){
+    var b = document.getElementById('askBtn');
+    var want = Ask.ns && askShowable();
+    if(!want){ if(b) b.remove(); return; }
+    if(!b){
+      b = document.createElement('button');
+      b.id = 'askBtn'; b.type = 'button'; b.className = 'ask-btn';
+      b.addEventListener('click', askOpen);
+      document.body.appendChild(b);
+    }
+    var label = 'Ask ' + askName();
+    if(b.dataset.label !== label){ b.dataset.label = label; b.innerHTML = '<span class="ask-btn-q" aria-hidden="true">?</span><span>' + esc(label) + '</span>'; }
+  }
+  function askResHTML(){
+    if(Ask.busy) return '<p class="ask-wait">' + esc(askName()) + ' is thinking…</p>';
+    if(Ask.err) return '<p class="ask-err">' + esc(Ask.err) + '</p>';
+    var r = Ask.res; if(!r) return '';
+    var h = '<p class="ask-q">' + esc(Ask.q) + '</p>';
+    if(r.answer) h += '<p class="ask-a">' + esc(r.answer) + '</p>';
+    if(r.parts.length) h += '<p class="ask-sub">The parts</p><ol class="ask-parts">' + r.parts.map(function(p){
+      return '<li><b>' + esc(p.part) + '</b><span>' + esc(p.meaning) + '</span></li>'; }).join('') + '</ol>';
+    if(r.example) h += '<p class="ask-sub">Example</p><p class="ask-ex">' + esc(r.example) + '</p>';
+    h += '<button type="button" class="btn btn-ghost ask-read" data-ask="read">🔊 Read it to me</button>';
+    return h;
+  }
+  function askRender(){
+    var w = document.getElementById('askWrap'); if(!w) return;
+    var name = askName(), card = askCard();
+    var chips = card ? [
+      'What does “' + card.front + '” mean?',
+      'What are the parts of “' + card.front + '”?'
+    ] : [];
+    w.querySelector('.ask-sheet').innerHTML =
+      '<div class="ask-head">' + (name === 'Lumi' ? lumiSVG('ask-face lumi') : mascotTurtleSVG('ask-face')) +
+        '<div class="ask-title"><h2 id="askTitle">Ask ' + esc(name) + '</h2><p>Ask what a word or sentence means, or what its parts are.</p></div>' +
+        '<button type="button" class="icon-btn ask-x" data-ask="close" aria-label="Close">✕</button></div>' +
+      (chips.length ? '<div class="ask-chips">' + chips.map(function(c, i){ return '<button type="button" class="ask-chip" data-ask-chip="' + i + '">' + esc(c) + '</button>'; }).join('') + '</div>' : '') +
+      '<form class="ask-form" data-ask-form><input id="askIn" type="text" maxlength="200" autocomplete="off" placeholder="Type a word or a question" aria-label="Your question"><button class="btn btn-primary" type="submit"' + (Ask.busy ? ' disabled' : '') + '>Ask</button></form>' +
+      '<div class="ask-res" aria-live="polite">' + askResHTML() + '</div>' +
+      '<button type="button" class="btn btn-ghost ask-done" data-ask="close">Done</button>';
+    w._chips = chips;
+  }
+  function askOpen(){
+    if(document.getElementById('askWrap')) return;
+    var w = document.createElement('div');
+    w.id = 'askWrap'; w.className = 'ask-wrap';
+    w.innerHTML = '<div class="ask-sheet" role="dialog" aria-modal="true" aria-labelledby="askTitle"></div>';
+    document.body.appendChild(w);
+    Ask.open = true;
+    askRender();
+    w.addEventListener('click', function(e){
+      if(e.target === w){ askClose(); return; }
+      var a = e.target.closest('[data-ask]'), c = e.target.closest('[data-ask-chip]');
+      if(a && a.dataset.ask === 'close'){ askClose(); return; }
+      if(a && a.dataset.ask === 'read' && Ask.res){
+        var r = Ask.res, t = [r.answer].concat(r.parts.map(function(p){ return p.part + ': ' + p.meaning; }), r.example ? [r.example] : []).join('. ');
+        try { Speech.speak(t); } catch(err){}
+        return;
+      }
+      if(c && w._chips){ askGo(w._chips[+c.dataset.askChip]); }
+    });
+    w.addEventListener('submit', function(e){
+      e.preventDefault();
+      var i = document.getElementById('askIn'), q = (i && i.value || '').trim();
+      if(q) askGo(q);
+    });
+    w._key = function(e){ if(e.key === 'Escape'){ e.preventDefault(); askClose(); } };
+    document.addEventListener('keydown', w._key);
+    setTimeout(function(){ var x = w.querySelector('.ask-chip') || document.getElementById('askIn'); if(x) x.focus(); }, 60);
+  }
+  function askClose(){
+    var w = document.getElementById('askWrap'); if(!w) return;
+    document.removeEventListener('keydown', w._key);
+    w.remove(); Ask.open = false;
+    var b = document.getElementById('askBtn'); if(b) b.focus();
+  }
+  function askGo(q){
+    q = String(q || '').trim().slice(0, 200);
+    if(!q || Ask.busy) return;
+    var card = askCard();
+    Ask.q = q; Ask.busy = true; Ask.err = ''; Ask.res = null; askRender();
+    var prompt = 'You are ' + askName() + ', a friendly sea helper in a flashcard app. The person asking is a 12-year-old learner (reading at about a first-grade level) or their tutor. ' +
+      'You only explain words and sentences in any language (for example Korean, English or Chinese): what they mean, and how they are built from parts (syllables, roots, particles, words). ' +
+      'Use short, simple, literal sentences. No idioms, no sarcasm. Be warm and calm. ' +
+      'For Korean, write each part in Hangul with its romanization in brackets, like "찜 (jjim)". For Chinese, add pinyin. ' +
+      'If the question is not about a word or a sentence, say kindly in one sentence that you help with words and sentences, and leave parts and example empty. ' +
+      (card ? 'The card on screen says: "' + card.front + '"' + (card.back ? ' (other side: "' + card.back + '")' : '') + '. ' : '') +
+      'Question: ' + q + '\n' +
+      'Reply with JSON only: {"answer":"1-2 short sentences that answer the question","parts":[{"part":"one piece of the word or sentence","meaning":"what that piece means, in a few words"}],"example":"one short example sentence using the word, or an empty string"}. ' +
+      'Give 2-6 parts when the word or sentence can be split; an empty list when it cannot.';
+    var name = askName();
+    askNS().then(function(ns){
+      if(!ns) throw { code: 'not_available' };
+      return ns.json(prompt, { modelTier: 'default', cache: true });
+    }).then(function(r){
+      r = r || {};
+      Ask.res = {
+        answer: String(r.answer || '').slice(0, 400),
+        parts: (Array.isArray(r.parts) ? r.parts : []).filter(function(p){ return p && p.part; }).slice(0, 8)
+          .map(function(p){ return { part: String(p.part).slice(0, 60), meaning: String(p.meaning || '').slice(0, 160) }; }),
+        example: String(r.example || '').slice(0, 200)
+      };
+      if(!Ask.res.answer && !Ask.res.parts.length) Ask.err = name + ' did not find an answer. Try asking in a different way.';
+    }).catch(function(e){
+      Ask.err = e && e.code === 'not_granted' ? name + ' needs permission to answer. Tap Ask again and choose Allow.'
+        : e && e.code === 'rate_limited' ? name + ' needs a short rest. Try again in one minute.'
+        : name + ' cannot answer right now. Try again in one minute.';
+    }).then(function(){
+      Ask.busy = false; askRender();
+      var i = document.getElementById('askIn'); if(i && !Ask.err) i.value = '';
+    });
+  }
+  (function(){
+    var askRender0 = render;
+    render = function(){
+      var out = askRender0.apply(this, arguments);
+      try { askSyncBtn(); if(Ask.open) askRender(); } catch(e){ console.warn('[Coral Cove] ask', e); }
+      return out;
+    };
+    askNS().then(function(){ try { askSyncBtn(); } catch(e){} });
+  })();
 })();
 </script>
 
@@ -12324,6 +12474,43 @@ body.reef-calm .reef-buddy-turtle, body.reef-calm .reef-buddy-say, body.reef-cal
 body.reef-calm .rw-light, body.reef-calm .rw-obj, body.reef-calm .rw-obj .rw-art, body.reef-calm .rw-pearl, body.reef-calm .rw-guide, body.reef-calm .rw-glow{ animation:none !important; }
 body.reef-calm .rw-far, body.reef-calm .rw-near.left{ transform:none; }
 body.reef-calm .rw-near.right{ transform:scaleX(-1); }
+/* ---------- Ask Shelly ---------- */
+.ask-btn{ position:fixed; left:max(14px, env(safe-area-inset-left,0px)); bottom:max(14px, env(safe-area-inset-bottom,0px)); z-index:60;
+  display:flex; align-items:center; gap:8px; padding:10px 16px 10px 10px; border-radius:999px; border:2px solid var(--border);
+  background:var(--surface); color:var(--ink); font:800 1rem 'Nunito',sans-serif; box-shadow:var(--shadow); cursor:pointer; }
+.ask-btn-q{ width:30px; height:30px; border-radius:50%; display:grid; place-items:center; background:var(--lagoon); color:#fff; font-weight:900; }
+.ask-btn:focus-visible{ outline:3px solid var(--sun-dark); outline-offset:2px; }
+.ask-wrap{ position:fixed; inset:0; z-index:70; display:flex; align-items:flex-end; justify-content:center; background:rgba(7,35,42,.45); padding:12px; }
+.ask-sheet{ width:min(560px,100%); max-height:88vh; max-height:88dvh; overflow-y:auto; background:var(--foam); color:var(--ink); border-radius:26px;
+  box-shadow:var(--shadow); padding:18px 16px max(18px, env(safe-area-inset-bottom,0px)); display:flex; flex-direction:column; gap:14px; }
+@media (min-width:640px){ .ask-wrap{ align-items:center; } }
+.ask-head{ display:flex; align-items:center; gap:10px; }
+.ask-face{ width:58px; height:auto; flex:none; }
+.ask-title{ flex:1; min-width:0; }
+.ask-title h2{ margin:0; font-size:1.4rem; color:var(--deep); }
+:root[data-theme="dark"] .ask-title h2{ color:var(--lagoon-light); }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .ask-title h2{ color:var(--lagoon-light); } }
+.ask-title p{ margin:2px 0 0; font-weight:700; color:var(--ink-soft); font-size:.95rem; }
+.ask-x{ flex:none; color:var(--ink); }
+.ask-chips{ display:flex; flex-direction:column; gap:8px; }
+.ask-chip{ text-align:left; padding:12px 14px; border-radius:var(--r-md); border:2px solid var(--border); background:var(--surface); color:var(--ink);
+  font:700 1.02rem 'Nunito',sans-serif; cursor:pointer; }
+.ask-chip:focus-visible, .ask-read:focus-visible, .ask-done:focus-visible{ outline:3px solid var(--sun-dark); outline-offset:2px; }
+.ask-form{ display:flex; gap:8px; }
+.ask-form input{ flex:1; min-width:0; font:600 16px 'Nunito',sans-serif; padding:12px 14px; border-radius:999px; border:2px solid var(--border); background:var(--surface); color:var(--ink); }
+.ask-res:empty{ display:none; }
+.ask-res{ display:flex; flex-direction:column; gap:10px; padding:14px; border-radius:var(--r-md); background:var(--surface); border:1px solid var(--border); }
+.ask-res p{ margin:0; }
+.ask-q{ align-self:flex-start; font-weight:800; font-size:.85rem; color:var(--seaweed); background:var(--foam-2); padding:4px 12px; border-radius:999px; }
+.ask-a{ font-size:1.08rem; font-weight:700; line-height:1.5; }
+.ask-sub{ font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); }
+.ask-parts{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+.ask-parts li{ display:grid; grid-template-columns:7.5em 1fr; overflow-wrap:anywhere; gap:12px; align-items:baseline; padding:10px 12px; border-radius:var(--r-sm); background:var(--foam-2); }
+.ask-parts b{ font-family:'Baloo 2',sans-serif; font-size:1.15rem; }
+.ask-ex{ font-weight:600; line-height:1.5; }
+.ask-wait, .ask-err{ font-weight:700; color:var(--ink-soft); }
+.ask-read, .ask-done{ align-self:flex-start; }
+.ask-done{ align-self:stretch; padding:12px; }
 </style>
 
 </body></html>

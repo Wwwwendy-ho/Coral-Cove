@@ -1,5 +1,13 @@
 # Changelog
 
+## Version 33 (October 22, 2026)
+
+- **Ask Shelly:** a new "Ask Shelly" button (Ask Lumi at night) sits in the bottom-left corner once a profile is open. Ask what a word or sentence means, like "What does jjim mean in galbijjim?". Shelly gives a short answer, the parts of the word with what each part means, and an example sentence. Korean parts show Hangul and romanization.
+- On a card, two ready-made questions appear: what the word on the card means, and what its parts are. No typing needed.
+- "Read it to me" reads the answer aloud. Closing the panel leaves the card exactly where it was.
+- Only the question and the card on screen are sent to Claude. Nothing about the profile is sent.
+- This needs Claude, so the button appears in the Claude version only. The GitHub copy looks and works the same as before.
+
 ## Version 32 (October 22, 2026)
 
 - **Her decks live in the reef:** the deck list is gone from her profile. Each deck is now something in the reef (a brain coral, sea fan, clam, sponge or anemone) on a sandy ledge for its subject: Kelp Library, Number Reef, Coral Garden and so on. Tap it to dive in.
