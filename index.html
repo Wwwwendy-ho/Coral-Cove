@@ -4115,15 +4115,14 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
       coveWaterHTML('frame') +
       '<div class="lock-screen">' +
         '<h2>🌊 '+esc(name)+' is resting</h2>' +
-        '<p>Ask a grown-up to enter the PIN to start today\'s study session.</p>' +
+        '<p>Tap Start Session when you\'re ready to dive in.</p>' +
         '<button type="button" class="btn btn-primary" data-act="choose-child">🧒 Start Session</button>' +
         '<button type="button" class="btn btn-ghost" data-act="switch-profile" style="margin-top:10px;">👥 Switch Profile</button>' +
       '</div>';
     app.querySelector('[data-act="choose-child"]').addEventListener('click', function(){
       Sound.unlock();
-      S.pinInput=''; S.pinError=''; S.pinShake=false;
-      S.pinPromptFor = 'start';
-      render();
+      /* iPad copy: starting a session doesn't need the PIN; ending one still does. */
+      beginSession();
     });
     app.querySelector('[data-act="switch-profile"]').addEventListener('click', function(){
       Sound.unlock();
@@ -4253,6 +4252,14 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
         var p = S.profiles.find(function(x){ return x.id === b.dataset.profile; });
         if(!p) return;
         Sound.unlock();
+        /* iPad copy: grown-up profiles need the PIN to open; child profiles open freely. */
+        if(p.mode === 'adult'){
+          S.pendingEnterProfile = p;
+          S.pinInput=''; S.pinError=''; S.pinShake=false;
+          S.pinPromptFor = 'enterAdult';
+          render();
+          return;
+        }
         enterProfile(p);
       });
     });
@@ -4508,6 +4515,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
   }
 
   function pinPadTitles(kind){
+    if(kind === 'enterAdult') return ['🔐 Grown-up Profile', 'Enter the PIN to open this profile.'];
     if(kind === 'start') return ['🔐 Start Child Mode', 'Ask a grown-up to enter the PIN to begin today\'s session.'];
     if(kind === 'end') return ['🔐 End Session', 'Enter the PIN to finish and lock Coral Cove.'];
     if(kind === 'exit') return ['🔐 Leave This Deck?', 'Ask a grown-up to enter the PIN to head back before finishing.'];
@@ -4582,7 +4590,12 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     S.pinInput = ''; S.pinError = ''; S.pinShake = false; S.pinTypedFocus = false;
     // Every kind below prompts for the PIN every single time it comes up -- there's no "unlock
     // once per visit" anymore. Adult Mode is the thing that's always free now (see renderLocked).
-    if(kind === 'start'){
+    if(kind === 'enterAdult'){
+      S.pinPromptFor = null;
+      var ep = S.pendingEnterProfile;
+      S.pendingEnterProfile = null;
+      if(ep) enterProfile(ep); else render();
+    } else if(kind === 'start'){
       beginSession();
     } else if(kind === 'end'){
       endSessionNow();
@@ -4617,6 +4630,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     S.pinInput = ''; S.pinError = ''; S.pinShake = false; S.pinTypedFocus = false;
     if(kind === 'edit') S.pendingEdit = null;
     if(kind === 'modeSwitch') S.pendingModeSwitch = null;
+    if(kind === 'enterAdult') S.pendingEnterProfile = null;
     S.pinPromptFor = null;
     render();
   }

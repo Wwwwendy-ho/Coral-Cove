@@ -41,6 +41,9 @@ Coral Cove flashcards, set up to run on GitHub Pages and as an iPad Home Screen 
   version don't appear here, and changes here don't go back to Claude.
 - **Always open it from the Home Screen icon**, not Safari. Safari can clear a website's saved data
   after a week without visits; Home Screen apps keep theirs.
+- **PIN on this copy:** the child profile opens and starts a session without the PIN. Ending her session,
+  switching profiles mid-session and leaving a deck early still need it. Grown-up profiles need the PIN to
+  open. (`tools/ipad_patches.py` makes this change on every update.)
 - **Photo uploads are turned off** in this version, since they need Claude's online storage.
 - **Fonts:** if Screen Time blocks `fonts.googleapis.com`, Coral Cove uses the iPad's built-in font
   instead. Approve `https://fonts.googleapis.com` and `https://fonts.gstatic.com` to keep the

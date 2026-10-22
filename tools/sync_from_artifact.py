@@ -10,12 +10,15 @@ Usage: python3 tools/sync_from_artifact.py <artifact-download-dir> <db-export-di
   profile ids. Pass it on the command line so the original name is never stored in the repo.
 
 Writes the site to the repo root and mirrors it into coral-cove/, because devices may have
-either URL saved. storage.js (the on-device database) is kept as is.
+either URL saved. storage.js (the on-device database) is kept as is. The iPad PIN changes in
+tools/ipad_patches.py are applied to every build.
 """
 import json
 import pathlib
 import shutil
 import sys
+
+import ipad_patches
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 TARGETS = [REPO, REPO / "coral-cove"]
@@ -59,6 +62,7 @@ def main(src, dbdir, date, swap=None):
     # The cache-busting version changes with every sync so iPads fetch the new files.
     v = date.replace("-", "")
     html = html.replace("</head>", HEAD_TAGS.format(v=v) + "</head>", 1)
+    html = ipad_patches.apply(html)
 
     docs = load_db(dbdir)
     audio = {p: d for p, d in docs.items() if p.startswith("audio-clips/")}

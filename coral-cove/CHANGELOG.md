@@ -1,5 +1,11 @@
 # Changelog
 
+## iPad PIN update (October 22, 2026)
+
+- The child profile opens and starts a session without the PIN. Ending the session, switching profiles mid-session and leaving a deck early still ask for it.
+- Grown-up profiles now need the PIN to open from the profile list.
+- This applies to the GitHub copy only. The Claude version works as before.
+
 ## Version 29 (October 17, 2026)
 
 Copied from the latest Claude artifact. The site's main address now runs this version. Before this, Version 28 was only in the `coral-cove/` folder, so the main address was still on Version 27. Both addresses now show the same version.
