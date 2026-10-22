@@ -1,5 +1,13 @@
 # Changelog
 
+## Version 32 (October 22, 2026)
+
+- **Her decks live in the reef:** the deck list is gone from her profile. Each deck is now something in the reef (a brain coral, sea fan, clam, sponge or anemone) on a sandy ledge for its subject: Kelp Library, Number Reef, Coral Garden and so on. Tap it to dive in.
+- **Shipwreck at night:** in dark mode the reef becomes a deep-sea shipwreck. Decks are crates, barrels, anchors, ship's wheels, cannons and lanterns in the Captain's Library, Cargo Hold and Crow's Nest.
+- **3D depth:** back rows sit higher and smaller, things cast shadows, light rays (or drifting marine snow at night) move across the water, and the far rocks shift slowly as she scrolls.
+- The back button reads "Back to the reef" (or "Back to the wreck" at night).
+- Calm motion still turns all the movement off.
+
 ## Version 31 (October 22, 2026)
 
 - **Drawn places on the map:** the Kelp Library, Number Wreck, Coral Garden, Treasure Reef and Story Bottle are now little illustrated scenes instead of emoji.

@@ -11360,158 +11360,6 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     var p = REEF_PLACES[id] || { name: (label || 'Secret') + ' Cove', art:'🏝️', hue:'#1c8c93', ink:'#0d5262' };
     return Object.assign({ artId: REEF_PLACES[id] ? id : 'custom' }, p);
   }
-  // Map spots as % of the map box: [x, y] on a wide screen, then [x, y] on a narrow one.
-  var REEF_SLOTS = [
-    [[22,30],[27,13]], [[52,20],[73,26.5]], [[81,33],[27,40]],
-    [[36,61],[73,53.5]], [[66,57],[27,67]], [[50,40],[73,80.5]]
-  ];
-  var REEF_SPECIAL = { story: [[88,84],[76,93]], treasure: [[12,84],[24,93]] };
-
-  function reefPlaces(){
-    var live = S.decks.filter(function(d){ return !d.archived; });
-    var tabs = buildSubjectTabs(live);
-    if(!tabs) return null;
-    return tabs.slice(0, REEF_SLOTS.length).map(function(t){
-      var decks = live.filter(function(d){ return (d.subject ? subjectMeta(d.subject).id : 'other') === t.id; });
-      var study = decks.filter(function(d){ return !(d.feedMode || d.storyMode || d.equationMode || d.langFeedMode || d.readAlongMode || d.flashFeedMode || d.miniStoryMode); });
-      var ready = 0, done = 0;
-      study.forEach(function(d){
-        var dc = S.dueCounts[d.id] || { due:0, total:0 };
-        if(dc.total > 0 && dc.due > 0) ready++;
-        else if(dc.total > 0) done++;
-      });
-      return { id: t.id, label: t.label, place: reefPlaceFor(t.id, t.label), decks: decks.length, studyCount: study.length, ready: ready, done: done };
-    });
-  }
-
-  function reefSpotStyle(slot, i, hue){
-    return '--x:'+slot[0][0]+'%;--y:'+slot[0][1]+'%;--xs:'+slot[1][0]+'%;--ys:'+slot[1][1]+'%;--i:'+i+';--hue:'+hue;
-  }
-  function reefPearls(p){
-    if(!p.studyCount) return '';
-    var n = Math.min(p.studyCount, 8), lit = Math.min(n, Math.round(p.done / p.studyCount * n));
-    var s = '';
-    for(var i = 0; i < n; i++) s += '<i class="'+(i < lit ? 'on' : '')+'"></i>';
-    return '<span class="reef-pearls" aria-hidden="true">'+s+'</span>';
-  }
-  function reefMapHTML(places){
-    // Shelly waits at the first place with something ready, so the next step is always obvious.
-    var next = places.find(function(p){ return p.ready > 0; }) || places[0];
-    var nextIdx = places.indexOf(next);
-    var pts = places.map(function(p, i){ return REEF_SLOTS[i]; });
-    var path = function(k){ return pts.map(function(s){ return s[k][0]+','+s[k][1]; }).join(' '); };
-    var spots = places.map(function(p, i){
-      var say = p.place.name + '. ' + (p.ready ? p.ready + ' ready to practice.' : (p.studyCount ? 'All done here!' : 'Tap to explore.'));
-      return '' +
-        '<button type="button" class="reef-spot'+(i === nextIdx ? ' next' : '')+'" data-reef-place="'+esc(p.id)+'" style="'+reefSpotStyle(REEF_SLOTS[i], i, p.place.hue)+'" aria-label="'+esc(say)+'">' +
-          '<span class="reef-rock"><span class="reef-art">'+reefArtSVG(p.place.artId)+'</span>' +
-            (p.ready ? '<span class="reef-ready" aria-hidden="true">'+p.ready+'</span>' : (p.studyCount ? '<span class="reef-done" aria-hidden="true">✓</span>' : '')) +
-          '</span>' +
-          '<span class="reef-label"><b>'+esc(p.place.name)+'</b><small>'+esc(p.label)+'</small></span>' +
-          reefPearls(p) +
-        '</button>';
-    }).join('');
-    var tally = reefTally();
-    var bubble = next.ready ? 'Let\'s swim to the '+next.place.name+'!' : 'Pick a place to explore!';
-    var guide = 'Shelly'; try { guide = coveSwimName() || 'Shelly'; } catch(e){}
-    return '' +
-      '<section class="reef-map-wrap" aria-label="Cove map">' +
-        '<div class="reef-map-head">' +
-          '<div class="reef-map-title"><h2>Where should we swim?</h2><p>'+esc(guide)+' says: '+esc(bubble)+'</p>'+reefTodayHTML(places)+'</div>' +
-          '<button type="button" class="reef-say" data-reef-say="'+esc('Where should we swim? '+guide+' says: '+bubble)+'" aria-label="Read this aloud">🔊</button>' +
-        '</div>' +
-        '<div class="reef-map">' +
-          '<div class="reef-rays" aria-hidden="true"></div>' +
-          '<svg class="reef-path wide" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="'+path(0)+'"/></svg>' +
-          '<svg class="reef-path narrow" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="'+path(1)+'"/></svg>' +
-          '<div class="reef-sand" aria-hidden="true"></div>' +
-          '<div class="reef-kelp k1" aria-hidden="true"></div><div class="reef-kelp k2" aria-hidden="true"></div><div class="reef-kelp k3" aria-hidden="true"></div>' +
-          spots +
-          '<button type="button" class="reef-critter reef-swimmer s1" data-reef-critter="Reef fish">🐠</button><button type="button" class="reef-critter reef-swimmer s2" data-reef-critter="Fish">🐟</button>' +
-          '<button type="button" class="reef-critter reef-deco d1" data-reef-critter="Coral">🪸</button><button type="button" class="reef-critter reef-deco d2" data-reef-critter="Seashell">🐚</button><button type="button" class="reef-critter reef-deco d3" data-reef-critter="Sea star">⭐</button>' +
-          '<button type="button" class="reef-spot special" data-reef-special="treasure" style="'+reefSpotStyle(REEF_SPECIAL.treasure, 7, '#c99a2e')+'" aria-label="My Treasure Reef">' +
-            '<span class="reef-rock chest"><span class="reef-art">'+reefArtSVG('treasure')+'</span>'+(tally.found ? '<span class="reef-ready gold" aria-hidden="true">'+tally.found+'</span>' : '')+'</span>' +
-            '<span class="reef-label"><b>Treasure Reef</b><small>My sea friends</small></span>' +
-          '</button>' +
-          '<button type="button" class="reef-spot special" data-reef-special="story" style="'+reefSpotStyle(REEF_SPECIAL.story, 8, '#3a7bd5')+'" aria-label="Story Maker">' +
-            '<span class="reef-rock bottle"><span class="reef-art">'+reefArtSVG('story')+'</span></span>' +
-            '<span class="reef-label"><b>Story Bottle</b><small>Make a story</small></span>' +
-          '</button>' +
-        '</div>' +
-      '</section>';
-  }
-  function reefPlaceHeadHTML(p){
-    var say = p.place.name + '. Pick a deck and dive in.';
-    return '' +
-      '<section class="reef-placehead" style="--hue:'+p.place.hue+';--ink:'+p.place.ink+'">' +
-        '<button type="button" class="reef-back" data-act="reef-map">🗺️ Back to the map</button>' +
-        '<div class="reef-placehead-main">' +
-          '<span class="reef-placehead-art" aria-hidden="true">'+reefArtSVG(p.place.artId)+'</span>' +
-          '<div class="reef-placehead-text">' +
-            '<h2>'+esc(p.place.name)+'</h2>' +
-            '<p>'+esc(p.label)+' · Pick a deck and dive in.</p>' +
-          '</div>' +
-          '<button type="button" class="reef-say" data-reef-say="'+esc(say)+'" aria-label="Read this aloud">🔊</button>' +
-        '</div>' +
-      '</section>';
-  }
-  // Runs at the end of renderHome() for Child Mode: swaps the subject tabs for the map, or puts the
-  // chosen place's banner above its decks.
-  function reefHome(){
-    if(!reefKid() || S.editMode) return;
-    var places = reefPlaces();
-    if(!places){ S.reefPlace = null; return; }
-    if(S.reefPlace && !places.some(function(p){ return p.id === S.reefPlace; })){ S.reefPlace = null; S.subjectFilter = 'all'; render(); return; }
-    var tabs = app.querySelector('.subject-tabs'); if(tabs) tabs.remove();
-    var grid = app.querySelector('.deck-grid'), note = app.querySelector('.empty-filter-note');
-    var holder = document.createElement('div');
-    if(!S.reefPlace){
-      if(grid) grid.hidden = true;
-      if(note) note.hidden = true;
-      holder.innerHTML = reefMapHTML(places);
-    } else {
-      holder.innerHTML = reefPlaceHeadHTML(places.find(function(p){ return p.id === S.reefPlace; }));
-    }
-    var el = holder.firstChild;
-    if(grid) grid.parentNode.insertBefore(el, grid); else app.appendChild(el);
-    if(S.reefPlace && grid){
-      grid.classList.add('reef-place-grid');
-      grid.style.setProperty('--hue', reefPlaceFor(S.reefPlace).hue);
-    }
-    el.querySelectorAll('[data-reef-place]').forEach(function(b){
-      b.addEventListener('click', function(){
-        Sound.bloop(520);
-        var id = b.dataset.reefPlace;
-        reefGo('swim', b, function(){ S.reefPlace = id; S.subjectFilter = id; render(); window.scrollTo(0, 0); });
-      });
-    });
-    var back = el.querySelector('[data-act="reef-map"]');
-    if(back) back.addEventListener('click', function(){
-      Sound.bloop(420);
-      reefGo('swim', back, function(){ S.reefPlace = null; S.subjectFilter = 'all'; render(); });
-    });
-    var chest = el.querySelector('[data-reef-special="treasure"]');
-    if(chest) chest.addEventListener('click', function(){ Sound.bloop(600); reefGo('swim', chest, function(){ S.view = 'collection'; render(); window.scrollTo(0, 0); }); });
-    var bottle = el.querySelector('[data-reef-special="story"]');
-    if(bottle) bottle.addEventListener('click', function(){ reefGo('dive', bottle, startStoryMaker); });
-    reefWireSay(el);
-    el.querySelectorAll('[data-reef-critter]').forEach(function(b){
-      b.addEventListener('click', function(){
-        try { Sound.bubbles(3); } catch(e){}
-        b.classList.remove('wiggle'); void b.offsetWidth; b.classList.add('wiggle');
-        try { Speech.speak(b.dataset.reefCritter); } catch(e){}
-      });
-    });
-  }
-  // How far today: one shell per practice deck, gold once it's all done.
-  function reefTodayHTML(places){
-    var total = 0, done = 0;
-    places.forEach(function(p){ total += p.studyCount; done += p.done; });
-    if(!total) return '';
-    var shells = '';
-    for(var i = 0; i < Math.min(total, 12); i++) shells += '<i class="'+(i < Math.round(done / total * Math.min(total, 12)) ? 'on' : '')+'"></i>';
-    return '<div class="reef-today"><span class="reef-today-shells" aria-hidden="true">'+shells+'</span><span>'+done+' of '+total+' decks all done</span></div>';
-  }
   function reefWireSay(root){
     root.querySelectorAll('[data-reef-say]').forEach(function(b){
       b.addEventListener('click', function(e){ e.stopPropagation(); try { Speech.speak(b.dataset.reefSay); } catch(err){} });
@@ -11648,7 +11496,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
           planNextHTML() +
           (S.planRun ? '' : '<div class="reef-sum-actions">' +
             '<button class="btn btn-primary" data-act="play-again">🔁 Play Again</button>' +
-            '<button class="btn btn-ghost" data-act="back-home">🗺️ Back to the map</button>' +
+            '<button class="btn btn-ghost" data-act="back-home">'+(reefNight() ? '⚓ Back to the wreck' : '🪸 Back to the reef')+'</button>' +
             '<button class="btn btn-ghost" data-act="reef-treasure">💎 Treasure Reef</button>' +
           '</div>') +
         '</div>' +
@@ -11677,7 +11525,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     }).join('');
     app.innerHTML = '' +
       '<div class="nav-row">' +
-        '<button class="back-btn" data-act="reef-back">🗺️ Back to the map</button>' +
+        '<button class="back-btn" data-act="reef-back">'+(reefNight() ? '⚓ Back to the wreck' : '🪸 Back to the reef')+'</button>' +
       '</div>' +
       '<section class="reef-collection">' +
         '<div class="reef-collection-head">' +
@@ -11757,6 +11605,267 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     };
   })();
 
+  /* ---------- REEF WORLD: every deck is its own spot in one scrolling reef (a shipwreck at night) ---------- */
+  function reefNight(){ try { return themeNow() === 'dark'; } catch(e){ return false; } }
+  var REEF_ZONE_NAMES = {
+    day:   { reading:'Kelp Library', math:'Number Reef', korean:'Lantern Reef', science:'Bubble Lab', life:'Sandy Town', other:'Coral Garden', all:'The Reef' },
+    night: { reading:'Captain\'s Library', math:'Cargo Hold', korean:'Lantern Deck', science:'Engine Room', life:'Galley', other:'Crow\'s Nest', all:'The Wreck' }
+  };
+  function reefDeckKind(d){
+    return d.feedMode ? 'Watch' : d.storyMode ? 'Story' : d.equationMode ? 'Solve' : d.langFeedMode ? 'Words' : d.readAlongMode ? 'Read' : d.flashFeedMode ? 'Flip' : d.miniStoryMode ? 'Pictures' : null;
+  }
+  function reefHash(s){ var h = 7; s = String(s); for(var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
+  function reefZones(){
+    var live = S.decks.filter(function(d){ return !d.archived; });
+    var tabs = buildSubjectTabs(live) || [{ id:'all', label:'Decks' }];
+    return tabs.map(function(t){
+      var decks = t.id === 'all' ? live : live.filter(function(d){ return (d.subject ? subjectMeta(d.subject).id : 'other') === t.id; });
+      decks = decks.slice().sort(function(a, b){ return (a.order || 0) - (b.order || 0); });
+      var items = decks.map(function(d){
+        var dc = S.dueCounts[d.id] || { due:0, total:0 };
+        var kind = reefDeckKind(d);
+        var state = dc.total === 0 ? 'empty' : (kind ? 'feed' : (dc.due > 0 ? 'ready' : 'done'));
+        return { d: d, dc: dc, kind: kind, state: state };
+      }).filter(function(x){ return x.state !== 'empty'; });
+      var place = reefPlaceFor(t.id === 'all' ? 'other' : t.id, t.label);
+      return { id: t.id, label: t.label, place: place, items: items };
+    }).filter(function(z){ return z.items.length; });
+  }
+
+  /* Shared shading for every object: one hidden <svg> of gradients the objects point at. */
+  function reefDefsSVG(){
+    return '<svg class="rw-defs" width="0" height="0" aria-hidden="true" focusable="false"><defs>' +
+      '<radialGradient id="rwBrain" cx="38%" cy="30%" r="75%"><stop offset="0" stop-color="#ffd1c2"/><stop offset=".45" stop-color="#ff8f73"/><stop offset="1" stop-color="#b8432c"/></radialGradient>' +
+      '<linearGradient id="rwStag" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffb3c1"/><stop offset=".5" stop-color="#ff6f86"/><stop offset="1" stop-color="#b63655"/></linearGradient>' +
+      '<radialGradient id="rwFan" cx="45%" cy="35%" r="70%"><stop offset="0" stop-color="#e2d4ff"/><stop offset=".55" stop-color="#9b7be0"/><stop offset="1" stop-color="#5a3fa8"/></radialGradient>' +
+      '<linearGradient id="rwClamOut" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f1e8"/><stop offset=".6" stop-color="#cfc6ad"/><stop offset="1" stop-color="#8d846b"/></linearGradient>' +
+      '<radialGradient id="rwClamIn" cx="50%" cy="30%" r="70%"><stop offset="0" stop-color="#7fe3ff"/><stop offset=".6" stop-color="#2a8fc9"/><stop offset="1" stop-color="#1b4f86"/></radialGradient>' +
+      '<radialGradient id="rwPearl" cx="35%" cy="30%" r="70%"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#f3eee6"/><stop offset="1" stop-color="#bdb3a3"/></radialGradient>' +
+      '<linearGradient id="rwTube" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9a5a1f"/><stop offset=".35" stop-color="#ffd27a"/><stop offset=".7" stop-color="#e8a33a"/><stop offset="1" stop-color="#8a4f1c"/></linearGradient>' +
+      '<linearGradient id="rwTube2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7a2f5a"/><stop offset=".35" stop-color="#ff9fd0"/><stop offset=".7" stop-color="#d9559a"/><stop offset="1" stop-color="#6e2350"/></linearGradient>' +
+      '<linearGradient id="rwAnem" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#6b2fa0"/><stop offset="1" stop-color="#f6a6ff"/></linearGradient>' +
+      '<radialGradient id="rwSand" cx="50%" cy="30%" r="70%"><stop offset="0" stop-color="#fff2cc"/><stop offset=".7" stop-color="#ecd08f"/><stop offset="1" stop-color="#c9a45a"/></radialGradient>' +
+      '<linearGradient id="rwWoodTop" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b98a52"/><stop offset="1" stop-color="#7b5228"/></linearGradient>' +
+      '<linearGradient id="rwWoodL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a5b2c"/><stop offset="1" stop-color="#4e3015"/></linearGradient>' +
+      '<linearGradient id="rwWoodR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5e3b1a"/><stop offset="1" stop-color="#2c1a09"/></linearGradient>' +
+      '<linearGradient id="rwBarrel" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3d2510"/><stop offset=".35" stop-color="#a87443"/><stop offset=".65" stop-color="#7b5228"/><stop offset="1" stop-color="#2c1a09"/></linearGradient>' +
+      '<linearGradient id="rwIron" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7d8a8f"/><stop offset=".5" stop-color="#3e4a50"/><stop offset="1" stop-color="#1c2428"/></linearGradient>' +
+      '<linearGradient id="rwRust" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c9773d"/><stop offset="1" stop-color="#5e2c12"/></linearGradient>' +
+      '<linearGradient id="rwCannon" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8d9aa0"/><stop offset=".4" stop-color="#4b585e"/><stop offset="1" stop-color="#151c20"/></linearGradient>' +
+      '<radialGradient id="rwGlow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#e9fffb"/><stop offset=".35" stop-color="#7ff5e3"/><stop offset="1" stop-color="#7ff5e3" stop-opacity="0"/></radialGradient>' +
+      '<radialGradient id="rwSilt" cx="50%" cy="30%" r="70%"><stop offset="0" stop-color="#4b5d63"/><stop offset="1" stop-color="#1a262b"/></radialGradient>' +
+      '<linearGradient id="rwBrass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe7a3"/><stop offset=".5" stop-color="#c99a2e"/><stop offset="1" stop-color="#6e4f10"/></linearGradient>' +
+    '</defs></svg>';
+  }
+  var RW_LINE = 'stroke="#0b2b33" stroke-opacity=".22" stroke-width="2" stroke-linejoin="round"';
+  // Each object stands on its own little mound, viewBox 0 0 160 140, base around y=124.
+  var REEF_OBJ_DAY = [
+    function brain(){ return '<ellipse cx="80" cy="124" rx="62" ry="12" fill="url(#rwSand)"/>' +
+      '<path d="M22 122Q20 52 80 48Q140 52 138 122Z" fill="url(#rwBrain)" '+RW_LINE+'/>' +
+      '<path d="M34 110q8-14 0-26t12-22M52 118q-6-16 6-28t2-26M74 120q8-18-2-32t10-24M98 118q-8-16 4-28t-2-24M120 112q-10-12 0-24" fill="none" stroke="#9a3420" stroke-opacity=".45" stroke-width="3" stroke-linecap="round"/>' +
+      '<ellipse cx="58" cy="66" rx="18" ry="9" fill="#fff" opacity=".35" transform="rotate(-20 58 66)"/>'; },
+    function staghorn(){ return '<ellipse cx="80" cy="124" rx="58" ry="11" fill="url(#rwSand)"/>' +
+      '<path d="M80 122C80 100 72 88 58 72C50 62 48 50 52 36M76 98C90 90 98 78 98 60C98 50 104 42 112 38M60 74C46 68 38 58 38 44M98 64C108 62 118 56 122 46M84 112C100 108 114 98 120 86" fill="none" stroke="url(#rwStag)" stroke-width="11" stroke-linecap="round"/>' +
+      '<path d="M80 122C80 100 72 88 58 72C50 62 48 50 52 36M76 98C90 90 98 78 98 60" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="3" stroke-linecap="round" transform="translate(-3 -2)"/>' +
+      '<circle cx="52" cy="35" r="6.5" fill="#ffd6de"/><circle cx="112" cy="38" r="6.5" fill="#ffd6de"/><circle cx="38" cy="43" r="6" fill="#ffd6de"/><circle cx="122" cy="45" r="6" fill="#ffd6de"/><circle cx="120" cy="85" r="5.5" fill="#ffd6de"/>'; },
+    function fan(){ return '<ellipse cx="80" cy="124" rx="52" ry="10" fill="url(#rwSand)"/>' +
+      '<path d="M80 122L76 96Q40 92 30 58Q28 30 56 22Q80 14 104 22Q132 30 130 58Q120 92 84 96Z" fill="url(#rwFan)" '+RW_LINE+'/>' +
+      '<path d="M78 96L56 30M79 96L80 20M80 96L104 28M78 94L36 56M82 94L124 56M60 80Q80 70 100 80M44 60Q80 44 116 60M50 40Q80 28 110 40" fill="none" stroke="#efe6ff" stroke-opacity=".7" stroke-width="2.2"/>' +
+      '<path d="M76 96V122" stroke="#5a3fa8" stroke-width="7" stroke-linecap="round"/>'; },
+    function clam(){ return '<ellipse cx="80" cy="124" rx="64" ry="12" fill="url(#rwSand)"/>' +
+      '<path d="M20 108Q22 78 80 76Q138 78 140 108Q138 126 80 126Q22 126 20 108Z" fill="url(#rwClamOut)" '+RW_LINE+'/>' +
+      '<path d="M26 104Q80 92 134 104Q120 86 80 84Q40 86 26 104Z" fill="url(#rwClamIn)"/>' +
+      '<path d="M22 92Q24 40 80 34Q136 40 138 92Q120 70 80 68Q40 70 22 92Z" fill="url(#rwClamOut)" '+RW_LINE+'/>' +
+      '<path d="M40 82Q44 52 58 42M62 72Q64 48 72 38M98 72Q96 48 88 38M120 82Q116 52 102 42" fill="none" stroke="#8d846b" stroke-opacity=".55" stroke-width="3" stroke-linecap="round"/>' +
+      '<circle cx="80" cy="96" r="11" fill="url(#rwPearl)"/><circle cx="76" cy="92" r="3" fill="#fff"/>'; },
+    function sponge(){ return '<ellipse cx="80" cy="124" rx="60" ry="11" fill="url(#rwSand)"/>' +
+      '<rect x="36" y="56" width="26" height="66" rx="8" fill="url(#rwTube)"/><ellipse cx="49" cy="57" rx="13" ry="6" fill="#5a2e0c"/><ellipse cx="49" cy="56" rx="13" ry="5" fill="none" stroke="#ffd27a" stroke-width="2.5"/>' +
+      '<rect x="70" y="30" width="28" height="92" rx="9" fill="url(#rwTube2)"/><ellipse cx="84" cy="31" rx="14" ry="6.5" fill="#4a1236"/><ellipse cx="84" cy="30" rx="14" ry="5.5" fill="none" stroke="#ff9fd0" stroke-width="2.5"/>' +
+      '<rect x="106" y="72" width="22" height="50" rx="7" fill="url(#rwTube)"/><ellipse cx="117" cy="73" rx="11" ry="5" fill="#5a2e0c"/><ellipse cx="117" cy="72" rx="11" ry="4.2" fill="none" stroke="#ffd27a" stroke-width="2.2"/>'; },
+    function anemone(){
+      var t = ''; for(var i = 0; i < 13; i++){ var a = -80 + i * 13.3, r = a * Math.PI / 180, x = 80 + Math.sin(r) * 46, y = 70 - Math.cos(r) * 40;
+        t += '<path d="M80 82Q'+(80 + Math.sin(r) * 20).toFixed(1)+' '+(64 - Math.cos(r) * 10).toFixed(1)+' '+x.toFixed(1)+' '+y.toFixed(1)+'" fill="none" stroke="url(#rwAnem)" stroke-width="7" stroke-linecap="round"/><circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="4.5" fill="#ffd6ff"/>'; }
+      return '<ellipse cx="80" cy="124" rx="56" ry="11" fill="url(#rwSand)"/>' +
+        '<path d="M58 122Q56 96 66 84H94Q104 96 102 122Z" fill="#7b3fae" '+RW_LINE+'/>' + t +
+        '<g transform="translate(102 92) rotate(-12)"><ellipse cx="0" cy="0" rx="15" ry="9" fill="#ff8a3d"/><path d="M-6 -8v16M5 -8v16" stroke="#fff" stroke-width="3.5"/><path d="M13 0l9-7v14Z" fill="#ff8a3d"/><circle cx="-9" cy="-2" r="2" fill="#0b2b33"/></g>'; }
+  ];
+  var REEF_OBJ_NIGHT = [
+    function crate(){ return '<ellipse cx="80" cy="124" rx="62" ry="12" fill="url(#rwSilt)"/>' +
+      '<path d="M30 60L80 40L130 60L80 80Z" fill="url(#rwWoodTop)" '+RW_LINE+'/>' +
+      '<path d="M30 60L80 80V124L30 106Z" fill="url(#rwWoodL)" '+RW_LINE+'/>' +
+      '<path d="M130 60L80 80V124L130 106Z" fill="url(#rwWoodR)" '+RW_LINE+'/>' +
+      '<path d="M30 74L80 94M30 90L80 110M130 74L80 94M130 90L80 110M44 54L94 74M58 48L108 68" stroke="#2c1a09" stroke-opacity=".55" stroke-width="2"/>' +
+      '<path d="M30 60L80 80L130 60" fill="none" stroke="#c9a45a" stroke-width="3" stroke-opacity=".7"/><circle cx="56" cy="92" r="3" fill="#c9a45a"/><circle cx="104" cy="92" r="3" fill="#c9a45a"/>'; },
+    function barrel(){ return '<ellipse cx="80" cy="124" rx="56" ry="11" fill="url(#rwSilt)"/>' +
+      '<path d="M46 40Q36 82 46 120H114Q124 82 114 40Z" fill="url(#rwBarrel)" '+RW_LINE+'/>' +
+      '<ellipse cx="80" cy="40" rx="34" ry="9" fill="#5e3b1a"/><ellipse cx="80" cy="40" rx="30" ry="7" fill="#3d2510"/>' +
+      '<path d="M42 58Q80 68 118 58M38 82Q80 92 122 82M42 106Q80 116 118 106" fill="none" stroke="url(#rwIron)" stroke-width="6"/>' +
+      '<path d="M60 46Q56 82 60 116" stroke="#fff" stroke-opacity=".18" stroke-width="5" stroke-linecap="round"/>'; },
+    function anchor(){ return '<ellipse cx="80" cy="124" rx="58" ry="11" fill="url(#rwSilt)"/>' +
+      '<g transform="rotate(-14 80 80)"><circle cx="80" cy="26" r="10" fill="none" stroke="url(#rwRust)" stroke-width="7"/>' +
+      '<rect x="74" y="34" width="12" height="78" rx="5" fill="url(#rwRust)" '+RW_LINE+'/><rect x="56" y="46" width="48" height="10" rx="5" fill="url(#rwRust)"/>' +
+      '<path d="M36 92Q40 120 80 120Q120 120 124 92L134 98L122 74L110 92Q108 110 80 110Q52 110 50 92L38 74L26 98Z" fill="url(#rwRust)" '+RW_LINE+'/></g>' +
+      '<path d="M20 120q10-10 20 0t20 0" fill="none" stroke="#3e4a50" stroke-width="5" stroke-linecap="round"/>'; },
+    function wheel(){
+      var s = ''; for(var i = 0; i < 8; i++){ var r = i * Math.PI / 4; s += '<path d="M80 74L'+(80 + Math.cos(r) * 56).toFixed(1)+' '+(74 + Math.sin(r) * 56).toFixed(1)+'" stroke="url(#rwBarrel)" stroke-width="7" stroke-linecap="round"/><circle cx="'+(80 + Math.cos(r) * 58).toFixed(1)+'" cy="'+(74 + Math.sin(r) * 58).toFixed(1)+'" r="5" fill="#7b5228"/>'; }
+      return '<ellipse cx="80" cy="124" rx="60" ry="11" fill="url(#rwSilt)"/>' + s +
+        '<circle cx="80" cy="74" r="40" fill="none" stroke="url(#rwWoodTop)" stroke-width="10"/><circle cx="80" cy="74" r="12" fill="url(#rwBrass)" '+RW_LINE+'/>' +
+        '<path d="M14 124Q80 100 146 124Z" fill="url(#rwSilt)"/>'; },
+    function cannon(){ return '<ellipse cx="80" cy="124" rx="64" ry="12" fill="url(#rwSilt)"/>' +
+      '<path d="M26 74L120 56Q136 54 138 68Q140 82 124 84L30 96Q18 96 18 85Q18 75 26 74Z" fill="url(#rwCannon)" '+RW_LINE+'/>' +
+      '<ellipse cx="132" cy="70" rx="7" ry="13" fill="#0c1215"/><path d="M30 80L118 64" stroke="#fff" stroke-opacity=".2" stroke-width="4" stroke-linecap="round"/>' +
+      '<circle cx="54" cy="104" r="17" fill="url(#rwWoodL)" '+RW_LINE+'/><circle cx="54" cy="104" r="5" fill="#2c1a09"/><circle cx="96" cy="100" r="15" fill="url(#rwWoodL)" '+RW_LINE+'/><circle cx="96" cy="100" r="4.5" fill="#2c1a09"/>'; },
+    function lantern(){ return '<ellipse cx="80" cy="124" rx="54" ry="11" fill="url(#rwSilt)"/>' +
+      '<circle cx="80" cy="74" r="62" fill="url(#rwGlow)" class="rw-glow"/>' +
+      '<path d="M80 12V28" stroke="url(#rwIron)" stroke-width="4"/><path d="M66 22Q80 6 94 22" fill="none" stroke="url(#rwIron)" stroke-width="4"/>' +
+      '<rect x="58" y="28" width="44" height="10" rx="3" fill="url(#rwBrass)"/>' +
+      '<path d="M60 38H100L106 104H54Z" fill="#7ff5e3" fill-opacity=".55" '+RW_LINE+'/>' +
+      '<ellipse cx="80" cy="74" rx="11" ry="18" fill="#e9fffb"/>' +
+      '<path d="M60 38L54 104M100 38L106 104M80 38V104" stroke="url(#rwBrass)" stroke-width="4"/>' +
+      '<rect x="50" y="104" width="60" height="14" rx="4" fill="url(#rwBrass)" '+RW_LINE+'/>'; }
+  ];
+  function reefObjSVG(item, night){
+    var set = night ? REEF_OBJ_NIGHT : REEF_OBJ_DAY;
+    var f = set[reefHash(item.d.id) % set.length];
+    return '<svg class="rw-art" viewBox="0 0 160 140" aria-hidden="true">' + f() + '</svg>';
+  }
+  // Wide silhouettes behind each area: rocks and coral by day, the broken ship by night.
+  function reefFarSVG(night){
+    return night
+      ? '<svg viewBox="0 0 1000 220" preserveAspectRatio="none" aria-hidden="true"><path d="M0 220V170L80 150L120 90L150 160L260 140V60L280 58V150L420 130L470 40L520 120L640 110L660 30L700 28L690 120L820 140L900 80L1000 120V220Z" fill="currentColor"/><path d="M300 150L300 70M340 148L340 80M380 144L380 92" stroke="currentColor" stroke-width="10"/></svg>'
+      : '<svg viewBox="0 0 1000 220" preserveAspectRatio="none" aria-hidden="true"><path d="M0 220V160Q60 120 120 150Q170 90 230 140Q300 110 360 150Q420 70 500 130Q560 100 610 140Q680 80 760 140Q820 110 880 150Q940 120 1000 140V220Z" fill="currentColor"/><path d="M180 140q-10-40 10-60M190 120q20-20 16-40M640 130q-14-50 8-70M648 100q22-10 26-34" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round"/></svg>';
+  }
+
+  function reefWorldHTML(zones){
+    var night = reefNight();
+    var names = REEF_ZONE_NAMES[night ? 'night' : 'day'];
+    var cols = innerWidth < 640 ? 2 : 3, rowH = innerWidth < 640 ? 200 : 228;
+    var next = null;
+    zones.forEach(function(z){ z.items.forEach(function(it){ if(!next && it.state === 'ready') next = it; }); });
+    var guide = 'Shelly'; try { guide = coveSwimName() || 'Shelly'; } catch(e){}
+    var nextZone = next ? zones.find(function(z){ return z.items.indexOf(next) !== -1; }) : null;
+    var line = next ? 'Let\'s dive into ' + next.d.name + (nextZone && names[nextZone.id] ? ' in the ' + names[nextZone.id] : '') + '!' : 'Everything is done! Pick any spot to play again.';
+    var html = '';
+    zones.forEach(function(z, zi){
+      var n = z.items.length, rows = Math.ceil(n / cols);
+      var objs = z.items.map(function(it, i){
+        var row = Math.floor(i / cols), inRow = Math.min(cols, n - row * cols), col = i - row * cols;
+        var jitter = (reefHash(it.d.id) % 9) - 4;
+        var x = ((col + 0.5) / inRow) * 100 + (inRow > 1 ? (row % 2 ? 4 : -4) : 0) + jitter * 0.6;
+        var y = row * rowH + rowH * 0.55 + jitter * 2;
+        var depth = rows > 1 ? row / (rows - 1) : 1;
+        var label = it.state === 'ready' ? 'Ready' : it.state === 'done' ? 'All done' : it.kind;
+        var say = it.d.name + '. ' + (it.state === 'ready' ? 'Ready to practice.' : it.state === 'done' ? 'All done. Tap to play again.' : 'Tap to ' + it.kind.toLowerCase() + '.');
+        return '' +
+          '<button type="button" class="rw-obj '+it.state+(it === next ? ' next' : '')+'" data-reef-deck="'+esc(it.d.id)+'" style="--x:'+x.toFixed(1)+'%;--y:'+y.toFixed(0)+'px;--depth:'+depth.toFixed(2)+';--i:'+(zi * 3 + i)+';z-index:'+(10 + row)+'" aria-label="'+esc(say)+'">' +
+            '<span class="rw-shadow" aria-hidden="true"></span>' +
+            reefObjSVG(it, night) +
+            '<span class="rw-badge" aria-hidden="true">'+it.d.emoji+'</span>' +
+            (it.state === 'ready' ? '<span class="rw-pearl" aria-hidden="true"></span>' : (it.state === 'done' ? '<span class="rw-star" aria-hidden="true">★</span>' : '')) +
+            (it === next ? '<span class="rw-guide" aria-hidden="true">'+(night ? lumiSVG('rw-guide-svg') : mascotTurtleSVG('rw-guide-svg'))+'</span>' : '') +
+            '<span class="rw-plaque"><b>'+esc(it.d.name)+'</b><small>'+esc(label)+'</small></span>' +
+          '</button>';
+      }).join('');
+      html += '' +
+        '<section class="rw-zone" style="--hue:'+z.place.hue+';--ink:'+z.place.ink+';--bed:'+(rows * rowH + 40)+'px" aria-label="'+esc(names[z.id] || z.label)+'">' +
+          '<div class="rw-far" aria-hidden="true">'+reefFarSVG(night)+'</div>' +
+          '<div class="rw-sign"><b>'+esc(names[z.id] || (z.label + (night ? ' Deck' : ' Cove')))+'</b><small>'+esc(z.label)+'</small>' +
+            '<button type="button" class="rw-say" data-reef-say="'+esc((names[z.id] || z.label) + '. ' + z.items.map(function(it){ return it.d.name; }).join(', ') + '.')+'" aria-label="Read this area aloud">🔊</button></div>' +
+          '<div class="rw-bed">'+objs+'</div>' +
+        '</section>';
+    });
+    var tally = reefTally();
+    var specials = '' +
+      '<section class="rw-zone rw-specials" style="--hue:#c99a2e;--ink:#8a6516;--bed:'+(rowH + 30)+'px">' +
+        '<div class="rw-far" aria-hidden="true">'+reefFarSVG(night)+'</div>' +
+        '<div class="rw-bed">' +
+          '<button type="button" class="rw-obj special" data-reef-special="treasure" style="--x:30%;--y:'+(rowH * .55)+'px;--depth:1;--i:30" aria-label="Treasure Reef. My sea friends.">' +
+            '<span class="rw-shadow" aria-hidden="true"></span>'+reefArtSVG('treasure').replace('reef-art-svg', 'rw-art')+(tally.found ? '<span class="rw-count" aria-hidden="true">'+tally.found+'</span>' : '') +
+            '<span class="rw-plaque"><b>Treasure Reef</b><small>My sea friends</small></span></button>' +
+          '<button type="button" class="rw-obj special" data-reef-special="story" style="--x:70%;--y:'+(rowH * .55)+'px;--depth:1;--i:31" aria-label="Story Bottle. Make a story.">' +
+            '<span class="rw-shadow" aria-hidden="true"></span>'+reefArtSVG('story').replace('reef-art-svg', 'rw-art') +
+            '<span class="rw-plaque"><b>Story Bottle</b><small>Make a story</small></span></button>' +
+        '</div>' +
+      '</section>';
+    return '' +
+      '<section class="rw '+(night ? 'night' : 'day')+'" aria-label="'+(night ? 'The shipwreck' : 'The reef')+'">' +
+        reefDefsSVG() +
+        '<div class="rw-head">' +
+          '<div class="rw-head-text"><h2>'+(night ? 'Where should we explore?' : 'Where should we swim?')+'</h2><p>'+esc(guide)+' says: '+esc(line)+'</p>'+reefTodayHTML(zones)+'</div>' +
+          '<button type="button" class="reef-say" data-reef-say="'+esc(guide+' says: '+line)+'" aria-label="Read this aloud">🔊</button>' +
+        '</div>' +
+        '<div class="rw-scene">' +
+          '<div class="rw-light" aria-hidden="true"></div>' +
+          html + specials +
+          '<div class="rw-near left" aria-hidden="true"></div><div class="rw-near right" aria-hidden="true"></div>' +
+        '</div>' +
+      '</section>';
+  }
+  // How far today: one shell per practice deck, gold once it's all done.
+  function reefTodayHTML(zones){
+    var total = 0, done = 0;
+    zones.forEach(function(z){ z.items.forEach(function(it){ if(it.state === 'ready' || it.state === 'done'){ total++; if(it.state === 'done') done++; } }); });
+    if(!total) return '';
+    var n = Math.min(total, 12), lit = Math.round(done / total * n), shells = '';
+    for(var i = 0; i < n; i++) shells += '<i class="'+(i < lit ? 'on' : '')+'"></i>';
+    return '<div class="reef-today"><span class="reef-today-shells" aria-hidden="true">'+shells+'</span><span>'+done+' of '+total+' decks all done</span></div>';
+  }
+  function reefStartDeck(id){
+    var d = S.decks.find(function(x){ return x.id === id; });
+    if(d && d.feedMode) startFeed(id);
+    else if(d && d.storyMode) startStory(id);
+    else if(d && d.equationMode) startEquationFeed(id);
+    else if(d && d.langFeedMode) startLangFeed(id);
+    else if(d && d.readAlongMode) startReadAlong(id);
+    else if(d && d.flashFeedMode) startFlashFeed(id);
+    else if(d && d.miniStoryMode) startMiniStory(id);
+    else startStudy(id);
+  }
+  // Depth as you scroll: the far ridges drift slower than the page, the near kelp a little faster.
+  var reefParallaxOn = false;
+  function reefParallax(){
+    var scene = document.querySelector('.rw-scene');
+    if(!scene || reefCalm()) return;
+    var r = scene.getBoundingClientRect();
+    scene.style.setProperty('--py', Math.round(-r.top) + 'px');
+  }
+  function reefParallaxWire(){
+    if(reefParallaxOn) return;
+    reefParallaxOn = true;
+    var queued = false;
+    addEventListener('scroll', function(){
+      if(queued) return; queued = true;
+      requestAnimationFrame(function(){ queued = false; reefParallax(); });
+    }, { passive: true });
+  }
+
+  // Runs at the end of renderHome() for Child Mode: the deck menu becomes the reef.
+  function reefHome(){
+    if(!reefKid() || S.editMode) return;
+    var zones = reefZones();
+    if(!zones.length) return;
+    ['.subject-tabs', '.deck-grid', '.empty-filter-note'].forEach(function(sel){ var e = app.querySelector(sel); if(e) e.hidden = true; });
+    var holder = document.createElement('div');
+    holder.innerHTML = reefWorldHTML(zones);
+    var el = holder.firstChild, grid = app.querySelector('.deck-grid');
+    if(grid) grid.parentNode.insertBefore(el, grid); else app.appendChild(el);
+    el.querySelectorAll('[data-reef-deck]').forEach(function(b){
+      b.addEventListener('click', function(){
+        Sound.bloop(520);
+        S.reefReturnY = window.scrollY;
+        var id = b.dataset.reefDeck;
+        reefGo('dive', b, function(){ reefStartDeck(id); });
+      });
+    });
+    var chest = el.querySelector('[data-reef-special="treasure"]');
+    if(chest) chest.addEventListener('click', function(){ Sound.bloop(600); S.reefReturnY = window.scrollY; reefGo('swim', chest, function(){ S.view = 'collection'; render(); window.scrollTo(0, 0); }); });
+    var bottle = el.querySelector('[data-reef-special="story"]');
+    if(bottle) bottle.addEventListener('click', function(){ S.reefReturnY = window.scrollY; reefGo('dive', bottle, startStoryMaker); });
+    reefWireSay(el);
+    reefParallaxWire();
+    if(S.reefReturnY != null){ var y = S.reefReturnY; S.reefReturnY = null; requestAnimationFrame(function(){ window.scrollTo(0, y); reefParallax(); }); }
+    else reefParallax();
+  }
   store.init().then(function(s){
     try { coveWrapStore(s); } catch(e){}
     S.store = s;
@@ -12097,6 +12206,124 @@ body.reef-kid .stage.has-buddy{ padding-bottom:96px; }
 @keyframes reefBuddyHmm{ 0%,100%{ transform:none; } 30%{ transform:rotate(-8deg); } 60%{ transform:rotate(6deg); } }
 body.reef-calm .reef-buddy-turtle, body.reef-calm .reef-buddy-say, body.reef-calm .reef-critter.wiggle{ animation:none !important; }
 @media (max-width:640px){ .reef-buddy-turtle{ width:62px; } .reef-buddy-say{ right:calc(7% + 66px); font-size:.85rem; } }
+
+/* ---------- round 3: the reef world (a shipwreck at night). Every deck is an object; depth comes from
+   size, haze and shadow by row, far ridges and near kelp that scroll at different speeds, and light. ---------- */
+.rw{ margin:4px 0 26px; }
+.rw-defs{ position:absolute; width:0; height:0; overflow:hidden; }
+.rw-head{ display:flex; align-items:flex-start; gap:10px; margin:0 0 12px; }
+.rw-head-text{ flex:1; min-width:0; }
+.rw-head h2{ margin:0; font-size:1.6rem; color:var(--deep); }
+:root[data-theme="dark"] .rw-head h2{ color:var(--lagoon-light); }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .rw-head h2{ color:var(--lagoon-light); } }
+.rw-head p{ margin:2px 0 0; font-weight:800; font-size:1.02rem; color:var(--reef-soft); }
+.rw-scene{ position:relative; border-radius:36px; overflow:hidden; isolation:isolate;
+  background:linear-gradient(180deg, #b5f0ec 0%, #5fcad0 10%, #26a3b0 38%, #12798b 72%, #0a5468 100%);
+  box-shadow:inset 0 0 0 4px rgba(255,255,255,.35), inset 0 -60px 80px rgba(4,30,40,.35), 0 20px 44px rgba(7,56,71,.3); }
+.rw.night .rw-scene{ background:linear-gradient(180deg, #123a4a 0%, #0a2735 22%, #061925 60%, #030c13 100%);
+  box-shadow:inset 0 0 0 3px rgba(127,245,227,.12), inset 0 -80px 100px rgba(0,0,0,.5), 0 20px 44px rgba(0,0,0,.45); }
+/* light: sun rays and moving caustics by day, a lantern beam and drifting marine snow by night */
+.rw-light{ position:absolute; inset:0; z-index:0; pointer-events:none;
+  background:
+    repeating-linear-gradient(100deg, rgba(255,255,255,0) 0 6%, rgba(255,255,255,.16) 7% 9%, rgba(255,255,255,0) 11% 18%),
+    radial-gradient(14px 9px at 20% 30%, rgba(255,255,255,.22), transparent 70%),
+    radial-gradient(18px 10px at 70% 60%, rgba(255,255,255,.18), transparent 70%);
+  background-size:100% 900px, 120px 90px, 160px 110px;
+  -webkit-mask-image:linear-gradient(180deg,#000 0,#000 40%,rgba(0,0,0,.3) 100%); mask-image:linear-gradient(180deg,#000 0,#000 40%,rgba(0,0,0,.3) 100%);
+  animation:rwCaustic 14s linear infinite; }
+@keyframes rwCaustic{ to{ background-position:0 0, 120px 90px, -160px 110px; } }
+.rw.night .rw-light{
+  background:
+    linear-gradient(115deg, rgba(127,245,227,.10) 0 18%, transparent 30%),
+    radial-gradient(1.5px 1.5px at 10% 20%, rgba(220,255,250,.7), transparent 60%),
+    radial-gradient(1px 1px at 60% 40%, rgba(220,255,250,.6), transparent 60%),
+    radial-gradient(2px 2px at 35% 75%, rgba(220,255,250,.5), transparent 60%);
+  background-size:100% 100%, 140px 140px, 90px 90px, 170px 170px;
+  -webkit-mask-image:none; mask-image:none; animation:rwSnow 22s linear infinite; }
+@keyframes rwSnow{ to{ background-position:0 0, 0 140px, 0 90px, 0 170px; } }
+
+.rw-zone{ position:relative; z-index:1; padding-top:76px; }
+.rw-zone{ padding-bottom:26px; }
+.rw-zone::after{ content:""; position:absolute; left:3%; right:3%; bottom:14px; height:64px; z-index:0; border-radius:50%;
+  background:radial-gradient(60% 90% at 45% 30%, #f8e6b8, #e2c07a 60%, #c9a45a);
+  box-shadow:inset 0 8px 0 rgba(255,255,255,.35), inset 0 -10px 18px rgba(120,80,20,.25), 0 22px 26px rgba(4,30,40,.28); }
+.rw.night .rw-zone::after{ background:radial-gradient(60% 90% at 45% 30%, #34444a, #1e292d 60%, #10181b); box-shadow:inset 0 6px 0 rgba(127,245,227,.07), 0 22px 30px rgba(0,0,0,.5); }
+.rw-zone + .rw-zone{ margin-top:10px; }
+.rw-far{ position:absolute; left:0; right:0; bottom:30px; height:62%; z-index:0; color:rgba(6,70,86,.32); filter:blur(1.5px);
+  transform:translateY(calc(var(--py, 0px) * .10)); pointer-events:none; }
+.rw.night .rw-far{ color:rgba(120,170,180,.10); }
+.rw-far svg{ width:100%; height:100%; display:block; }
+.rw-sign{ position:absolute; left:20px; top:18px; z-index:30; display:flex; align-items:center; gap:10px; padding:8px 10px 8px 16px; border-radius:16px;
+  background:linear-gradient(180deg, #c48a4f, #93602e); color:#fff6e2; box-shadow:0 5px 0 #5e3b1a, 0 10px 18px rgba(0,0,0,.25), inset 0 2px 0 rgba(255,255,255,.25); }
+.rw-sign::before{ content:""; position:absolute; left:50%; top:-14px; width:4px; height:14px; margin-left:-2px; background:#5e3b1a; }
+.rw-sign b{ font:800 1.15rem 'Baloo 2',sans-serif; text-shadow:0 2px 0 rgba(0,0,0,.25); }
+.rw-sign small{ font-weight:800; font-size:.8rem; opacity:.9; padding:2px 8px; border-radius:999px; background:rgba(0,0,0,.18); }
+.rw.night .rw-sign{ background:linear-gradient(180deg, #e9c46a, #a7801f); color:#2a1d02; box-shadow:0 5px 0 #6e4f10, 0 0 22px rgba(255,209,102,.25), inset 0 2px 0 rgba(255,255,255,.4); }
+.rw.night .rw-sign::before{ background:#3e4a50; }
+.rw.night .rw-sign b{ text-shadow:none; }
+.rw-say{ border:none; cursor:pointer; width:38px; height:38px; border-radius:50%; font-size:1rem; background:rgba(255,255,255,.92); box-shadow:0 3px 0 rgba(0,0,0,.2); }
+.rw-say:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.2); }
+.rw-bed{ position:relative; z-index:1; height:var(--bed); }
+
+.rw-obj{ position:absolute; left:var(--x); top:var(--y); width:clamp(140px, 23vw, 206px); padding:0; border:none; background:none; cursor:pointer; font:inherit; color:inherit;
+  transform:translate(-50%, -50%) scale(calc(.88 + .12 * var(--depth)));
+  filter:saturate(calc(.78 + .22 * var(--depth))) brightness(calc(.93 + .07 * var(--depth)));
+  -webkit-tap-highlight-color:transparent; animation:rwRise .7s var(--reef-pop) both; animation-delay:calc(var(--i) * 55ms); }
+@keyframes rwRise{ from{ opacity:0; margin-top:40px; } to{ opacity:1; margin-top:0; } }
+.rw-obj .rw-art{ display:block; width:100%; height:auto; overflow:visible; position:relative; z-index:1; transform-origin:50% 90%;
+  filter:drop-shadow(0 10px 8px rgba(4,30,40,.28)); animation:rwSway 5s ease-in-out infinite; animation-delay:calc(var(--i) * -.7s); transition:transform .18s var(--reef-pop); }
+@keyframes rwSway{ 0%,100%{ transform:rotate(-1.5deg); } 50%{ transform:rotate(1.5deg) translateY(-3px); } }
+.rw-obj:hover .rw-art{ transform:translateY(-6px) scale(1.04); }
+.rw-obj:active .rw-art{ transform:translateY(6px) scale(.94); animation-play-state:paused; }
+.rw-obj:focus-visible{ outline:none; }
+.rw-obj:focus-visible .rw-plaque{ outline:4px solid var(--reef-sun); outline-offset:3px; }
+.rw-shadow{ position:absolute; left:16%; right:16%; top:74%; height:22px; z-index:0; border-radius:50%; background:radial-gradient(closest-side, rgba(4,24,32,.55), transparent); filter:blur(3px); }
+.rw-badge{ position:absolute; right:6%; top:4%; z-index:3; width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.7rem;
+  background:radial-gradient(circle at 35% 30%, #fff, #e8f7f6); box-shadow:0 0 0 4px color-mix(in srgb, var(--hue) 70%, #fff), 0 6px 10px rgba(4,30,40,.3); }
+.rw.night .rw-badge{ background:radial-gradient(circle at 35% 30%, #234a55, #0d2a33); box-shadow:0 0 0 3px rgba(127,245,227,.55), 0 0 16px rgba(127,245,227,.35); }
+.rw-pearl{ position:absolute; left:8%; top:10%; z-index:3; width:24px; height:24px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #fff, #ffe9a8 45%, #e8a716);
+  box-shadow:0 0 0 0 rgba(255,209,102,.7); animation:rwPearl 1.8s ease-out infinite; }
+@keyframes rwPearl{ 0%{ box-shadow:0 0 0 0 rgba(255,209,102,.75); } 100%{ box-shadow:0 0 0 18px rgba(255,209,102,0); } }
+.rw-star{ position:absolute; left:8%; top:8%; z-index:3; font-size:1.5rem; color:#ffd166; text-shadow:0 2px 0 #a8770a, 0 0 10px rgba(255,209,102,.8); }
+.rw-count{ position:absolute; right:12%; top:10%; z-index:3; min-width:32px; height:32px; padding:0 8px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+  font:800 1rem 'Baloo 2',sans-serif; background:var(--reef-sun); color:var(--reef-sun-ink); border:3px solid #fff; box-shadow:0 3px 0 #a8770a; }
+.rw-plaque{ position:relative; z-index:2; display:inline-flex; flex-direction:column; align-items:center; margin-top:-6px; max-width:100%; padding:6px 14px 7px; border-radius:16px;
+  background:rgba(255,255,255,.95); color:#0b2b33; box-shadow:0 4px 0 rgba(4,40,52,.22); line-height:1.12; }
+.rw-plaque b{ font:800 1.02rem 'Baloo 2',sans-serif; text-align:center; }
+.rw-plaque small{ font-size:.76rem; font-weight:800; color:#3f6670; }
+.rw-obj.ready .rw-plaque small{ color:var(--reef-coral-ink); }
+.rw-obj.done .rw-plaque small{ color:#1d6b49; }
+.rw.night .rw-plaque{ background:rgba(8,28,36,.9); color:#e6fbf8; box-shadow:0 0 0 2px rgba(127,245,227,.25), 0 4px 0 rgba(0,0,0,.4); }
+.rw.night .rw-plaque small{ color:#9fd8d0; }
+.rw.night .rw-obj.ready .rw-plaque small{ color:#ffb59e; }
+.rw.night .rw-obj.done .rw-plaque small{ color:#8ee6b4; }
+.rw.night .rw-glow{ animation:rwGlow 3s ease-in-out infinite; transform-origin:80px 74px; }
+@keyframes rwGlow{ 0%,100%{ opacity:.7; } 50%{ opacity:1; } }
+.rw-guide{ position:absolute; left:-14%; top:-18%; z-index:4; width:44%; animation:reefGuide 2.6s ease-in-out infinite; }
+.rw-guide-svg{ display:block; width:100%; height:auto; transform:scaleX(-1); filter:drop-shadow(0 6px 6px rgba(0,0,0,.25)); }
+.rw.night .rw-guide-svg{ transform:none; filter:drop-shadow(0 0 10px rgba(127,245,227,.5)); }
+.rw-near{ position:absolute; top:0; bottom:0; width:70px; z-index:20; pointer-events:none; filter:blur(2.5px); opacity:.85;
+  transform:translateY(calc(var(--py, 0px) * -.06));
+  background:
+    radial-gradient(18px 120px at 30px 15%, #2f7d58 60%, transparent 62%),
+    radial-gradient(16px 140px at 48px 48%, #3f9c6d 60%, transparent 62%),
+    radial-gradient(20px 130px at 22px 82%, #2f7d58 60%, transparent 62%); }
+.rw-near.left{ left:-26px; } .rw-near.right{ right:-26px; transform:scaleX(-1) translateY(calc(var(--py, 0px) * -.06)); }
+.rw.night .rw-near{ opacity:.6;
+  background:
+    linear-gradient(90deg, transparent 30px, #1c2428 30px 38px, transparent 38px),
+    radial-gradient(10px 7px at 34px 20%, #3e4a50 60%, transparent 64%), radial-gradient(10px 7px at 34px 26%, #3e4a50 60%, transparent 64%),
+    radial-gradient(10px 7px at 34px 64%, #3e4a50 60%, transparent 64%), radial-gradient(10px 7px at 34px 70%, #3e4a50 60%, transparent 64%); }
+@media (max-width:640px){
+  .rw-scene{ border-radius:28px; }
+  .rw-obj{ width:clamp(130px, 42vw, 170px); }
+  .rw-badge{ width:42px; height:42px; font-size:1.35rem; }
+  .rw-sign{ left:12px; } .rw-sign b{ font-size:1rem; }
+  .rw-near{ width:44px; }
+}
+body.reef-calm .rw-light, body.reef-calm .rw-obj, body.reef-calm .rw-obj .rw-art, body.reef-calm .rw-pearl, body.reef-calm .rw-guide, body.reef-calm .rw-glow{ animation:none !important; }
+body.reef-calm .rw-far, body.reef-calm .rw-near.left{ transform:none; }
+body.reef-calm .rw-near.right{ transform:scaleX(-1); }
 </style>
 
 </body></html>
