@@ -1,5 +1,20 @@
 # Changelog
 
+## Version 30 (October 22, 2026)
+
+A new look for her profile, with ideas borrowed from top-rated kids' learning apps.
+
+- **Cove map:** her decks are grouped into places on an underwater map, one per subject: Kelp Library (Reading), Number Wreck (Math), Coral Garden (More) and so on. Each place keeps the same spot every time, shows how many decks are ready, and fills in pearls as decks are finished. Shelly (Lumi at night) suggests where to go next, and the 🔊 button reads it aloud.
+- **Silly transitions:** opening a deck plays a quick "Splash!" with Shelly somersaulting past bubbles and fish. Leaving a deck plays a "Pop!" back up to the map.
+- **Treasure Reef:** every finished round opens a treasure chest with a new sea friend and a one-line fact, read aloud. She can visit all her sea friends on the Treasure Reef shelf (20 to find).
+- **Tutor tip on a miss:** after a wrong answer she sees the right answer, hears it read aloud, and gets one "Next time…" tip that fits the card (count on your fingers, look at the first letter, read one word at a time).
+- **No scores or timers in her mode:** the streak and star counters are off her home screen, the round-end screen shows her new sea friend instead of numbers, and "Beat the clock" cards no longer count down.
+- **Calm motion:** a new switch in her Settings turns off every animation. The iPad's own Reduce Motion setting does the same.
+- **Chunkier look:** bigger, rounder buttons that press down, brighter deck tiles and a softer study screen.
+- Fixed: the ⚙️ Settings button in a child profile's Edit Mode now opens Settings.
+
+Grown-up profiles look and work the same as before.
+
 ## iPad PIN update (October 22, 2026)
 
 - The child profile opens and starts a session without the PIN. Ending the session, switching profiles mid-session and leaving a deck early still ask for it.

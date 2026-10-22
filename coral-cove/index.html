@@ -3781,7 +3781,8 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     return (last === todayISO() || last === todayISO(y)) ? (st.streak || 0) : 0;
   }
   var WRONG_EXTRA_MS = 1600; // extra time to read the right answer before auto-advancing after a miss
-  function gentleMiss(lead, answer){ return lead + ' It\'s <b class="its-answer">' + esc(answer) + '</b>' + (/[.!?。]\s*$/.test(String(answer||'')) ? '' : '.'); } // no doubled full stop when the answer is already a sentence
+  function gentleMiss(lead, answer){ return gentleMissBase(lead, answer) + (reefKid() ? reefTip(answer) : ''); }
+  function gentleMissBase(lead, answer){ return lead + ' It\'s <b class="its-answer">' + esc(answer) + '</b>' + (/[.!?。]\s*$/.test(String(answer||'')) ? '' : '.'); } // no doubled full stop when the answer is already a sentence
   function todayISO(d){ d = d || new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
   function shuffle(arr){ var a = arr.slice(); for(var i=a.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
@@ -4023,6 +4024,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     try { Ocean.apply(!(S.activeProfileId && S.profile && S.profile.oceanTheme === false)); } catch(e){} // on for everyone unless a profile turned it off
     applyThemeMode(S.activeProfileId && S.profile ? S.profile.themeMode : null);
     if(!S.booted) return; // wait for settings to load before showing anything (avoids a lock-screen flash)
+    reefSyncBody();
     /* coveqa: opening a deck from a scrolled home list left the new screen scrolled (header cut off) */
     try {
       var vk = (S.pinPromptFor ? 'pin' : S.creatingProfile ? 'new' : S.managingProfiles ? 'mp' : !S.activeProfileId ? 'pick' : S.view) + '';
@@ -4043,6 +4045,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     if(S.view !== 'study' && (echoRec || S.echoState)) echoReset(); // left a card mid-recording: free the microphone
     if(S.view === 'study') return renderStudy();
     if(S.view === 'summary') return renderSummary();
+    if(S.view === 'collection') return reefCollection();
     if(S.view === 'feed') return renderFeed();   // Word Feed -- same "works from either Manage Decks or
                                                    // Child Mode home" reasoning as study/summary above
     if(S.view === 'story') return renderStory();  // Story Mode -- same reasoning, see the STORY MODE
@@ -4163,7 +4166,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     S.store.setActiveProfile(profile.id);
     S.profileLoading = true;
     S.decks = []; S.dueCounts = {}; S.currentDeckId = null;
-    S.statsData = null; S.statsDeckId = null; S.deckFilter = 'all'; S.subjectFilter = 'all';
+    S.statsData = null; S.statsDeckId = null; S.deckFilter = 'all'; S.subjectFilter = 'all'; S.reefPlace = null;
     S.view = 'home';
     S.managingDecks = profile.mode === 'adult';
     S.editMode = false;
@@ -4782,7 +4785,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     render();
     return refreshDueCounts().then(function(){ if(S.view === 'home' && coveDueSig() !== before) render(); });
   }
-  function goHome(){
+  function goHomeNow(){
     // A single choke point for leaving ANY screen back to the deck grid -- covers Word Feed's sound
     // player too, so it always stops here no matter which path led out (the exit button, a PIN
     // clearing, Adult Mode's no-PIN early exit, ...) rather than needing its own cleanup on each one.
@@ -4816,6 +4819,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
 
   function renderHome(){
     var managing = S.managingDecks;
+    if(reefKid() && !S.editMode) S.subjectFilter = S.reefPlace || 'all';
     // Edit Mode -- not the same as Adult Mode -- is what now shows archived decks and the
     // Live/Archived tabs, per-deck editing/archiving, and deck creation/import. Adult Mode flips it
     // on for free; Child Mode has to clear the PIN first (see requestEditMode/toggleEditMode).
@@ -4972,7 +4976,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
       (editMode ? '<input type="file" id="ankiImportInput" accept=".txt,.csv,.tsv" style="display:none">' : '');
 
     app.querySelectorAll('[data-act="study"]').forEach(function(b){
-      b.addEventListener('click', function(){
+      b.addEventListener('click', function(){ reefGo('dive', b, function(){
         var d = S.decks.find(function(x){ return x.id === b.dataset.deck; });
         if(d && d.feedMode) startFeed(b.dataset.deck);
         else if(d && d.storyMode) startStory(b.dataset.deck);
@@ -4982,7 +4986,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
         else if(d && d.flashFeedMode) startFlashFeed(b.dataset.deck);
         else if(d && d.miniStoryMode) startMiniStory(b.dataset.deck);
         else startStudy(b.dataset.deck);
-      });
+      }); });
     });
     app.querySelector('[data-act="open-stats"]').addEventListener('click', openStats);
     wirePlanHome();
@@ -5014,6 +5018,8 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
           render();
         });
       });
+      var kidSettingsBtn = managing ? null : app.querySelector('[data-act="open-settings"]');
+      if(kidSettingsBtn) kidSettingsBtn.addEventListener('click', function(){ S.view = 'settings'; render(); });
       var newBtn = app.querySelector('[data-act="new-deck"]');
       if(newBtn) newBtn.addEventListener('click', createDeck);
       var ankiInput = app.querySelector('#ankiImportInput');
@@ -5036,6 +5042,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
       wireCtrlRow();
     }
     wireErrorBanner();
+    reefHome();
   }
 
   function createDeck(){
@@ -8977,6 +8984,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     } else if(mode === 'timedchoice'){
       if(!S.timedChoiceState || S.timedChoiceState.cardId !== card.id){
         S.timedChoiceState = buildTimedChoiceRound(card);
+        if(reefKid()){ S.timedChoiceState.deadline = Date.now() + 864e5; S.timedChoiceState.reefCalm = true; }
       }
       var tc = S.timedChoiceState;
       var tcDone = tc.selected != null || tc.expired;
@@ -8990,12 +8998,12 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
         return '<button type="button" class="'+cls+'" data-tc-idx="'+idx+'" '+(tcDone?'disabled':'')+'>'+esc(opt)+'</button>';
       }).join('');
       var tcFeedback = !tcDone
-        ? '<div class="flip-hint" style="position:relative;z-index:1;">Tap an answer before time runs out!</div>'
+        ? '<div class="flip-hint" style="position:relative;z-index:1;">'+(tc.reefCalm ? 'Tap an answer' : 'Tap an answer before time runs out!')+'</div>'
         : '<div class="choice-feedback '+(tc.expired ? 'no' : (tcPickedCorrect?'ok':'no'))+'">'+(tc.expired ? gentleMiss('Time\'s up! ⏰', tc.answer) : (tcPickedCorrect ? 'Nice job! 🎉' : gentleMiss('Good try!', tc.answer)))+'</div>';
       stageInner = '' +
         '<div class="flip-scene" style="position:relative;z-index:1;">' +
           '<div class="face face-front read-face">' +
-            '<div class="read-label">⏱️ Beat the clock</div>' +
+            '<div class="read-label">'+(tc.reefCalm ? '🔘 Pick the answer' : '⏱️ Beat the clock')+'</div>' +
             (card.photoUrl?'<img class="card-photo" src="'+esc(card.photoUrl)+'" alt="">':'') +
             '<div class="card-text">'+esc(tc.prompt)+'</div>' +
           '</div>' +
@@ -9221,6 +9229,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
         // Child Mode: read whichever option was just tapped aloud, right or wrong -- reinforces the
         // text/sound link either way. Adult Mode (S.managingDecks) stays quiet, same as everywhere else.
         if(!S.managingDecks) Speech.speak(chosen);
+        if(!correct) reefSayAnswer(card.back);
         render();
         // Fully automatic: the app already knows right vs. wrong from the tap, so it grades itself —
         // pause just long enough for the correct/wrong highlight to register, then move on.
@@ -9269,9 +9278,10 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
           tcNow.selected = parseInt(b.dataset.tcIdx, 10);
           var chosen = tcNow.options[tcNow.selected];
           var correct = chosen === tcNow.answer;
-          var elapsed = (tcNow.totalSeconds + tcNow.secondsAdded) * 1000 - Math.max(0, tcNow.deadline - Date.now());
+          var elapsed = tcNow.reefCalm ? (Date.now() - (S.cardShownAt || Date.now())) : ((tcNow.totalSeconds + tcNow.secondsAdded) * 1000 - Math.max(0, tcNow.deadline - Date.now()));
           if(correct) Sound.correct(); else Sound.wrong();
           if(!S.managingDecks) Speech.speak(chosen);
+          if(!correct) reefSayAnswer(tcNow.answer);
           render();
           setTimeout(function(){ grade(timedChoiceRating(tcNow, correct, elapsed), true); }, correct ? 650 : 1100 + WRONG_EXTRA_MS);
         });
@@ -9480,6 +9490,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
         totalReviews: (stats.totalReviews||0) + S.sessionReviewed,
         unlockedSounds: stats.unlockedSounds || (S.stats && S.stats.unlockedSounds) || []
       });
+      reefAward(stats, newStats);
       newStatsRef = newStats;
       S.stats = newStats;
       var wp = Promise.resolve(S.store.setStats(newStats)).then(function(){ return S.store.addHistoryEntry(historyEntry); });
@@ -9504,6 +9515,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
   }
 
   function renderSummary(){
+    if(reefKid()) return reefSummary();
     var deck = S.decks.find(function(d){ return d.id === S.currentDeckId; }) || {name:'Deck', emoji:'🌊'};
     var t = S.roundTally || { again:0, hard:0, good:0, easy:0 };
     var total = S.sessionReviewed;
@@ -10087,6 +10099,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
           '<p class="algo-note">This applies to every deck too. Switching only changes how future answers are scheduled — cards already due keep their current date.</p>' +
         '</div>' +
         readingSupportHTML +
+        reefCalmHTML() +
         voiceSettingsHTML() +
         micSettingsHTML() +
         planSettingsToggleHTML() +
@@ -10141,6 +10154,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
         }
       });
     });
+    reefWireCalm();
     var rs = app.querySelector('[data-act="toggle-reading-support"]');
     if(rs) rs.addEventListener('click', function(){
       var newSettings = Object.assign({}, S.settings, { readingSupport: !readingSupportOn });
@@ -11226,6 +11240,382 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       });
     };
   }
+  /* ============ REEF: the child's cove map, silly deck transitions, treasure rewards ============ */
+  // Child Mode only (Adult Mode screens never use any of this). Every animation here is skipped
+  // when "Calm motion" is on in Settings or the device asks for reduced motion -- the screen just
+  // changes, the same as before.
+  function reefKid(){ return !!(S.profile && S.profile.mode === 'child' && !S.managingDecks); }
+  function reefCalm(){
+    if(S.settings && S.settings.calmMotion) return true;
+    try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){ return false; }
+  }
+  function reefSyncBody(){
+    document.body.classList.toggle('reef-kid', reefKid());
+    document.body.classList.toggle('reef-calm', reefCalm());
+  }
+
+  // One place on the map per subject. Each keeps the same spot every time.
+  var REEF_PLACES = {
+    reading: { name:'Kelp Library', art:'📚', hue:'#2f9e6e', ink:'#1d6b49' },
+    math:    { name:'Number Wreck', art:'⚓', hue:'#d9735a', ink:'#a24a33' },
+    korean:  { name:'Lantern Reef', art:'🏮', hue:'#c2477a', ink:'#8f2c58' },
+    science: { name:'Bubble Lab',   art:'🔬', hue:'#3a7bd5', ink:'#2558a0' },
+    life:    { name:'Sandy Town',   art:'🏖️', hue:'#c99a2e', ink:'#8a6516' },
+    other:   { name:'Coral Garden', art:'🪸', hue:'#7a5cc2', ink:'#56409a' }
+  };
+  function reefPlaceFor(id, label){
+    return REEF_PLACES[id] || { name: (label || 'Secret') + ' Cove', art:'🏝️', hue:'#1c8c93', ink:'#0d5262' };
+  }
+  // Map spots as % of the map box: [x, y] on a wide screen, then [x, y] on a narrow one.
+  var REEF_SLOTS = [
+    [[22,30],[27,13]], [[52,20],[73,26.5]], [[81,33],[27,40]],
+    [[36,61],[73,53.5]], [[66,57],[27,67]], [[50,40],[73,80.5]]
+  ];
+  var REEF_SPECIAL = { story: [[88,84],[76,93]], treasure: [[12,84],[24,93]] };
+
+  function reefPlaces(){
+    var live = S.decks.filter(function(d){ return !d.archived; });
+    var tabs = buildSubjectTabs(live);
+    if(!tabs) return null;
+    return tabs.slice(0, REEF_SLOTS.length).map(function(t){
+      var decks = live.filter(function(d){ return (d.subject ? subjectMeta(d.subject).id : 'other') === t.id; });
+      var study = decks.filter(function(d){ return !(d.feedMode || d.storyMode || d.equationMode || d.langFeedMode || d.readAlongMode || d.flashFeedMode || d.miniStoryMode); });
+      var ready = 0, done = 0;
+      study.forEach(function(d){
+        var dc = S.dueCounts[d.id] || { due:0, total:0 };
+        if(dc.total > 0 && dc.due > 0) ready++;
+        else if(dc.total > 0) done++;
+      });
+      return { id: t.id, label: t.label, place: reefPlaceFor(t.id, t.label), decks: decks.length, studyCount: study.length, ready: ready, done: done };
+    });
+  }
+
+  function reefSpotStyle(slot, i, hue){
+    return '--x:'+slot[0][0]+'%;--y:'+slot[0][1]+'%;--xs:'+slot[1][0]+'%;--ys:'+slot[1][1]+'%;--i:'+i+';--hue:'+hue;
+  }
+  function reefPearls(p){
+    if(!p.studyCount) return '';
+    var n = Math.min(p.studyCount, 8), lit = Math.min(n, Math.round(p.done / p.studyCount * n));
+    var s = '';
+    for(var i = 0; i < n; i++) s += '<i class="'+(i < lit ? 'on' : '')+'"></i>';
+    return '<span class="reef-pearls" aria-hidden="true">'+s+'</span>';
+  }
+  function reefMapHTML(places){
+    // Shelly waits at the first place with something ready, so the next step is always obvious.
+    var next = places.find(function(p){ return p.ready > 0; }) || places[0];
+    var nextIdx = places.indexOf(next);
+    var pts = places.map(function(p, i){ return REEF_SLOTS[i]; });
+    var path = function(k){ return pts.map(function(s){ return s[k][0]+','+s[k][1]; }).join(' '); };
+    var spots = places.map(function(p, i){
+      var say = p.place.name + '. ' + (p.ready ? p.ready + ' ready to practice.' : (p.studyCount ? 'All done here!' : 'Tap to explore.'));
+      return '' +
+        '<button type="button" class="reef-spot'+(i === nextIdx ? ' next' : '')+'" data-reef-place="'+esc(p.id)+'" style="'+reefSpotStyle(REEF_SLOTS[i], i, p.place.hue)+'" aria-label="'+esc(say)+'">' +
+          '<span class="reef-rock"><span class="reef-art">'+p.place.art+'</span>' +
+            (p.ready ? '<span class="reef-ready" aria-hidden="true">'+p.ready+'</span>' : (p.studyCount ? '<span class="reef-done" aria-hidden="true">✓</span>' : '')) +
+          '</span>' +
+          '<span class="reef-label"><b>'+esc(p.place.name)+'</b><small>'+esc(p.label)+'</small></span>' +
+          reefPearls(p) +
+        '</button>';
+    }).join('');
+    var tally = reefTally();
+    var bubble = next.ready ? 'Let\'s swim to the '+next.place.name+'!' : 'Pick a place to explore!';
+    var guide = 'Shelly'; try { guide = coveSwimName() || 'Shelly'; } catch(e){}
+    return '' +
+      '<section class="reef-map-wrap" aria-label="Cove map">' +
+        '<div class="reef-map-head">' +
+          '<div class="reef-map-title"><h2>Where should we swim?</h2><p>'+esc(guide)+' says: '+esc(bubble)+'</p></div>' +
+          '<button type="button" class="reef-say" data-reef-say="'+esc('Where should we swim? '+guide+' says: '+bubble)+'" aria-label="Read this aloud">🔊</button>' +
+        '</div>' +
+        '<div class="reef-map">' +
+          '<div class="reef-rays" aria-hidden="true"></div>' +
+          '<svg class="reef-path wide" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="'+path(0)+'"/></svg>' +
+          '<svg class="reef-path narrow" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="'+path(1)+'"/></svg>' +
+          '<div class="reef-sand" aria-hidden="true"></div>' +
+          '<div class="reef-kelp k1" aria-hidden="true"></div><div class="reef-kelp k2" aria-hidden="true"></div><div class="reef-kelp k3" aria-hidden="true"></div>' +
+          spots +
+          '<span class="reef-swimmer s1" aria-hidden="true">🐠</span><span class="reef-swimmer s2" aria-hidden="true">🐟</span>' +
+          '<span class="reef-deco d1" aria-hidden="true">🪸</span><span class="reef-deco d2" aria-hidden="true">🐚</span><span class="reef-deco d3" aria-hidden="true">⭐</span>' +
+          '<button type="button" class="reef-spot special" data-reef-special="treasure" style="'+reefSpotStyle(REEF_SPECIAL.treasure, 7, '#c99a2e')+'" aria-label="My Treasure Reef">' +
+            '<span class="reef-rock chest"><span class="reef-art">💎</span>'+(tally.found ? '<span class="reef-ready gold" aria-hidden="true">'+tally.found+'</span>' : '')+'</span>' +
+            '<span class="reef-label"><b>Treasure Reef</b><small>My sea friends</small></span>' +
+          '</button>' +
+          '<button type="button" class="reef-spot special" data-reef-special="story" style="'+reefSpotStyle(REEF_SPECIAL.story, 8, '#3a7bd5')+'" aria-label="Story Maker">' +
+            '<span class="reef-rock bottle"><span class="reef-art">🍾</span></span>' +
+            '<span class="reef-label"><b>Story Bottle</b><small>Make a story</small></span>' +
+          '</button>' +
+        '</div>' +
+      '</section>';
+  }
+  function reefPlaceHeadHTML(p){
+    var say = p.place.name + '. Pick a deck and dive in.';
+    return '' +
+      '<section class="reef-placehead" style="--hue:'+p.place.hue+';--ink:'+p.place.ink+'">' +
+        '<button type="button" class="reef-back" data-act="reef-map">🗺️ Back to the map</button>' +
+        '<div class="reef-placehead-main">' +
+          '<span class="reef-placehead-art" aria-hidden="true">'+p.place.art+'</span>' +
+          '<div class="reef-placehead-text">' +
+            '<h2>'+esc(p.place.name)+'</h2>' +
+            '<p>'+esc(p.label)+' · Pick a deck and dive in.</p>' +
+          '</div>' +
+          '<button type="button" class="reef-say" data-reef-say="'+esc(say)+'" aria-label="Read this aloud">🔊</button>' +
+        '</div>' +
+      '</section>';
+  }
+  // Runs at the end of renderHome() for Child Mode: swaps the subject tabs for the map, or puts the
+  // chosen place's banner above its decks.
+  function reefHome(){
+    if(!reefKid() || S.editMode) return;
+    var places = reefPlaces();
+    if(!places){ S.reefPlace = null; return; }
+    if(S.reefPlace && !places.some(function(p){ return p.id === S.reefPlace; })){ S.reefPlace = null; S.subjectFilter = 'all'; render(); return; }
+    var tabs = app.querySelector('.subject-tabs'); if(tabs) tabs.remove();
+    var grid = app.querySelector('.deck-grid'), note = app.querySelector('.empty-filter-note');
+    var holder = document.createElement('div');
+    if(!S.reefPlace){
+      if(grid) grid.hidden = true;
+      if(note) note.hidden = true;
+      holder.innerHTML = reefMapHTML(places);
+    } else {
+      holder.innerHTML = reefPlaceHeadHTML(places.find(function(p){ return p.id === S.reefPlace; }));
+    }
+    var el = holder.firstChild;
+    if(grid) grid.parentNode.insertBefore(el, grid); else app.appendChild(el);
+    if(S.reefPlace && grid){
+      grid.classList.add('reef-place-grid');
+      grid.style.setProperty('--hue', reefPlaceFor(S.reefPlace).hue);
+    }
+    el.querySelectorAll('[data-reef-place]').forEach(function(b){
+      b.addEventListener('click', function(){
+        Sound.bloop(520);
+        var id = b.dataset.reefPlace;
+        reefGo('swim', b, function(){ S.reefPlace = id; S.subjectFilter = id; render(); window.scrollTo(0, 0); });
+      });
+    });
+    var back = el.querySelector('[data-act="reef-map"]');
+    if(back) back.addEventListener('click', function(){
+      Sound.bloop(420);
+      reefGo('swim', back, function(){ S.reefPlace = null; S.subjectFilter = 'all'; render(); });
+    });
+    var chest = el.querySelector('[data-reef-special="treasure"]');
+    if(chest) chest.addEventListener('click', function(){ Sound.bloop(600); reefGo('swim', chest, function(){ S.view = 'collection'; render(); window.scrollTo(0, 0); }); });
+    var bottle = el.querySelector('[data-reef-special="story"]');
+    if(bottle) bottle.addEventListener('click', function(){ reefGo('dive', bottle, startStoryMaker); });
+    reefWireSay(el);
+  }
+  function reefWireSay(root){
+    root.querySelectorAll('[data-reef-say]').forEach(function(b){
+      b.addEventListener('click', function(e){ e.stopPropagation(); try { Speech.speak(b.dataset.reefSay); } catch(err){} });
+    });
+  }
+
+  /* ---------- transitions: a silly splash into a deck, a pop back up out of it ---------- */
+  var reefBusy = false;
+  function reefTxHTML(kind){
+    var bubbles = '';
+    for(var i = 0; i < 18; i++){
+      var x = Math.round(Math.random() * 100), s = 10 + Math.round(Math.random() * 34), d = (Math.random() * 0.45).toFixed(2);
+      bubbles += '<span class="tx-bub" style="--x:'+x+'%;--s:'+s+'px;--d:'+d+'s"></span>';
+    }
+    var word = kind === 'dive' ? 'Splash!' : 'Pop!';
+    var letters = word.split('').map(function(c, i){ return '<span style="--i:'+i+'">'+esc(c)+'</span>'; }).join('');
+    return '' +
+      '<div class="tx-water"><svg class="tx-crest" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0 70 C150 10 300 10 450 60 S750 120 900 50 S1100 0 1200 50 V120 H0 Z"/></svg></div>' +
+      '<div class="tx-bubbles">'+bubbles+'</div>' +
+      '<div class="tx-fish f1">🐠</div><div class="tx-fish f2">🐡</div><div class="tx-fish f3">🐟</div>' +
+      '<div class="tx-shelly">'+mascotTurtleSVG('tx-shelly-svg')+'</div>' +
+      '<div class="tx-word">'+letters+'</div>';
+  }
+  // Plays a transition and calls fn while the screen is covered. With Calm motion (or in Adult
+  // Mode) fn just runs straight away.
+  function reefGo(kind, fromEl, fn){
+    if(!reefKid() || reefCalm() || reefBusy){ fn(); return; }
+    reefBusy = true;
+    var ov = document.createElement('div');
+    ov.className = 'reef-tx reef-tx-' + kind;
+    ov.setAttribute('aria-hidden', 'true');
+    if(kind === 'swim'){
+      var r = fromEl && fromEl.getBoundingClientRect ? fromEl.getBoundingClientRect() : null;
+      var cx = r ? r.left + r.width / 2 : innerWidth / 2, cy = r ? r.top + r.height / 2 : innerHeight / 2;
+      ov.style.setProperty('--cx', cx + 'px'); ov.style.setProperty('--cy', cy + 'px');
+      ov.innerHTML = '<span class="tx-iris"></span>';
+    } else {
+      ov.innerHTML = reefTxHTML(kind);
+      try { Sound.bubbles(5); } catch(e){}
+    }
+    document.body.appendChild(ov);
+    var mid = kind === 'swim' ? 230 : 560, end = kind === 'swim' ? 560 : 1300;
+    setTimeout(function(){ try { fn(); } catch(e){ console.error('[Coral Cove] transition', e); } }, mid);
+    setTimeout(function(){ ov.remove(); reefBusy = false; }, end);
+  }
+  function reefInDeck(){
+    return ['study','summary','feed','story','equationFeed','langFeed','readAlong','flashFeed','miniStory','wordBank'].indexOf(S.view) !== -1;
+  }
+  // Every way out of a deck goes through goHome(), so this is the one place that adds the pop-up.
+  function goHome(){
+    if(reefKid() && reefInDeck()) reefGo('surface', null, goHomeNow);
+    else goHomeNow();
+  }
+
+  /* ---------- a short tutor line on a miss: the answer, then what to try next time ---------- */
+  function reefTip(answer){
+    var a = String(answer || '').trim(), tip;
+    if(/^-?\d+([.,]\d+)?$/.test(a)) tip = 'Next time, count up on your fingers to check.';
+    else if(/[가-힣]/.test(a)) tip = 'Next time, say each block out loud, one at a time.';
+    else if(/\s/.test(a)) tip = 'Next time, read it one word at a time, out loud.';
+    else if(/^[A-Za-z]/.test(a)) tip = 'Next time, look at the first letter, ' + esc(a.charAt(0)) + ', and say the word slowly.';
+    else tip = 'Next time, say it out loud with Shelly.';
+    return '<span class="reef-tip"><span class="reef-tip-face" aria-hidden="true">🐢</span><span>' + tip + ' Shelly will bring this one back soon.</span></span>';
+  }
+  function reefSayAnswer(answer){
+    if(!reefKid()) return;
+    setTimeout(function(){ try { Speech.speak('It\'s ' + answer + '.'); } catch(e){} }, 1000);
+  }
+
+  /* ---------- treasure: one sea friend for every finished round ---------- */
+  var REEF_FRIENDS = [
+    { id:'octopus', e:'🐙', name:'Octopus', fact:'An octopus has eight arms and three hearts.' },
+    { id:'puffer', e:'🐡', name:'Pufferfish', fact:'A pufferfish puffs up into a ball when it feels scared.' },
+    { id:'dolphin', e:'🐬', name:'Dolphin', fact:'A dolphin breathes air through a blowhole on top of its head.' },
+    { id:'turtle', e:'🐢', name:'Sea Turtle', fact:'A sea turtle can stay under water for a long time.' },
+    { id:'crab', e:'🦀', name:'Crab', fact:'A crab walks sideways.' },
+    { id:'jelly', e:'🪼', name:'Jellyfish', fact:'A jellyfish has no brain and no bones.' },
+    { id:'shark', e:'🦈', name:'Shark', fact:'A shark grows new teeth again and again.' },
+    { id:'humpback', e:'🐳', name:'Humpback Whale', fact:'Humpback whales sing long songs.' },
+    { id:'bluewhale', e:'🐋', name:'Blue Whale', fact:'The blue whale is the biggest animal ever.' },
+    { id:'seal', e:'🦭', name:'Seal', fact:'A seal can sleep in the water.' },
+    { id:'squid', e:'🦑', name:'Squid', fact:'A squid squirts ink to hide.' },
+    { id:'lobster', e:'🦞', name:'Lobster', fact:'A lobster has blue blood.' },
+    { id:'shrimp', e:'🦐', name:'Shrimp', fact:'Some shrimp clean other fish.' },
+    { id:'shell', e:'🐚', name:'Seashell', fact:'A hermit crab can move into an empty shell.' },
+    { id:'coral', e:'🪸', name:'Coral', fact:'Coral is made of tiny animals.' },
+    { id:'otter', e:'🦦', name:'Sea Otter', fact:'Sea otters hold hands while they sleep.' },
+    { id:'penguin', e:'🐧', name:'Penguin', fact:'A penguin is a bird that swims but cannot fly.' },
+    { id:'tropical', e:'🐠', name:'Reef Fish', fact:'Bright reef fish live near coral.' },
+    { id:'fish', e:'🐟', name:'Fish', fact:'A fish breathes through its gills.' },
+    { id:'oyster', e:'🦪', name:'Oyster', fact:'An oyster can make a pearl.' }
+  ];
+  function reefFriend(id){ return REEF_FRIENDS.find(function(f){ return f.id === id; }) || null; }
+  function reefTally(){
+    var c = (S.stats && S.stats.collection) || {};
+    return { found: REEF_FRIENDS.filter(function(f){ return c[f.id]; }).length, total: REEF_FRIENDS.length };
+  }
+  // Adds a sea friend to newStats.collection and remembers it for the summary screen.
+  function reefAward(stats, newStats){
+    S.reefFind = null;
+    if(!reefKid() || !S.sessionReviewed) return;
+    var have = Object.assign({}, stats.collection || {});
+    var fresh = REEF_FRIENDS.filter(function(f){ return !have[f.id]; });
+    var pool = fresh.length ? fresh : REEF_FRIENDS;
+    var pick = pool[Math.floor(Math.random() * pool.length)];
+    have[pick.id] = (have[pick.id] || 0) + 1;
+    newStats.collection = have;
+    S.reefFind = { id: pick.id, again: !fresh.length };
+  }
+  function reefSummary(){
+    var deck = S.decks.find(function(d){ return d.id === S.currentDeckId; }) || { name:'Deck', emoji:'🌊' };
+    var find = S.reefFind ? reefFriend(S.reefFind.id) : null;
+    var earnedHTML = '';
+    if(S.justEarnedBadges && S.justEarnedBadges.length){
+      earnedHTML = '<div class="badge-earned-banner">' + BADGES.filter(function(b){ return S.justEarnedBadges.indexOf(b.id) !== -1; }).map(function(b){
+        return '<div class="badge-earned-item"><span class="badge-earned-icon">'+b.icon+'</span><span>New badge: <strong>'+esc(b.name)+'</strong></span></div>';
+      }).join('') + '</div>';
+    }
+    var head = find ? (S.reefFind.again ? 'Another ' + find.name + '!' : 'You found ' + (/^[AEIOU]/.test(find.name) ? 'an ' : 'a ') + find.name + '!') : 'Nice swimming!';
+    app.innerHTML = '' +
+      '<div class="reef-sum">' +
+        '<div class="summary-card reef-sum-card">' +
+          errorBannerHTML() +
+          '<div class="reef-sum-deck">'+deck.emoji+' '+esc(deck.name)+' · All done!</div>' +
+          (find ? '' +
+            '<button type="button" class="reef-chest" data-reef-friend="'+find.id+'" aria-label="'+esc(head+' '+find.fact)+'">' +
+              '<span class="reef-chest-rays" aria-hidden="true"></span>' +
+              '<span class="reef-chest-friend" aria-hidden="true">'+find.e+'</span>' +
+              '<span class="reef-chest-box" aria-hidden="true"><span class="lid"></span><span class="body"></span></span>' +
+            '</button>' : '') +
+          '<h2>'+esc(head)+'</h2>' +
+          (find ? '<p class="reef-fact">'+esc(find.fact)+'</p><p class="reef-sum-note">It\'s in your Treasure Reef now.</p>' : '') +
+          earnedHTML +
+          planNextHTML() +
+          (S.planRun ? '' : '<div class="reef-sum-actions">' +
+            '<button class="btn btn-primary" data-act="play-again">🔁 Play Again</button>' +
+            '<button class="btn btn-ghost" data-act="back-home">🗺️ Back to the map</button>' +
+            '<button class="btn btn-ghost" data-act="reef-treasure">💎 Treasure Reef</button>' +
+          '</div>') +
+        '</div>' +
+      '</div>';
+    wireErrorBanner();
+    wirePlanNext();
+    var chest = app.querySelector('[data-reef-friend]');
+    if(chest){
+      var sayIt = function(){ try { Speech.speak(head + ' ' + find.fact); } catch(e){} };
+      chest.addEventListener('click', sayIt);
+      if(!S.reefSaid || S.reefSaid !== S.reefFind){ S.reefSaid = S.reefFind; setTimeout(sayIt, reefCalm() ? 200 : 900); }
+    }
+    if(S.planRun) return;
+    app.querySelector('[data-act="back-home"]').addEventListener('click', function(){ S.reefPlace = null; S.subjectFilter = 'all'; goHome(); });
+    app.querySelector('[data-act="play-again"]').addEventListener('click', function(){ reefGo('dive', null, function(){ startStudy(S.currentDeckId); }); });
+    app.querySelector('[data-act="reef-treasure"]').addEventListener('click', function(){ goHomeNow(); S.view = 'collection'; render(); });
+  }
+  function reefCollection(){
+    var c = (S.stats && S.stats.collection) || {};
+    var t = reefTally();
+    var tiles = REEF_FRIENDS.map(function(f){
+      var n = c[f.id] || 0;
+      return n
+        ? '<button type="button" class="reef-friend found" data-reef-friend="'+f.id+'" aria-label="'+esc(f.name+'. '+f.fact)+'"><span class="reef-friend-e">'+f.e+'</span><b>'+esc(f.name)+'</b>'+(n > 1 ? '<small>× '+n+'</small>' : '')+'</button>'
+        : '<div class="reef-friend" aria-label="Not found yet"><span class="reef-friend-e">'+f.e+'</span><b>Not found yet</b></div>';
+    }).join('');
+    app.innerHTML = '' +
+      '<div class="nav-row">' +
+        '<button class="back-btn" data-act="reef-back">🗺️ Back to the map</button>' +
+      '</div>' +
+      '<section class="reef-collection">' +
+        '<div class="reef-collection-head">' +
+          '<span class="reef-collection-art" aria-hidden="true">💎</span>' +
+          '<div><h2>My Treasure Reef</h2><p>You have found '+t.found+' of '+t.total+' sea friends. Finish a deck to find another one.</p></div>' +
+        '</div>' +
+        '<div class="reef-fact-box" id="reefFactBox" hidden></div>' +
+        '<div class="reef-friends">'+tiles+'</div>' +
+      '</section>';
+    app.querySelector('[data-act="reef-back"]').addEventListener('click', function(){
+      reefGo('swim', null, function(){ S.view = 'home'; S.reefPlace = null; S.subjectFilter = 'all'; render(); });
+    });
+    var box = app.querySelector('#reefFactBox');
+    app.querySelectorAll('[data-reef-friend]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var f = reefFriend(b.dataset.reefFriend);
+        box.hidden = false;
+        box.innerHTML = '<span class="reef-fact-e">'+f.e+'</span><span><b>'+esc(f.name)+'</b><br>'+esc(f.fact)+'</span>';
+        app.querySelectorAll('.reef-friend.on').forEach(function(x){ x.classList.remove('on'); });
+        b.classList.add('on');
+        try { Speech.speak(f.name + '. ' + f.fact); } catch(e){}
+      });
+    });
+  }
+
+  /* ---------- Settings: Calm motion ---------- */
+  function reefCalmHTML(){
+    var on = !!(S.settings && S.settings.calmMotion);
+    return '' +
+      '<div class="stats-section">' +
+        '<h3>🌊 Calm motion</h3>' +
+        '<button type="button" class="algo-opt'+(on?' active':'')+'" data-act="toggle-calm-motion">' +
+          '<span class="algo-name">'+(on ? '✅ On' : '⬜ Off')+'</span>' +
+          '<span class="algo-blurb">Turns off the splash animations when a deck opens or closes, the moving map and the treasure chest animation. Screens change straight away instead. The device\'s own "Reduce Motion" setting does the same.</span>' +
+        '</button>' +
+      '</div>';
+  }
+  function reefWireCalm(){
+    var b = app.querySelector('[data-act="toggle-calm-motion"]');
+    if(!b) return;
+    b.addEventListener('click', function(){
+      var newSettings = Object.assign({}, S.settings, { calmMotion: !(S.settings && S.settings.calmMotion) });
+      S.settings = newSettings;
+      S.store.setSettings(newSettings);
+      render();
+    });
+  }
+
   store.init().then(function(s){
     try { coveWrapStore(s); } catch(e){}
     S.store = s;
@@ -11257,6 +11647,282 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
 })();
 </script>
 
+
+<style id="reef">
+/* REEF: Child Mode look. The cove map, chunkier tiles and buttons, silly deck transitions, the
+   treasure chest and the Treasure Reef shelf. body.reef-kid is set only on Child Mode screens;
+   body.reef-calm (Settings -> Calm motion, or the device's Reduce Motion) stops every animation. */
+:root{
+  --reef-sun:#ffd166; --reef-sun-ink:#8a5a00;
+  --reef-shallow:#8fe0dc; --reef-mid:#2aa6b3; --reef-deep:#0b5d73; --reef-abyss:#073847;
+  --reef-sand:#f6e2b0; --reef-sand-2:#e8c987;
+  --reef-coral:#ff8a6b; --reef-coral-ink:#b24a2e;
+  --reef-card:#ffffff; --reef-ink:#0b2b33; --reef-soft:#3f6670;
+  --reef-pop:cubic-bezier(.34,1.56,.64,1);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --reef-shallow:#1f6f7a; --reef-mid:#145a69; --reef-deep:#0a3746; --reef-abyss:#04161d;
+  --reef-sand:#3a3324; --reef-sand-2:#2d2719; --reef-card:#0f3942; --reef-ink:#eaf6f4; --reef-soft:#a9cbc7;
+} }
+:root[data-theme="dark"]{
+  --reef-shallow:#1f6f7a; --reef-mid:#145a69; --reef-deep:#0a3746; --reef-abyss:#04161d;
+  --reef-sand:#3a3324; --reef-sand-2:#2d2719; --reef-card:#0f3942; --reef-ink:#eaf6f4; --reef-soft:#a9cbc7;
+}
+
+/* ---------- chunky buttons (Child Mode) ---------- */
+body.reef-kid .btn{ border-radius:18px; font-family:'Baloo 2',system-ui,sans-serif; font-size:1.05rem; letter-spacing:.01em; padding:12px 20px; transition:transform .16s var(--reef-pop), box-shadow .16s ease, filter .16s ease; }
+body.reef-kid .btn-primary{ background:linear-gradient(180deg,#36b9c3,#1c8c93 70%); box-shadow:0 6px 0 #0d5262, 0 10px 18px rgba(10,61,74,.22); }
+body.reef-kid .btn-primary:hover{ filter:brightness(1.06); }
+body.reef-kid .btn-primary:active{ transform:translateY(5px) scale(.98); box-shadow:0 1px 0 #0d5262, 0 4px 8px rgba(10,61,74,.2); }
+body.reef-kid .btn-ghost{ background:var(--reef-card); color:var(--reef-ink); box-shadow:0 5px 0 var(--border), 0 8px 14px rgba(10,61,74,.12); }
+body.reef-kid .btn-ghost:active{ transform:translateY(4px) scale(.98); box-shadow:0 1px 0 var(--border); }
+body.reef-kid .btn:disabled{ filter:grayscale(.6); opacity:.6; }
+body.reef-kid .stats-row{ display:none; } /* no scores on her home screen */
+
+/* ---------- the cove map ---------- */
+.reef-map-wrap{ margin:4px 0 22px; }
+.reef-map-head{ display:flex; align-items:center; gap:10px; margin:0 0 10px; }
+.reef-map-title{ flex:1; min-width:0; }
+.reef-map-head h2{ margin:0; font-size:1.55rem; color:var(--deep); }
+.reef-map-head p{ margin:2px 0 0; font-weight:800; font-size:1.02rem; color:var(--reef-soft); }
+:root[data-theme="dark"] .reef-map-head h2{ color:var(--lagoon-light); }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .reef-map-head h2{ color:var(--lagoon-light); } }
+.reef-say{ flex:none; width:44px; height:44px; border-radius:50%; border:none; cursor:pointer; font-size:1.15rem; background:var(--reef-card); box-shadow:0 4px 0 var(--border), 0 6px 12px rgba(10,61,74,.12); }
+.reef-say:active{ transform:translateY(3px); box-shadow:0 1px 0 var(--border); }
+.reef-map{
+  position:relative; width:100%; aspect-ratio:16/11; max-width:100%; border-radius:34px; overflow:hidden; isolation:isolate;
+  background:
+    radial-gradient(120% 70% at 50% -20%, rgba(255,255,255,.55), transparent 55%),
+    linear-gradient(180deg, var(--reef-shallow) 0%, var(--reef-mid) 48%, var(--reef-deep) 100%);
+  box-shadow:inset 0 0 0 4px rgba(255,255,255,.35), 0 18px 40px rgba(7,56,71,.28);
+}
+.reef-rays{ position:absolute; inset:-20% -10% 30%; z-index:0; pointer-events:none; opacity:.55;
+  background:repeating-linear-gradient(100deg, rgba(255,255,255,.0) 0 7%, rgba(255,255,255,.22) 8% 10%, rgba(255,255,255,0) 12% 19%);
+  -webkit-mask-image:linear-gradient(180deg,#000,transparent); mask-image:linear-gradient(180deg,#000,transparent);
+  animation:reefRays 9s ease-in-out infinite alternate; }
+@keyframes reefRays{ from{ transform:translateX(-3%) skewX(-4deg); } to{ transform:translateX(3%) skewX(4deg); } }
+.reef-sand{ position:absolute; left:-5%; right:-5%; bottom:-6%; height:24%; z-index:0; border-radius:50% 50% 0 0 / 70% 70% 0 0;
+  background:radial-gradient(60% 120% at 30% 0%, var(--reef-sand), var(--reef-sand-2)); box-shadow:inset 0 6px 0 rgba(255,255,255,.35); }
+.reef-kelp{ position:absolute; bottom:8%; width:18px; z-index:0; border-radius:12px 12px 4px 4px; transform-origin:bottom center; opacity:.55;
+  background:linear-gradient(180deg,#5fbf8a,#2f6d5c); animation:reefSway 4.5s ease-in-out infinite alternate; }
+.reef-kelp.k1{ left:4%; height:34%; } .reef-kelp.k2{ left:7%; height:22%; animation-delay:-1.3s; } .reef-kelp.k3{ right:5%; height:30%; animation-delay:-2.1s; }
+@keyframes reefSway{ from{ transform:rotate(-5deg); } to{ transform:rotate(6deg); } }
+.reef-path{ position:absolute; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+.reef-path polyline{ fill:none; stroke:rgba(255,255,255,.75); stroke-width:4; stroke-dasharray:2 12; stroke-linecap:round; vector-effect:non-scaling-stroke; }
+.reef-path.narrow{ display:none; }
+
+.reef-spot{
+  position:absolute; left:var(--x); top:var(--y); transform:translate(-50%,-50%); z-index:2;
+  display:flex; flex-direction:column; align-items:center; gap:6px; border:none; background:none; padding:0; cursor:pointer;
+  font:inherit; color:inherit; -webkit-tap-highlight-color:transparent;
+  animation:reefSpotIn .55s var(--reef-pop) both; animation-delay:calc(var(--i) * 70ms);
+}
+@keyframes reefSpotIn{ from{ transform:translate(-50%,-30%) scale(.4); opacity:0; } to{ transform:translate(-50%,-50%) scale(1); opacity:1; } }
+.reef-rock{
+  position:relative; width:clamp(78px, 13vw, 118px); aspect-ratio:1; border-radius:46% 54% 44% 56% / 55% 50% 50% 45%;
+  display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(70% 60% at 35% 28%, rgba(255,255,255,.85), rgba(255,255,255,0) 60%), radial-gradient(circle at 50% 60%, color-mix(in srgb, var(--hue) 55%, #fff), var(--hue));
+  box-shadow:0 8px 0 color-mix(in srgb, var(--hue) 60%, #000), 0 16px 26px rgba(7,40,52,.35), inset 0 -6px 12px rgba(0,0,0,.12);
+  transition:transform .2s var(--reef-pop);
+}
+.reef-spot .reef-art{ font-size:clamp(2.4rem, 6.4vw, 3.6rem); line-height:1; filter:drop-shadow(0 4px 4px rgba(0,0,0,.22)); animation:reefBob 3.4s ease-in-out infinite; animation-delay:calc(var(--i) * -.6s); }
+@keyframes reefBob{ 0%,100%{ transform:translateY(0) rotate(-3deg); } 50%{ transform:translateY(-6px) rotate(3deg); } }
+.reef-spot:hover .reef-rock{ transform:translateY(-3px) scale(1.04); }
+.reef-spot:active .reef-rock{ transform:translateY(5px) scale(.95); box-shadow:0 3px 0 color-mix(in srgb, var(--hue) 60%, #000), 0 6px 10px rgba(7,40,52,.3); }
+.reef-spot:focus-visible{ outline:none; }
+.reef-spot:focus-visible .reef-rock{ outline:4px solid var(--reef-sun); outline-offset:4px; }
+.reef-spot.next .reef-rock::after{ content:""; position:absolute; inset:-10px; border-radius:inherit; border:4px solid rgba(255,255,255,.85); animation:reefPulse 1.8s ease-out infinite; }
+@keyframes reefPulse{ from{ transform:scale(.9); opacity:.9; } to{ transform:scale(1.25); opacity:0; } }
+.reef-ready, .reef-done{
+  position:absolute; top:-6px; right:-6px; min-width:32px; height:32px; padding:0 8px; border-radius:16px;
+  display:flex; align-items:center; justify-content:center; font:800 1rem 'Baloo 2',sans-serif;
+  background:var(--reef-coral); color:#fff; box-shadow:0 3px 0 var(--reef-coral-ink); border:3px solid #fff;
+}
+.reef-done{ background:#2f9e6e; box-shadow:0 3px 0 #1d6b49; }
+.reef-ready.gold{ background:var(--reef-sun); color:var(--reef-sun-ink); box-shadow:0 3px 0 #c99a2e; }
+.reef-label{ display:flex; flex-direction:column; align-items:center; padding:6px 14px 7px; border-radius:16px; background:rgba(255,255,255,.94); color:#0b2b33;
+  box-shadow:0 4px 0 rgba(7,56,71,.18); line-height:1.1; white-space:nowrap; }
+.reef-label b{ font:800 1rem 'Baloo 2',sans-serif; }
+.reef-label small{ font-size:.74rem; font-weight:800; color:#3f6670; letter-spacing:.02em; }
+.reef-pearls{ display:flex; gap:4px; }
+.reef-pearls i{ width:9px; height:9px; border-radius:50%; background:rgba(255,255,255,.45); box-shadow:inset 0 1px 2px rgba(0,0,0,.2); }
+.reef-pearls i.on{ background:radial-gradient(circle at 35% 30%, #fff, #ffe9a8 45%, #e8a716); box-shadow:0 0 6px rgba(255,209,102,.9); }
+.reef-spot.special .reef-rock{ width:clamp(64px, 10vw, 92px); }
+.reef-rock.chest{ background:radial-gradient(70% 60% at 35% 28%, rgba(255,255,255,.8), rgba(255,255,255,0) 60%), radial-gradient(circle at 50% 60%, #ffe39a, #e8a716); box-shadow:0 7px 0 #a8770a, 0 14px 22px rgba(7,40,52,.3); }
+.reef-rock.bottle{ background:radial-gradient(70% 60% at 35% 28%, rgba(255,255,255,.8), rgba(255,255,255,0) 60%), radial-gradient(circle at 50% 60%, #bfe3ff, #3a7bd5); box-shadow:0 7px 0 #2558a0, 0 14px 22px rgba(7,40,52,.3); }
+
+.reef-swimmer{ position:absolute; z-index:1; font-size:2rem; line-height:1; pointer-events:none; opacity:.85; }
+.reef-swimmer.s1{ top:46%; left:-10%; animation:reefSwimR 26s linear infinite; }
+.reef-swimmer.s2{ top:70%; left:110%; font-size:1.5rem; animation:reefSwimL 34s linear 6s infinite; }
+@keyframes reefSwimR{ from{ left:-10%; } to{ left:110%; } }
+@keyframes reefSwimL{ from{ left:110%; transform:scaleX(-1); } to{ left:-10%; transform:scaleX(-1); } }
+.reef-deco{ position:absolute; z-index:1; bottom:5%; font-size:2.2rem; line-height:1; pointer-events:none; filter:drop-shadow(0 3px 2px rgba(0,0,0,.15)); }
+.reef-deco.d1{ left:30%; } .reef-deco.d2{ left:58%; bottom:4%; font-size:1.6rem; } .reef-deco.d3{ left:70%; bottom:9%; font-size:1.4rem; }
+.reef-guide{ position:absolute; left:var(--x); top:var(--y); z-index:3; pointer-events:none;
+  transform:translate(-118%, -92%); display:flex; flex-direction:column; align-items:flex-end; }
+.reef-guide-turtle{ width:clamp(64px, 10vw, 92px); height:auto; transform:scaleX(-1); filter:drop-shadow(0 6px 8px rgba(0,0,0,.25)); animation:reefGuide 2.6s ease-in-out infinite; }
+@keyframes reefGuide{ 0%,100%{ transform:scaleX(-1) translateY(0) rotate(4deg); } 50%{ transform:scaleX(-1) translateY(-8px) rotate(-4deg); } }
+.reef-guide-bubble{ order:-1; max-width:200px; margin-bottom:-4px; padding:8px 12px; border-radius:16px 16px 4px 16px; background:#fff; color:#0b2b33;
+  font:800 .9rem/1.25 'Nunito',sans-serif; box-shadow:0 6px 14px rgba(7,40,52,.25); animation:reefSpotIn .6s var(--reef-pop) .5s both; }
+
+/* ---------- a place's banner above its decks ---------- */
+.reef-placehead{ position:relative; overflow:hidden; border-radius:28px; padding:14px 16px 18px; margin:2px 0 18px;
+  background:radial-gradient(90% 120% at 100% 0%, rgba(255,255,255,.4), transparent 60%), linear-gradient(135deg, color-mix(in srgb, var(--hue) 70%, #fff), var(--hue));
+  box-shadow:0 8px 0 var(--ink), 0 16px 28px rgba(7,40,52,.22); color:#fff; display:flex; flex-direction:column; gap:12px; }
+.reef-back{ align-self:flex-start; border:none; cursor:pointer; border-radius:999px; padding:9px 16px; font:800 .95rem 'Baloo 2',sans-serif;
+  background:rgba(255,255,255,.95); color:#0b2b33; box-shadow:0 4px 0 rgba(0,0,0,.18); }
+.reef-back:active{ transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.18); }
+.reef-placehead-main{ display:flex; align-items:center; gap:14px; }
+.reef-placehead-art{ font-size:3.4rem; line-height:1; filter:drop-shadow(0 4px 4px rgba(0,0,0,.2)); animation:reefBob 3.4s ease-in-out infinite; }
+.reef-placehead-text{ flex:1; min-width:0; }
+.reef-placehead h2{ margin:0; font-size:1.7rem; line-height:1.1; color:#fff; text-shadow:0 2px 0 rgba(0,0,0,.15); }
+.reef-placehead p{ margin:2px 0 0; font-weight:800; opacity:.95; }
+
+/* ---------- deck tiles (Child Mode) ---------- */
+body.reef-kid .deck-card.kid{ border:none; border-radius:28px; padding:16px; gap:10px;
+  background:linear-gradient(180deg, var(--reef-card), color-mix(in srgb, var(--reef-card) 88%, var(--hue, #1c8c93)));
+  box-shadow:0 8px 0 color-mix(in srgb, var(--hue, #1c8c93) 30%, var(--border)), 0 14px 24px rgba(10,61,74,.14);
+  animation:reefSpotIn2 .5s var(--reef-pop) both; }
+body.reef-kid .reef-place-grid .deck-card.kid:nth-child(2){ animation-delay:.06s; } body.reef-kid .reef-place-grid .deck-card.kid:nth-child(3){ animation-delay:.12s; }
+body.reef-kid .reef-place-grid .deck-card.kid:nth-child(4){ animation-delay:.18s; } body.reef-kid .reef-place-grid .deck-card.kid:nth-child(n+5){ animation-delay:.24s; }
+@keyframes reefSpotIn2{ from{ transform:translateY(18px) scale(.94); opacity:0; } to{ transform:none; opacity:1; } }
+body.reef-kid .deck-card.kid .deck-emoji{ background:radial-gradient(circle at 35% 30%, #fff, color-mix(in srgb, var(--hue, #1c8c93) 25%, #fff)); }
+body.reef-kid .deck-card.kid .deck-name{ font-size:1.3rem; line-height:1.15; }
+body.reef-kid .deck-card.kid .deck-badge.due{ background:var(--reef-coral); color:#fff; font-size:.85rem; padding:5px 12px; box-shadow:0 3px 0 var(--reef-coral-ink); }
+body.reef-kid .deck-card.kid .btn-primary{ width:100%; padding:14px 16px; font-size:1.15rem; }
+
+/* ---------- study screen (Child Mode) ---------- */
+body.reef-kid .stage{ border:none; border-radius:32px; padding:28px 18px 32px;
+  background:radial-gradient(120% 60% at 50% 0%, rgba(255,255,255,.65), transparent 60%), linear-gradient(180deg, color-mix(in srgb, var(--reef-shallow) 45%, var(--foam)), var(--foam) 75%);
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.5), 0 14px 30px rgba(10,61,74,.12); }
+body.reef-kid .face{ border-radius:26px; }
+body.reef-kid .face-front .card-text{ font-size:2.1rem; }
+body.reef-kid .choice-row{ gap:12px; max-width:460px; }
+body.reef-kid .choice-btn{ border:none; border-radius:22px; padding:16px 20px; font-size:1.25rem; text-align:center;
+  background:var(--reef-card); box-shadow:0 6px 0 var(--border), 0 10px 18px rgba(10,61,74,.10); transition:transform .16s var(--reef-pop), box-shadow .16s ease; }
+body.reef-kid .choice-btn:not(:disabled):active{ transform:translateY(5px) scale(.98); box-shadow:0 1px 0 var(--border); }
+body.reef-kid .choice-btn.correct{ background:var(--ok-bg); color:var(--ok-ink); box-shadow:0 6px 0 var(--ok-ink); animation:reefYay .5s var(--reef-pop); }
+body.reef-kid .choice-btn.wrong{ background:var(--bad-bg); color:var(--bad-ink); box-shadow:0 6px 0 color-mix(in srgb, var(--bad-ink) 50%, var(--border)); animation:reefWobble .45s ease; }
+@keyframes reefYay{ 0%{ transform:scale(1); } 40%{ transform:scale(1.07) rotate(-1deg); } 100%{ transform:scale(1); } }
+@keyframes reefWobble{ 0%,100%{ transform:translateX(0); } 30%{ transform:translateX(-5px); } 60%{ transform:translateX(4px); } }
+body.reef-kid .choice-feedback{ font-size:1.1rem; }
+body.reef-kid .choice-feedback.ok{ animation:reefYay .5s var(--reef-pop); }
+.reef-tip{ display:flex; align-items:flex-start; gap:10px; margin:12px auto 0; max-width:440px; padding:10px 14px; border-radius:18px; text-align:left;
+  background:var(--reef-card); color:var(--reef-ink); font-weight:700; font-size:.98rem; line-height:1.35; box-shadow:0 4px 0 var(--border); }
+.reef-tip-face{ font-size:1.6rem; line-height:1; }
+body.reef-kid .tc-timer-row{ display:none; } /* no countdowns in her mode */
+
+/* ---------- round finished: the treasure chest ---------- */
+.reef-sum{ padding-top:6px; }
+.reef-sum-card{ border:none; border-radius:34px; padding:22px 18px 26px; overflow:hidden;
+  background:radial-gradient(100% 60% at 50% 0%, color-mix(in srgb, var(--reef-shallow) 60%, var(--reef-card)), var(--reef-card) 70%);
+  box-shadow:0 10px 0 var(--border), 0 20px 40px rgba(10,61,74,.18); }
+.reef-sum-deck{ font:800 .95rem 'Nunito',sans-serif; color:var(--reef-soft); }
+.reef-sum-card h2{ font-size:2rem; margin:6px 0 4px; }
+.reef-fact{ margin:0 auto; max-width:420px; font-weight:800; font-size:1.1rem; color:var(--reef-ink); }
+.reef-sum-note{ margin:6px 0 0; font-weight:700; color:var(--reef-soft); }
+.reef-sum-actions{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-top:20px; }
+.reef-chest{ position:relative; display:block; width:220px; height:210px; margin:6px auto 0; border:none; background:none; cursor:pointer; padding:0; -webkit-tap-highlight-color:transparent; }
+.reef-chest-rays{ position:absolute; left:50%; top:42%; width:300px; height:300px; margin:-150px 0 0 -150px; border-radius:50%; opacity:0;
+  background:repeating-conic-gradient(from 0deg, rgba(255,209,102,.55) 0 10deg, transparent 10deg 24deg);
+  -webkit-mask-image:radial-gradient(circle, #000 25%, transparent 68%); mask-image:radial-gradient(circle, #000 25%, transparent 68%);
+  animation:reefRaysIn .5s ease .55s forwards, reefSpin 14s linear .55s infinite; }
+@keyframes reefRaysIn{ to{ opacity:1; } }
+@keyframes reefSpin{ to{ transform:rotate(360deg); } }
+.reef-chest-box{ position:absolute; left:50%; bottom:6px; width:150px; height:96px; margin-left:-75px; }
+.reef-chest-box .body{ position:absolute; inset:34px 0 0; border-radius:10px 10px 18px 18px; background:linear-gradient(180deg,#b9732f,#8a4f1c); box-shadow:inset 0 0 0 5px #e8a716, 0 8px 0 #5e3410; }
+.reef-chest-box .body::after{ content:""; position:absolute; left:50%; top:6px; width:22px; height:26px; margin-left:-11px; border-radius:6px; background:#ffd166; box-shadow:0 2px 0 #a8770a; }
+.reef-chest-box .lid{ position:absolute; left:0; right:0; top:0; height:42px; border-radius:60px 60px 8px 8px; background:linear-gradient(180deg,#d08a3f,#a86224); box-shadow:inset 0 0 0 5px #e8a716;
+  transform-origin:50% 100%; animation:reefLid .5s var(--reef-pop) .35s both; z-index:2; }
+@keyframes reefLid{ from{ transform:rotateX(0) translateY(0); } to{ transform:translateY(-28px) rotate(-14deg); } }
+.reef-chest-friend{ position:absolute; left:50%; top:4%; font-size:5.2rem; line-height:1; transform:translate(-50%, 60px) scale(.2); opacity:0;
+  filter:drop-shadow(0 8px 10px rgba(0,0,0,.25)); animation:reefFriendUp .7s var(--reef-pop) .6s forwards, reefBob 3.4s ease-in-out 1.4s infinite; z-index:1; }
+@keyframes reefFriendUp{ to{ transform:translate(-50%, 0) scale(1); opacity:1; } }
+
+/* ---------- Treasure Reef shelf ---------- */
+.reef-collection{ border-radius:34px; padding:20px 16px 24px; color:#fff; overflow:hidden;
+  background:radial-gradient(100% 50% at 50% -10%, rgba(255,255,255,.35), transparent 60%), linear-gradient(180deg, var(--reef-mid), var(--reef-deep) 60%, var(--reef-abyss));
+  box-shadow:0 18px 40px rgba(7,56,71,.28); }
+.reef-collection-head{ display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+.reef-collection-art{ font-size:3.4rem; line-height:1; }
+.reef-collection h2{ margin:0; color:#fff; font-size:1.8rem; }
+.reef-collection p{ margin:2px 0 0; font-weight:700; opacity:.92; }
+.reef-friends{ display:grid; grid-template-columns:repeat(auto-fill, minmax(124px, 1fr)); gap:14px; }
+.reef-friend{ display:flex; flex-direction:column; align-items:center; gap:4px; padding:14px 8px 12px; border-radius:24px; border:none; font:inherit; color:#fff;
+  background:rgba(255,255,255,.08); box-shadow:inset 0 0 0 2px rgba(255,255,255,.12); text-align:center; }
+.reef-friend b{ font:800 .95rem 'Baloo 2',sans-serif; }
+.reef-friend small{ font-weight:800; color:var(--reef-sun); }
+.reef-friend-e{ font-size:3rem; line-height:1.1; filter:brightness(0) opacity(.28); }
+.reef-friend:not(.found) b{ opacity:.55; font-size:.8rem; }
+.reef-friend.found{ cursor:pointer; background:radial-gradient(circle at 50% 30%, rgba(255,255,255,.28), rgba(255,255,255,.08) 70%); box-shadow:inset 0 0 0 2px rgba(255,209,102,.55), 0 6px 0 rgba(0,0,0,.18); }
+.reef-friend.found .reef-friend-e{ filter:drop-shadow(0 4px 4px rgba(0,0,0,.3)); }
+.reef-friend.found:active{ transform:translateY(3px); }
+.reef-friend.on{ box-shadow:inset 0 0 0 3px var(--reef-sun), 0 6px 0 rgba(0,0,0,.18); }
+.reef-fact-box{ display:flex; align-items:center; gap:12px; margin:0 0 14px; padding:12px 16px; border-radius:20px; background:#fff; color:#0b2b33; font-weight:700; font-size:1.05rem; }
+.reef-fact-e{ font-size:2.6rem; line-height:1; }
+
+/* ---------- transitions ---------- */
+.reef-tx{ position:fixed; inset:0; z-index:99990; overflow:hidden; pointer-events:auto; }
+.tx-water{ position:absolute; left:0; right:0; top:0; height:130%; transform:translateY(100%);
+  background:linear-gradient(180deg, #4fc7cf 0%, #1c8c93 30%, #0b5d73 70%, #073847 100%); animation:txDive 1.3s cubic-bezier(.7,0,.3,1) forwards; }
+.tx-crest{ position:absolute; left:0; top:-58px; width:100%; height:60px; }
+.tx-crest path{ fill:#4fc7cf; }
+@keyframes txDive{ 0%{ transform:translateY(100%); } 42%,58%{ transform:translateY(-8%); } 100%{ transform:translateY(-125%); } }
+.reef-tx-surface .tx-water{ animation-name:txSurface; }
+@keyframes txSurface{ 0%{ transform:translateY(-125%); } 42%,58%{ transform:translateY(-8%); } 100%{ transform:translateY(100%); } }
+.reef-tx-surface .tx-crest{ top:auto; bottom:-58px; transform:scaleY(-1); }
+.reef-tx-surface .tx-crest path{ fill:#073847; }
+.tx-bubbles{ position:absolute; inset:0; }
+.tx-bub{ position:absolute; left:var(--x); bottom:-60px; width:var(--s); height:var(--s); border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.95), rgba(255,255,255,.15) 60%, rgba(255,255,255,.35)); box-shadow:inset 0 0 0 2px rgba(255,255,255,.5);
+  animation:txBub 1.1s ease-in var(--d) forwards; }
+@keyframes txBub{ to{ transform:translateY(-125vh) translateX(20px); } }
+.tx-fish{ position:absolute; font-size:3.4rem; line-height:1; left:-20%; }
+.tx-fish.f1{ top:28%; animation:txFishR .9s ease-in-out .2s forwards; }
+.tx-fish.f2{ top:62%; left:auto; right:-20%; animation:txFishL 1s ease-in-out .25s forwards; }
+.tx-fish.f3{ top:46%; animation:txFishR 1.05s ease-in-out .32s forwards; font-size:2.6rem; }
+@keyframes txFishR{ to{ left:120%; } }
+@keyframes txFishL{ from{ transform:scaleX(-1); } to{ right:120%; transform:scaleX(-1); } }
+.tx-shelly{ position:absolute; left:50%; top:50%; width:min(42vw, 230px); transform:translate(-50%, 70vh) rotate(0); animation:txShelly 1.25s cubic-bezier(.3,1.2,.5,1) forwards; }
+.tx-shelly-svg{ width:100%; height:auto; display:block; filter:drop-shadow(0 12px 16px rgba(0,0,0,.35)); }
+@keyframes txShelly{ 0%{ transform:translate(-50%, 70vh) rotate(-30deg) scale(.6); } 45%{ transform:translate(-50%, -55%) rotate(360deg) scale(1.1); } 60%{ transform:translate(-50%, -50%) rotate(350deg) scale(1); } 100%{ transform:translate(-50%, -120vh) rotate(420deg) scale(.8); } }
+.reef-tx-surface .tx-shelly{ animation-name:txShellyUp; }
+@keyframes txShellyUp{ 0%{ transform:translate(-50%, -120vh) rotate(0) scale(.6); } 45%{ transform:translate(-50%, -55%) rotate(-360deg) scale(1.15); } 60%{ transform:translate(-50%, -50%) rotate(-350deg) scale(1); } 100%{ transform:translate(-50%, 80vh) rotate(-400deg) scale(.7); } }
+.tx-goggles{ position:absolute; left:58%; top:36%; width:26%; height:12%; border-radius:999px; border:4px solid #ffd166; background:rgba(143,224,220,.55); box-shadow:0 0 0 3px #0b2b33; }
+.tx-word{ position:absolute; left:0; right:0; top:16%; text-align:center; font:800 clamp(3rem, 12vw, 6rem) 'Baloo 2',sans-serif; color:#fff; text-shadow:0 6px 0 #0b5d73, 0 10px 20px rgba(0,0,0,.3); }
+.tx-word span{ display:inline-block; opacity:0; animation:txLetter .9s var(--reef-pop) forwards; animation-delay:calc(.28s + var(--i) * 45ms); }
+@keyframes txLetter{ 0%{ transform:translateY(40px) scale(.3) rotate(-20deg); opacity:0; } 35%{ transform:translateY(-8px) scale(1.15) rotate(6deg); opacity:1; } 70%{ transform:none; opacity:1; } 100%{ transform:translateY(-30px); opacity:0; } }
+.reef-tx-swim{ pointer-events:auto; }
+.tx-iris{ position:absolute; left:var(--cx); top:var(--cy); width:40px; height:40px; margin:-20px 0 0 -20px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #bff3f0, #2aa6b3 55%, #0b5d73); box-shadow:inset 0 0 0 6px rgba(255,255,255,.5);
+  animation:txIris .56s cubic-bezier(.6,0,.3,1) forwards; }
+@keyframes txIris{ 0%{ transform:scale(0); opacity:1; } 45%{ transform:scale(70); opacity:1; } 100%{ transform:scale(70); opacity:0; } }
+
+/* ---------- phones: the map stands up tall ---------- */
+@media (max-width:640px){
+  .reef-map{ aspect-ratio:3/5.2; border-radius:28px; }
+  .reef-spot, .reef-guide{ left:var(--xs); top:var(--ys); }
+  .reef-path.wide{ display:none; } .reef-path.narrow{ display:block; }
+  .reef-rock{ width:84px; } .reef-spot.special .reef-rock{ width:66px; }
+  .reef-spot .reef-art{ font-size:2.6rem; }
+  .reef-guide{ transform:translate(-30%, -128%); }
+  .reef-guide-turtle{ width:58px; }
+  .reef-guide-bubble{ max-width:150px; font-size:.82rem; }
+  .reef-label b{ font-size:.92rem; }
+  .reef-placehead h2{ font-size:1.4rem; }
+}
+
+/* ---------- Calm motion: nothing moves ---------- */
+body.reef-calm .reef-swimmer{ display:none; }
+body.reef-calm .reef-rays, body.reef-calm .reef-kelp, body.reef-calm .reef-spot, body.reef-calm .reef-spot .reef-art,
+body.reef-calm .reef-guide-turtle, body.reef-calm .reef-guide-bubble, body.reef-calm .reef-spot.next .reef-rock::after,
+body.reef-calm .reef-placehead-art, body.reef-calm .deck-card.kid, body.reef-calm .choice-btn, body.reef-calm .choice-feedback,
+body.reef-calm .reef-chest-rays, body.reef-calm .reef-chest-box .lid, body.reef-calm .reef-chest-friend{ animation:none !important; }
+body.reef-calm .reef-spot.next .reef-rock::after{ display:none; }
+body.reef-calm .reef-chest-rays{ opacity:1; }
+body.reef-calm .reef-chest-box .lid{ transform:translateY(-28px) rotate(-14deg); }
+body.reef-calm .reef-chest-friend{ transform:translate(-50%, 0); opacity:1; }
+</style>
 
 </body></html>
 
