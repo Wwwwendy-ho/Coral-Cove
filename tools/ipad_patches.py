@@ -52,6 +52,8 @@ PATCHES = [
 def apply(html):
     for name, old, new in PATCHES:
         n = html.count(old)
+        if n == 0 and html.count(new) == 1:
+            continue  # already applied (the Claude version now carries these changes too)
         if n != 1:
             sys.exit(f"iPad patch '{name}' expected its anchor once but found it {n} times; "
                      "the artifact's code changed, so update tools/ipad_patches.py.")
