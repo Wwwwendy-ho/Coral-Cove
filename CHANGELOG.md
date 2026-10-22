@@ -1,5 +1,14 @@
 # Changelog
 
+## Version 31 (October 22, 2026)
+
+- **Drawn places on the map:** the Kelp Library, Number Wreck, Coral Garden, Treasure Reef and Story Bottle are now little illustrated scenes instead of emoji.
+- **Playful map:** tapping a fish, coral, shell or star makes it wiggle, bubble and say its name.
+- **How far today:** a row of shells under the map heading fills in gold as decks are finished.
+- **Shelly on the study screen:** Shelly (Lumi at night) sits on a little seabed under each card, cheers "Yay!" after a right answer and says "Let's look together." after a miss.
+- **Splash and pop sounds** for the deck transitions. They follow the sound switch.
+- Dark mode: the study screen no longer has a grey glow at the top.
+
 ## Version 30 (October 22, 2026)
 
 A new look for her profile, with ideas borrowed from top-rated kids' learning apps.

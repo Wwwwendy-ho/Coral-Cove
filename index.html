@@ -11240,6 +11240,99 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       });
     };
   }
+  /* ---------- REEF art: one small drawn scene per map place (viewBox 0 0 120 120) ---------- */
+  var REEF_LINE = 'stroke="#173a44" stroke-opacity=".28" stroke-width="2" stroke-linejoin="round"';
+  function reefMound(fill, top){
+    return '<ellipse cx="60" cy="104" rx="50" ry="13" fill="'+(fill||'#e8c987')+'"/>' +
+      '<ellipse cx="54" cy="100" rx="34" ry="6" fill="'+(top||'#f6e2b0')+'" opacity=".8"/>';
+  }
+  var REEF_ART = {
+    reading: function(){ // an open storybook standing in the sand, kelp on both sides
+      return reefMound() +
+        '<path d="M22 100C14 82 28 70 20 52C14 40 22 30 18 20" fill="none" stroke="#3f9c6d" stroke-width="7" stroke-linecap="round"/>' +
+        '<path d="M100 100C108 84 96 72 102 58C106 48 100 40 104 30" fill="none" stroke="#2f7d58" stroke-width="6" stroke-linecap="round"/>' +
+        '<path d="M60 96L28 88V40L60 48Z" fill="#fff8e7" '+REEF_LINE+'/>' +
+        '<path d="M60 96L92 88V40L60 48Z" fill="#fffdf6" '+REEF_LINE+'/>' +
+        '<path d="M60 48V96" stroke="#c99a2e" stroke-width="3"/>' +
+        '<path d="M26 92L60 100L94 92V86L60 94L26 86Z" fill="#2f9e6e"/>' +
+        '<path d="M35 56l18 4M35 64l18 4M35 72l14 3M67 60l18-4M67 68l18-4M67 76l14-3" stroke="#7aa8b0" stroke-width="2.4" stroke-linecap="round"/>' +
+        '<circle cx="44" cy="30" r="4" fill="#fff" opacity=".7"/><circle cx="52" cy="20" r="2.6" fill="#fff" opacity=".6"/>';
+    },
+    math: function(){ // a little sunken ship with a 1-2-3 porthole
+      return reefMound() +
+        '<path d="M14 72L104 64L94 98Q60 106 26 100Z" fill="#b8713a" '+REEF_LINE+'/>' +
+        '<path d="M18 80L101 72" stroke="#8a4f1c" stroke-width="3"/><path d="M22 90L98 83" stroke="#8a4f1c" stroke-width="3"/>' +
+        '<path d="M14 72L104 64L102 58L12 66Z" fill="#d08a3f"/>' +
+        '<path d="M58 66L62 18" stroke="#6b3b14" stroke-width="5" stroke-linecap="round"/>' +
+        '<path d="M62 22L88 30L62 40Z" fill="#ff8a6b" '+REEF_LINE+'/>' +
+        '<circle cx="40" cy="84" r="11" fill="#bff3f0" stroke="#ffd166" stroke-width="4"/>' +
+        '<text x="40" y="88.5" text-anchor="middle" font-family="Baloo 2, sans-serif" font-weight="800" font-size="11" fill="#0b5d73">123</text>' +
+        '<circle cx="76" cy="82" r="6" fill="#5e3410" opacity=".45"/>';
+    },
+    other: function(){ // a coral garden: branching coral, a sea fan and a brain coral
+      return reefMound() +
+        '<path d="M86 96L84 60Q84 40 96 30Q92 46 98 58Q100 70 92 96Z" fill="#ffa94d" '+REEF_LINE+'/>' +
+        '<path d="M86 92L82 52M84 70L94 46M84 80L96 66M84 62L76 44" stroke="#ffd8a8" stroke-width="2" stroke-linecap="round"/>' +
+        '<path d="M42 100C41 88 38 80 31 70C27 64 25 58 27 49M37 79C45 73 49 65 47 55M31 70C23 66 19 59 20 51M47 55C47 50 50 46 54 44M47 61C53 60 57 56 58 51" fill="none" stroke="#ff6f86" stroke-width="7" stroke-linecap="round"/>' +
+        '<circle cx="27" cy="48" r="4" fill="#ffc2cc"/><circle cx="20" cy="50" r="4" fill="#ffc2cc"/><circle cx="54" cy="43" r="3.6" fill="#ffc2cc"/><circle cx="58" cy="50" r="3.4" fill="#ffc2cc"/>' +
+        '<path d="M50 104Q50 82 66 82Q82 82 82 104Z" fill="#9b7be0" '+REEF_LINE+'/>' +
+        '<path d="M56 98q4-4 0-8t4-6M64 100q-4-5 2-9t2-8M73 98q4-5-1-9" fill="none" stroke="#d7c8ff" stroke-width="2.2" stroke-linecap="round"/>';
+    },
+    korean: function(){ // a rock with a glowing paper lantern
+      return reefMound() +
+        '<path d="M24 102Q22 70 44 62Q70 54 92 70Q102 84 98 102Z" fill="#7d8f96" '+REEF_LINE+'/>' +
+        '<path d="M60 58V30" stroke="#5c3a1e" stroke-width="3"/><path d="M50 30h20" stroke="#5c3a1e" stroke-width="4" stroke-linecap="round"/>' +
+        '<circle cx="60" cy="46" r="20" fill="#ffd166" opacity=".35"/>' +
+        '<rect x="46" y="32" width="28" height="30" rx="12" fill="#e2445c" '+REEF_LINE+'/>' +
+        '<path d="M50 40h20M49 47h22M50 54h20" stroke="#ff9aa8" stroke-width="2"/>' +
+        '<path d="M56 62l-2 8M60 62v9M64 62l2 8" stroke="#ffd166" stroke-width="2" stroke-linecap="round"/>';
+    },
+    science: function(){ // a glass flask full of bubbles
+      return reefMound() +
+        '<path d="M50 24h20v22l20 40q4 12-10 14H40q-14-2-10-14l20-40Z" fill="#dff6ff" fill-opacity=".85" '+REEF_LINE+'/>' +
+        '<path d="M36 78h48l6 10q2 10-10 10H40q-12 0-10-10Z" fill="#4fc7cf"/>' +
+        '<rect x="47" y="18" width="26" height="8" rx="4" fill="#7aa8b0"/>' +
+        '<circle cx="52" cy="86" r="4" fill="#fff" opacity=".85"/><circle cx="66" cy="82" r="3" fill="#fff" opacity=".85"/><circle cx="60" cy="62" r="3.5" fill="#bff3f0"/>' +
+        '<circle cx="64" cy="10" r="4" fill="#fff" opacity=".7"/><circle cx="56" cy="4" r="2.5" fill="#fff" opacity=".6"/>';
+    },
+    life: function(){ // a sandcastle
+      return reefMound() +
+        '<path d="M28 100V66h10v-6h8v6h8v-6h8v6h8v-6h8v6h10v34Z" fill="#f2cf7d" '+REEF_LINE+'/>' +
+        '<path d="M48 66V40h6v-6h6v6h6v-6h6v6h-0v26" fill="#f6dc95" '+REEF_LINE+'/>' +
+        '<path d="M60 100V86a8 8 0 0 1 16 0v14Z" fill="#c99a2e"/>' +
+        '<path d="M60 34V14" stroke="#8a6516" stroke-width="2.5"/><path d="M60 14l14 5-14 5Z" fill="#ff8a6b"/>';
+    },
+    custom: function(){ // a tiny palm island
+      return reefMound() +
+        '<path d="M58 98Q54 70 62 44" fill="none" stroke="#a0662f" stroke-width="7" stroke-linecap="round"/>' +
+        '<path d="M62 44Q40 34 26 44Q44 40 60 48ZM62 44Q84 32 98 42Q78 40 64 48ZM62 44Q56 24 40 20Q56 30 60 46ZM62 44Q72 24 88 22Q72 32 64 46Z" fill="#3f9c6d"/>' +
+        '<circle cx="60" cy="48" r="4" fill="#7a4a1e"/><circle cx="66" cy="49" r="3.6" fill="#7a4a1e"/>';
+    },
+    treasure: function(){ // a treasure chest with gold
+      return reefMound() +
+        '<path d="M26 66h68v30q0 6-6 6H32q-6 0-6-6Z" fill="#a0602a" '+REEF_LINE+'/>' +
+        '<path d="M24 66q0-26 36-26t36 26Z" fill="#c07a38" '+REEF_LINE+'/>' +
+        '<path d="M26 66h68" stroke="#ffd166" stroke-width="5"/><path d="M40 42v58M80 42v58" stroke="#ffd166" stroke-width="4"/>' +
+        '<rect x="54" y="62" width="12" height="16" rx="3" fill="#ffd166" stroke="#a8770a" stroke-width="2"/>' +
+        '<circle cx="34" cy="38" r="5" fill="#ffd166"/><circle cx="88" cy="40" r="4" fill="#ffe39a"/><path d="M60 22l3 7 7 1-5 5 1 7-6-4-6 4 1-7-5-5 7-1Z" fill="#fff4c2"/>';
+    },
+    story: function(){ // a message in a bottle
+      return reefMound() +
+        '<g transform="rotate(-24 60 70)">' +
+          '<path d="M30 58h44q14 0 14 14t-14 14H30q-8 0-8-14t8-14Z" fill="#8fd3e8" fill-opacity=".85" '+REEF_LINE+'/>' +
+          '<path d="M88 64h12v16H88Z" fill="#8fd3e8" '+REEF_LINE+'/>' +
+          '<rect x="100" y="62" width="8" height="20" rx="3" fill="#b8713a"/>' +
+          '<rect x="36" y="64" width="38" height="16" rx="4" fill="#fff4d6" stroke="#c99a2e" stroke-width="2"/>' +
+          '<path d="M42 70h26M42 75h18" stroke="#c99a2e" stroke-width="2" stroke-linecap="round"/>' +
+          '<path d="M30 62q10-2 18 0" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".8"/>' +
+        '</g>';
+    }
+  };
+  function reefArtSVG(id){
+    var f = REEF_ART[id] || REEF_ART.custom;
+    return '<svg class="reef-art-svg" viewBox="0 0 120 120" aria-hidden="true">' + f() + '</svg>';
+  }
+
   /* ============ REEF: the child's cove map, silly deck transitions, treasure rewards ============ */
   // Child Mode only (Adult Mode screens never use any of this). Every animation here is skipped
   // when "Calm motion" is on in Settings or the device asks for reduced motion -- the screen just
@@ -11264,7 +11357,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     other:   { name:'Coral Garden', art:'🪸', hue:'#7a5cc2', ink:'#56409a' }
   };
   function reefPlaceFor(id, label){
-    return REEF_PLACES[id] || { name: (label || 'Secret') + ' Cove', art:'🏝️', hue:'#1c8c93', ink:'#0d5262' };
+    var p = REEF_PLACES[id] || { name: (label || 'Secret') + ' Cove', art:'🏝️', hue:'#1c8c93', ink:'#0d5262' };
+    return Object.assign({ artId: REEF_PLACES[id] ? id : 'custom' }, p);
   }
   // Map spots as % of the map box: [x, y] on a wide screen, then [x, y] on a narrow one.
   var REEF_SLOTS = [
@@ -11310,7 +11404,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       var say = p.place.name + '. ' + (p.ready ? p.ready + ' ready to practice.' : (p.studyCount ? 'All done here!' : 'Tap to explore.'));
       return '' +
         '<button type="button" class="reef-spot'+(i === nextIdx ? ' next' : '')+'" data-reef-place="'+esc(p.id)+'" style="'+reefSpotStyle(REEF_SLOTS[i], i, p.place.hue)+'" aria-label="'+esc(say)+'">' +
-          '<span class="reef-rock"><span class="reef-art">'+p.place.art+'</span>' +
+          '<span class="reef-rock"><span class="reef-art">'+reefArtSVG(p.place.artId)+'</span>' +
             (p.ready ? '<span class="reef-ready" aria-hidden="true">'+p.ready+'</span>' : (p.studyCount ? '<span class="reef-done" aria-hidden="true">✓</span>' : '')) +
           '</span>' +
           '<span class="reef-label"><b>'+esc(p.place.name)+'</b><small>'+esc(p.label)+'</small></span>' +
@@ -11323,7 +11417,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     return '' +
       '<section class="reef-map-wrap" aria-label="Cove map">' +
         '<div class="reef-map-head">' +
-          '<div class="reef-map-title"><h2>Where should we swim?</h2><p>'+esc(guide)+' says: '+esc(bubble)+'</p></div>' +
+          '<div class="reef-map-title"><h2>Where should we swim?</h2><p>'+esc(guide)+' says: '+esc(bubble)+'</p>'+reefTodayHTML(places)+'</div>' +
           '<button type="button" class="reef-say" data-reef-say="'+esc('Where should we swim? '+guide+' says: '+bubble)+'" aria-label="Read this aloud">🔊</button>' +
         '</div>' +
         '<div class="reef-map">' +
@@ -11333,14 +11427,14 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
           '<div class="reef-sand" aria-hidden="true"></div>' +
           '<div class="reef-kelp k1" aria-hidden="true"></div><div class="reef-kelp k2" aria-hidden="true"></div><div class="reef-kelp k3" aria-hidden="true"></div>' +
           spots +
-          '<span class="reef-swimmer s1" aria-hidden="true">🐠</span><span class="reef-swimmer s2" aria-hidden="true">🐟</span>' +
-          '<span class="reef-deco d1" aria-hidden="true">🪸</span><span class="reef-deco d2" aria-hidden="true">🐚</span><span class="reef-deco d3" aria-hidden="true">⭐</span>' +
+          '<button type="button" class="reef-critter reef-swimmer s1" data-reef-critter="Reef fish">🐠</button><button type="button" class="reef-critter reef-swimmer s2" data-reef-critter="Fish">🐟</button>' +
+          '<button type="button" class="reef-critter reef-deco d1" data-reef-critter="Coral">🪸</button><button type="button" class="reef-critter reef-deco d2" data-reef-critter="Seashell">🐚</button><button type="button" class="reef-critter reef-deco d3" data-reef-critter="Sea star">⭐</button>' +
           '<button type="button" class="reef-spot special" data-reef-special="treasure" style="'+reefSpotStyle(REEF_SPECIAL.treasure, 7, '#c99a2e')+'" aria-label="My Treasure Reef">' +
-            '<span class="reef-rock chest"><span class="reef-art">💎</span>'+(tally.found ? '<span class="reef-ready gold" aria-hidden="true">'+tally.found+'</span>' : '')+'</span>' +
+            '<span class="reef-rock chest"><span class="reef-art">'+reefArtSVG('treasure')+'</span>'+(tally.found ? '<span class="reef-ready gold" aria-hidden="true">'+tally.found+'</span>' : '')+'</span>' +
             '<span class="reef-label"><b>Treasure Reef</b><small>My sea friends</small></span>' +
           '</button>' +
           '<button type="button" class="reef-spot special" data-reef-special="story" style="'+reefSpotStyle(REEF_SPECIAL.story, 8, '#3a7bd5')+'" aria-label="Story Maker">' +
-            '<span class="reef-rock bottle"><span class="reef-art">🍾</span></span>' +
+            '<span class="reef-rock bottle"><span class="reef-art">'+reefArtSVG('story')+'</span></span>' +
             '<span class="reef-label"><b>Story Bottle</b><small>Make a story</small></span>' +
           '</button>' +
         '</div>' +
@@ -11352,7 +11446,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       '<section class="reef-placehead" style="--hue:'+p.place.hue+';--ink:'+p.place.ink+'">' +
         '<button type="button" class="reef-back" data-act="reef-map">🗺️ Back to the map</button>' +
         '<div class="reef-placehead-main">' +
-          '<span class="reef-placehead-art" aria-hidden="true">'+p.place.art+'</span>' +
+          '<span class="reef-placehead-art" aria-hidden="true">'+reefArtSVG(p.place.artId)+'</span>' +
           '<div class="reef-placehead-text">' +
             '<h2>'+esc(p.place.name)+'</h2>' +
             '<p>'+esc(p.label)+' · Pick a deck and dive in.</p>' +
@@ -11401,6 +11495,22 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     var bottle = el.querySelector('[data-reef-special="story"]');
     if(bottle) bottle.addEventListener('click', function(){ reefGo('dive', bottle, startStoryMaker); });
     reefWireSay(el);
+    el.querySelectorAll('[data-reef-critter]').forEach(function(b){
+      b.addEventListener('click', function(){
+        try { Sound.bubbles(3); } catch(e){}
+        b.classList.remove('wiggle'); void b.offsetWidth; b.classList.add('wiggle');
+        try { Speech.speak(b.dataset.reefCritter); } catch(e){}
+      });
+    });
+  }
+  // How far today: one shell per practice deck, gold once it's all done.
+  function reefTodayHTML(places){
+    var total = 0, done = 0;
+    places.forEach(function(p){ total += p.studyCount; done += p.done; });
+    if(!total) return '';
+    var shells = '';
+    for(var i = 0; i < Math.min(total, 12); i++) shells += '<i class="'+(i < Math.round(done / total * Math.min(total, 12)) ? 'on' : '')+'"></i>';
+    return '<div class="reef-today"><span class="reef-today-shells" aria-hidden="true">'+shells+'</span><span>'+done+' of '+total+' decks all done</span></div>';
   }
   function reefWireSay(root){
     root.querySelectorAll('[data-reef-say]').forEach(function(b){
@@ -11440,7 +11550,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       ov.innerHTML = '<span class="tx-iris"></span>';
     } else {
       ov.innerHTML = reefTxHTML(kind);
-      try { Sound.bubbles(5); } catch(e){}
+      try { Sound.bubbles(5); Sound.bloop(kind === 'dive' ? 300 : 520, 0.35, 0.09); } catch(e){}
     }
     document.body.appendChild(ov);
     var mid = kind === 'swim' ? 230 : 560, end = kind === 'swim' ? 560 : 1300;
@@ -11571,7 +11681,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       '</div>' +
       '<section class="reef-collection">' +
         '<div class="reef-collection-head">' +
-          '<span class="reef-collection-art" aria-hidden="true">💎</span>' +
+          '<span class="reef-collection-art" aria-hidden="true">'+reefArtSVG('treasure')+'</span>' +
           '<div><h2>My Treasure Reef</h2><p>You have found '+t.found+' of '+t.total+' sea friends. Finish a deck to find another one.</p></div>' +
         '</div>' +
         '<div class="reef-fact-box" id="reefFactBox" hidden></div>' +
@@ -11616,6 +11726,37 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     });
   }
 
+  /* ---------- Shelly on the study screen: cheers after a right answer, encourages after a miss ---------- */
+  function reefStudyBuddy(){
+    if(!reefKid() || S.view !== 'study') return;
+    var stage = app.querySelector('.stage');
+    if(!stage || stage.classList.contains('stage-exit')) return;
+    var mood = app.querySelector('.choice-feedback.ok') ? 'yay' : (app.querySelector('.choice-feedback.no') ? 'hmm' : 'idle');
+    var say = mood === 'yay' ? 'Yay! 🎉' : (mood === 'hmm' ? 'Let\'s look together.' : '');
+    var bud = stage.querySelector('.reef-buddy');
+    if(!bud){
+      bud = document.createElement('div');
+      bud.className = 'reef-buddy';
+      bud.setAttribute('aria-hidden', 'true');
+      var night = false; try { night = coveSwimName() === 'Lumi'; } catch(e){}
+      bud.innerHTML = '<div class="reef-seabed"></div>' + (night ? lumiSVG('reef-buddy-turtle lumi') : mascotTurtleSVG('reef-buddy-turtle')) + '<span class="reef-buddy-say"></span>';
+      stage.appendChild(bud);
+      stage.classList.add('has-buddy');
+    }
+    if(bud.dataset.mood !== mood){
+      bud.dataset.mood = mood;
+      bud.querySelector('.reef-buddy-say').textContent = say;
+    }
+  }
+  (function(){
+    var reefRender0 = render;
+    render = function(){
+      var out = reefRender0.apply(this, arguments);
+      try { reefStudyBuddy(); } catch(e){ console.warn('[Coral Cove] study buddy', e); }
+      return out;
+    };
+  })();
+
   store.init().then(function(s){
     try { coveWrapStore(s); } catch(e){}
     S.store = s;
@@ -11658,15 +11799,15 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   --reef-sand:#f6e2b0; --reef-sand-2:#e8c987;
   --reef-coral:#ff8a6b; --reef-coral-ink:#b24a2e;
   --reef-card:#ffffff; --reef-ink:#0b2b33; --reef-soft:#3f6670;
-  --reef-pop:cubic-bezier(.34,1.56,.64,1);
+  --reef-pop:cubic-bezier(.34,1.56,.64,1); --reef-glow:rgba(255,255,255,.65);
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   --reef-shallow:#1f6f7a; --reef-mid:#145a69; --reef-deep:#0a3746; --reef-abyss:#04161d;
-  --reef-sand:#3a3324; --reef-sand-2:#2d2719; --reef-card:#0f3942; --reef-ink:#eaf6f4; --reef-soft:#a9cbc7;
+  --reef-sand:#3a3324; --reef-sand-2:#2d2719; --reef-card:#0f3942; --reef-ink:#eaf6f4; --reef-soft:#a9cbc7; --reef-glow:rgba(160,240,240,.07);
 } }
 :root[data-theme="dark"]{
   --reef-shallow:#1f6f7a; --reef-mid:#145a69; --reef-deep:#0a3746; --reef-abyss:#04161d;
-  --reef-sand:#3a3324; --reef-sand-2:#2d2719; --reef-card:#0f3942; --reef-ink:#eaf6f4; --reef-soft:#a9cbc7;
+  --reef-sand:#3a3324; --reef-sand-2:#2d2719; --reef-card:#0f3942; --reef-ink:#eaf6f4; --reef-soft:#a9cbc7; --reef-glow:rgba(160,240,240,.07);
 }
 
 /* ---------- chunky buttons (Child Mode) ---------- */
@@ -11793,8 +11934,8 @@ body.reef-kid .deck-card.kid .btn-primary{ width:100%; padding:14px 16px; font-s
 
 /* ---------- study screen (Child Mode) ---------- */
 body.reef-kid .stage{ border:none; border-radius:32px; padding:28px 18px 32px;
-  background:radial-gradient(120% 60% at 50% 0%, rgba(255,255,255,.65), transparent 60%), linear-gradient(180deg, color-mix(in srgb, var(--reef-shallow) 45%, var(--foam)), var(--foam) 75%);
-  box-shadow:inset 0 0 0 3px rgba(255,255,255,.5), 0 14px 30px rgba(10,61,74,.12); }
+  background:radial-gradient(120% 60% at 50% 0%, var(--reef-glow), transparent 60%), linear-gradient(180deg, color-mix(in srgb, var(--reef-shallow) 45%, var(--foam)), var(--foam) 75%);
+  box-shadow:inset 0 0 0 3px color-mix(in srgb, var(--reef-glow) 80%, transparent), 0 14px 30px rgba(10,61,74,.12); }
 body.reef-kid .face{ border-radius:26px; }
 body.reef-kid .face-front .card-text{ font-size:2.1rem; }
 body.reef-kid .choice-row{ gap:12px; max-width:460px; }
@@ -11922,6 +12063,40 @@ body.reef-calm .reef-spot.next .reef-rock::after{ display:none; }
 body.reef-calm .reef-chest-rays{ opacity:1; }
 body.reef-calm .reef-chest-box .lid{ transform:translateY(-28px) rotate(-14deg); }
 body.reef-calm .reef-chest-friend{ transform:translate(-50%, 0); opacity:1; }
+
+/* ---------- round 2: drawn art, tappable critters, today's shells, Shelly on the study screen ---------- */
+.reef-rock{ background:radial-gradient(circle at 50% 55%, color-mix(in srgb, var(--hue) 40%, #fff) 0 46%, color-mix(in srgb, var(--hue) 18%, transparent) 47% 66%, transparent 67%);
+  box-shadow:none; border-radius:50%; }
+.reef-spot:active .reef-rock{ box-shadow:none; transform:translateY(4px) scale(.95); }
+.reef-rock.chest, .reef-rock.bottle{ background:radial-gradient(circle at 50% 55%, rgba(255,255,255,.55) 0 46%, rgba(255,255,255,.18) 47% 66%, transparent 67%); box-shadow:none; }
+.reef-spot .reef-art{ width:118%; display:block; }
+.reef-art-svg{ display:block; width:100%; height:auto; overflow:visible; filter:drop-shadow(0 6px 6px rgba(7,40,52,.25)); }
+.reef-placehead-art{ width:84px; flex:none; }
+.reef-collection-art{ width:84px; flex:none; }
+.reef-critter{ border:none; background:none; padding:4px; cursor:pointer; pointer-events:auto; font-family:inherit; color:inherit; -webkit-tap-highlight-color:transparent; }
+.reef-critter.wiggle{ animation:reefCritter .6s var(--reef-pop); }
+.reef-swimmer.reef-critter.wiggle{ animation:reefSwimR 26s linear infinite, reefCritterTilt .6s var(--reef-pop); }
+@keyframes reefCritter{ 0%{ transform:scale(1); } 30%{ transform:scale(1.5) rotate(-14deg); } 60%{ transform:scale(.9) rotate(10deg); } 100%{ transform:none; } }
+@keyframes reefCritterTilt{ 50%{ font-size:3rem; } }
+.reef-today{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:6px; font-weight:800; font-size:.92rem; color:var(--reef-soft); }
+.reef-today-shells{ display:flex; gap:5px; }
+.reef-today-shells i{ width:16px; height:16px; border-radius:50% 50% 45% 45%; background:var(--border); box-shadow:inset 0 -2px 0 rgba(0,0,0,.08); }
+.reef-today-shells i.on{ background:radial-gradient(circle at 35% 30%, #fff, #ffe9a8 40%, #e8a716); box-shadow:0 0 6px rgba(255,209,102,.8); }
+body.reef-kid .stage.has-buddy{ padding-bottom:96px; }
+.reef-buddy{ position:absolute; left:0; right:0; bottom:0; height:92px; pointer-events:none; z-index:0; }
+.reef-seabed{ position:absolute; left:-4%; right:-4%; bottom:-24px; height:56px; border-radius:50% 50% 0 0 / 80% 80% 0 0;
+  background:radial-gradient(60% 120% at 30% 0%, var(--reef-sand), var(--reef-sand-2)); opacity:.9; }
+.reef-buddy-turtle{ position:absolute; right:7%; bottom:8px; width:78px; height:auto; filter:drop-shadow(0 4px 5px rgba(0,0,0,.2)); animation:reefGuide 2.8s ease-in-out infinite; }
+.reef-buddy-say{ position:absolute; right:calc(7% + 84px); bottom:44px; max-width:60%; padding:7px 12px; border-radius:14px 14px 4px 14px; background:#fff; color:#0b2b33;
+  font:800 .95rem 'Nunito',sans-serif; box-shadow:0 4px 10px rgba(7,40,52,.18); }
+.reef-buddy-say:empty{ display:none; }
+.reef-buddy[data-mood="yay"] .reef-buddy-turtle{ animation:reefBuddyYay .7s var(--reef-pop); }
+.reef-buddy[data-mood="hmm"] .reef-buddy-turtle{ animation:reefBuddyHmm 1.2s ease-in-out; }
+.reef-buddy[data-mood="yay"] .reef-buddy-say, .reef-buddy[data-mood="hmm"] .reef-buddy-say{ animation:reefSpotIn2 .4s var(--reef-pop) both; }
+@keyframes reefBuddyYay{ 0%{ transform:none; } 40%{ transform:translateY(-34px) rotate(-20deg) scale(1.1); } 70%{ transform:translateY(-10px) rotate(8deg); } 100%{ transform:none; } }
+@keyframes reefBuddyHmm{ 0%,100%{ transform:none; } 30%{ transform:rotate(-8deg); } 60%{ transform:rotate(6deg); } }
+body.reef-calm .reef-buddy-turtle, body.reef-calm .reef-buddy-say, body.reef-calm .reef-critter.wiggle{ animation:none !important; }
+@media (max-width:640px){ .reef-buddy-turtle{ width:62px; } .reef-buddy-say{ right:calc(7% + 66px); font-size:.85rem; } }
 </style>
 
 </body></html>
