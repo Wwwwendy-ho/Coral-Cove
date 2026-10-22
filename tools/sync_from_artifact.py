@@ -82,6 +82,11 @@ def main(src, dbdir, date, swap=None):
                     f"var FILES = ['./', 'index.html', 'seed-data.js?v={v}', 'audio-clips.js?v={v}', 'storage.js?v={v}',\n"
                     "             'three.min.js', 'reef-models.js', 'win.mp3', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];\n\n")
 
+    # The offline list must only name files this build has, or the iPad's offline copy fails to install.
+    for optional in ("reef-models.js", "win.mp3"):
+        if not (src / optional).exists():
+            sw = sw.replace(f"'{optional}', ", "")
+
     if swap:
         old, _, new = swap.partition("=")
         if not old or not new:
