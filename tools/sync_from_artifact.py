@@ -22,7 +22,8 @@ import ipad_patches
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 TARGETS = [REPO, REPO / "coral-cove"]
-SHARED = ["storage.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png", ".nojekyll"]
+SHARED = ["storage.js", "three.min.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png", ".nojekyll"]
+THREE_CDN = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
 HEAD_TAGS = """<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -63,6 +64,8 @@ def main(src, dbdir, date, swap=None):
     v = date.replace("-", "")
     html = html.replace("</head>", HEAD_TAGS.format(v=v) + "</head>", 1)
     html = ipad_patches.apply(html)
+    # The 3D reef loads three.js from a CDN inside Claude; the iPad copy uses its own copy so it works offline.
+    html = html.replace(THREE_CDN, "three.min.js")
 
     docs = load_db(dbdir)
     audio = {p: d for p, d in docs.items() if p.startswith("audio-clips/")}
@@ -77,7 +80,7 @@ def main(src, dbdir, date, swap=None):
     sw = sw.replace(sw[sw.index("var CACHE"):sw.index("self.addEventListener")],
                     f"var CACHE = 'coral-cove-{v}';\n"
                     f"var FILES = ['./', 'index.html', 'seed-data.js?v={v}', 'audio-clips.js?v={v}', 'storage.js?v={v}',\n"
-                    "             'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];\n\n")
+                    "             'three.min.js', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];\n\n")
 
     if swap:
         old, _, new = swap.partition("=")
