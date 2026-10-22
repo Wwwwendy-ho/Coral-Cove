@@ -80,7 +80,7 @@ def main(src, dbdir, date, swap=None):
     sw = sw.replace(sw[sw.index("var CACHE"):sw.index("self.addEventListener")],
                     f"var CACHE = 'coral-cove-{v}';\n"
                     f"var FILES = ['./', 'index.html', 'seed-data.js?v={v}', 'audio-clips.js?v={v}', 'storage.js?v={v}',\n"
-                    "             'three.min.js', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];\n\n")
+                    "             'three.min.js', 'reef-models.js', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];\n\n")
 
     if swap:
         old, _, new = swap.partition("=")
@@ -98,6 +98,8 @@ def main(src, dbdir, date, swap=None):
         (t / "sw.js").write_text(sw, encoding="utf-8")
         shutil.rmtree(t / "voice", ignore_errors=True)
         shutil.copytree(src / "voice", t / "voice")
+        if (src / "reef-models.js").exists():  # the 3D board's models (CC0), loaded when the board opens
+            shutil.copy2(src / "reef-models.js", t / "reef-models.js")
         if t != REPO:
             for name in SHARED:
                 shutil.copy2(REPO / name, t / name)
