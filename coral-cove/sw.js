@@ -17,7 +17,9 @@ self.addEventListener('activate', function (e) {
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET' || new URL(e.request.url).origin !== self.location.origin) return;
   e.respondWith(
-    fetch(e.request).then(function (res) {
+    // Ask GitHub every time instead of the browser's 10-minute cache, so an update shows up the
+    // first time the app is reopened online. Unchanged files come back as a quick "not modified".
+    fetch(e.request.mode === 'navigate' ? e.request.url : e.request, { cache: 'no-cache', credentials: 'same-origin' }).then(function (res) {
       var copy = res.clone();
       caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
       return res;
