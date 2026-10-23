@@ -107,6 +107,9 @@ def main(src, dbdir, date, swap=None):
             shutil.copy2(src / "reef-models.js", t / "reef-models.js")
         if (src / "win.mp3").exists():  # celebration music for right answers and finished decks
             shutil.copy2(src / "win.mp3", t / "win.mp3")
+        for song in ("day-song.mp3", "night-song.mp3"):  # background music (cached the first time it plays)
+            if (src / song).exists():
+                shutil.copy2(src / song, t / song)
         if t != REPO:
             for name in SHARED:
                 shutil.copy2(REPO / name, t / name)
