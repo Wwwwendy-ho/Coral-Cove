@@ -2,7 +2,7 @@
    Network first, so a new upload to GitHub shows up the next time the iPad is online. */
 var CACHE = 'coral-cove-20261026';
 var FILES = ['./', 'index.html', 'seed-data.js?v=20261026', 'audio-clips.js?v=20261026', 'storage.js?v=20261026',
-             'three.min.js', 'reef-models.js', 'win.mp3', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
+             'library.js', 'three.min.js', 'reef-models.js', 'win.mp3', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FILES); }).then(function () { return self.skipWaiting(); }));

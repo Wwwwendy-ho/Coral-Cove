@@ -22,7 +22,7 @@ import ipad_patches
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 TARGETS = [REPO, REPO / "coral-cove"]
-SHARED = ["storage.js", "three.min.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png", ".nojekyll"]
+SHARED = ["storage.js", "library.js", "three.min.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png", ".nojekyll"]
 THREE_CDN = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
 HEAD_TAGS = """<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -35,6 +35,7 @@ HEAD_TAGS = """<meta name="apple-mobile-web-app-capable" content="yes">
 <script src="seed-data.js?v={v}"></script>
 <script src="audio-clips.js?v={v}"></script>
 <script src="storage.js?v={v}"></script>
+<script src="library.js?v={v}" defer></script>
 <script>if('serviceWorker' in navigator){{addEventListener('load',function(){{navigator.serviceWorker.register('sw.js?v={v}').catch(function(){{}});}});}}</script>
 """
 
@@ -80,7 +81,7 @@ def main(src, dbdir, date, swap=None):
     sw = sw.replace(sw[sw.index("var CACHE"):sw.index("self.addEventListener")],
                     f"var CACHE = 'coral-cove-{v}';\n"
                     f"var FILES = ['./', 'index.html', 'seed-data.js?v={v}', 'audio-clips.js?v={v}', 'storage.js?v={v}',\n"
-                    "             'three.min.js', 'reef-models.js', 'win.mp3', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];\n\n")
+                    "             'library.js', 'three.min.js', 'reef-models.js', 'win.mp3', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];\n\n")
 
     # The offline list must only name files this build has, or the iPad's offline copy fails to install.
     for optional in ("reef-models.js", "win.mp3"):

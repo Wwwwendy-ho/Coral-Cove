@@ -9,6 +9,7 @@
 <script src="seed-data.js?v=20261026"></script>
 <script src="audio-clips.js?v=20261026"></script>
 <script src="storage.js?v=20261026"></script>
+<script src="library.js?v=20261026" defer></script>
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v=20261026').catch(function(){});});}</script>
 </head><body>
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap"></noscript><script>(function(){var l=document.getElementById("coveperfFonts");if(!l)return;function on(){l.media="all";}l.addEventListener("load",on);l.addEventListener("error",on);setTimeout(on,2500);})();</script></head><body>
@@ -4945,6 +4946,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
             '<div class="pill stars"><span class="icon">⭐</span><span class="tabular">'+S.stats.stars+'</span></div>' +
           '</div>') +
           ((managing || editMode) ? '<button type="button" class="icon-btn" data-act="open-settings" title="Settings" aria-label="Study settings">⚙️</button>' : '') +
+          '<button type="button" class="icon-btn" data-act="open-library" title="Library" aria-label="Open the Library">📚</button>' +
           '<button type="button" class="icon-btn" data-act="open-stats" title="Progress" aria-label="View progress">📊</button>' +
           '<button type="button" class="icon-btn" data-act="toggle-edit-mode" title="'+(editMode?'Exit Edit Mode':'Edit Mode')+'" aria-label="'+(editMode?'Exit Edit Mode':'Enter Edit Mode')+'">'+(editMode?'🔓':'✏️')+'</button>' +
           (managing ? '<button type="button" class="btn btn-ghost" data-act="exit-manager">✅ Done</button>' : ctrlRowHTML()) +
@@ -4995,6 +4997,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
       }); });
     });
     app.querySelector('[data-act="open-stats"]').addEventListener('click', openStats);
+    var libBtn = app.querySelector('[data-act="open-library"]'); if(libBtn) libBtn.addEventListener('click', function(){ if(window.CoralLibrary) window.CoralLibrary.open(); });
     wirePlanHome();
     var smBtn = app.querySelector('[data-act="story-maker"]');
     if(smBtn) smBtn.addEventListener('click', startStoryMaker);
@@ -12320,6 +12323,21 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     setTimeout(function(){ if(document.body.contains(head)) try { Speech.speak(say.dataset.reefSay); } catch(e){} }, 900);
     setTimeout(function(){ if(!document.body.contains(head)) return; head.classList.add('rw-fading'); setTimeout(function(){ head.classList.add('rw-gone'); }, 450); }, 7000);
   }
+  /* ---------- The Library (library.js) sits beside the app, off the board. This is all it can reach. ---------- */
+  window.CoralCove = {
+    profile: function(){ return S.profile ? { id: S.profile.id, name: S.profile.name, child: S.profile.mode === 'child' } : null; },
+    decks: function(){ return (S.decks || []).filter(function(d){ return !d.archived; }).map(function(d){ return { id: d.id, name: d.name, emoji: d.emoji || '🌊', subject: d.subject || '' }; }); },
+    cards: function(id){ return S.store ? S.store.getCardsOnce(id) : Promise.resolve([]); },
+    history: function(){ return S.store && S.store.getHistoryOnce ? S.store.getHistoryOnce() : Promise.resolve([]); },
+    stats: function(){ return S.stats || {}; },
+    speak: function(t, o){ try { Speech.speak(t, o); } catch(e){} },
+    stopSpeaking: function(){ try { if(window.speechSynthesis) speechSynthesis.cancel(); } catch(e){} },
+    sound: function(name){ try { if(Sound[name]) Sound[name](); } catch(e){} },
+    startDeck: function(id){ reefStartDeck(id); },
+    checkPin: function(p){ return !!S.pinHash && pinHash(String(p || '')) === S.pinHash; },
+    night: function(){ try { return reefNight(); } catch(e){ return false; } },
+    calm: function(){ try { return reefCalm(); } catch(e){ return false; } }
+  };
   // Runs at the end of renderHome(): outside Edit Mode the deck menu becomes the reef (every profile).
   function reefHome(){
     if(!reefGame() || S.editMode) return;
@@ -18588,7 +18606,19 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     var g = view.guide.position;
     var f = view.w && view.w < 640 ? .95 : .6;
     var gy = g.y - .3;   // the level she's on (the ship's hold at night is lower)
-    out.set(g.x * f, 13 + (gy < 0 ? gy * .55 : gy), g.z + 10.5 + (gy < -1 ? -gy * .25 : 0));   // lower down, the camera stays higher and looks down into the hold
+    if(view.night){
+      // On the spiral staircase the camera swings out to a three-quarter view of it, so the climb down reads.
+      var st = view.spaces.stair;
+      if(st && Math.hypot(g.x - st.cx, g.z - st.cz) < 4.4 && gy < -.5 && gy > st.low + .5){
+        var sd = st.cx > 0 ? -1 : 1;   // from above the open hold, a little to the side, looking down into the spiral
+        out.set(st.cx + sd * 3, st.low + 12.5, st.cz - 6.5); look.set(st.cx, gy - .8, st.cz + .3); return;
+      }
+      // Elsewhere on the ship it sits lower and looks ahead, so the masts, sails and the drop to the hold show.
+      out.set(g.x * f, 10.5 + gy * .55, g.z + 12.5 + (gy < -1 ? -gy * .25 : 0));
+      look.set(g.x * (f + .05), gy + 1.4, g.z - 4.5);
+      return;
+    }
+    out.set(g.x * f, 13 + gy, g.z + 10.5);
     look.set(g.x * (f + .05), gy, g.z - 2.6);
   }
   function reef3dSize(view){
@@ -18662,6 +18692,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       view.rayList.forEach(function(rm){ rm.material.opacity = rm.userData.base * (.65 + .35 * Math.sin(t * .5 + rm.userData.ph)); });
       // Each school circles its own home on the reef; it doesn't follow Shelly. A school she has left far
       // behind swims (not jumps) to a new home ahead of her. Fish face the way they are really moving.
+      view.fishLvl = (view.fishLvl || 0) + ((g.y - .3) - (view.fishLvl || 0)) * Math.min(1, dt * 1.5);
       view.schools.forEach(function(sc, k){
         if(sc.hz == null){ sc.hx = sc.off; sc.hz = g.z - 4 - k * 7; sc.tx = sc.hx; sc.tz = sc.hz; }
         if(Math.abs(sc.tz - g.z) > 18){ sc.tz = g.z - 6 - Math.random() * 8; sc.tx = (Math.random() - .5) * 10; }
@@ -18674,7 +18705,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
         sc.fish.forEach(function(f, j){
           var o = f.userData.o, px = f.position.x, pz = f.position.z;
           var fo = fl ? reef3dFleeOff(fl, j, fa) : null;
-          f.position.set(cx + o.x + Math.sin(t * .9 + j) * .12 + (fo ? fo.x : 0), sc.h + o.y + Math.sin(t * 2 + j) * .12 + (fo ? fo.y : 0), cz + o.z + (fo ? fo.z : 0));
+          f.position.set(cx + o.x + Math.sin(t * .9 + j) * .12 + (fo ? fo.x : 0), sc.h + view.fishLvl + o.y + Math.sin(t * 2 + j) * .12 + (fo ? Math.min(.5, fo.y) : 0), cz + o.z + (fo ? fo.z : 0));
           var vx = f.position.x - px, vz = f.position.z - pz;
           if(vx * vx + vz * vz > 1e-6){   // turn smoothly toward the direction of travel
             var want = Math.atan2(vx, vz), d = Math.atan2(Math.sin(want - f.rotation.y), Math.cos(want - f.rotation.y));
@@ -18978,6 +19009,12 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       var last = i === steps - 1, edge = Math.min(i, steps - 1 - i);          // hops near the start and end are slower
       var dur = (steps > 6 ? 250 : 330) + (edge === 0 ? 90 : edge === 1 ? 35 : 0) + Math.random() * 40 + (last && steps >= 3 ? 160 : 0);
       var hgt = (.85 + Math.random() * .35) * (last && steps >= 3 ? 1.45 : 1), roll = (i % 2 ? 1 : -1) * (.1 + Math.random() * .06);
+      var ship = view.spaces.ship;
+      if(ship && (Math.abs(a.x) < ship.half) !== (Math.abs(b.x) < ship.half)){   // over the side of the wreck: clear the rail
+        var u = Math.min(.85, Math.max(.15, (ship.half - Math.abs(a.x)) / ((Math.abs(b.x) - Math.abs(a.x)) || 1)));
+        var baseY = (a.y || 0) + ((b.y || 0) - (a.y || 0)) * u, railTop = 1.7 + ship.roll * ship.half * (a.x < 0 ? -1 : 1);   // the rail's top, on the side she crosses
+        hgt = Math.max(hgt, (railTop - baseY) / Math.sin(u * Math.PI)); dur += 220;
+      }
       var ry0 = g.rotation.y, ry1 = ry0 + angTo(ry0, Math.atan2(b.x - a.x, b.z - a.z)), spin = last && steps >= 3 ? (Math.random() < .5 ? -1 : 1) * Math.PI * 2 : 0;
       try { Sound.bloop(400 + Math.min(i, 8) * 45, 0, .035); } catch(e){}
       (function step(now){
@@ -19150,9 +19187,10 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       mast.add(mesh(new THREE.CylinderGeometry(.26, .4, h, 10), mastM, 0, h / 2, 0));
       S.add(mesh(new THREE.CylinderGeometry(.62, .62, .3, 10), trimM, mx, base + .15, mz));
       if(broken){ var stub2 = mesh(new THREE.CylinderGeometry(.24, .26, 7, 10), mastM, mx - side * 3.4, base + .4, mz + 1.4); stub2.rotation.set(0, .5, side * (Math.PI / 2 - .1)); if(clear(stub2.position.x, stub2.position.z, 3.6)) S.add(stub2); return; }
-      var yard = mesh(new THREE.CylinderGeometry(.11, .11, 7, 8), mastM, 0, h * .72, 0); yard.rotation.z = Math.PI / 2; yard.rotation.y = .25; mast.add(yard);
+      var yard = mesh(new THREE.CylinderGeometry(.11, .11, 7, 8), mastM, 0, Math.max(h * .72 + .8, UP - base + 9.9), 0); yard.rotation.z = Math.PI / 2; yard.rotation.y = .25; mast.add(yard);
       mast.add(mesh(new THREE.CylinderGeometry(.85, .6, .7, 12, 1, true), M('#3f3024', { side: THREE.DoubleSide }), 0, h - .8, 0));
-      var sail = new THREE.Mesh(new THREE.PlaneGeometry(6.2, 4.6, 8, 4), sailMat); sail.position.set(mx, base + h * .72 - 2.4, mz + .2); sail.rotation.set(0, .25, lean);
+      var sailY = Math.max(base + h * .72 - 1.6, UP + 7.6);   // every sail's foot sits well above the top deck, where the fish swim
+      var sail = new THREE.Mesh(new THREE.PlaneGeometry(6.2, 4.6, 8, 4), sailMat); sail.position.set(mx, sailY, mz + .2); sail.rotation.set(0, .25, lean);
       var sa = sail.geometry.attributes.position; for(var v = 0; v < sa.count; v++) sa.setZ(v, Math.sin((sa.getX(v) + 3.1) / 6.2 * Math.PI) * .5);
       sail.geometry.computeVertexNormals(); sail.raycast = function(){}; D.add(sail);
       var lan = B.lantern(); lan.position.set(mx + side * .55, base + 3.3, mz + .5); lan.scale.setScalar(.7); D.add(lan); o.deckObjs.push(lan);
