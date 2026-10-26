@@ -12278,6 +12278,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   }
   function reefStartDeck(id){
     var d = S.decks.find(function(x){ return x.id === id; });
+    R3.fromDeck = true;   // back on the board after this deck (finished or not): a cheer, then the dice
     if(d && d.feedMode) startFeed(id);
     else if(d && d.storyMode) startStory(id);
     else if(d && d.equationMode) startEquationFeed(id);
@@ -17667,14 +17668,56 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
         list.push({ kind: 'deck', item: it, zone: z, first: i === 0 });
       });
     });
-    list.push({ kind: 'plain' }, { kind: 'surprise' }, { kind: 'treasure' }, { kind: 'plain' }, { kind: 'story' });
+    list.push({ kind: 'plain' }, { kind: 'surprise' }, { kind: 'plain' });
     var amp = innerWidth < 640 ? .5 : 1; // a narrower board on phones so the path stays on screen
     list.forEach(function(s, i){
       s.i = i;
       s.x = (Math.sin(i * .42) * 4.2 + Math.sin(i * .13) * 1.6) * amp;
       s.z = -i * 2.6;
+      s.links = [];
+      if(i > 0){ s.links.push(i - 1); list[i - 1].links.push(i); }
     });
+    // Side branches (like a Mario Party fork): the Treasure Reef and the Story Bottle sit at the end of their own
+    // short paths off the main one. A fork is a plain space; the branch curls out to the open side and dead-ends.
+    var mainN = list.length;
+    function forkNear(f){
+      for(var d = 0; d < mainN; d++){ var k = [Math.round(mainN * f) + d, Math.round(mainN * f) - d];
+        for(var j = 0; j < 2; j++){ var c = list[k[j]]; if(c && c.kind === 'plain' && c.i > 1 && c.i < mainN - 1 && !c.fork) return c; } }
+      return list[mainN - 1];
+    }
+    [{ name: 'treasure', at: .42, kinds: ['plain', 'surprise', 'plain', 'treasure'] },
+     { name: 'story', at: .78, kinds: ['plain', 'surprise', 'story'] }].forEach(function(br){
+      var j = forkNear(br.at), side = j.x >= 0 ? 1 : -1, prev = j, step = innerWidth < 640 ? 2 : 2.4;
+      j.fork = br.name;
+      br.kinds.forEach(function(kind, k){
+        var s = { kind: kind, i: list.length, branch: br.name, jn: j.i, links: [prev.i], end: k === br.kinds.length - 1 };
+        s.x = j.x + side * step * (k + 1); s.z = j.z - .7 * (k + 1) + Math.sin(k * 1.3) * .5;
+        prev.links.push(s.i); list.push(s); prev = s;
+      });
+    });
+    list.mainN = mainN;
     return list;
+  }
+  // The shortest way along the paths from one space to another (spaces in order, not counting the start).
+  function reef3dRoute(spaces, from, to){
+    if(from === to) return [];
+    var back = {}, q = [from]; back[from] = -1;
+    while(q.length){ var c = q.shift(); if(c === to) break; (spaces[c].links || []).forEach(function(n){ if(back[n] === undefined){ back[n] = c; q.push(n); } }); }
+    if(back[to] === undefined) return [];
+    var r = []; for(var x = to; x !== from; x = back[x]) r.unshift(x); return r;
+  }
+  // The space a guide standing here would face: the next one along (on a branch, toward its end; at an end, back).
+  function reef3dAhead(spaces, i){
+    var s = spaces[i], L = s.links || [];
+    if(s.branch) return spaces[s.end ? L[0] : L[L.length - 1]];
+    var fwd = L.filter(function(n){ return n > i && !spaces[n].branch; })[0];
+    return spaces[fwd != null ? fwd : (L[0] != null ? L[0] : i)];
+  }
+  // The path as separate lines: the main path, then each branch starting from its fork.
+  function reef3dPathLines(spaces){
+    var n = spaces.mainN || spaces.length, lines = [spaces.slice(0, n)], cur = null;
+    for(var i = n; i < spaces.length; i++){ var s = spaces[i]; if(!cur || cur.name !== s.branch){ cur = { name: s.branch, pts: [spaces[s.jn]] }; lines.push(cur.pts); } cur.pts.push(s); }
+    return lines;
   }
 
   /* ---- little 3D builders, all simple shapes with cartoon (toon) shading ---- */
@@ -18193,7 +18236,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     scene.fog = new THREE.Fog(fogCol, 11, 42);
     var cam = new THREE.PerspectiveCamera(42, 1, .1, 120);
     var kit = reef3dKit(THREE, night), B = kit.B, M = kit.M, mesh = kit.mesh;
-    var r = reefRand(spaces.length * 131 + (night ? 5 : 1));
+    var mainN = spaces.mainN || spaces.length, mains = spaces.slice(0, mainN);
+    var r = reefRand(mainN * 131 + (night ? 5 : 1));
 
     scene.add(new THREE.HemisphereLight(night ? '#7fb6c4' : '#fff6e2', night ? '#0b1e26' : '#3f7f88', night ? .55 : .5));
     var sun = new THREE.DirectionalLight(night ? '#a9e6ff' : '#fff1d2', night ? .6 : .72);
@@ -18204,11 +18248,12 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     renderer.shadowMap.enabled = false; sun.castShadow = false;
 
     // Sea floor with soft dunes.
-    var len = spaces.length * 2.6 + 40;
+    var len = mainN * 2.6 + 40;
     var floorGeo = new THREE.PlaneGeometry(70, len, 35, Math.round(len / 2));
     var pos = floorGeo.attributes.position;
     // The dunes settle down under the path and just around it, so no tile or bit of path sinks into the sand.
-    var pathPts = new THREE.CatmullRomCurve3(spaces.map(function(s){ return new THREE.Vector3(s.x, 0, s.z); })).getSpacedPoints(spaces.length * 6);
+    var pathLines = reef3dPathLines(spaces), pathPts = [];
+    pathLines.forEach(function(ln){ if(ln.length > 1) pathPts = pathPts.concat(new THREE.CatmullRomCurve3(ln.map(function(s){ return new THREE.Vector3(s.x, 0, s.z); })).getSpacedPoints(ln.length * 6)); });
     function duneK(x, z){
       var d2 = 1e9; for(var pi = 0; pi < pathPts.length; pi++){ var dx = pathPts[pi].x - x, dz = pathPts[pi].z - z, q = dx * dx + dz * dz; if(q < d2) d2 = q; }
       var k = Math.min(1, Math.max(0, (Math.sqrt(d2) - 1.9) / 2.6)); return k * k * (3 - 2 * k);   // 0 on the path, 1 a few steps away
@@ -18221,9 +18266,12 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     floor.rotation.x = -Math.PI / 2; floor.position.set(0, -.15, -len / 2 + 14); floor.receiveShadow = true; scene.add(floor);
 
     // Path: a sandy ribbon joining the spaces, then the round spaces themselves.
-    var curve = new THREE.CatmullRomCurve3(spaces.map(function(s){ return new THREE.Vector3(s.x, 0, s.z); }));
-    var ribbon = mesh(new THREE.TubeGeometry(curve, spaces.length * 8, .55, 8), M(night ? '#4a5650' : '#efdcb4'));
-    ribbon.scale.y = .12; ribbon.position.y = .02; scene.add(ribbon); reef3dBakeObject(ribbon, rig, bake);
+    pathLines.forEach(function(ln){
+      if(ln.length < 2) return;
+      var curve = new THREE.CatmullRomCurve3(ln.map(function(s){ return new THREE.Vector3(s.x, 0, s.z); }));
+      var ribbon = mesh(new THREE.TubeGeometry(curve, ln.length * 8, .55, 8), M(night ? '#4a5650' : '#efdcb4'));
+      ribbon.scale.y = .12; ribbon.position.y = .02; scene.add(ribbon); reef3dBakeObject(ribbon, rig, bake);
+    });
     var hitables = [], deckObjs = [], swayers = [], chestModel = null, spinners = [];
     var statics = new THREE.Group(); // parts that never move; merged into a few draws at the end
     spaces.forEach(function(s){
@@ -18243,8 +18291,9 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
         var MODEL_FOR = { crate: [s.i % 2 ? 'crateBottles' : 'crate', 1.1], barrel: ['barrel', 1.2], cannon: ['cannon', 1], treasure: ['chest', 1.1], story: ['bottle', 1.3] };
         var o = (MODEL_FOR[kind] && reef3dModel(models, MODEL_FOR[kind][0], MODEL_FOR[kind][1], kit.grad)) || B[kind](r);
         if(kind === 'treasure' && o.userData.gltf) chestModel = o;
-        var nxt = spaces[Math.min(s.i + 1, spaces.length - 1)], side = s.x > nxt.x ? 1 : -1;
+        var nxt = reef3dAhead(spaces, s.i), side = s.x > nxt.x ? 1 : -1;
         if(innerWidth < 640) side = s.x > 0 ? -1 : 1; // on phones, keep objects toward the middle
+        if(s.end) side = s.x > spaces[s.jn].x ? 1 : -1;   // a branch's prize sits past its end, away from the main path
         o.position.set(s.x + side * 2.1, 0, s.z - .2);
         o.scale.setScalar(1.25);
         o.traverse(function(c){ c.userData.space = s.i; });
@@ -18256,8 +18305,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     // Scenery off the path.
     function nearPath(x, z){ for(var i = 0; i < spaces.length; i++){ var dx = spaces[i].x - x, dz = spaces[i].z - z; if(dx * dx + dz * dz < 12) return true; } return false; }
     var setD = night ? ['kelp', 'rock', 'plank', 'coralBall', 'rock'] : ['kelp', 'coralBall', 'rock', 'staghorn', 'coralBall', 'star', 'kelp'];
-    for(var n = 0; n < spaces.length * 3.2; n++){
-      var sx = (r() - .5) * 30, sz = 8 - r() * (spaces.length * 2.6 + 18);
+    for(var n = 0; n < mainN * 3.2; n++){
+      var sx = (r() - .5) * 30, sz = 8 - r() * (mainN * 2.6 + 18);
       if(nearPath(sx, sz)) continue;
       var nm = setD[Math.floor(r() * setD.length)];
       if(nm === 'kelp' && Math.abs(sx) < 9) nm = 'coralBall'; // tall kelp only at the sides, so it never hides the board
@@ -18270,11 +18319,11 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     var wreckM = night ? reef3dModel(models, 'wreck', 7, kit.grad, '#3c5560') : null;
     if(wreckM){ // the pirate shipwreck lies beside the middle of the path
       wreckM.traverse(function(m){ if(/^grass/.test(m.name || '')) m.visible = false; });
-      var wmid = spaces[Math.floor(spaces.length / 2)], wside = wmid.x > 0 ? -1 : 1;
+      var wmid = spaces[Math.floor(mainN / 2)], wside = wmid.x > 0 ? -1 : 1;
       wreckM.position.set(wmid.x + wside * 11, -.3, wmid.z - 3); wreckM.rotation.y = wside > 0 ? -.6 : Math.PI + .6; wreckM.scale.multiplyScalar(1);
       statics.add(wreckM);
     } else if(night){ // the sunken ship lies on its side beside the middle of the path, half buried in the silt
-      var mid = spaces[Math.floor(spaces.length / 2)], ship = new THREE.Group();
+      var mid = spaces[Math.floor(mainN / 2)], ship = new THREE.Group();
       var hs = new THREE.Shape(); hs.moveTo(-6, 1.2); hs.quadraticCurveTo(-5.4, -1.6, -1, -2); hs.lineTo(3.6, -2); hs.quadraticCurveTo(6.4, -1.4, 7, 1.6); hs.lineTo(-6, 1.2);
       var hull = mesh(new THREE.ExtrudeGeometry(hs, { depth: 3, bevelEnabled: true, bevelSize: .35, bevelThickness: .35, bevelSegments: 3, curveSegments: 18 }), M('#5a4332'));
       hull.position.z = -1.5; ship.add(hull);
@@ -18292,7 +18341,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       ship.position.set(mid.x + side * 11.5, .6, mid.z - 3); ship.rotation.set(0, side > 0 ? -.35 : Math.PI + .35, side * .32);
       statics.add(ship);
     } else { // a coral-covered rock arch over the path, partway along
-      var a = spaces[Math.floor(spaces.length * .45)], arch = mesh(new THREE.TorusGeometry(4.2, .9, 12, 36, Math.PI), M('#a9bcb9'), a.x, -.2, a.z);
+      var a = spaces[Math.floor(mainN * .6)], arch = mesh(new THREE.TorusGeometry(4.2, .9, 12, 36, Math.PI), M('#a9bcb9'), a.x, -.2, a.z);
       statics.add(arch);
       for(var q = 0; q < 9; q++){ var ang = q / 8 * Math.PI, cb = B.coralBall(r); cb.position.set(a.x + Math.cos(ang) * 4.2, Math.sin(ang) * 4.2 + .5, a.z); cb.scale.setScalar(.55); statics.add(cb); }
     }
@@ -18307,7 +18356,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       plume = new THREE.InstancedMesh(new THREE.SphereGeometry(.13, 8, 6), new THREE.MeshBasicMaterial({ color: night ? '#cfeff0' : '#ffffff', transparent: true, opacity: .7 }), 16);
       plume.userData = { x: px, y: py, z: pz, h: 9 }; plume.frustumCulled = false; reef3dPlume(plume, new THREE.Object3D(), 0); scene.add(plume);
       if(night){
-        var lmMid = spaces[Math.floor(spaces.length / 2)], lx = lmC.x + (lmMid.x - lmC.x) * .55, lz = lmC.z + 1.5;
+        var lmMid = spaces[Math.floor(mainN / 2)], lx = lmC.x + (lmMid.x - lmC.x) * .55, lz = lmC.z + 1.5;
         var lantern = B.lantern(); lantern.position.set(lx, 0, lz); lantern.rotation.y = .4; lantern.scale.setScalar(1.1); deckObjs.push(lantern); scene.add(lantern);
         var poolGeo = new THREE.PlaneGeometry(13, 13); poolGeo.rotateX(-Math.PI / 2);   // Wendy chose the warmer, bigger glow
         var pool = new THREE.Mesh(poolGeo, new THREE.MeshBasicMaterial({ map: reef3dBlobTex(true), color: '#ffab45', transparent: true, opacity: .85, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }));
@@ -18316,7 +18365,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       }
     }
     // Tall towers in the haze on both sides give the sea floor depth: coral by day, rock spires at night.
-    for(var tz = 6; tz > -spaces.length * 2.6 - 10; tz -= 7 + r() * 5){
+    for(var tz = 6; tz > -mainN * 2.6 - 10; tz -= 7 + r() * 5){
       [-1, 1].forEach(function(sd){
         var tw = new THREE.Group(), hgt = 4 + r() * 6, x = sd * (15 + r() * 8);
         if(night){ var sp = mesh(new THREE.ConeGeometry(1.4 + r(), hgt, 7), M('#25363c')); sp.position.y = hgt / 2; tw.add(sp); }
@@ -18450,7 +18499,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     });
 
     var view = {
-      wrap: wrap, renderer: renderer, scene: scene, cam: cam, spaces: spaces, guide: guide, ring: ring, night: night, curve: curve,
+      wrap: wrap, renderer: renderer, scene: scene, cam: cam, spaces: spaces, guide: guide, ring: ring, night: night,
       at: 0, moving: false, camPos: new THREE.Vector3(), camLook: new THREE.Vector3(), t0: performance.now(),
       bubbles: bubbles, bubbleData: bubbleData, dummy: dummy, swayers: swayers, hitables: hitables, sun: sun, key: '', dirty: true,
       caus: caus, rays: rays, rayList: rayList, schools: schools, fx: [], kit: kit,
@@ -18465,7 +18514,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   function reef3dPlace(view, i){
     var s = view.spaces[i]; view.at = i;
     view.guide.position.set(s.x, .3, s.z);
-    var nx = view.spaces[Math.min(i + 1, view.spaces.length - 1)];
+    var nx = reef3dAhead(view.spaces, i);
     if(nx !== s) view.guide.rotation.y = Math.atan2(nx.x - s.x, nx.z - s.z);
   }
   function reef3dCamTarget(view, out, look){
@@ -18842,16 +18891,18 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   // in the air and squashes on landing; heights and timing vary a little, the trip eases in and out, she turns
   // smoothly toward the next space and rocks side to side, and a trip of three or more ends with a spinning leap.
   // onHop(left) runs as each hop lands, with the number of hops still to go.
-  function reef3dTravel(view, target, done, onHop){
+  function reef3dTravel(view, target, done, onHop, route){
     if(view.moving || target === view.at){ if(!view.moving) done(); return; }
-    var dir = target > view.at ? 1 : -1, calm = reefCalm();
-    if(calm){ reef3dPlace(view, target); if(onHop) onHop(0); done(); return; }
+    route = route || reef3dRoute(view.spaces, view.at, target);
+    if(!route.length){ done(); return; }
+    var calm = reefCalm();
+    if(calm){ reef3dPlace(view, route[route.length - 1]); if(onHop) onHop(0); done(); return; }
     view.moving = true; view.emote = null;
-    var from = view.at, steps = Math.abs(target - from), i = 0;
+    var from = view.at, steps = route.length, i = 0;
     var body = view.guide.userData.body, g = view.guide;
     function angTo(a, b){ return Math.atan2(Math.sin(b - a), Math.cos(b - a)); }
     function hop(){
-      var a = view.spaces[from + i * dir], b = view.spaces[from + (i + 1) * dir], t0 = performance.now();
+      var a = view.spaces[i ? route[i - 1] : from], b = view.spaces[route[i]], t0 = performance.now();
       var last = i === steps - 1, edge = Math.min(i, steps - 1 - i);          // hops near the start and end are slower
       var dur = (steps > 6 ? 250 : 330) + (edge === 0 ? 90 : edge === 1 ? 35 : 0) + Math.random() * 40 + (last && steps >= 3 ? 160 : 0);
       var hgt = (.85 + Math.random() * .35) * (last && steps >= 3 ? 1.45 : 1), roll = (i % 2 ? 1 : -1) * (.1 + Math.random() * .06);
@@ -18872,7 +18923,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
         body.rotation.z = roll * Math.sin(Math.min(1, p / l) * Math.PI);
         if(p < 1) return requestAnimationFrame(step);
         body.position.y = 0; body.scale.set(1, 1, 1); body.rotation.x = 0; body.rotation.z = 0; g.rotation.y = ry1;
-        i++; view.at = from + i * dir;
+        i++; view.at = route[i - 1];
         reef3dPuff(view, b);
         if(onHop) try { onHop(steps - i); } catch(e){}
         if(i < steps) hop(); else { view.moving = false; done(); }
@@ -18902,7 +18953,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     t.needsUpdate = true;
   }
   function reef3dDice(view){
-    if(view.dice || view.at >= view.spaces.length - 1 || !document.body.contains(view.wrap)) return;
+    if(view.dice || !reef3dWays(view.spaces, view.at).length || !document.body.contains(view.wrap)) return;
     var THREE = window.THREE, n = 1 + Math.floor(Math.random() * 6), tex = reef3dDiceTex(n, view.night);
     var mat = new THREE.MeshLambertMaterial({ map: tex, emissive: view.night ? '#38e6d6' : '#7fb0ff', emissiveIntensity: view.night ? .45 : .12 });
     var box = new THREE.Mesh(reef3dRoundBox(1.05, .16, 4), mat), dg = new THREE.Group(); dg.add(box);
@@ -18953,25 +19004,71 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     }, calm ? 0 : 400);   // the moment her head meets the block
   }
   function reef3dDiceMove(view, d){
-    var target = Math.min(view.spaces.length - 1, view.at + d.n);
-    d.counting = true; reef3dDiceDraw(d.tex, target - view.at);
-    reef3dTravel(view, target, function(){
+    var left = d.n;
+    d.counting = true; reef3dDiceDraw(d.tex, left);
+    // Hop along until the count runs out, the path ends, or a fork comes up (then she picks a way, like Mario Party).
+    function stretch(firstStep){
+      var route = [], at = view.at, next = firstStep;
+      while(left - route.length > 0){
+        if(next == null){
+          var opts = reef3dWays(view.spaces, at);
+          if(!opts.length) break;
+          if(opts.length > 1 && (route.length || at !== d.startAt || d.asked)){ return run(route, function(){ choose(opts); }); }
+          if(opts.length > 1){ return choose(opts); }
+          next = opts[0];
+        }
+        route.push(next); at = next; next = null;
+        if(view.spaces[at].end) break;
+      }
+      run(route, land);
+    }
+    function run(route, then){
+      if(!route.length) return then();
+      reef3dTravel(view, route[route.length - 1], then, function(){ left--; if(view.dice === d) reef3dDiceDraw(d.tex, left); }, route);
+    }
+    function choose(opts){
+      if(left <= 0) return land();
+      d.asked = true;
+      var box = document.createElement('div'); box.className = 'r3-fork'; box.setAttribute('role', 'group'); box.setAttribute('aria-label', 'Which way?');
+      box.innerHTML = '<b>Which way?</b>' + opts.map(function(n){
+        var t = view.spaces[n], br = t.branch;
+        var lab = br === 'treasure' ? '🧰 Treasure Reef' : br === 'story' ? '🍾 Story Bottle' : '⬆️ Keep going';
+        return '<button type="button" data-fork="' + n + '">' + lab + '</button>';
+      }).join('');
+      view.wrap.appendChild(box); d.fork = box;
+      try { Sound.bloop(700, 0, .05); } catch(e){}
+      box.addEventListener('click', function(e){
+        var b = e.target.closest('[data-fork]'); if(!b) return; e.stopPropagation();
+        box.remove(); d.fork = null; try { Sound.tap(); } catch(err){}
+        stretch(+b.dataset.fork);
+      });
+    }
+    function land(){
       reef3dDiceDone(view, d);
       S.reef3dAt = view.at;
       var s = view.spaces[view.at];
+      if(s.kind === 'treasure' || s.kind === 'story') return reef3dArrive(view, s);   // the end of a branch: go in
       if(s.kind === 'surprise'){
         if(reefCalm()){ reef3dQHit(view, s); return reef3dSurprise(view, s); }
         setTimeout(function(){ reef3dEmote(view, 'bonk', function(){ reef3dEmote(view, 'startle'); }); }, 250);
         setTimeout(function(){ reef3dQHit(view, s); reef3dCrabAct(view, 'Dance', true); }, 650);
         return setTimeout(function(){ reef3dSurprise(view, s); }, 950);
       }
-      if(s.kind === 'deck' || s.kind === 'treasure'){ reef3dStars(view, s); if(!reefCalm()) reef3dCrabAct(view, 'Yes', true); }
+      if(s.kind === 'deck'){ reef3dStars(view, s); if(!reefCalm()) reef3dCrabAct(view, 'Yes', true); }
       reef3dEmote(view, s.kind === 'plain' ? 'hello' : 'twirl');
-    }, function(left){ if(view.dice === d) reef3dDiceDraw(d.tex, left); });
+    }
+    d.startAt = view.at;
+    stretch(null);
+  }
+  // The ways forward from a space: along the main path, and onto a branch at a fork. On a branch, toward its end.
+  function reef3dWays(spaces, i){
+    var s = spaces[i];
+    if(s.branch) return s.end ? [] : (s.links || []).filter(function(n){ return n > i; });
+    return (s.links || []).filter(function(n){ return n > i; });
   }
   function reef3dDiceDone(view, d){
     if(view.dice !== d) return;
-    view.dice = null; if(d.tip) d.tip.remove(); if(d.here && d.here.qb) d.here.qb.visible = true;
+    view.dice = null; if(d.tip) d.tip.remove(); if(d.fork) d.fork.remove(); if(d.here && d.here.qb) d.here.qb.visible = true;
     var fin = function(){ view.scene.remove(d.g); d.box.geometry.dispose(); d.mat.dispose(); d.tex.dispose(); d.halo.material.dispose(); };
     if(reefCalm()) return fin();
     var s0 = d.g.scale.x;
@@ -19134,7 +19231,12 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     if(view.dice){ reef3dDiceHit(view); return; }
     if(!s || view.moving) return;
     view.ring.visible = false;
-    reef3dTravel(view, i, function(){
+    reef3dTravel(view, i, function(){ reef3dArrive(view, s); });
+  }
+  // What happens when the guide stops on a space she was sent to (a deck opens, the Treasure Reef shelf opens…).
+  function reef3dArrive(view, s){
+    var i = s.i;
+    (function(){
       S.reef3dAt = i;
       if(s.kind === 'surprise'){
         if(reefCalm()){ reef3dQHit(view, s); return reef3dSurprise(view, s); }
@@ -19149,16 +19251,17 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       if(s.kind === 'deck'){ Sound.bloop(520); S.reefReturnY = window.scrollY; return setTimeout(function(){ reefGo('dive', s.label, function(){ reefStartDeck(s.item.d.id); }); }, reefCalm() ? 0 : 750); }
       if(s.kind === 'treasure'){ Sound.bloop(600); S.reefReturnY = window.scrollY; return setTimeout(function(){ reefGo('swim', s.label, function(){ S.view = 'collection'; render(); window.scrollTo(0, 0); }); }, reefCalm() ? 0 : 750); }
       if(s.kind === 'story'){ S.reefReturnY = window.scrollY; return setTimeout(function(){ reefGo('dive', s.label, startStoryMaker); }, reefCalm() ? 0 : 250); }
-    });
+    })();
   }
 
   // Treasure map: the whole board from above on parchment. Tap a deck to send the guide there.
   function reef3dMap(view){
-    var sp = view.spaces, minX = -8, maxX = 8, minZ = sp[sp.length - 1].z - 2, maxZ = 2;
+    var sp = view.spaces, minX = -8, maxX = 8, minZ = 0, maxZ = 2;
+    sp.forEach(function(s){ minX = Math.min(minX, s.x - 2); maxX = Math.max(maxX, s.x + 2); minZ = Math.min(minZ, s.z - 2); });
     var W = 300, H = Math.max(420, (maxZ - minZ) * 13);
     function px(s){ return ((s.x - minX) / (maxX - minX)) * (W - 60) + 30; }
     function py(s){ return ((maxZ - s.z) / (maxZ - minZ)) * (H - 60) + 30; }
-    var d = 'M' + sp.map(function(s){ return px(s).toFixed(1) + ' ' + py(s).toFixed(1); }).join('L');
+    var d = reef3dPathLines(sp).map(function(ln){ return 'M' + ln.map(function(s){ return px(s).toFixed(1) + ' ' + py(s).toFixed(1); }).join('L'); }).join(' ');
     var dots = sp.map(function(s){
       if(s.kind === 'plain' || s.kind === 'start') return '<circle cx="'+px(s).toFixed(1)+'" cy="'+py(s).toFixed(1)+'" r="4" fill="#a8814f"/>';
       if(s.kind === 'surprise') return '<text x="'+px(s).toFixed(1)+'" y="'+(py(s) + 5).toFixed(1)+'" text-anchor="middle" font-size="14" fill="#2f8f95">✦</text>';
@@ -19345,11 +19448,12 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     return up;
   }
 
-  // What Shelly does when the board appears: a cheer if a deck has just been finished (it went from
-  // 'ready' to 'done' since she last saw it), a wave hello when arriving from the profiles, nothing otherwise.
+  // What Shelly does when the board appears: a cheer and then the dice when she's just come out of a deck (many
+  // decks have no end, so leaving one counts), a wave hello when arriving from the profiles, nothing otherwise.
   function reef3dGreet(view, zones, quiet){
     var now = {}, finished = false;
-    zones.forEach(function(z){ z.items.forEach(function(it){ now[it.d.id] = it.state; if(R3.seen && R3.seen[it.d.id] === 'ready' && it.state === 'done') finished = true; }); });
+    zones.forEach(function(z){ z.items.forEach(function(it){ now[it.d.id] = it.state; }); });
+    if(R3.fromDeck){ R3.fromDeck = false; finished = true; }
     var first = !R3.seen || R3.seenProfile !== (S.profile && S.profile.id);
     R3.seen = now; R3.seenProfile = S.profile && S.profile.id;
     if(quiet || (!finished && !first)) return;
@@ -19390,6 +19494,16 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
         view.w = 0; reef3dLoop(view);
         reef3dAmbience(view, true);
         reef3dGreet(view, zones, reef3dThemeArrive(view));   // after a day/night switch she waves on her own cue
+        // back from the Treasure Reef or the Story Bottle: hop back along the branch to the main path
+        var here = view.spaces[view.at];
+        if(here && here.branch && here.end){
+          clearTimeout(view.homeT);
+          view.homeT = setTimeout(function(){
+            var h = view.spaces[view.at];
+            if(!document.body.contains(view.wrap) || view.moving || view.dice || !h || !h.branch) return;
+            reef3dTravel(view, h.jn, function(){ S.reef3dAt = view.at; reef3dEmote(view, 'hello'); });
+          }, 1300);
+        }
       } catch(err){
         try { console.warn('3D reef turned off:', err); } catch(e){}
         R3.failed = true; R3.view = null; scene2d.hidden = false; rw.classList.remove('has-3d'); document.body.classList.remove('r3-full', 'r3-loading');
@@ -20416,6 +20530,15 @@ body.reef-calm .rw-light, body.reef-calm .rw-obj, body.reef-calm .rw-post, body.
 @keyframes r3DiceNum{ 0%{ opacity:0; transform:translate(-50%,-50%) scale(.2); } 30%{ opacity:1; transform:translate(-50%,-50%) scale(1.25); } 45%{ transform:translate(-50%,-50%) scale(1); }
   80%{ opacity:1; transform:translate(-50%,-60%) scale(1); } 100%{ opacity:0; transform:translate(-50%,-90%) scale(.9); } }
 body.reef-calm .r3-dice-tip, body.reef-calm .r3-dice-num{ animation:none !important; }
+/* a fork in the path: two big buttons to pick a way */
+.r3-fork{ position:absolute; z-index:5; left:50%; bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 74px); transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:8px;
+  padding:12px 14px; border-radius:22px; background:rgba(251,246,234,.95); box-shadow:0 6px 18px rgba(30,60,60,.2); animation:r3Pop2 .3s var(--reef-pop) both; width:max-content; max-width:calc(100% - 32px); }
+.r3-fork b{ font:800 1.1rem 'Baloo 2',sans-serif; color:#3f2c1b; }
+.r3-fork button{ border:none; cursor:pointer; padding:10px 18px; border-radius:16px; font:800 1.05rem 'Baloo 2',sans-serif; min-width:190px;
+  background:linear-gradient(180deg, #f6e7c4, #e8d2a0); color:#5a3d1d; box-shadow:0 4px 0 #b08d5a; -webkit-tap-highlight-color:transparent; }
+.r3-fork button:active{ transform:translateY(3px); box-shadow:0 1px 0 #b08d5a; }
+.r3.night .r3-fork{ background:rgba(20,52,58,.95); } .r3.night .r3-fork b{ color:#f6e9c8; }
+@media (max-height:500px) and (orientation:landscape){ .r3-fork{ bottom:max(12px, env(safe-area-inset-bottom, 0px)); flex-direction:row; flex-wrap:wrap; justify-content:center; } .r3-fork button{ min-width:0; } }
 /* the ? block's prize: a ta-da card in the middle of the screen */
 .r3-prize{ position:absolute; inset:0; z-index:6; display:flex; align-items:center; justify-content:center; padding:24px; }
 .r3-prize-card{ position:relative; display:flex; flex-direction:column; align-items:center; gap:4px; width:min(300px, 82vw); padding:22px 20px 20px; border-radius:28px; text-align:center;
@@ -20586,7 +20709,7 @@ body.r3-full .sea, body.r3-lobby .sea{ display:none !important; }
 body.r3-loading{ background:linear-gradient(180deg, #d9f0ec 0%, #b2e0de 35%, #9fd6d6 70%) fixed; }
 :root[data-theme="dark"] body.r3-loading{ background:linear-gradient(180deg, #24505b 0%, #143844 40%, #0d2b35 70%) fixed; }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) body.r3-loading{ background:linear-gradient(180deg, #24505b 0%, #143844 40%, #0d2b35 70%) fixed; } }
-body.r3-loading .rw-scene, body.r3-loading .deck-grid, body.r3-loading .subject-tabs{ visibility:hidden !important; }
+body.r3-loading .rw-scene, body.r3-loading .deck-grid, body.r3-loading .subject-tabs, body.r3-loading .empty-filter-note{ visibility:hidden !important; }
 body.r3-loading .rw::after{ content:"🐢"; position:fixed; left:50%; top:55%; font-size:3rem; transform:translate(-50%, -50%); animation:r3Load 1.6s ease-in-out infinite; }
 @keyframes r3Load{ 0%,100%{ transform:translate(-50%, -50%) rotate(-8deg); } 50%{ transform:translate(-50%, -62%) rotate(8deg); } }
 body.r3-lobby{ background:linear-gradient(180deg, #d9f0ec 0%, #b2e0de 35%, #9fd6d6 70%) fixed; }
