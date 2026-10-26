@@ -1,5 +1,42 @@
 # Changelog
 
+## Version 99 (October 26, 2026)
+
+The big one: Coral Cove went from a flat, drawn reef to a 3D game board, like a party board game under the sea. This entry covers everything from Version 33 to Version 99.
+
+**The 3D reef board**
+- Her decks are now spaces on a winding 3D path across the sea floor, grouped by subject (Kelp Library, Number Reef, Coral Garden…), ending at the Treasure Reef and the Story Bottle. Plain seashell spaces and **? surprise spaces** sit between the decks.
+- **Shelly hops along the path** one space at a time to the deck you tap. She waves hello, dives into a deck, cheers with a spin when a deck is finished, giggles when tapped, and does little twirls while she waits. At night the guide is **Lumi** the anglerfish, whose lure lights up the sand.
+- **? blocks:** a floating block over every surprise space. Shelly jumps up and bonks it for a burst of coins and sparkles.
+- **Kiko the crab** walks along with Shelly and dances at surprises. Tap Kiko to swap between Mochi and Hermit.
+- **A living reef:** schools of fish that scatter when tapped, a dolphin swimming past, a whale far off in the haze (a manta ray at night), drifting bubbles, light rays and moving sunlight on the sand. By day there's a coral rock arch; at night a sunken pirate ship with a lantern.
+- **Treasure map:** see the whole board from above on parchment and tap a deck to send Shelly there.
+- **Day ⇄ night switch:** the camera looks up at the sky while the sun sets and the moon rises (or the other way round), then tilts back down to the new reef.
+
+**The profile lobby**
+- The profile picker is a 3D underwater room. Profiles are big game-board coins, Shelly swims around, and Kiko sits at the side.
+- **Feed Shelly:** tap the water to drop a food (flakes, a leaf, a shrimp, a jellyfish, or a rare golden star cookie). Shelly swims over and gulps it, and rare foods get a twirl and sparkles.
+
+**Music and sound**
+- **Background music:** a day song and a night song that crossfade when you switch. Turn it on or off with the 🎵 button. Hold 🎵 for a second to see a short note on what the music did, for passing on if it won't play.
+- **Celebration music** when a deck is finished, plus a soft underwater hum on the board.
+- Music keeps playing when the iPad's side switch is set to silent, like Shelly's voice already did.
+
+**While studying**
+- **Spoken praise** after a right answer, naming the effort, in every deck type.
+- **Celebration bubbles** float up after a right answer. Tap them to pop them.
+- **A splash** when she dives into a deck.
+- **Leaving a deck early in her mode asks a subtraction question** (like 20 − 15) instead of the PIN.
+- **Ask Shelly** (Lumi at night): ask what a word or sentence means and how it's built. Inside Claude it can answer any question. On the GitHub copy it only explains Korean word parts, worked out on the iPad with no internet needed.
+
+**Grown-up profiles** now get the same game board, transitions, music and praise. Grown-up tools are still in Edit Mode.
+
+**Behind the scenes**
+- The 3D models are free (CC0) models from Quaternius and Kenney, kept in `reef-models.js` and loaded the first time the board opens.
+- Tuned to keep the iPad cool: lighting and shadows are painted onto the scenery once, still parts are merged together, and the board redraws more slowly when nothing is moving.
+- The GitHub copy keeps its own `three.min.js` (the 3D engine), so the board works without Wi-Fi. The models, the 3D engine and the celebration music are saved for offline use. The day and night songs are saved the first time each one plays.
+- Starting decks re-exported from Claude on October 26, 2026.
+
 ## Version 32 (October 22, 2026)
 
 - **Her decks live in the reef:** the deck list is gone from her profile. Each deck is now something in the reef (a brain coral, sea fan, clam, sponge or anemone) on a sandy ledge for its subject: Kelp Library, Number Reef, Coral Garden and so on. Tap it to dive in.
