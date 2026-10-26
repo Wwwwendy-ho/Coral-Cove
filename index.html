@@ -18277,7 +18277,13 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     }
     function duneH(fx, fy, k){ var h = Math.sin(fx * .35) * .25 + Math.cos(fy * .22 + fx * .1) * .3; return Math.min(h, 0) * .4 - .06 + (h - Math.min(h, 0) * .4 + .06) * k; }
     var floorZ = -len / 2 + 14;
-    for(var v = 0; v < pos.count; v++){ var fx = pos.getX(v), fy = pos.getY(v); pos.setZ(v, duneH(fx, fy, duneK(fx, floorZ - fy)) + (Math.abs(fx) > 12 ? (Math.abs(fx) - 12) * .25 : 0)); }
+    // Night: the main path runs along the deck of a huge abandoned ship (see reef3dWreckDeck). The deck spans the
+    // path with room to spare; the silt under it is pushed down so it never shows through the planks.
+    var shipDeck = night ? { half: Math.max.apply(null, spaces.slice(0, mainN).map(function(s){ return Math.abs(s.x); })) + 4.5,
+      z0: spaces[0].z + 7, z1: spaces[mainN - 1].z - 9, y: -.02 } : null;
+    function onDeck(x, z){ return shipDeck && Math.abs(x) < shipDeck.half + .6 && z < shipDeck.z0 + .6 && z > shipDeck.z1 - 5; }
+    for(var v = 0; v < pos.count; v++){ var fx = pos.getX(v), fy = pos.getY(v);
+      pos.setZ(v, onDeck(fx, floorZ - fy) ? -.6 : duneH(fx, fy, duneK(fx, floorZ - fy)) + (Math.abs(fx) > 12 ? (Math.abs(fx) - 12) * .25 : 0)); }
     floorGeo.computeVertexNormals();
     var floor = new THREE.Mesh(floorGeo, M(night ? '#2f3e3e' : '#d9cba6'));
     floor.rotation.x = -Math.PI / 2; floor.position.set(0, -.15, -len / 2 + 14); floor.receiveShadow = true; scene.add(floor);
@@ -18286,7 +18292,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     pathLines.forEach(function(ln){
       if(ln.length < 2) return;
       var curve = new THREE.CatmullRomCurve3(ln.map(function(s){ return new THREE.Vector3(s.x, 0, s.z); }));
-      var ribbon = mesh(new THREE.TubeGeometry(curve, ln.length * 8, .55, 8), M(night ? '#4a5650' : '#efdcb4'));
+      var ribbon = mesh(new THREE.TubeGeometry(curve, ln.length * 8, .55, 8), M(night ? '#6b5640' : '#efdcb4'));
       ribbon.scale.y = .12; ribbon.position.y = .02; scene.add(ribbon); reef3dBakeObject(ribbon, rig, bake);
     });
     var hitables = [], deckObjs = [], swayers = [], chestModel = null, spinners = [];
@@ -18338,7 +18344,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     if(wreckM){ // the pirate shipwreck lies beside the middle of the path
       wreckM.traverse(function(m){ if(/^grass/.test(m.name || '')) m.visible = false; });
       var wmid = spaces[Math.floor(mainN / 2)], wside = wmid.x > 0 ? -1 : 1;
-      wreckM.position.set(wmid.x + wside * 11, -.3, wmid.z - 3); wreckM.rotation.y = wside > 0 ? -.6 : Math.PI + .6; wreckM.scale.multiplyScalar(1);
+      wreckM.position.set(wmid.x + wside * (shipDeck ? shipDeck.half + 13 : 11), -.3, wmid.z - 3); wreckM.rotation.y = wside > 0 ? -.6 : Math.PI + .6; wreckM.scale.multiplyScalar(1);
       statics.add(wreckM);
     } else if(night){ // the sunken ship lies on its side beside the middle of the path, half buried in the silt
       var mid = spaces[Math.floor(mainN / 2)], ship = new THREE.Group();
@@ -18382,6 +18388,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
         lamp = { glow: lantern.userData.glow, halo: lantern.userData.halo, pool: pool };
       }
     }
+    if(shipDeck) reef3dWreckDeck({ THREE: THREE, scene: scene, statics: statics, deck: shipDeck, spaces: spaces, mainN: mainN, M: M, mesh: mesh, B: B, r: r, models: models, kit: kit, deckObjs: deckObjs });
     // Tall towers in the haze on both sides give the sea floor depth: coral by day, rock spires at night.
     for(var tz = 6; tz > -mainN * 2.6 - 10; tz -= 7 + r() * 5){
       [-1, 1].forEach(function(sd){
@@ -18474,7 +18481,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     var chestMixer = null, chestActs = {};
     if(chestModel){ chestMixer = new THREE.AnimationMixer(chestModel.userData.root); chestModel.userData.gltf.animations.forEach(function(c){ chestActs[c.name] = chestMixer.clipAction(c); }); }
     // Soft shadows under everything that stands on the sand, then the still scenery baked and merged.
-    function groundY(x, z){ var fy = -(z - (-len / 2 + 14)); return duneH(x, fy, duneK(x, z)) + (Math.abs(x) > 12 ? (Math.abs(x) - 12) * .25 : 0) - .15; }
+    function groundY(x, z){ if(onDeck(x, z) && Math.abs(x) < shipDeck.half && z < shipDeck.z0) return shipDeck.y; var fy = -(z - (-len / 2 + 14)); return duneH(x, fy, duneK(x, z)) + (Math.abs(x) > 12 ? (Math.abs(x) - 12) * .25 : 0) - .15; }
     var blobList = [], blobMat = reef3dBlobMat(reef3dBlobTex(), night);
     statics.updateMatrixWorld(true);
     statics.children.forEach(function(c){ reef3dFootprint(c, blobList); });
@@ -18950,6 +18957,109 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       })(t0);
     }
     hop();
+  }
+
+  /* ---------- Night: the board is the deck of a huge abandoned ship. Weathered planks under the path, the hull and
+     its railings down both sides (with gaps where branch paths step off onto the sand), three broken masts with torn
+     sails and lanterns, cannons at the rails, kelp hanging over the side, and a bow at the far end. ---------- */
+  function reef3dPlankTex(THREE){
+    var c = document.createElement('canvas'); c.width = 256; c.height = 512; var g = c.getContext('2d');
+    var cols = ['#5b4632', '#4f3c2b', '#634c36', '#584331', '#4a3828', '#5f4934', '#533f2d', '#61493a'];
+    for(var i = 0; i < 8; i++){
+      g.fillStyle = cols[i]; g.fillRect(i * 32, 0, 32, 512);
+      for(var j = 0; j < 4; j++){ var y = (i * 97 + j * 131) % 512; g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(i * 32, y, 32, 2); g.fillStyle = 'rgba(255,230,190,.06)'; g.fillRect(i * 32, y + 2, 32, 1); }
+      for(var k = 0; k < 14; k++){ g.fillStyle = 'rgba(0,0,0,' + (.05 + Math.random() * .08) + ')'; g.fillRect(i * 32 + 4 + Math.random() * 24, Math.random() * 512, 1, 20 + Math.random() * 60); }   // grain
+      g.fillStyle = 'rgba(0,0,0,.5)'; g.fillRect(i * 32, 0, 2, 512);   // the seam between planks
+    }
+    for(var m = 0; m < 9; m++){ var mx = Math.random() * 256, my = Math.random() * 512, rr = 10 + Math.random() * 26;   // patches of moss and silt
+      var gr = g.createRadialGradient(mx, my, 0, mx, my, rr); gr.addColorStop(0, 'rgba(70,110,90,.45)'); gr.addColorStop(1, 'rgba(70,110,90,0)'); g.fillStyle = gr; g.fillRect(mx - rr, my - rr, rr * 2, rr * 2); }
+    var t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t;
+  }
+  function reef3dSailTex(THREE){   // a torn, faded sail: holes and ragged edges are see-through
+    var c = document.createElement('canvas'); c.width = 128; c.height = 128; var g = c.getContext('2d');
+    g.fillStyle = '#b9b09a'; g.fillRect(0, 0, 128, 128);
+    for(var s = 0; s < 6; s++){ g.fillStyle = 'rgba(80,70,50,.12)'; g.fillRect(0, s * 22 + 6, 128, 3); }
+    g.globalCompositeOperation = 'destination-out';
+    for(var h = 0; h < 7; h++){ g.beginPath(); var x = Math.random() * 128, y = 20 + Math.random() * 100, r = 4 + Math.random() * 12; g.moveTo(x + r, y);
+      for(var a = 1; a <= 7; a++){ var an = a / 7 * Math.PI * 2, rr = r * (.6 + Math.random() * .6); g.lineTo(x + Math.cos(an) * rr, y + Math.sin(an) * rr); } g.fill(); }
+    g.beginPath(); g.moveTo(0, 128); for(var e = 0; e <= 16; e++) g.lineTo(e * 8, 112 + Math.random() * 16); g.lineTo(128, 128); g.fill();   // ragged bottom edge
+    var t = new THREE.CanvasTexture(c); return t;
+  }
+  function reef3dWreckDeck(o){
+    var THREE = o.THREE, d = o.deck, sp = o.spaces, M = o.M, mesh = o.mesh, B = o.B, r = o.r, st = o.statics;
+    var W = d.half * 2, L = d.z0 - d.z1, zc = (d.z0 + d.z1) / 2;
+    // the deck itself: one textured slab
+    var tex = reef3dPlankTex(THREE); tex.repeat.set(W / 4, L / 8);
+    var top = new THREE.Mesh(new THREE.BoxGeometry(W, .5, L), new THREE.MeshLambertMaterial({ map: tex, color: '#9fb4b0' }));
+    top.position.set(0, d.y - .25, zc); top.raycast = function(){}; o.scene.add(top);
+    // the hull: walls down both sides, a darker band of planks along the waterline
+    var hullM = M('#3f2f22'), trimM = M('#2b2018'), railM = M('#4d3a29');
+    [-1, 1].forEach(function(side){
+      st.add(mesh(new THREE.BoxGeometry(.5, 3.4, L), hullM, side * (d.half + .25), d.y - 1.5, zc));
+      st.add(mesh(new THREE.BoxGeometry(.56, .25, L), trimM, side * (d.half + .25), d.y - 1.1, zc));
+      st.add(mesh(new THREE.BoxGeometry(.3, .16, L), railM, side * (d.half + .1), d.y + 1.05, zc));   // the top rail
+    });
+    // railing posts, leaving gaps where a branch path steps off the ship
+    var exits = sp.filter(function(s){ return s.branch && Math.abs(s.x) > d.half - 1; });
+    for(var z = d.z0 - 1; z > d.z1 + 1; z -= 1.6){
+      [-1, 1].forEach(function(side){
+        var x = side * (d.half + .1);
+        if(exits.some(function(s){ return Math.abs(s.z - z) < 2.2 && Math.sign(s.x) === side; })) return;
+        if(r() < .12) return;   // a few posts have rotted away
+        st.add(mesh(new THREE.CylinderGeometry(.07, .09, 1.05, 6), railM, x, d.y + .52, z));
+      });
+    }
+    // planks down to the sand where a branch leaves the ship
+    sp.forEach(function(s){
+      if(!s.branch || !(sp[s.links[0]] && !sp[s.links[0]].branch)) return;   // the first space of each branch
+      var j = sp[s.jn], dir = Math.sign(s.x - j.x) || 1, gx = dir * (d.half + .9);
+      var gp = mesh(new THREE.BoxGeometry(2.4, .12, 1.3), M('#6b5238'), gx, d.y - .3, (j.z + s.z) / 2); gp.rotation.z = -dir * .25; st.add(gp);
+    });
+    // the bow at the far end: two angled walls meeting in a point, and a bowsprit
+    var bowZ = d.z1, bowLen = d.half * 1.4;
+    [-1, 1].forEach(function(side){
+      var wall = mesh(new THREE.BoxGeometry(.5, 3.4, Math.hypot(d.half, bowLen)), hullM, side * d.half / 2, d.y - 1.3, bowZ - bowLen / 2);
+      wall.rotation.y = side * Math.atan2(d.half, bowLen); st.add(wall);
+    });
+    var bowDeck = new THREE.Shape(); bowDeck.moveTo(-d.half, 0); bowDeck.lineTo(d.half, 0); bowDeck.lineTo(0, bowLen); bowDeck.lineTo(-d.half, 0);
+    var bd = new THREE.Mesh(new THREE.ShapeGeometry(bowDeck), new THREE.MeshLambertMaterial({ map: tex, color: '#9fb4b0' }));
+    bd.rotation.x = -Math.PI / 2; bd.position.set(0, d.y, bowZ); bd.raycast = function(){}; o.scene.add(bd);
+    var sprit = mesh(new THREE.CylinderGeometry(.14, .2, 7, 8), railM, 0, d.y + 1.6, bowZ - bowLen - 2); sprit.rotation.x = -Math.PI / 2 + .35; st.add(sprit);
+    // masts: three, set beside the path, one snapped off; each with a yard, a torn sail, a crow's nest and a lantern
+    var sailTex = reef3dSailTex(THREE), sailMat = new THREE.MeshLambertMaterial({ map: sailTex, color: '#a7b3ad', transparent: true, alphaTest: .4, side: THREE.DoubleSide });
+    var mains = sp.slice(0, o.mainN);
+    [.2, .5, .8].forEach(function(f, k){
+      var s = mains[Math.round((mains.length - 1) * f)], side = s.x > 0 ? -1 : 1;
+      var mx = Math.max(-d.half + 1.5, Math.min(d.half - 1.5, s.x + side * 3.6)), mz = s.z - 1.2, broken = k === 1, h = broken ? 5.5 : 13;
+      st.add(mesh(new THREE.CylinderGeometry(.28, .4, h, 10), M('#3a2b20'), mx, d.y + h / 2, mz));
+      st.add(mesh(new THREE.CylinderGeometry(.62, .62, .3, 10), trimM, mx, d.y + .15, mz));
+      if(broken){ var stub = mesh(new THREE.CylinderGeometry(.26, .28, 7, 10), M('#3a2b20'), mx - side * 3.2, d.y + .45, mz + 1.5); stub.rotation.z = side * (Math.PI / 2 - .12); stub.rotation.y = .5; st.add(stub); return; }
+      var yard = mesh(new THREE.CylinderGeometry(.12, .12, 7, 8), M('#3a2b20'), mx, d.y + h * .72, mz); yard.rotation.z = Math.PI / 2; yard.rotation.y = .25; st.add(yard);
+      var sail = new THREE.Mesh(new THREE.PlaneGeometry(6.2, 4.6, 8, 4), sailMat); sail.position.set(mx, d.y + h * .72 - 2.4, mz + .2); sail.rotation.y = .25;
+      var sp2 = sail.geometry.attributes.position; for(var v = 0; v < sp2.count; v++) sp2.setZ(v, Math.sin((sp2.getX(v) + 3.1) / 6.2 * Math.PI) * .5);   // a little billow
+      sail.geometry.computeVertexNormals(); sail.raycast = function(){}; o.scene.add(sail);
+      st.add(mesh(new THREE.CylinderGeometry(.85, .6, .7, 12, 1, true), M('#4a3a2c', { side: THREE.DoubleSide }), mx, d.y + h - .8, mz));
+      var lan = B.lantern(); lan.position.set(mx + side * .5, d.y + 3.4, mz + .5); lan.scale.setScalar(.7); o.scene.add(lan); o.deckObjs.push(lan);
+    });
+    // cannons poking over the rails, and kelp hanging over the side
+    for(var cz = d.z0 - 6, ci = 0; cz > d.z1 + 4; cz -= 9, ci++){
+      [-1, 1].forEach(function(side){
+        if(exits.some(function(s){ return Math.abs(s.z - cz) < 3 && Math.sign(s.x) === side; })) return;
+        var cn = (o.models && reef3dModel(o.models, 'cannon', .9, o.kit.grad)) || B.cannon(r);
+        cn.position.set(side * (d.half - 1), d.y, cz); cn.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2; st.add(cn);
+        if((ci + (side > 0 ? 1 : 0)) % 2){ var kp = B.kelp(r); kp.position.set(side * (d.half + .5), d.y - 2.6, cz + 3); kp.scale.setScalar(.8); st.add(kp); }
+      });
+    }
+    // loose crates, a coil of rope and broken planks scattered on the deck, kept off the path
+    function clear(x, z){ return !sp.some(function(s){ return Math.hypot(s.x - x, s.z - z) < 2.2; }); }
+    for(var n = 0, tries = 0; n < Math.round(L / 6) && tries < 300; tries++){
+      var x = (r() - .5) * (W - 3), z = d.z1 + 2 + r() * (L - 4); if(!clear(x, z)) continue; n++;
+      var pick = r(), obj;
+      if(pick < .35) obj = (o.models && reef3dModel(o.models, r() < .5 ? 'crate' : 'barrel', .8 + r() * .4, o.kit.grad)) || B.plank(r);
+      else if(pick < .6){ obj = new THREE.Group(); var coil = mesh(new THREE.TorusGeometry(.42, .13, 8, 20), M('#a08660'), 0, .13, 0); coil.rotation.x = Math.PI / 2; obj.add(coil); obj.add(mesh(new THREE.TorusGeometry(.26, .12, 8, 16), M('#a08660'), 0, .3, 0)); obj.children[1].rotation.x = Math.PI / 2; }
+      else obj = B.plank(r);
+      obj.position.set(x, d.y, z); obj.rotation.y = r() * 6; st.add(obj);
+    }
   }
 
   /* ---------- The dice block (after leaving a deck): it floats over the guide's head and flicks through its
