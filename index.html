@@ -11403,13 +11403,20 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       var sp = ((up ? 10 : 9) + Math.random() * (up ? 10 : 11)) * k, r = (4 + Math.random() * (up ? 10 : 9)) * k;
       drops.push({ x: cx + (up ? (Math.random() - .5) * W : (Math.random() - .5) * 30), y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: r, life: .75 + Math.random() * .5 });
     }
+    // One drop is painted once (gradient and glint) and then stamped for every drop, stretched along its direction
+    // of travel: far cheaper than building a gradient per drop per frame, which made the dive stutter on phones.
+    var spr = reefSplash.spr;
+    if(!spr){
+      spr = reefSplash.spr = document.createElement('canvas'); spr.width = 96; spr.height = 48; var sg = spr.getContext('2d');
+      var gr = sg.createRadialGradient(38, 17, 0, 48, 24, 48); gr.addColorStop(0, '#ffffff'); gr.addColorStop(.45, '#c9f2f2'); gr.addColorStop(1, '#4fc7cf');
+      sg.fillStyle = gr; sg.beginPath(); sg.ellipse(48, 24, 47, 23, 0, 0, Math.PI * 2); sg.fill();
+      sg.fillStyle = 'rgba(255,255,255,.85)'; sg.beginPath(); sg.arc(34, 16, 7, 0, Math.PI * 2); sg.fill();
+    }
     function drop(d, alpha){ // a teardrop stretched along its direction of travel
       var v = Math.sqrt(d.vx * d.vx + d.vy * d.vy), ang = Math.atan2(d.vy, d.vx), len = d.r * (1 + Math.min(2.2, v / 6));
-      g.save(); g.translate(d.x, d.y); g.rotate(ang); g.globalAlpha = alpha;
-      var gr = g.createRadialGradient(-len * .2, -d.r * .3, 0, 0, 0, len); gr.addColorStop(0, '#ffffff'); gr.addColorStop(.45, '#c9f2f2'); gr.addColorStop(1, '#4fc7cf');
-      g.fillStyle = gr; g.beginPath(); g.ellipse(0, 0, len, d.r, 0, 0, Math.PI * 2); g.fill();
-      g.fillStyle = 'rgba(255,255,255,.85)'; g.beginPath(); g.arc(-len * .3, -d.r * .35, d.r * .3, 0, Math.PI * 2); g.fill();
-      g.restore();
+      var c = Math.cos(ang), s = Math.sin(ang);
+      g.globalAlpha = alpha; g.setTransform(c * dpr, s * dpr, -s * dpr, c * dpr, d.x * dpr, d.y * dpr);
+      g.drawImage(spr, -len, -d.r, len * 2, d.r * 2);
     }
     (function frame(now){
       var e = (now - t0) / 1000; g.clearRect(0, 0, W, H);
@@ -11434,6 +11441,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
         if(e > d.life) return;
         d.vy += .5 * k; d.x += d.vx; d.y += d.vy; drop(d, Math.min(1, (d.life - e) * 3));
       });
+      g.setTransform(dpr, 0, 0, dpr, 0, 0);
       g.globalAlpha = 1;
       if(e < 1.3) requestAnimationFrame(frame);
     })(t0);
@@ -11442,7 +11450,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   // Mode) fn just runs straight away.
   function reefGo(kind, fromEl, fn){
     if(!reefGame() || reefCalm() || reefBusy){ fn(); return; }
-    reefBusy = true;
+    reefBusy = true; window.__reefTx = true;   // the 3D board pauses underneath while the water covers it
     var ov = document.createElement('div');
     ov.className = 'reef-tx reef-tx-' + kind;
     ov.setAttribute('aria-hidden', 'true');
@@ -11461,7 +11469,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     }
     var mid = kind === 'swim' ? 230 : 560, end = kind === 'swim' ? 560 : 1300;
     setTimeout(function(){ try { fn(); } catch(e){ console.error('[Coral Cove] transition', e); } }, mid);
-    setTimeout(function(){ ov.remove(); reefBusy = false; }, end);
+    setTimeout(function(){ ov.remove(); reefBusy = false; window.__reefTx = false; }, end);
   }
   function reefInDeck(){
     return ['study','summary','feed','story','equationFeed','langFeed','readAlong','flashFeed','miniStory','wordBank'].indexOf(S.view) !== -1;
@@ -11789,7 +11797,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   }
 
   /* ---------- Celebration music (Wendy's clip, win.mp3, published with the Claude version only):
-     the first two seconds after a right answer, about ten seconds after finishing a deck. Played
+     the first four seconds after a right answer, the whole clip after finishing a deck. Played
      through Web Audio so it can fade out on the iPad too. Without the file, the usual chime plays. ---------- */
   var reefWinBuf = null, reefWinLoading = null, reefWinNode = null;
   function reefWinLoad(){
@@ -11797,7 +11805,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     var ctx = null; try { ctx = Sound.getCtx(); } catch(e){}
     if(!ctx || !window.fetch) return null;
     // packed in a script file first, for the same reason as the songs (see reefMusicBytes)
-    reefWinLoading = reefMusicScript('win').catch(function(){ return fetch('win.mp3').then(function(r){ if(!r.ok) throw new Error('no music file'); return r.arrayBuffer(); }); })
+    reefWinLoading = (window.CORAL_COVE_SEED ? Promise.reject() : reefMusicScript('win')).catch(function(){ return fetch('win.mp3').then(function(r){ if(!r.ok) throw new Error('no music file'); return r.arrayBuffer(); }); })
       .then(function(b){ return new Promise(function(res, rej){ ctx.decodeAudioData(b, res, rej); }); })
       .then(function(buf){ reefWinBuf = buf; return buf; })
       .catch(function(){ reefWinLoading = 'none'; return null; });
@@ -11812,7 +11820,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       if(ctx.state === 'suspended' && ctx.resume) ctx.resume();
       if(reefWinNode){ try { reefWinNode.stop(); } catch(e){} }
       var src = ctx.createBufferSource(), gain = ctx.createGain(), t = ctx.currentTime;
-      var dur = Math.min(reefWinBuf.duration, full ? 10 : 2.2), vol = full ? .7 : .5;
+      var dur = Math.min(reefWinBuf.duration, full ? 14 : 4), vol = full ? .7 : .5;
       src.buffer = reefWinBuf; src.connect(gain); gain.connect(ctx.destination);
       gain.gain.setValueAtTime(vol, t); gain.gain.setValueAtTime(vol, t + Math.max(0, dur - (full ? 1.5 : .6))); gain.gain.linearRampToValueAtTime(0.0001, t + dur);
       src.start(t, 0, dur + .05); reefWinNode = src;
@@ -12297,6 +12305,17 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     }, { passive: true });
   }
 
+  // Shelly's line ("Let's dive into…") is shown and read aloud once when it's new, then fades away; when the board
+  // is drawn again with the same line it stays hidden, so it never sits over the board.
+  var reefHeadSaid = {};
+  function reefHeadOnce(el){
+    var head = el.querySelector('.rw-head'), say = head && head.querySelector('[data-reef-say]'); if(!head || !say) return;
+    var key = (S.profile && S.profile.id) + '|' + say.dataset.reefSay;
+    if(reefHeadSaid[key]){ head.classList.add('rw-gone'); return; }
+    reefHeadSaid[key] = true;
+    setTimeout(function(){ if(document.body.contains(head)) try { Speech.speak(say.dataset.reefSay); } catch(e){} }, 900);
+    setTimeout(function(){ if(!document.body.contains(head)) return; head.classList.add('rw-fading'); setTimeout(function(){ head.classList.add('rw-gone'); }, 450); }, 7000);
+  }
   // Runs at the end of renderHome(): outside Edit Mode the deck menu becomes the reef (every profile).
   function reefHome(){
     if(!reefGame() || S.editMode) return;
@@ -12332,6 +12351,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     var bottle = el.querySelector('[data-reef-special="story"]');
     if(bottle) bottle.addEventListener('click', function(){ S.reefReturnY = window.scrollY; reefGo('dive', bottle, startStoryMaker); });
     reefWireSay(el);
+    reefHeadOnce(el);
     reefParallaxWire();
     reef3dMount(el, zones);
     reefWinLoad(); // get the celebration music ready before the first right answer
@@ -17544,14 +17564,21 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
      camera follows. The painted 2D reef stays underneath as the fallback when 3D can't run. ---------- */
   var REEF_THREE_URL = 'three.min.js';
   var R3 = { loading: null, failed: false, view: null };
-  /* Auto quality. Each iPad is different and we can't test them all, so the board and lobby time their own frames
-     and step down one level at a time while drawing runs slow. The level reached is remembered on this device.
-     0: sharp, shadows, 60 a second · 1: less sharp · 2: no shadows or light rays · 3: softer image, 30 a second */
-  var R3Q_KEY = 'cc-3dq2', R3Q_MAX = 3;   // '2': levels found on the old, heavier board don't carry over
+  /* Auto quality. Each device is different and we can't test them all, so the board and lobby time their own frames
+     and step down one level at a time while drawing runs slow, and back up again when there's room to spare.
+     0: sharpest, 60 a second · 1: a little less sharp · 2: no light rays · 3: 30 a second
+     Sharpness is set by a pixel budget, never below the screen's own size, so phones (small screens with dense
+     pixels) stay crisp at every level instead of going soft. */
+  var R3Q_KEY = 'cc-3dq3', R3Q_MAX = 3;   // '3': levels saved by older versions (which could get stuck soft) don't carry over
+  var R3Q_BUDGET = [2.2e6, 1.6e6, 1.25e6, 1e6];   // pixels drawn per frame at each level
   R3.q = (function(){ try { var n = parseInt(localStorage.getItem(R3Q_KEY), 10); return n >= 0 && n <= R3Q_MAX ? n : 0; } catch(e){ return 0; } })();
+  function reef3dQRatio(q){
+    var dpr = devicePixelRatio || 1, css = Math.max(1, innerWidth * innerHeight);
+    return Math.min(dpr, 2, Math.max(1, Math.sqrt(R3Q_BUDGET[q] / css)));
+  }
   function reef3dQApply(view){
-    var q = R3.q, r = view.renderer, big = innerWidth * innerHeight > 700000;
-    r.setPixelRatio(Math.min(devicePixelRatio || 1, [big ? 1.25 : 1.5, 1, 1, .75][q]));
+    var q = R3.q, r = view.renderer;
+    r.setPixelRatio(reef3dQRatio(q));
     var sh = q < 2 && !view.baked;
     if(r.shadowMap.enabled !== sh){
       r.shadowMap.enabled = sh; r.shadowMap.needsUpdate = true;
@@ -17560,7 +17587,14 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     (view.rayList || view.rays || []).forEach(function(rm){ rm.visible = q < 2; });
     view.every = q >= 3 ? 2 : 1; view.w = 0; view.qs = null;
   }
+  function reef3dQSet(view, q, now){
+    R3.q = q; try { localStorage.setItem(R3Q_KEY, String(q)); } catch(e){}
+    reef3dQApply(view); view.qs = { n: 0, t0: now, last: now, hold: now + 1500 };
+  }
   // Called on every drawn frame. Skips start-up, the moment after a change, and pauses (hidden tab, app switch).
+  // One slow stretch (a deck loading, a song unpacking) isn't enough to step down: it takes two in a row. If a
+  // step down didn't make drawing faster, the device is capped (iPhone Low Power Mode draws 30 a second whatever
+  // we do), so that step is undone and the level stays put for this visit.
   function reef3dQTick(view, now){
     try { if(localStorage.getItem('cc-3dq-lock')) return; } catch(e){}   // tests hold the level steady
     var s = view.qs || (view.qs = { n: 0, t0: now, last: now, hold: now + 2500 });
@@ -17570,10 +17604,18 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     if(now - s.t0 < 2000) return;
     var fps = s.n * 1000 / (now - s.t0), want = view.every === 2 ? 30 : 60;
     view.fps = Math.round(fps); s.n = 0; s.t0 = now;
-    if(fps < want * .8 && R3.q < R3Q_MAX){
-      R3.q++; try { localStorage.setItem(R3Q_KEY, String(R3.q)); } catch(e){}
-      reef3dQApply(view); view.qs = { n: 0, t0: now, last: now, hold: now + 1500 };
+    var R = R3.qRun || (R3.qRun = { slow: 0, fast: 0 });
+    if(R.check != null){   // the first full reading after a step down
+      var was = R.check; R.check = null;
+      if(fps * (view.every || 1) < was * 1.12 && R3.q > 0){ R3.qStuck = true; R.slow = R.fast = 0; return reef3dQSet(view, R3.q - 1, now); }
     }
+    // (frames drawn × frames skipped) compares fairly across the 60 and 30 a second levels
+    if(fps < want * .8){ R.fast = 0; if(++R.slow >= 2 && R3.q < R3Q_MAX && !R3.qStuck){
+      R.slow = 0; R.check = fps * (view.every || 1);
+      if(R.upAt && now - R.upAt < 15000) R3.qMin = R3.q + 1;   // just stepped up and it's slow again: stay at the lower level this visit
+      reef3dQSet(view, R3.q + 1, now); } }
+    else if(fps > want * .95){ R.slow = 0; if(++R.fast >= 4 && R3.q > (R3.qMin || 0) && !R3.qStuck){ R.fast = 0; R.upAt = now; reef3dQSet(view, R3.q - 1, now); } }
+    else R.slow = R.fast = 0;
   }
   // For checking performance: how many draws and triangles the board's last frame took.
   window.__reef3dScene = function(){   // test helper: what the board draws, biggest first
@@ -17598,6 +17640,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   window.__reef3dView = function(){ return R3.view; };
   window.__reef3dThemeAt = function(p){ var v = R3.view; if(!v) return; if(!v.themeFx) reef3dThemeShow(v, true); v.themeFx.hold = p; };   // test helper
   window.__reef3dGo = function(i){ if(R3.view) reef3dGoTo(R3.view, i); };   // test helper
+  window.__reef3dDice = function(){ if(R3.view) reef3dDice(R3.view); };   // test helper
   window.__reef3dEmote = function(n){ if(R3.view) reef3dEmote(R3.view, n); return R3.view && R3.view.emote && R3.view.emote.name; };   // test helper   // test helper
   window.__reef3dInfo = function(){ var v = R3.view; return v ? { calls: v.renderer.info.render.calls, triangles: v.renderer.info.render.triangles, tier: R3.q, fps: v.fps } : { tier: R3.q }; };
   function reef3dLoad(){
@@ -17700,8 +17743,11 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
         [-.45, .45].forEach(function(z){ var w = mesh(new THREE.CylinderGeometry(.35, .35, .14, 16), M('#7a5230'), -.1, .35, z); w.rotation.x = Math.PI / 2; g.add(w); }); return g; },
       lantern: function(){ var g = group(); g.add(mesh(new THREE.BoxGeometry(.8, .12, .8), M('#b8902f'), 0, .06, 0), mesh(new THREE.BoxGeometry(.8, .12, .8), M('#b8902f'), 0, 1.4, 0));
         [[-.35, -.35], [.35, -.35], [-.35, .35], [.35, .35]].forEach(function(p){ g.add(mesh(new THREE.CylinderGeometry(.05, .05, 1.3, 6), M('#b8902f'), p[0], .72, p[1])); });
-        var glow = new THREE.Mesh(new THREE.SphereGeometry(.32, 16, 12), new THREE.MeshBasicMaterial({ color: '#fff1b8' })); glow.position.y = .72; g.add(glow);
-        g.add(mesh(new THREE.TorusGeometry(.18, .05, 6, 14), M('#b8902f'), 0, 1.62, 0)); g.userData.glow = glow; return g; },
+        var glow = new THREE.Mesh(new THREE.SphereGeometry(.32, 16, 12), new THREE.MeshBasicMaterial({ color: '#ffe08a', fog: false })); glow.position.y = .72; g.add(glow);
+        // a warm halo round the flame, so the lantern really glows in the dark water (the frame loop makes it flicker)
+        var halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: R3haloTex || (R3haloTex = reef3dBlobTex(true)), color: '#ffb84a', transparent: true, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }));
+        halo.position.y = .72; halo.scale.setScalar(2.6); halo.renderOrder = 4; g.add(halo);
+        g.add(mesh(new THREE.TorusGeometry(.18, .05, 6, 14), M('#b8902f'), 0, 1.62, 0)); g.userData.glow = glow; g.userData.halo = halo; return g; },
       treasure: function(){ var g = group(); g.add(mesh(new THREE.BoxGeometry(1.5, .8, 1), M('#9a5f2c'), 0, .4, 0));
         var lid = mesh(new THREE.CylinderGeometry(.5, .5, 1.5, 16, 1, false, 0, Math.PI), M('#b8743a'), 0, .8, 0); lid.rotation.z = Math.PI / 2; g.add(lid);
         [-.45, .45].forEach(function(x){ g.add(mesh(new THREE.BoxGeometry(.14, 1.32, 1.04), M('#f0c35a'), x, .62, 0)); });
@@ -17814,7 +17860,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
         [1, -1].forEach(function(s){ var fp = new THREE.Group(); fp.position.set(s * .58, .85, .05); body.add(fp);
           var fin = mesh(new THREE.ConeGeometry(.2, .45, 4), M('#2e5878'), s * .15, 0, 0); fin.rotation.z = s * -Math.PI / 2; fin.scale.set(.3, 1, 1); fp.add(fin); fp.userData.side = s; parts.flippers.push(fp); });
         var stalk = mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(0, 1.5, .1), new THREE.Vector3(0, 1.95, .35), new THREE.Vector3(0, 1.75, .78)]), 12, .035, 6), M('#2e5878'));
-        body.add(stalk);
+        stalk.userData.noOutline = true; body.add(stalk);
         var bulb = new THREE.Mesh(new THREE.SphereGeometry(.15, 14, 10), new THREE.MeshBasicMaterial({ color: '#b8fff2' })); bulb.position.set(0, 1.68, .82); body.add(bulb);
         var glow = new THREE.PointLight('#8ffff0', 1.4, 7, 2); glow.position.copy(bulb.position); body.add(glow);
         parts.bulb = bulb; parts.glow = glow;
@@ -17886,7 +17932,15 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   function reef3dOutline(obj, color, amt){
     var THREE = window.THREE, mat = new THREE.MeshBasicMaterial({ color: color, side: THREE.BackSide }), list = [];
     obj.traverse(function(m){ if(m.isMesh && !m.userData.noOutline && !(m.material && m.material.transparent)) list.push(m); });
-    list.forEach(function(m){ var o = new THREE.Mesh(m.geometry, mat); o.scale.setScalar(1 + amt); o.userData.noOutline = true; o.raycast = function(){}; m.add(o); });
+    list.forEach(function(m){
+      // grow the copy around the part's own middle (not its pivot), so parts built away from their pivot (Lumi's lure
+      // stalk, her belly) get an even line instead of a shifted dark shadow; tiny parts (teeth) get no line at all
+      if(!m.geometry.boundingSphere) m.geometry.computeBoundingSphere();
+      var bs = m.geometry.boundingSphere, sc = m.scale, size = bs.radius * Math.min(Math.abs(sc.x), Math.abs(sc.y), Math.abs(sc.z));
+      if(size < .09) return;
+      var o = new THREE.Mesh(m.geometry, mat); o.scale.setScalar(1 + amt); o.position.copy(bs.center).multiplyScalar(-amt);
+      o.userData.noOutline = true; o.raycast = function(){}; m.add(o);
+    });
   }
 
   // The CC0 models (see REEF_MODELS), parsed once and given the same cartoon shading as everything else.
@@ -18086,6 +18140,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     return m;
   }
   // Soft round shadows painted on the sand: one texture, all the still ones merged into a single draw.
+  var R3haloTex = null;
   function reef3dBlobTex(light){   // dark for shadows, white for glows
     var THREE = window.THREE, c = document.createElement('canvas'); c.width = c.height = 64; var g = c.getContext('2d'), k = light ? '255,255,255' : '0,0,0';
     var gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(' + k + ',.55)'); gr.addColorStop(.55, 'rgba(' + k + ',.28)'); gr.addColorStop(1, 'rgba(' + k + ',0)');
@@ -18152,7 +18207,15 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     var len = spaces.length * 2.6 + 40;
     var floorGeo = new THREE.PlaneGeometry(70, len, 35, Math.round(len / 2));
     var pos = floorGeo.attributes.position;
-    for(var v = 0; v < pos.count; v++){ var fx = pos.getX(v), fy = pos.getY(v); pos.setZ(v, Math.sin(fx * .35) * .25 + Math.cos(fy * .22 + fx * .1) * .3 + (Math.abs(fx) > 12 ? (Math.abs(fx) - 12) * .25 : 0)); }
+    // The dunes settle down under the path and just around it, so no tile or bit of path sinks into the sand.
+    var pathPts = new THREE.CatmullRomCurve3(spaces.map(function(s){ return new THREE.Vector3(s.x, 0, s.z); })).getSpacedPoints(spaces.length * 6);
+    function duneK(x, z){
+      var d2 = 1e9; for(var pi = 0; pi < pathPts.length; pi++){ var dx = pathPts[pi].x - x, dz = pathPts[pi].z - z, q = dx * dx + dz * dz; if(q < d2) d2 = q; }
+      var k = Math.min(1, Math.max(0, (Math.sqrt(d2) - 1.9) / 2.6)); return k * k * (3 - 2 * k);   // 0 on the path, 1 a few steps away
+    }
+    function duneH(fx, fy, k){ var h = Math.sin(fx * .35) * .25 + Math.cos(fy * .22 + fx * .1) * .3; return Math.min(h, 0) * .4 - .06 + (h - Math.min(h, 0) * .4 + .06) * k; }
+    var floorZ = -len / 2 + 14;
+    for(var v = 0; v < pos.count; v++){ var fx = pos.getX(v), fy = pos.getY(v); pos.setZ(v, duneH(fx, fy, duneK(fx, floorZ - fy)) + (Math.abs(fx) > 12 ? (Math.abs(fx) - 12) * .25 : 0)); }
     floorGeo.computeVertexNormals();
     var floor = new THREE.Mesh(floorGeo, M(night ? '#2f3e3e' : '#d9cba6'));
     floor.rotation.x = -Math.PI / 2; floor.position.set(0, -.15, -len / 2 + 14); floor.receiveShadow = true; scene.add(floor);
@@ -18249,7 +18312,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
         var poolGeo = new THREE.PlaneGeometry(13, 13); poolGeo.rotateX(-Math.PI / 2);   // Wendy chose the warmer, bigger glow
         var pool = new THREE.Mesh(poolGeo, new THREE.MeshBasicMaterial({ map: reef3dBlobTex(true), color: '#ffab45', transparent: true, opacity: .85, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }));
         pool.position.set(lx, groundY(lx, lz) + .08, lz); pool.renderOrder = 3; scene.add(pool);
-        lamp = { glow: lantern.userData.glow, pool: pool };
+        lamp = { glow: lantern.userData.glow, halo: lantern.userData.halo, pool: pool };
       }
     }
     // Tall towers in the haze on both sides give the sea floor depth: coral by day, rock spires at night.
@@ -18344,14 +18407,14 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     var chestMixer = null, chestActs = {};
     if(chestModel){ chestMixer = new THREE.AnimationMixer(chestModel.userData.root); chestModel.userData.gltf.animations.forEach(function(c){ chestActs[c.name] = chestMixer.clipAction(c); }); }
     // Soft shadows under everything that stands on the sand, then the still scenery baked and merged.
-    function groundY(x, z){ var fy = -(z - (-len / 2 + 14)); return Math.sin(x * .35) * .25 + Math.cos(fy * .22 + x * .1) * .3 + (Math.abs(x) > 12 ? (Math.abs(x) - 12) * .25 : 0) - .15; }
+    function groundY(x, z){ var fy = -(z - (-len / 2 + 14)); return duneH(x, fy, duneK(x, z)) + (Math.abs(x) > 12 ? (Math.abs(x) - 12) * .25 : 0) - .15; }
     var blobList = [], blobMat = reef3dBlobMat(reef3dBlobTex(), night);
     statics.updateMatrixWorld(true);
     statics.children.forEach(function(c){ reef3dFootprint(c, blobList); });
     deckObjs.forEach(function(o){ reef3dFootprint(o, blobList); if(o !== chestModel){ reef3dBakeObject(o, rig, bake); reef3dCompact(o); } });
     var blobs = reef3dBlobs(blobList, blobMat, groundY); if(blobs) scene.add(blobs);
     scene.add(reef3dMerge(statics, rig, bake));
-    var guide = B.guide(); reef3dOutline(guide, night ? '#06121a' : '#1f3a2c', .05); scene.add(guide);
+    var guide = B.guide(); reef3dOutline(guide, night ? '#173d5c' : '#1f3a2c', night ? .035 : .05); scene.add(guide);
     var crabFit = reefCrabExtent(guide) * .7; reefCrabFit(crab, crabFit);   // the crab is about 70% of Shelly's (or Lumi's) size
     function moverBlob(r){ var g = new THREE.PlaneGeometry(r * 2, r * 2); g.rotateX(-Math.PI / 2); var b = new THREE.Mesh(g, blobMat); b.renderOrder = 2; scene.add(b); return b; }
     var blobG = moverBlob(1.1), blobC = crab ? moverBlob(.8) : null, glowG = null;
@@ -18448,14 +18511,19 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
         else view.idleAt = 0;
       }
       view.swayers.forEach(function(s, i){ s.rotation.z = Math.sin(t * .9 + i) * .06; s.rotation.x = Math.cos(t * .7 + i) * .05; });
-      view.spaces.forEach(function(s){ if(s.obj && s.obj.userData.glow) s.obj.userData.glow.material.color.setHSL(.13, 1, .78 + Math.sin(t * 2 + s.i) * .06); });
+      view.spaces.forEach(function(s){ var u = s.obj && s.obj.userData; if(!u || !u.glow) return; var w = Math.sin(t * 2 + s.i);
+        u.glow.material.color.setHSL(.12, 1, .68 + w * .06); if(u.halo) u.halo.scale.setScalar(2.5 + w * .25 + Math.sin(t * 9 + s.i * 3) * .08); });
       view.bubbleData.forEach(function(b, i){
         var y = (b.y + t * b.v) % 9, d = view.dummy;
-        d.position.set(b.x + Math.sin(t + i) * .3, view.night ? 9 - y : y, b.z + g.z * .9); d.scale.setScalar(b.s); d.updateMatrix(); view.bubbles.setMatrixAt(i, d.matrix);
+        // fixed in the water (they don't travel with the guide); one left far behind comes back far ahead, in the haze
+        var bz = g.z + 6 - (((g.z + 6 - b.z) % 40) + 40) % 40;
+        d.position.set(b.x + Math.sin(t + i) * .3, view.night ? 9 - y : y, bz); d.scale.setScalar(b.s); d.updateMatrix(); view.bubbles.setMatrixAt(i, d.matrix);
       });
       view.bubbles.instanceMatrix.needsUpdate = true;
       if(view.plume) reef3dPlume(view.plume, view.dummy, t);
-      if(view.lamp){ var lf = .5 + Math.sin(t * 1.6) * .5; view.lamp.pool.material.opacity = .8 + lf * .1 + Math.sin(t * 7.3) * .02; if(view.lamp.glow) view.lamp.glow.material.color.setHSL(.11, 1, .74 + lf * .08); }
+      if(view.lamp){ var lf = .5 + Math.sin(t * 1.6) * .5, fk = Math.sin(t * 7.3) * .5 + Math.sin(t * 11.1) * .5;   // a slow breath plus a candle flicker
+        view.lamp.pool.material.opacity = .85 + lf * .12 + fk * .03; if(view.lamp.glow) view.lamp.glow.material.color.setHSL(.12, 1, .68 + lf * .08);
+        if(view.lamp.halo){ view.lamp.halo.scale.setScalar(3.4 + lf * .5 + fk * .12); view.lamp.halo.material.opacity = .85 + fk * .1; } }
       view.ring.scale.setScalar(1 + Math.sin(t * 2.4) * .06);
       var parts = view.guide.userData.parts, mv = view.moving;
       var fl = mv ? 1 : q.flap;
@@ -18481,15 +18549,15 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
         if(sc.hz == null){ sc.hx = sc.off; sc.hz = g.z - 4 - k * 7; sc.tx = sc.hx; sc.tz = sc.hz; }
         if(Math.abs(sc.tz - g.z) > 18){ sc.tz = g.z - 6 - Math.random() * 8; sc.tx = (Math.random() - .5) * 10; }
         // after a tap the fish dart apart (fl.k rises fast), then drift back together while the school swims to its new home
-        var fl = sc.flee, fa = fl ? performance.now() / 1000 - fl.t0 : 9, fk = 0;
-        if(fl){ fk = fa < .45 ? Math.sin(fa / .45 * Math.PI / 2) : Math.max(0, 1 - (fa - .45) / 2.6); if(fa > 3.1) sc.flee = null; }
+        var fl = sc.flee, fa = fl ? performance.now() / 1000 - fl.t0 : 9;
+        if(fl && fa > fl.dur) sc.flee = fl = null;
         var mx = sc.tx - sc.hx, mz = sc.tz - sc.hz, md = Math.sqrt(mx * mx + mz * mz), step = Math.min(md, dt * (fl ? 4 : 1.8));
         if(md > .01){ sc.hx += mx / md * step; sc.hz += mz / md * step; }
         var a = t * sc.spd + sc.ph, cx = sc.hx + Math.cos(a) * sc.rad, cz = sc.hz + Math.sin(a) * sc.rad * .7;
         sc.fish.forEach(function(f, j){
           var o = f.userData.o, px = f.position.x, pz = f.position.z;
-          var fo = fl ? fl.offs[j] : null;
-          f.position.set(cx + o.x + Math.sin(t * .9 + j) * .12 + (fo ? fo.x * fk : 0), sc.h + o.y + Math.sin(t * 2 + j) * .12 + (fo ? fo.y * fk : 0), cz + o.z + (fo ? fo.z * fk : 0));
+          var fo = fl ? reef3dFleeOff(fl, j, fa) : null;
+          f.position.set(cx + o.x + Math.sin(t * .9 + j) * .12 + (fo ? fo.x : 0), sc.h + o.y + Math.sin(t * 2 + j) * .12 + (fo ? fo.y : 0), cz + o.z + (fo ? fo.z : 0));
           var vx = f.position.x - px, vz = f.position.z - pz;
           if(vx * vx + vz * vz > 1e-6){   // turn smoothly toward the direction of travel
             var want = Math.atan2(vx, vz), d = Math.atan2(Math.sin(want - f.rotation.y), Math.cos(want - f.rotation.y));
@@ -18506,12 +18574,14 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       view.spinners.forEach(function(sp, i){ sp.rotation.y = t * 1.4 + i; sp.position.y = .8 + Math.sin(t * 2 + i) * .12; });
       if(view.nextStar && view.nextStar.visible){ view.nextStar.rotation.y = t * 2; view.nextStar.position.y = view.nextStar.userData.y + Math.sin(t * 2.4) * .15; }
       view.spaces.forEach(function(s){ if(s.qb) reef3dQIdle(s, t); });
+      reef3dDiceTick(view, now, t);
       view.spaces.forEach(function(s){
         if(!s.obj) return;
         if(s.obj.userData.lid) s.obj.userData.lid.rotation.x = -.25 - .35 * (Math.sin(t * .7 + s.i) * .5 + .5);
         if(s.obj.userData.spin) s.obj.userData.spin.rotation.z = t * .25;
       });
     }
+    if(calm) reef3dDiceTick(view, now, t);
     // short-lived effects (sand puffs, star bursts) run even in Calm motion as a single still frame
     view.fx = view.fx.filter(function(fx){ var p = Math.min(1, (now - fx.t0) / fx.dur); fx.step(p); if(p >= 1){ fx.end(); return false; } return true; });
     if(!calm && view.amb && now - (view.ambBlip || 0) > 3500 + Math.random() * 4000){ view.ambBlip = now; try { if(Sound.isEnabled()) Sound.bloop(700 + Math.random() * 500, 0, .012); } catch(e){} }
@@ -18536,6 +18606,9 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     if(busy || view.frameN % (view.every === 2 ? 6 : 12) === 0) view.renderer.shadowMap.needsUpdate = true;
     view.renderer.render(view.scene, view.cam);
     reef3dLabels(view);
+    // nothing important moving: a device that has shown it struggles may draw the gentle idle motion at half speed
+    view.idle = !busy && !view.emote && !view.dice && !view.themeFx && !view.themeIn && now - (view.touchAt || 0) > 2000 &&
+      !view.schools.some(function(sc){ return sc.flee; });
   }
   function reef3dPin(el, tf, on){
     if(el._tf !== tf){ el._tf = tf; el.style.transform = tf; }
@@ -18547,8 +18620,11 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     // In full screen, names never slide under the floating top bar or Shelly's line.
     if(!view.topLimitAt || view.frameN - view.topLimitAt > 30){
       view.topLimitAt = view.frameN || 1;
-      var hd = document.body.classList.contains('r3-full') && document.querySelector('.rw-head');
-      view.topLimit = hd ? hd.getBoundingClientRect().bottom - view.wrap.getBoundingClientRect().top + 6 : 0;
+      // below whichever is lower: the top buttons, or Shelly's line while it's showing
+      var full = document.body.classList.contains('r3-full'), wt = view.wrap.getBoundingClientRect().top, lim = 0;
+      [full && document.querySelector('.rw-head'), full && document.querySelector('.cv3-hero .topbar')].forEach(function(el){
+        if(el && el.offsetParent !== null){ var b = el.getBoundingClientRect().bottom; if(b > 0) lim = Math.max(lim, b - wt + 6); } });
+      view.topLimit = lim;
     }
     view.spaces.forEach(function(s){
       if(!s.label) return;
@@ -18570,7 +18646,11 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     function tick(now){
       if(!document.body.contains(view.wrap)){ view.raf = null; reef3dAmbience(view, false); if(!document.querySelector('.r3')) document.body.classList.remove('r3-full'); return; }
       view.tick = (view.tick || 0) + 1;
-      if(view.tick % (view.every || 1) === 0){ reef3dFrame(view, now); reef3dQTick(view, now); }
+      if(window.__reefTx){ if(view.qs) view.qs.hold = now + 800; }   // a transition covers the board: don't draw under it
+      else if(view.tick % (view.every || 1) === 0){
+        if(view.idle && R3.q >= 1 && view.every !== 2 && view.tick % 2){ if(view.qs) view.qs.hold = now + 600; }   // skipped: not counted as slow
+        else { reef3dFrame(view, now); reef3dQTick(view, now); }
+      }
       view.raf = requestAnimationFrame(tick);
     }
     view.raf = requestAnimationFrame(tick);
@@ -18758,30 +18838,144 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   }
   function reef3dPose(){ return { y: 0, sy: 1, rx: 0, ry: 0, rz: 0, headY: 0, headX: 0, flap: 0, wave: 0, eyes: 1, face: 0 }; }
 
-  function reef3dTravel(view, target, done){
+  // Hop along the path one space at a time; Calm motion skips straight there. Each hop crouches, springs, stretches
+  // in the air and squashes on landing; heights and timing vary a little, the trip eases in and out, she turns
+  // smoothly toward the next space and rocks side to side, and a trip of three or more ends with a spinning leap.
+  // onHop(left) runs as each hop lands, with the number of hops still to go.
+  function reef3dTravel(view, target, done, onHop){
     if(view.moving || target === view.at){ if(!view.moving) done(); return; }
     var dir = target > view.at ? 1 : -1, calm = reefCalm();
-    if(calm){ reef3dPlace(view, target); done(); return; }
+    if(calm){ reef3dPlace(view, target); if(onHop) onHop(0); done(); return; }
     view.moving = true; view.emote = null;
-    var from = view.at, steps = Math.abs(target - from), dur = steps > 6 ? 170 : 260, i = 0;
-    var body = view.guide.userData.body;
+    var from = view.at, steps = Math.abs(target - from), i = 0;
+    var body = view.guide.userData.body, g = view.guide;
+    function angTo(a, b){ return Math.atan2(Math.sin(b - a), Math.cos(b - a)); }
     function hop(){
       var a = view.spaces[from + i * dir], b = view.spaces[from + (i + 1) * dir], t0 = performance.now();
-      view.guide.rotation.y = Math.atan2(b.x - a.x, b.z - a.z);
-      try { Sound.bloop(420 + (i % 4) * 60, 0, .035); } catch(e){}
+      var last = i === steps - 1, edge = Math.min(i, steps - 1 - i);          // hops near the start and end are slower
+      var dur = (steps > 6 ? 250 : 330) + (edge === 0 ? 90 : edge === 1 ? 35 : 0) + Math.random() * 40 + (last && steps >= 3 ? 160 : 0);
+      var hgt = (.85 + Math.random() * .35) * (last && steps >= 3 ? 1.45 : 1), roll = (i % 2 ? 1 : -1) * (.1 + Math.random() * .06);
+      var ry0 = g.rotation.y, ry1 = ry0 + angTo(ry0, Math.atan2(b.x - a.x, b.z - a.z)), spin = last && steps >= 3 ? (Math.random() < .5 ? -1 : 1) * Math.PI * 2 : 0;
+      try { Sound.bloop(400 + Math.min(i, 8) * 45, 0, .035); } catch(e){}
       (function step(now){
         var p = Math.min(1, (now - t0) / dur);
-        view.guide.position.set(a.x + (b.x - a.x) * p, .3, a.z + (b.z - a.z) * p);
-        body.position.y = Math.sin(p * Math.PI) * .9; body.rotation.x = -Math.cos(p * Math.PI) * .22;   // nose up leaving, nose down landing
-        var ys = p < .15 ? 1 - (.15 - p) * 1.3 : 1 + .16 * Math.sin((p - .15) / .85 * Math.PI);
+        var c = .2, l = .82;                                                  // crouch until c, airborne until l, then land
+        var air = p < c ? 0 : p < l ? (p - c) / (l - c) : 1, ae = air * air * (3 - 2 * air);
+        g.position.set(a.x + (b.x - a.x) * ae, .3, a.z + (b.z - a.z) * ae);
+        g.rotation.y = ry0 + (ry1 - ry0) * Math.min(1, p / c) + spin * ae;
+        body.position.y = Math.sin(air * Math.PI) * hgt;
+        var ys = p < c ? 1 - .22 * Math.sin(p / c * Math.PI / 2)                       // crouch
+               : p < l ? (air < .25 ? .78 + (1.22 - .78) * (air / .25) : 1.22 - .22 * ((air - .25) / .75))   // spring up, stretch, relax
+               : 1 - .2 * Math.sin((p - l) / (1 - l) * Math.PI);                       // squash on landing
         body.scale.set(1 / Math.sqrt(ys), ys, 1 / Math.sqrt(ys));
+        body.rotation.x = p < c ? .12 * (p / c) : p < l ? -Math.cos(air * Math.PI) * .26 : .08 * (1 - (p - l) / (1 - l));   // lean in, nose up, nose down
+        body.rotation.z = roll * Math.sin(Math.min(1, p / l) * Math.PI);
         if(p < 1) return requestAnimationFrame(step);
-        body.position.y = 0; body.scale.set(1, 1, 1); body.rotation.x = 0; i++; view.at = from + i * dir;
+        body.position.y = 0; body.scale.set(1, 1, 1); body.rotation.x = 0; body.rotation.z = 0; g.rotation.y = ry1;
+        i++; view.at = from + i * dir;
         reef3dPuff(view, b);
+        if(onHop) try { onHop(steps - i); } catch(e){}
         if(i < steps) hop(); else { view.moving = false; done(); }
       })(t0);
     }
     hop();
+  }
+
+  /* ---------- The dice block (after each finished deck): it floats over the guide's head and flicks through
+     1 to 6; a tap and she jumps up and hits it, then hops that many spaces along the path, counting down. ---------- */
+  function reef3dDiceTex(n, night){
+    var THREE = window.THREE, N = 192, cv = document.createElement('canvas'); cv.width = cv.height = N; var gx = cv.getContext('2d');
+    var bg = gx.createLinearGradient(0, 0, 0, N); bg.addColorStop(0, night ? '#c9fff8' : '#ffffff'); bg.addColorStop(1, night ? '#7fd8e0' : '#e9eef6');
+    gx.fillStyle = bg; gx.fillRect(0, 0, N, N);
+    gx.lineWidth = 10; gx.strokeStyle = night ? '#2aa7b6' : '#5a8fd8'; gx.strokeRect(14, 14, N - 28, N - 28);
+    var t = new THREE.CanvasTexture(cv); t.anisotropy = 2; t.userData = { cv: cv, night: night };
+    reef3dDiceDraw(t, n); return t;
+  }
+  function reef3dDiceDraw(t, n){
+    var cv = t.userData.cv, gx = cv.getContext('2d'), N = cv.width, night = t.userData.night;
+    gx.save(); gx.beginPath(); gx.rect(22, 22, N - 44, N - 44); gx.clip();
+    var bg = gx.createLinearGradient(0, 0, 0, N); bg.addColorStop(0, night ? '#c9fff8' : '#ffffff'); bg.addColorStop(1, night ? '#7fd8e0' : '#e9eef6');
+    gx.fillStyle = bg; gx.fillRect(0, 0, N, N); gx.restore();
+    gx.font = '900 128px "Baloo 2", system-ui, -apple-system, sans-serif'; gx.textAlign = 'center'; gx.textBaseline = 'middle';
+    gx.lineJoin = 'round'; gx.lineWidth = 14; gx.strokeStyle = night ? '#0f4a55' : '#1d4f9a'; gx.strokeText(String(n), N / 2, N / 2 + 8);
+    gx.fillStyle = night ? '#ffffff' : '#ffd24a'; gx.fillText(String(n), N / 2, N / 2 + 8);
+    t.needsUpdate = true;
+  }
+  function reef3dDice(view){
+    if(view.dice || view.at >= view.spaces.length - 1 || !document.body.contains(view.wrap)) return;
+    var THREE = window.THREE, n = 1 + Math.floor(Math.random() * 6), tex = reef3dDiceTex(n, view.night);
+    var mat = new THREE.MeshLambertMaterial({ map: tex, emissive: view.night ? '#38e6d6' : '#7fb0ff', emissiveIntensity: view.night ? .45 : .12 });
+    var box = new THREE.Mesh(reef3dRoundBox(1.05, .16, 4), mat), dg = new THREE.Group(); dg.add(box);
+    var halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: reef3dBlobTex(true), color: view.night ? '#5ff0e0' : '#bfe0ff', transparent: true, opacity: .55, depthWrite: false, blending: THREE.AdditiveBlending }));
+    halo.scale.setScalar(2.6); halo.raycast = function(){}; dg.add(halo);
+    var gp = view.guide.position; dg.position.set(gp.x, REEF3D_QY, gp.z); dg.scale.setScalar(.01); view.scene.add(dg);
+    var here = view.spaces[view.at]; if(here && here.qb) here.qb.visible = false;
+    view.dice = { g: dg, box: box, mat: mat, tex: tex, halo: halo, n: n, rolling: true, t0: performance.now(), flick: 0, here: here };
+    var tip = document.createElement('button'); tip.type = 'button'; tip.className = 'r3-dice-tip'; tip.textContent = '🎲 Tap to roll!';
+    tip.addEventListener('click', function(e){ e.stopPropagation(); reef3dDiceHit(view); });
+    view.wrap.appendChild(tip); view.dice.tip = tip;
+    try { Sound.bloop(660, 0, .05); Sound.bloop(990, .1, .04); } catch(e){}
+    if(reefCalm()) dg.scale.setScalar(1);
+  }
+  // Every frame while the dice is out: grow in, bob and spin, and flick through the numbers until it's hit.
+  function reef3dDiceTick(view, now, t){
+    var d = view.dice; if(!d) return;
+    var gp = view.guide.position, age = (now - d.t0) / 1000;
+    if(!d.hitAt){
+      d.g.position.set(gp.x, REEF3D_QY + Math.sin(t * 2.2) * .12, gp.z);
+      if(!reefCalm()){ var k = Math.min(1, age / .45); d.g.scale.setScalar(k < 1 ? reef3dBounce(k) * 1.1 + .01 : 1); d.box.rotation.y = t * 1.8; d.box.rotation.x = Math.sin(t * 1.3) * .25; }
+      d.halo.material.opacity = .4 + .2 * Math.sin(t * 5);
+      if(d.rolling && now - d.flick > 85){ d.flick = now; var m; do { m = 1 + Math.floor(Math.random() * 6); } while(m === d.shown); d.shown = m; reef3dDiceDraw(d.tex, m); try { Sound.tick(); } catch(e){} }
+    } else if(d.counting){
+      // hovering over her head while she hops, showing how many hops are left
+      d.g.position.set(gp.x, gp.y + view.guide.userData.body.position.y + 2.5, gp.z); d.g.scale.setScalar(.7); d.box.rotation.set(0, Math.atan2(view.cam.position.x - gp.x, view.cam.position.z - gp.z), 0);
+    }
+  }
+  function reef3dDiceHit(view){
+    var d = view.dice; if(!d || !d.rolling || view.moving) return;
+    d.rolling = false; if(d.tip){ d.tip.remove(); d.tip = null; }
+    var calm = reefCalm();
+    if(!calm) reef3dEmote(view, 'bonk');
+    setTimeout(function(){
+      if(view.dice !== d) return;
+      d.hitAt = performance.now(); d.shown = d.n; reef3dDiceDraw(d.tex, d.n);
+      try { Sound.bloop(880, 0, .06); Sound.bloop(1320, .09, .05); } catch(e){}
+      if(!calm){
+        var y0 = d.g.position.y, r0 = d.box.rotation.y;
+        view.fx.push({ t0: performance.now(), dur: 700, step: function(p){
+          d.g.position.y = y0 + Math.sin(Math.min(1, p / .5) * Math.PI) * .5; d.box.rotation.y = r0 + reef3dEase(p) * Math.PI * 3; d.box.rotation.x = 0;
+          d.g.scale.setScalar(1 + .35 * Math.sin(p * Math.PI)); d.mat.emissiveIntensity = (view.night ? .45 : .12) + 1.4 * Math.max(0, 1 - p * 2);
+        }, end: function(){} });
+      }
+      var big = document.createElement('div'); big.className = 'r3-dice-num'; big.setAttribute('role', 'status'); big.textContent = d.n;
+      view.wrap.appendChild(big); setTimeout(function(){ big.remove(); }, 1300);
+      setTimeout(function(){ reef3dDiceMove(view, d); }, calm ? 300 : 1000);
+    }, calm ? 0 : 400);   // the moment her head meets the block
+  }
+  function reef3dDiceMove(view, d){
+    var target = Math.min(view.spaces.length - 1, view.at + d.n);
+    d.counting = true; reef3dDiceDraw(d.tex, target - view.at);
+    reef3dTravel(view, target, function(){
+      reef3dDiceDone(view, d);
+      S.reef3dAt = view.at;
+      var s = view.spaces[view.at];
+      if(s.kind === 'surprise'){
+        if(reefCalm()){ reef3dQHit(view, s); return reef3dSurprise(view, s); }
+        setTimeout(function(){ reef3dEmote(view, 'bonk', function(){ reef3dEmote(view, 'startle'); }); }, 250);
+        setTimeout(function(){ reef3dQHit(view, s); reef3dCrabAct(view, 'Dance', true); }, 650);
+        return setTimeout(function(){ reef3dSurprise(view, s); }, 950);
+      }
+      if(s.kind === 'deck' || s.kind === 'treasure'){ reef3dStars(view, s); if(!reefCalm()) reef3dCrabAct(view, 'Yes', true); }
+      reef3dEmote(view, s.kind === 'plain' ? 'hello' : 'twirl');
+    }, function(left){ if(view.dice === d) reef3dDiceDraw(d.tex, left); });
+  }
+  function reef3dDiceDone(view, d){
+    if(view.dice !== d) return;
+    view.dice = null; if(d.tip) d.tip.remove(); if(d.here && d.here.qb) d.here.qb.visible = true;
+    var fin = function(){ view.scene.remove(d.g); d.box.geometry.dispose(); d.mat.dispose(); d.tex.dispose(); d.halo.material.dispose(); };
+    if(reefCalm()) return fin();
+    var s0 = d.g.scale.x;
+    view.fx.push({ t0: performance.now(), dur: 300, step: function(p){ d.g.scale.setScalar(s0 * (1 + .3 * Math.sin(p * Math.PI) - p)); d.g.position.y += .02; }, end: fin });
   }
 
   // A puff of sand where Shelly lands.
@@ -18851,15 +19045,37 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     var cp = view.crab.position, out = cp.x >= view.guide.position.x ? 1 : -1;
     view.crabBusy = false; reefCrabSwap(view, { x: cp.x - out * 7, z: cp.z + 1 }, out);
   }
-  // Tap near a school of fish: they dart apart, then swim off and regroup at a new home elsewhere on the reef.
+  // How far a fleeing fish is pushed from its place in the school, fa seconds after the tap.
+  //  burst: straight out from the middle · dart: the whole school shoots one way in a stream · swirl: a spinning
+  //  ring that widens · split: two groups peel off to either side · zigzag: out from the middle in sharp zigzags
+  var REEF3D_FLEE = ['burst', 'dart', 'swirl', 'split', 'zigzag'], reef3dFleeV = { x: 0, y: 0, z: 0 };
+  function reef3dFleeOff(fl, j, fa){
+    var p = fl.fish[j], o = reef3dFleeV, ta = Math.max(0, fa - p.lag), back = fl.dur - fl.out - p.lag;
+    var k = ta < fl.out ? Math.sin(ta / fl.out * Math.PI / 2) : Math.max(0, 1 - (ta - fl.out) / Math.max(.5, back));
+    k = k * k * (3 - 2 * k);   // ease in and out
+    var d = p.d, r = p.r * k;
+    if(fl.style === 'dart'){ var w = Math.sin(ta * 9 + p.ph) * .35 * k; o.x = fl.dir.x * r * 1.6 - fl.dir.z * w; o.y = fl.dir.y * r + d.y * .3; o.z = fl.dir.z * r * 1.6 + fl.dir.x * w; }
+    else if(fl.style === 'swirl'){ var a = Math.atan2(d.z, d.x) + fl.spin * ta * 5 * (1 - ta / fl.dur); o.x = Math.cos(a) * r; o.y = Math.sin(ta * 6 + p.ph) * .4 * k; o.z = Math.sin(a) * r * .8; }
+    else if(fl.style === 'split'){ o.x = p.side * r * 1.3; o.y = (Math.sin(ta * 4 + p.ph) * .5 + d.y) * k; o.z = d.z * r * .5 + Math.sin(ta * 3 + p.ph) * .3 * k; }
+    else if(fl.style === 'zigzag'){ var zz = (Math.floor(ta * 5 + p.ph) % 2 ? 1 : -1) * .5 * k; o.x = d.x * r - d.z * zz; o.y = d.y * r; o.z = d.z * r + d.x * zz; }
+    else { o.x = d.x * r; o.y = d.y * r; o.z = d.z * r; }
+    return o;
+  }
+  // Tap near a school of fish: they flee (a different way each time), then swim off and regroup at a new home elsewhere on the reef.
   function reef3dScatter(view, sc){
     try { Sound.bubbles(3); Sound.bloop(980, 0, .03); } catch(e){}
     if(reefCalm()) return;
     var THREE = window.THREE, n = sc.fish.length, mid = new THREE.Vector3();
     sc.fish.forEach(function(f){ mid.add(f.position); }); mid.multiplyScalar(1 / n);
-    sc.flee = { t0: performance.now() / 1000, offs: sc.fish.map(function(f){
-      var d = f.position.clone().sub(mid); d.y *= .5; if(d.lengthSq() < 1e-4) d.set(Math.random() - .5, 0, Math.random() - .5);
-      return d.normalize().multiplyScalar(2.2 + Math.random() * 1.5); }) };
+    // A different escape each time: never the same style twice in a row, with random direction, reach and timing.
+    var styles = REEF3D_FLEE.filter(function(st){ return st !== sc.lastFlee; }), style = styles[Math.floor(Math.random() * styles.length)];
+    sc.lastFlee = style;
+    var ang = Math.random() * Math.PI * 2, dir = new THREE.Vector3(Math.cos(ang), (Math.random() - .5) * .4, Math.sin(ang) * .6);
+    sc.flee = { t0: performance.now() / 1000, style: style, out: .3 + Math.random() * .3, dur: 2.6 + Math.random() * 1.4, spin: Math.random() < .5 ? -1 : 1, dir: dir,
+      fish: sc.fish.map(function(f, j){
+        var d = f.position.clone().sub(mid); d.y *= .5; if(d.lengthSq() < 1e-4) d.set(Math.random() - .5, 0, Math.random() - .5);
+        return { d: d.normalize(), r: 1.8 + Math.random() * 2.2, lag: style === 'dart' ? j * .06 + Math.random() * .05 : Math.random() * .12, ph: Math.random() * 6.3, side: j % 2 ? 1 : -1 };
+      }) };
     var g = view.guide.position, other = sc.hx > g.x ? -1 : 1;   // the far side of Shelly, a little way ahead
     sc.tx = Math.max(-9, Math.min(9, g.x + other * (3 + Math.random() * 4))); sc.tz = g.z - 5 - Math.random() * 8;
   }
@@ -18870,14 +19086,27 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     var bubble = view.wrap.querySelector('.r3-bubble'), guide = view.night ? 'Lumi' : 'Shelly';
     var kind = REEF3D_SURPRISES[(s.i * 7 + (view.surpriseN = (view.surpriseN || 0) + 1)) % REEF3D_SURPRISES.length];
     var f = REEF_FRIENDS[(s.i * 3 + view.surpriseN) % REEF_FRIENDS.length];
-    var text = kind === 'fact' ? f.fact : kind === 'fish' ? 'Look! A ' + f.name.toLowerCase() + ' swam by!' : kind === 'shell' ? 'A shell opened. There is a pearl inside!' : 'Bubbles! Pop, pop, pop!';
-    bubble.innerHTML = '<span class="r3-bubble-e" aria-hidden="true">'+(kind === 'shell' ? '🐚' : kind === 'bubbles' ? '🫧' : f.e)+'</span><span>'+esc(guide)+': '+esc(text)+'</span>';
-    bubble.hidden = false;
-    bubble.classList.remove('show'); void bubble.offsetWidth; bubble.classList.add('show');
-    try { Speech.speak(text); } catch(e){}
+    var e = kind === 'shell' ? '🦪' : kind === 'bubbles' ? '🫧' : f.e;
+    var head = kind === 'shell' ? 'A pearl!' : kind === 'bubbles' ? 'Magic bubbles!' : kind === 'fish' ? 'A ' + f.name.toLowerCase() + '!' : 'A sea secret!';
+    var sub = kind === 'fact' ? f.fact : kind === 'fish' ? 'A new friend swam by.' : kind === 'shell' ? 'The shell opened just for you.' : 'Pop, pop, pop!';
+    if(bubble) bubble.hidden = true;
+    reef3dPrize(view, e, head, sub);
     if(!reefCalm() && kind !== 'fact') reef3dSwimBy(view, s, f, kind);
-    clearTimeout(view.bubbleTimer);
-    view.bubbleTimer = setTimeout(function(){ bubble.hidden = true; }, 5200);
+  }
+  // The ? block's prize: shown in the middle of the screen with a "ta-da" (not read aloud). Tap to close.
+  function reef3dPrize(view, e, head, sub){
+    var old = view.wrap.querySelector('.r3-prize'); if(old) old.remove();
+    var el = document.createElement('div');
+    el.className = 'r3-prize'; el.setAttribute('role', 'status');
+    var rays = ''; for(var i = 0; i < 10; i++) rays += '<i style="--a:' + (i * 36) + 'deg"></i>';
+    el.innerHTML = '<div class="r3-prize-rays" aria-hidden="true">' + rays + '</div><div class="r3-prize-card">' +
+      '<div class="r3-prize-e" aria-hidden="true">' + e + '</div><b>' + esc(head) + '</b><span>' + esc(sub) + '</span></div>';
+    view.wrap.appendChild(el);
+    try { Sound.sessionStart(); } catch(err){}
+    function close(){ clearTimeout(view.prizeTimer); el.classList.add('out'); setTimeout(function(){ el.remove(); }, reefCalm() ? 0 : 260); }
+    el.addEventListener('pointerdown', function(ev){ ev.stopPropagation(); close(); });
+    clearTimeout(view.prizeTimer);
+    view.prizeTimer = setTimeout(close, 3800);
   }
   function reef3dSwimBy(view, s, f, kind){
     if(kind === 'fish' && view.models && view.models.dolphin){ // a real dolphin swims past Shelly
@@ -18902,6 +19131,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
 
   function reef3dGoTo(view, i){
     var s = view.spaces[i];
+    if(view.dice){ reef3dDiceHit(view); return; }
     if(!s || view.moving) return;
     view.ring.visible = false;
     reef3dTravel(view, i, function(){
@@ -18964,9 +19194,10 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
 
   function reef3dWire(view){
     var THREE = window.THREE, ray = new THREE.Raycaster(), ptr = new THREE.Vector2(), down = null;
-    view.wrap.addEventListener('pointerdown', function(e){ down = { x: e.clientX, y: e.clientY }; reef3dAmbience(view, true); });
+    view.wrap.addEventListener('pointerdown', function(e){ down = { x: e.clientX, y: e.clientY }; view.touchAt = performance.now(); view.idle = false; reef3dAmbience(view, true); });
     view.renderer.domElement.addEventListener('click', function(e){
       if(down && Math.abs(e.clientX - down.x) + Math.abs(e.clientY - down.y) > 12) return;
+      if(view.dice) return reef3dDiceHit(view);   // while the dice is out, a tap anywhere rolls it
       var rc = view.renderer.domElement.getBoundingClientRect();
       ptr.set((e.clientX - rc.left) / rc.width * 2 - 1, -((e.clientY - rc.top) / rc.height) * 2 + 1);
       ray.setFromCamera(ptr, view.cam);
@@ -19124,7 +19355,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     if(quiet || (!finished && !first)) return;
     setTimeout(function(){
       if(!document.body.contains(view.wrap) || view.moving) return;
-      if(finished){ reef3dEmote(view, 'cheer'); var sp = view.spaces[view.at]; if(sp && !reefCalm()) reef3dStars(view, sp); if(!reefCalm()) reef3dCrabAct(view, 'Dance', true); }
+      if(finished){ reef3dEmote(view, 'cheer'); var sp = view.spaces[view.at]; if(sp && !reefCalm()) reef3dStars(view, sp); if(!reefCalm()) reef3dCrabAct(view, 'Dance', true);
+        setTimeout(function(){ if(!view.moving) reef3dDice(view); }, reefCalm() ? 200 : 2000); }   // then the dice block comes out
       else reef3dEmote(view, 'hello');
     }, 650);
   }
@@ -19291,7 +19523,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
 
     if(crab) reef3dFootprint(crab, blobList);
     var blobs = reef3dBlobs(blobList, blobMat, groundY); if(blobs) scene.add(blobs);
-    var guide = B.guide(); reef3dOutline(guide, night ? '#06121a' : '#1f3a2c', .05); guide.position.set(0, 4, -1); scene.add(guide);
+    var guide = B.guide(); reef3dOutline(guide, night ? '#173d5c' : '#1f3a2c', night ? .035 : .05); guide.position.set(0, 4, -1); scene.add(guide);
     // Shelly swims high in the lobby, so her shadow is soft and faint; at night Lumi's lure lights the sand instead
     var gb = new THREE.PlaneGeometry(2.6, 2.6); gb.rotateX(-Math.PI / 2);
     var blobG = new THREE.Mesh(gb, night ? new THREE.MeshBasicMaterial({ map: reef3dBlobTex(true), color: '#5ff0e0', transparent: true, opacity: .45, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }) : blobMat.clone());
@@ -19457,17 +19689,28 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     catch(e){ m.g = null; a.volume = 0; reefMusicNote(name, 'no volume control (' + e.message + ')'); }
     a.addEventListener('playing', function(){ reefMusicNote(name, 'playing'); });
     a.addEventListener('error', function(){
+      if(m.direct){ m.direct = false; m.stage = 1; reefMusicNote(name, 'streaming failed, downloading instead'); reefMusicFetch(m); return; }
       if(m.stage !== 2) return;
       reefMusicNote(name, 'copy would not stream (media error ' + (a.error ? a.error.code : '?') + ')');
       reefMusicDecode(m);
     });
     reefMusicNote(name, 'loading');
+    // The GitHub copy serves the songs from its own address, so they can stream straight away (no script copy
+    // to try first, and no waiting for the whole file). If streaming fails, the download below is the backup.
+    if(window.CORAL_COVE_SEED && !document.getElementById('reef-song-' + name)){
+      m.stage = 2; m.direct = true; a.src = name + '.mp3'; a.load();
+      return RM.el[name] = m;
+    }
+    reefMusicFetch(m);
+    return RM.el[name] = m;
+  }
+  function reefMusicFetch(m){
+    var name = m.name, a = m.a;
     reefMusicBytes(name).then(function(bytes){
       m.bytes = bytes; m.stage = 2;
       a.src = URL.createObjectURL(new Blob([bytes], { type: (RM.types && RM.types[name]) || 'audio/mpeg' })); a.load();
       if(m.level > 0){ m.level = -1; reefMusicUpdate(); }
     }, function(e){ m.stage = 0; reefMusicNote(name, 'could not load the song (' + (e && e.message || e) + ')'); });
-    return RM.el[name] = m;
   }
   // Last resort: unpack the whole song into memory and loop it through Web Audio.
   function reefMusicDecode(m){
@@ -19495,7 +19738,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   }
   // What should be playing right now, and how loud (1 = full, small = tucked under a deck).
   function reefMusicTarget(){
-    if(!reefMusicOn()) return null;
+    if(!reefMusicOn() || document.hidden) return null;
     try { if(!Sound.isEnabled()) return null; } catch(e){}
     var name = reefNight() ? 'night-song' : 'day-song';
     if(!S.profile) return { name: name, vol: 1 };               // the lobby
@@ -19531,6 +19774,22 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     reefMusicUpdate();   // inside the tap, where the iPad allows a song to start (cheap when nothing changed)
   }
   ['pointerdown', 'touchend', 'click', 'keydown'].forEach(function(t){ document.addEventListener(t, reefMusicStart, true); });
+  // Leaving the app or locking the device stops the music straight away (no fade: timers stop in the background);
+  // coming back picks it up again.
+  function reefMusicAway(){
+    Object.keys(RM.el).forEach(function(k){ var m = RM.el[k]; clearTimeout(m.stopT); reefMusicPause(m); m.level = 0; if(m.g) try { m.g.gain.cancelScheduledValues(0); m.g.gain.value = 0; } catch(e){} });
+    if(reefWinNode){ try { reefWinNode.stop(); } catch(e){} reefWinNode = null; }
+    try { if(window.speechSynthesis) speechSynthesis.cancel(); } catch(e){}
+    var ctx = reefMusicCtx(); if(ctx && ctx.state === 'running' && ctx.suspend) ctx.suspend().catch(function(){});
+  }
+  function reefMusicBack(){
+    var ctx = reefMusicCtx(); if(ctx && ctx.state !== 'running' && ctx.resume) ctx.resume().then(reefMusicUpdate, function(){});
+    Object.keys(RM.el).forEach(function(k){ RM.el[k].level = -1; });
+    reefMusicUpdate();
+  }
+  document.addEventListener('visibilitychange', function(){ if(document.hidden) reefMusicAway(); else reefMusicBack(); });
+  addEventListener('pagehide', reefMusicAway);
+  addEventListener('pageshow', function(e){ if(e.persisted && !document.hidden) reefMusicBack(); });
   function reefMusicButtonHTML(cls){
     var on = reefMusicOn();
     return '<button type="button" class="' + cls + (on ? '' : ' off') + '" data-music-toggle aria-pressed="' + on + '" aria-label="' + (on ? 'Turn the music off' : 'Turn the music on') + '">🎵</button>';
@@ -20144,6 +20403,37 @@ body.reef-calm .rw-light, body.reef-calm .rw-obj, body.reef-calm .rw-post, body.
 .r3-swim.bubbles{ left:50%; top:auto; bottom:20%; animation:r3Rise 2.4s ease-out forwards; }
 @keyframes r3Swim{ to{ left:110%; transform:translateY(-30px); } }
 @keyframes r3Rise{ to{ bottom:90%; opacity:0; transform:scale(1.6); } }
+/* the dice block: a "tap to roll" button, then the number it landed on */
+.r3-dice-tip{ position:absolute; z-index:5; left:50%; bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 74px); transform:translateX(-50%); border:none; cursor:pointer;
+  padding:12px 22px; border-radius:999px; font:800 1.15rem 'Baloo 2',sans-serif; background:linear-gradient(180deg, #fff, #e3eefc); color:#1d4f9a;
+  box-shadow:0 5px 0 #8fb0e0, 0 10px 20px rgba(30,60,90,.25); animation:r3DiceTip 1.1s ease-in-out infinite; -webkit-tap-highlight-color:transparent; }
+.r3-dice-tip:active{ transform:translateX(-50%) translateY(3px); box-shadow:0 2px 0 #8fb0e0; }
+@keyframes r3DiceTip{ 0%,100%{ transform:translateX(-50%) scale(1); } 50%{ transform:translateX(-50%) scale(1.07); } }
+.r3-dice-num{ position:absolute; z-index:5; left:50%; top:30%; transform:translate(-50%,-50%); pointer-events:none; font:900 6rem/1 'Baloo 2',sans-serif; color:#ffd24a;
+  -webkit-text-stroke:5px #1d4f9a; paint-order:stroke fill; text-shadow:0 8px 0 rgba(29,79,154,.35); animation:r3DiceNum 1.3s cubic-bezier(.2,.9,.3,1.4) both; }
+.r3.night .r3-dice-tip{ background:linear-gradient(180deg, #d9fffb, #8fe3e8); color:#0f4a55; box-shadow:0 5px 0 #2aa7b6, 0 10px 20px rgba(0,0,0,.35); }
+.r3.night .r3-dice-num{ color:#fff; -webkit-text-stroke-color:#0f4a55; }
+@keyframes r3DiceNum{ 0%{ opacity:0; transform:translate(-50%,-50%) scale(.2); } 30%{ opacity:1; transform:translate(-50%,-50%) scale(1.25); } 45%{ transform:translate(-50%,-50%) scale(1); }
+  80%{ opacity:1; transform:translate(-50%,-60%) scale(1); } 100%{ opacity:0; transform:translate(-50%,-90%) scale(.9); } }
+body.reef-calm .r3-dice-tip, body.reef-calm .r3-dice-num{ animation:none !important; }
+/* the ? block's prize: a ta-da card in the middle of the screen */
+.r3-prize{ position:absolute; inset:0; z-index:6; display:flex; align-items:center; justify-content:center; padding:24px; }
+.r3-prize-card{ position:relative; display:flex; flex-direction:column; align-items:center; gap:4px; width:min(300px, 82vw); padding:22px 20px 20px; border-radius:28px; text-align:center;
+  background:#fbf6ea; color:#3f2c1b; box-shadow:0 6px 0 #d9b25a, 0 0 0 5px #f6d77c, 0 20px 40px rgba(30,60,60,.3); animation:r3Tada .9s cubic-bezier(.2,.9,.3,1.3) both; }
+.r3-prize-card b{ font:800 1.6rem 'Baloo 2',sans-serif; line-height:1.1; }
+.r3-prize-card span{ font-weight:800; font-size:.98rem; opacity:.8; }
+.r3-prize-e{ font-size:4.4rem; line-height:1; margin-top:-62px; filter:drop-shadow(0 6px 6px rgba(0,0,0,.2)); animation:r3TadaE 1.1s .15s cubic-bezier(.2,.9,.3,1.4) both; }
+.r3-prize-rays{ position:absolute; left:50%; top:calc(50% - 40px); width:0; height:0; animation:r3Spin 6s linear infinite; }
+.r3-prize-rays i{ position:absolute; left:-9px; bottom:0; width:18px; height:130px; border-radius:9px; transform-origin:50% 100%; transform:rotate(var(--a));
+  background:linear-gradient(0deg, rgba(255,214,102,0), rgba(255,214,102,.85)); }
+.r3-prize.out .r3-prize-card, .r3-prize.out .r3-prize-rays{ animation:r3PrizeOut .25s ease-in forwards; }
+@keyframes r3Tada{ 0%{ opacity:0; transform:scale(.3) rotate(-8deg); } 45%{ opacity:1; transform:scale(1.12) rotate(4deg); } 60%{ transform:scale(.96) rotate(-3deg); }
+  75%{ transform:scale(1.04) rotate(2deg); } 88%{ transform:scale(.99) rotate(-1deg); } 100%{ opacity:1; transform:none; } }
+@keyframes r3TadaE{ 0%{ transform:scale(0) translateY(30px); } 60%{ transform:scale(1.25) translateY(-8px); } 100%{ transform:none; } }
+@keyframes r3Spin{ to{ transform:rotate(360deg); } }
+@keyframes r3PrizeOut{ to{ opacity:0; transform:scale(.8); } }
+.r3.night .r3-prize-card{ background:#20343a; color:#f6e9c8; }
+body.reef-calm .r3-prize-card, body.reef-calm .r3-prize-e, body.reef-calm .r3-prize-rays{ animation:none !important; }
 .rw.has-3d .rw-scene{ display:none; }
 /* treasure map */
 .r3-map{ position:fixed; inset:0; z-index:9000; background:rgba(20,40,45,.55); display:flex; align-items:flex-start; justify-content:center; overflow:auto; padding:24px 16px; }
@@ -20199,6 +20489,35 @@ body.r3-full .cv3-hero .topbar{ pointer-events:auto; margin:0; }
 body.r3-full .cv3-hero .brand{ background:rgba(251,246,234,.9); padding:6px 14px; border-radius:18px; box-shadow:0 4px 14px rgba(30,60,60,.15); }
 body.r3-full .cv3-hero .brand-title{ font-size:1.3rem; }
 body.r3-full .cv3-hero .brand-tag{ display:none; }
+/* in the game the title is hidden (the board is the title); the buttons keep to the right */
+body.r3-full .cv3-hero .brand{ display:none; }
+body.r3-full .cv3-hero .topbar > :last-child{ margin-left:auto; }
+.rw-head{ transition:opacity .4s ease, transform .4s ease; }
+.rw-head.rw-fading{ opacity:0; transform:translateY(-12px); pointer-events:none; }
+.rw-head.rw-gone{ display:none !important; }
+/* phones and other handhelds: nothing in the corners may touch, in either orientation */
+@media (max-width:480px), (max-height:500px){
+  body.r3-full .cv3-hero .icon-btn{ width:40px; height:40px; min-width:40px; font-size:1.05rem; }
+  body.r3-full .cv3-hero .topbar > :last-child{ gap:6px !important; }
+  body.r3-full .rw-head{ top:calc(max(10px, env(safe-area-inset-top, 0px)) + 50px); max-width:calc(100% - 28px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)); }
+  .r3-mapbtn, body.r3-full .r3-mapbtn{ width:52px; height:52px; padding:0; border-radius:50%; font-size:0; }
+  .r3-mapbtn::before{ content:"🗺️"; font-size:1.45rem; }
+  .ask-btn{ padding:8px !important; }
+  .ask-btn > span:not(.ask-btn-q){ display:none; }
+  body .r3-themebtn, body .r3-musicbtn{ width:48px; height:48px; font-size:1.3rem; }
+  body .r3-themebtn{ bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 62px); }
+  body .r3-musicbtn{ bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 118px); }
+  .r3-label b{ font-size:.82rem; } .r3-label small{ font-size:.66rem; }
+  .r3-sign b{ font-size:.9rem; } .r3-sign small{ font-size:.66rem; }
+}
+/* landscape phones: the right-hand buttons sit in one row along the bottom instead of a tall stack */
+@media (max-height:500px) and (orientation:landscape){
+  body .r3-themebtn{ bottom:max(16px, env(safe-area-inset-bottom, 0px)); right:calc(max(16px, env(safe-area-inset-right, 0px)) + 62px); }
+  body .r3-musicbtn{ bottom:max(16px, env(safe-area-inset-bottom, 0px)); right:calc(max(16px, env(safe-area-inset-right, 0px)) + 120px); }
+  .r3-dice-tip{ bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 4px); }
+  body.r3-full .rw-head{ max-width:min(420px, 55%); }
+  .r3-prize-card{ padding:14px 16px; } .r3-prize-e{ font-size:3.2rem; margin-top:-44px; }
+}
 body.r3-full .rw-head{ position:fixed; z-index:35; left:max(14px, env(safe-area-inset-left, 0px)); top:calc(max(10px, env(safe-area-inset-top, 0px)) + 62px); margin:0;
   max-width:min(520px, calc(100% - 28px)); padding:10px 12px 10px 16px; border-radius:20px; background:rgba(251,246,234,.92); box-shadow:0 6px 18px rgba(30,60,60,.16); }
 body.r3-full .rw-head h2{ font-size:1.2rem; }

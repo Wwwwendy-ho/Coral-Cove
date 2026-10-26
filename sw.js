@@ -14,14 +14,38 @@ self.addEventListener('activate', function (e) {
   }).then(function () { return self.clients.claim(); }));
 });
 
+// Music streams in pieces (Range requests). A piece can't be stored, so the whole song is saved once in the
+// background, and later pieces come from that saved copy (offline too).
+function rangeFromCache(req, cached) {
+  return cached.arrayBuffer().then(function (buf) {
+    var m = /bytes=(\d*)-(\d*)/.exec(req.headers.get('range') || ''), size = buf.byteLength;
+    var start = m && m[1] ? +m[1] : 0, end = m && m[2] ? Math.min(+m[2], size - 1) : size - 1;
+    if (m && !m[1] && m[2]) { start = Math.max(0, size - +m[2]); end = size - 1; }
+    if (start >= size || start > end) return new Response(null, { status: 416, headers: { 'Content-Range': 'bytes */' + size } });
+    return new Response(buf.slice(start, end + 1), { status: 206, headers: {
+      'Content-Type': cached.headers.get('Content-Type') || 'audio/mpeg', 'Content-Length': String(end - start + 1),
+      'Content-Range': 'bytes ' + start + '-' + end + '/' + size, 'Accept-Ranges': 'bytes' } });
+  });
+}
+
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET' || new URL(e.request.url).origin !== self.location.origin) return;
+  if (e.request.headers.has('range')) {
+    var url = e.request.url.split('#')[0];
+    e.respondWith(caches.match(url, { ignoreSearch: true }).then(function (cached) {
+      if (cached) return rangeFromCache(e.request, cached);
+      e.waitUntil(fetch(url, { credentials: 'same-origin' }).then(function (res) {
+        if (res.ok && res.status === 200) return caches.open(CACHE).then(function (c) { return c.put(url, res); });
+      }).catch(function () {}));
+      return fetch(e.request);
+    }));
+    return;
+  }
   e.respondWith(
     // Ask GitHub every time instead of the browser's 10-minute cache, so an update shows up the
     // first time the app is reopened online. Unchanged files come back as a quick "not modified".
     fetch(e.request.mode === 'navigate' ? e.request.url : e.request, { cache: 'no-cache', credentials: 'same-origin' }).then(function (res) {
-      var copy = res.clone();
-      caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
+      if (res.status === 200) { var copy = res.clone(); caches.open(CACHE).then(function (c) { return c.put(e.request, copy); }).catch(function () {}); }
       return res;
     }).catch(function () {
       return caches.match(e.request, { ignoreSearch: true }).then(function (r) { return r || caches.match('index.html'); });
