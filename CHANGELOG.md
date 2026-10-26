@@ -1,5 +1,46 @@
 # Changelog
 
+## Party board update (October 26, 2026, GitHub copy)
+
+Made on GitHub, not in the Claude version. Syncing from Claude with `tools/sync_from_artifact.py` would overwrite these changes.
+
+**A party board game**
+- **Dice:** after she leaves any deck, a dice block appears over Shelly's head. She taps, Shelly jumps up and hits it, then hops that many spaces with the count going down. Before rolling she can pick a die: 1 to 6, Shelly's die (3 or 4), Lumi's die (1 or 7), Kiko's die (0 gives 3 shells), or Double Dice from the shop.
+- **Branch paths:** the Treasure Reef and the Story Bottle sit at the ends of side paths. A roll that reaches a fork asks "Which way?". Reaching the end opens that place, and afterwards Shelly hops back to the main path.
+- **Shells and the golden pearl:** shells come from plain spaces, from practising and from minigames. A golden pearl sits on a space; passing it with 10 shells trades them for the pearl, and it moves somewhere new. Shells and pearls are saved with each profile.
+- **Hermit Crab's Shop:** a shop space sells Double Dice and hats (party hat, flower crown, pirate hat, gold crown) that Shelly and Lumi wear on the board.
+- **Chance Time:** pink "!" spaces spin a wheel with silly outcomes.
+- **Whirlpools** swirl her to their partner space, and a **clam gate** on the path opens and closes every turn.
+- **Minigames:** a short game after each dice turn, with no timers: Card Match (pairs from the deck she just played), Bubble Numbers and Odd Fish Out. The 🎮 corner replays them any time.
+- **Story mode:** for profiles with a daily plan, today's plan is the adventure. The next planned deck is the goal, the dice head toward it, and arriving starts it. A switch on the board turns on free play.
+- **? spaces** show their prize in the middle of the screen with a ta-da, instead of reading it aloud.
+
+**The boards**
+- **Day:** a brighter reef, with vivid coral along the path, seagrass and clownfish around the anemones.
+- **Night:** an abandoned shipwreck, a third buried in the sand and listing to one side. The path runs along its deck, then down a half-broken spiral staircase into the cargo hold below. On board: a captain's cabin with glowing windows, a treasure-strewn hold, a pirate flag with a seashell and crossed anchors, an octopus on a mast, drifting jellyfish, ghost lights, glowing portholes and an eel peeking out of the hull.
+- **Hops:** livelier, with a crouch, stretch, squash, varied heights and a spinning last leap.
+- **Small fixes:**
+  - Tapped fish flee in different ways.
+  - Bubbles stay put instead of following Shelly.
+  - Tiles sit above the sand.
+  - Lumi's outline is even.
+  - Lanterns glow at night.
+
+**Phones and speed**
+- **Layout:**
+  - Fits phones in both orientations: no title on the board, smaller corner buttons, and labels that stay clear of the top buttons.
+  - Shelly's line is said once and then fades away.
+- **Sharper and smoother:**
+  - Sharper on phones.
+  - Picture quality now steps back up after a slow moment instead of staying blurry.
+  - Struggling devices draw quietly at half speed when nothing moves.
+  - The board pauses during the dive into a deck.
+- **Music:**
+  - Streams straight away on this copy.
+  - Stops when the app is closed or the phone is locked.
+  - "I Like to Move It" plays for longer.
+- No more "No decks here" flash when a profile opens.
+
 ## Version 99 (October 26, 2026)
 
 The big one: Coral Cove went from a flat, drawn reef to a 3D game board, like a party board game under the sea. This entry covers everything from Version 33 to Version 99.

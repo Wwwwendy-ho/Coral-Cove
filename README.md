@@ -55,6 +55,9 @@ See `CHANGELOG.md` for what's in the current version (Version 99).
   changes on every update.)
 - **Photo uploads are turned off** in this version, since they need Claude's online storage.
 - **Ask Shelly** only explains Korean word parts on this copy. Full answers need the Claude version.
+- **The party board** (dice, shells, pearls, shop, minigames, story mode, the night shipwreck) exists only in this
+  GitHub copy. Shells, pearls and hats are saved with each profile on the device. Story mode appears for profiles
+  with a daily plan.
 - **Music** starts after the first tap, because browsers don't allow sound before one. The 🎵 button turns it
   on or off. If it won't play, hold 🎵 for a second to see a short note on what happened.
 - **3D and offline:** the 3D engine, the models and the celebration music are saved for offline use the first
@@ -63,6 +66,8 @@ See `CHANGELOG.md` for what's in the current version (Version 99).
 - **Fonts:** if Screen Time blocks `fonts.googleapis.com`, Coral Cove uses the iPad's built-in font
   instead. Approve `https://fonts.googleapis.com` and `https://fonts.gstatic.com` to keep the
   rounded Coral Cove fonts.
+- **Syncing from Claude:** `tools/sync_from_artifact.py` replaces `index.html` with the Claude version, which would
+  remove the party board. Bring those changes into the Claude version first, or skip the sync.
 - **Updating later:** upload changed files over the old ones. Decks already saved on the iPad are
   kept; new decks and cards in `seed-data.js` are added the next time the app opens, without changing
   progress already saved on that device.
