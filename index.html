@@ -18423,7 +18423,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
         lamp = { glow: lantern.userData.glow, halo: lantern.userData.halo, pool: pool };
       }
     }
-    if(shipDeck) reef3dWreckDeck({ THREE: THREE, scene: scene, statics: statics, deck: shipDeck, spaces: spaces, mainN: mainN, M: M, mesh: mesh, B: B, r: r, models: models, kit: kit, deckObjs: deckObjs });
+    var wreckFx = shipDeck ? reef3dWreckDeck({ THREE: THREE, scene: scene, statics: statics, deck: shipDeck, spaces: spaces, mainN: mainN, M: M, mesh: mesh, B: B, r: r, models: models, kit: kit, deckObjs: deckObjs }) : null;
     // Tall towers in the haze on both sides give the sea floor depth: coral by day, rock spires at night.
     for(var tz = 6; tz > -mainN * 2.6 - 10; tz -= 7 + r() * 5){
       [-1, 1].forEach(function(sd){
@@ -18568,7 +18568,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       caus: caus, rays: rays, rayList: rayList, schools: schools, fx: [], kit: kit,
       fishMixers: fishMixers, bigOne: bigOne, models: models, baked: true, blobG: blobG, blobC: blobC, glowG: glowG, groundY: groundY,
       crab: crab, crabFit: crabFit, crabGap: reefCrabExtent(guide) / 2 + crabFit / 2 + .2, leaving: null, spareCrab: null, chestMixer: chestMixer, chestActs: chestActs, nextStar: nextStar, spinners: spinners, lastT: performance.now(),
-      plume: plume, lamp: lamp
+      plume: plume, lamp: lamp, wreck: wreckFx
     };
     reef3dPartyBuild(view);
     reef3dQApply(view);
@@ -18690,6 +18690,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       view.spaces.forEach(function(s){ if(s.qb) reef3dQIdle(s, t); });
       reef3dDiceTick(view, now, t);
       reef3dPartyTick(view, now, t);
+      reef3dWreckTick(view, t);
       view.spaces.forEach(function(s){
         if(!s.obj) return;
         if(s.obj.userData.lid) s.obj.userData.lid.rotation.x = -.25 - .35 * (Math.sin(t * .7 + s.i) * .5 + .5);
@@ -18705,8 +18706,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       var cp = view.crab.position, dx = tx - cp.x, dz = tz - cp.z, dist = Math.sqrt(dx * dx + dz * dz);
       var entering = view.crab.userData.entering && !calm;   // a crab swapped in scuttles over from the side
       if(!entering && (calm || dist > 6)){ cp.set(tx, 0, tz); dist = 0; }
-      cp.y += (view.guide.position.y - .3 - cp.y) * (calm ? 1 : .2);   // the crab keeps to her level (stairs, the hold)
       else if(dist > .05){ var st = Math.min(dist, dt * (entering ? 4.5 : 7)); cp.x += dx / dist * st; cp.z += dz / dist * st; }
+      cp.y += (view.guide.position.y - .3 - cp.y) * (calm ? 1 : .2);   // the crab keeps to her level (stairs, the hold)
       if(entering && dist < .3){ view.crab.userData.entering = false; view.crabBusy = false; reef3dCrabAct(view, 'Dance', true); }
       var walking = dist > .25 && !calm;
       if(walking) view.crab.rotation.y = Math.atan2(dx, dz) - Math.PI / 2;   // crabs walk sideways
@@ -19026,80 +19027,249 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     var t = new THREE.CanvasTexture(c); return t;
   }
   function reef3dWreckDeck(o){
-    var THREE = o.THREE, d = o.deck, sp = o.spaces, M = o.M, mesh = o.mesh, B = o.B, r = o.r, st = o.statics;
-    var W = d.half * 2, L = d.z0 - d.z1, zc = (d.z0 + d.z1) / 2;
-    // the deck itself: one textured slab
-    var tex = reef3dPlankTex(THREE); tex.repeat.set(W / 4, L / 8);
-    var top = new THREE.Mesh(new THREE.BoxGeometry(W, .5, L), new THREE.MeshLambertMaterial({ map: tex, color: '#9fb4b0' }));
-    top.position.set(0, d.y - .25, zc); top.raycast = function(){}; o.scene.add(top);
-    // the hull: walls down both sides, a darker band of planks along the waterline
-    var hullM = M('#3f2f22'), trimM = M('#2b2018'), railM = M('#4d3a29');
+    var THREE = o.THREE, d = o.deck, sp = o.spaces, M = o.M, mesh = o.mesh, B = o.B, r = o.r;
+    var W = d.half * 2, zc0 = d.z0, st = d.stair, holeZ = st ? d.holeZ : d.z1, bowZ = d.z1, bowLen = d.half * 1.4;
+    var UP = d.y, LOW = st ? -4 + d.y : d.y, BOT = LOW - 1.6, TOP = .35;
+    // Everything on the ship goes into two groups that list together: still parts (merged and baked with the
+    // scenery) and parts that glow or move. Inside them, heights are the ship's own (before the list).
+    var S = new THREE.Group(), D = new THREE.Group(); S.rotation.z = D.rotation.z = Math.atan(d.roll);
+    o.statics.add(S); o.scene.add(D);
+    var hullM = M('#3a2c21'), trimM = M('#271d16'), railM = M('#4a3828'), mastM = M('#33261c');
+    var tex = reef3dPlankTex(THREE), deckMat = function(w, l){ var t = tex.clone(); t.needsUpdate = true; t.repeat.set(w / 4, l / 8); return new THREE.MeshLambertMaterial({ map: t, color: '#a9c2bb' }); };
+    function slab(z0, z1, y, col){ var L = z0 - z1, mt = deckMat(W, L); if(col) mt.color.set(col); var m = new THREE.Mesh(new THREE.BoxGeometry(W, .5, L), mt); m.position.set(0, y - .25, (z0 + z1) / 2); m.raycast = function(){}; D.add(m); return m; }
+    function glowSprite(col, size, op){ var g = new THREE.Sprite(new THREE.SpriteMaterial({ map: reef3dBlobTex(true), color: col, transparent: true, opacity: op, depthWrite: false, fog: false, blending: THREE.AdditiveBlending })); g.scale.setScalar(size); g.raycast = function(){}; return g; }
+    function clear(x, z, room){ return !sp.some(function(s){ return Math.hypot(s.x - x, s.z - z) < (room || 2.2); }); }
+    var out = { jellies: [], wisps: [], glints: [], flag: null, octo: null, eel: null, D: D };
+
+    // decks: the top deck up to the broken edge, the hold floor below it (under the sand line), and the bow
+    slab(zc0, holeZ, UP);
+    if(st){
+      slab(holeZ + 2.5, bowZ, LOW, '#5d716c');   // the hold is darker: less light reaches down there
+      for(var hl = 0; hl < 3; hl++){ var hz = holeZ - 5 - hl * (holeZ - bowZ - 6) / 3, hx = (hl % 2 ? 1 : -1) * (d.half - 1.2);   // lanterns hung in the hold
+        var hlan = B.lantern(); hlan.position.set(hx, LOW, hz); hlan.scale.setScalar(.8); if(clear(hx, hz)) { D.add(hlan); o.deckObjs.push(hlan); } }
+      for(var k = 0; k < 10; k++){   // the jagged edge: plank ends of different lengths, a few drooping into the hole
+        var bw = W / 10, bx = -d.half + bw * (k + .5), blen = .3 + r() * 1.8, pl = mesh(new THREE.BoxGeometry(bw * .92, .16, blen), M('#4f3d2b'), bx, UP - .08, holeZ - blen / 2);
+        pl.rotation.x = r() < .3 ? .25 + r() * .3 : 0; S.add(pl);
+      }
+      for(var f = 0; f < 4; f++){ var fp = mesh(new THREE.BoxGeometry(.45, .14, 2 + r() * 1.5), M('#4a3828'), (r() - .5) * (W - 4), LOW + .2, holeZ - 2 - r() * 4); fp.rotation.set(r() * .3, r() * 3, r() * .2); if(clear(fp.position.x, fp.position.z)) S.add(fp); }   // fallen planks
+    }
+    var bowShape = new THREE.Shape(); bowShape.moveTo(-d.half, 0); bowShape.lineTo(d.half, 0); bowShape.lineTo(0, bowLen); bowShape.lineTo(-d.half, 0);
+    var bd = new THREE.Mesh(new THREE.ShapeGeometry(bowShape), deckMat(W, bowLen)); bd.rotation.x = -Math.PI / 2; bd.position.set(0, (st ? LOW : UP), bowZ); bd.raycast = function(){}; D.add(bd);
+
+    // the hull: tall walls from below the sand to the gunwale, a stern wall, angled bow walls, trim and rails
+    var H = TOP - BOT, L = zc0 - bowZ;
     [-1, 1].forEach(function(side){
-      st.add(mesh(new THREE.BoxGeometry(.5, 3.4, L), hullM, side * (d.half + .25), d.y - 1.5, zc));
-      st.add(mesh(new THREE.BoxGeometry(.56, .25, L), trimM, side * (d.half + .25), d.y - 1.1, zc));
-      st.add(mesh(new THREE.BoxGeometry(.3, .16, L), railM, side * (d.half + .1), d.y + 1.05, zc));   // the top rail
+      S.add(mesh(new THREE.BoxGeometry(.5, H, L), hullM, side * (d.half + .25), (TOP + BOT) / 2, (zc0 + bowZ) / 2));
+      S.add(mesh(new THREE.BoxGeometry(.6, .22, L), trimM, side * (d.half + .28), -1.2, (zc0 + bowZ) / 2));
+      S.add(mesh(new THREE.BoxGeometry(.3, .16, L), railM, side * (d.half + .1), TOP + .75, (zc0 + bowZ) / 2));
+      var wall = mesh(new THREE.BoxGeometry(.5, H, Math.hypot(d.half, bowLen)), hullM, side * d.half / 2, (TOP + BOT) / 2, bowZ - bowLen / 2);
+      wall.rotation.y = side * Math.atan2(d.half, bowLen); S.add(wall);
     });
-    // railing posts, leaving gaps where a branch path steps off the ship
-    var exits = sp.filter(function(s){ return s.branch && Math.abs(s.x) > d.half - 1; });
-    for(var z = d.z0 - 1; z > d.z1 + 1; z -= 1.6){
+    S.add(mesh(new THREE.BoxGeometry(W + 1, H, .5), hullM, 0, (TOP + BOT) / 2, zc0 + .25));
+    var sprit = mesh(new THREE.CylinderGeometry(.14, .2, 7, 8), railM, 0, (st ? LOW : UP) + 1.8, bowZ - bowLen - 2); sprit.rotation.x = -Math.PI / 2 + .35; S.add(sprit);
+    var exits = sp.filter(function(s){ return s.branch && Math.abs(s.x) > d.half - .6; });
+    function exitNear(z, side, w){ return exits.some(function(s){ return Math.abs(s.z - z) < (w || 2.4) && Math.sign(s.x) === side; }); }
+    for(var z = zc0 - 1; z > bowZ + 1; z -= 1.6){
       [-1, 1].forEach(function(side){
-        var x = side * (d.half + .1);
-        if(exits.some(function(s){ return Math.abs(s.z - z) < 2.2 && Math.sign(s.x) === side; })) return;
-        if(r() < .12) return;   // a few posts have rotted away
-        st.add(mesh(new THREE.CylinderGeometry(.07, .09, 1.05, 6), railM, x, d.y + .52, z));
+        if(exitNear(z, side) || r() < .12) return;   // gaps where branches leave, and posts that rotted away
+        S.add(mesh(new THREE.CylinderGeometry(.07, .09, .75, 6), railM, side * (d.half + .1), TOP + .38, z));
       });
     }
-    // planks down to the sand where a branch leaves the ship
+    // gangplanks down to the sand where a branch leaves the ship
     sp.forEach(function(s){
-      if(!s.branch || !(sp[s.links[0]] && !sp[s.links[0]].branch)) return;   // the first space of each branch
-      var j = sp[s.jn], dir = Math.sign(s.x - j.x) || 1, gx = dir * (d.half + .9);
-      var gp = mesh(new THREE.BoxGeometry(2.4, .12, 1.3), M('#6b5238'), gx, d.y - .3, (j.z + s.z) / 2); gp.rotation.z = -dir * .25; st.add(gp);
+      if(!s.branch || Math.abs(s.x) < d.half - .6) return;
+      var prev = sp[s.links[0]]; if(Math.abs(prev.x) > d.half - .6) return;
+      var side = Math.sign(s.x), py = (prev.y || 0) - prev.x * d.roll, sy = d.sand, run = Math.abs(s.x) - Math.abs(prev.x) - 1.4;
+      var gp = mesh(new THREE.BoxGeometry(Math.hypot(run, py - sy), .14, 1.3), M('#6b5238'), side * (d.half + run / 2 - .4), (py + sy) / 2, (prev.z + s.z) / 2);
+      gp.rotation.z = side * Math.atan2(py - sy, run) * -1; S.add(gp);
     });
-    // the bow at the far end: two angled walls meeting in a point, and a bowsprit
-    var bowZ = d.z1, bowLen = d.half * 1.4;
-    [-1, 1].forEach(function(side){
-      var wall = mesh(new THREE.BoxGeometry(.5, 3.4, Math.hypot(d.half, bowLen)), hullM, side * d.half / 2, d.y - 1.3, bowZ - bowLen / 2);
-      wall.rotation.y = side * Math.atan2(d.half, bowLen); st.add(wall);
-    });
-    var bowDeck = new THREE.Shape(); bowDeck.moveTo(-d.half, 0); bowDeck.lineTo(d.half, 0); bowDeck.lineTo(0, bowLen); bowDeck.lineTo(-d.half, 0);
-    var bd = new THREE.Mesh(new THREE.ShapeGeometry(bowDeck), new THREE.MeshLambertMaterial({ map: tex, color: '#9fb4b0' }));
-    bd.rotation.x = -Math.PI / 2; bd.position.set(0, d.y, bowZ); bd.raycast = function(){}; o.scene.add(bd);
-    var sprit = mesh(new THREE.CylinderGeometry(.14, .2, 7, 8), railM, 0, d.y + 1.6, bowZ - bowLen - 2); sprit.rotation.x = -Math.PI / 2 + .35; st.add(sprit);
-    // masts: three, set beside the path, one snapped off; each with a yard, a torn sail, a crow's nest and a lantern
-    var sailTex = reef3dSailTex(THREE), sailMat = new THREE.MeshLambertMaterial({ map: sailTex, color: '#a7b3ad', transparent: true, alphaTest: .4, side: THREE.DoubleSide });
-    var mains = sp.slice(0, o.mainN);
-    [.2, .5, .8].forEach(function(f, k){
-      var s = mains[Math.round((mains.length - 1) * f)], side = s.x > 0 ? -1 : 1;
-      var mx = Math.max(-d.half + 1.5, Math.min(d.half - 1.5, s.x + side * 3.6)), mz = s.z - 1.2, broken = k === 1, h = broken ? 5.5 : 13;
-      st.add(mesh(new THREE.CylinderGeometry(.28, .4, h, 10), M('#3a2b20'), mx, d.y + h / 2, mz));
-      st.add(mesh(new THREE.CylinderGeometry(.62, .62, .3, 10), trimM, mx, d.y + .15, mz));
-      if(broken){ var stub = mesh(new THREE.CylinderGeometry(.26, .28, 7, 10), M('#3a2b20'), mx - side * 3.2, d.y + .45, mz + 1.5); stub.rotation.z = side * (Math.PI / 2 - .12); stub.rotation.y = .5; st.add(stub); return; }
-      var yard = mesh(new THREE.CylinderGeometry(.12, .12, 7, 8), M('#3a2b20'), mx, d.y + h * .72, mz); yard.rotation.z = Math.PI / 2; yard.rotation.y = .25; st.add(yard);
-      var sail = new THREE.Mesh(new THREE.PlaneGeometry(6.2, 4.6, 8, 4), sailMat); sail.position.set(mx, d.y + h * .72 - 2.4, mz + .2); sail.rotation.y = .25;
-      var sp2 = sail.geometry.attributes.position; for(var v = 0; v < sp2.count; v++) sp2.setZ(v, Math.sin((sp2.getX(v) + 3.1) / 6.2 * Math.PI) * .5);   // a little billow
-      sail.geometry.computeVertexNormals(); sail.raycast = function(){}; o.scene.add(sail);
-      st.add(mesh(new THREE.CylinderGeometry(.85, .6, .7, 12, 1, true), M('#4a3a2c', { side: THREE.DoubleSide }), mx, d.y + h - .8, mz));
-      var lan = B.lantern(); lan.position.set(mx + side * .5, d.y + 3.4, mz + .5); lan.scale.setScalar(.7); o.scene.add(lan); o.deckObjs.push(lan);
-    });
-    // cannons poking over the rails, and kelp hanging over the side
-    for(var cz = d.z0 - 6, ci = 0; cz > d.z1 + 4; cz -= 9, ci++){
+    // portholes glowing a ghostly green along the hull, above the sand; barnacles crusting the waterline
+    for(var pz = zc0 - 3; pz > bowZ + 2; pz -= 4.2){
       [-1, 1].forEach(function(side){
-        if(exits.some(function(s){ return Math.abs(s.z - cz) < 3 && Math.sign(s.x) === side; })) return;
-        var cn = (o.models && reef3dModel(o.models, 'cannon', .9, o.kit.grad)) || B.cannon(r);
-        cn.position.set(side * (d.half - 1), d.y, cz); cn.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2; st.add(cn);
-        if((ci + (side > 0 ? 1 : 0)) % 2){ var kp = B.kelp(r); kp.position.set(side * (d.half + .5), d.y - 2.6, cz + 3); kp.scale.setScalar(.8); st.add(kp); }
+        if(exitNear(pz, side, 1.5)) return;
+        var ring = mesh(new THREE.TorusGeometry(.38, .09, 6, 16), M('#8a6a2c'), side * (d.half + .52), -1.9, pz); ring.rotation.y = Math.PI / 2; S.add(ring);
+        var glass = new THREE.Mesh(new THREE.CircleGeometry(.32, 16), new THREE.MeshBasicMaterial({ color: '#7cf2c4', fog: false })); glass.position.set(side * (d.half + .53), -1.9, pz); glass.rotation.y = side * Math.PI / 2; D.add(glass);
+        if(r() < .5){ var gw = glowSprite('#56e0a8', 1.6, .35); gw.position.set(side * (d.half + .9), -1.9, pz); D.add(gw); }
       });
     }
-    // loose crates, a coil of rope and broken planks scattered on the deck, kept off the path
-    function clear(x, z){ return !sp.some(function(s){ return Math.hypot(s.x - x, s.z - z) < 2.2; }); }
-    for(var n = 0, tries = 0; n < Math.round(L / 6) && tries < 300; tries++){
-      var x = (r() - .5) * (W - 3), z = d.z1 + 2 + r() * (L - 4); if(!clear(x, z)) continue; n++;
-      var pick = r(), obj;
-      if(pick < .35) obj = (o.models && reef3dModel(o.models, r() < .5 ? 'crate' : 'barrel', .8 + r() * .4, o.kit.grad)) || B.plank(r);
-      else if(pick < .6){ obj = new THREE.Group(); var coil = mesh(new THREE.TorusGeometry(.42, .13, 8, 20), M('#a08660'), 0, .13, 0); coil.rotation.x = Math.PI / 2; obj.add(coil); obj.add(mesh(new THREE.TorusGeometry(.26, .12, 8, 16), M('#a08660'), 0, .3, 0)); obj.children[1].rotation.x = Math.PI / 2; }
-      else obj = B.plank(r);
-      obj.position.set(x, d.y, z); obj.rotation.y = r() * 6; st.add(obj);
+    for(var b = 0; b < 40; b++){ var side2 = r() < .5 ? -1 : 1, bc = mesh(new THREE.ConeGeometry(.09 + r() * .07, .14, 6), M('#7f8f86'), side2 * (d.half + .52), d.sand + .2 + r() * .9, zc0 - r() * L); bc.rotation.z = -side2 * Math.PI / 2; S.add(bc); }
+    // sand that has drifted over the rails and spilled down into the hold
+    for(var sd = 0; sd < 8; sd++){
+      var sx = (r() < .5 ? -1 : 1) * (d.half - .8 - r() * 1.2), sz = zc0 - 2 - r() * (L - 4); if(!clear(sx, sz, 2.6)) continue;
+      var lvl = st && sz < holeZ ? LOW : UP, dr = mesh(new THREE.SphereGeometry(1.4 + r(), 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), M('#566a63'), sx, lvl - .05, sz); dr.scale.set(1, .25, 1.6); S.add(dr);
     }
+
+    // the spiral staircase: a central post and wedge steps winding from the top deck down into the hold, a few
+    // steps missing and the handrail broken in places
+    if(st){
+      var cx = st.cx, cz = st.cz, N = 16;
+      S.add(mesh(new THREE.CylinderGeometry(.32, .38, UP - LOW + 2.2, 10), M('#6b5238'), cx, (UP + LOW) / 2 + 1.1, cz));
+      var snap = mesh(new THREE.ConeGeometry(.33, .7, 10), mastM, cx + .1, UP + 2.5, cz); snap.rotation.z = .5; S.add(snap);
+      for(var i = 0; i <= N; i++){
+        var th = (90 + i / N * 190) * Math.PI / 180, y = UP + (LOW - UP) * Math.min(1, i / N * 190 / 180);
+        var deg = 90 + i / N * 190, nearTile = [90, 150, 210, 270].some(function(a){ return Math.abs(deg - a) < 14; });
+        if(!nearTile && (i === 4 || i === 11 || i === 14)){   // a broken step: just a stub, or fallen to the floor
+          var stub = mesh(new THREE.BoxGeometry(.9, .16, .9), M('#4a3828'), cx + Math.cos(th) * .9, y, cz + Math.sin(th) * .9); stub.rotation.y = -th; S.add(stub); continue;
+        }
+        var step = mesh(new THREE.BoxGeometry(3.1, .32, 1.25), M(i % 2 ? '#8a6a48' : '#7a5d3f'), cx + Math.cos(th) * 1.9, y - .16, cz + Math.sin(th) * 1.9);
+        step.rotation.y = -th; S.add(step);
+        if(i % 2 === 0 && r() > .25){   // handrail posts at the outer edge; the rail between some of them is gone
+          var px = cx + Math.cos(th) * 3.35, pz2 = cz + Math.sin(th) * 3.35;
+          S.add(mesh(new THREE.CylinderGeometry(.06, .07, 1, 6), railM, px, y + .5, pz2));
+          var th2 = (90 + (i + 2) / N * 190) * Math.PI / 180, y2 = UP + (LOW - UP) * Math.min(1, (i + 2) / N * 190 / 180);
+          if(i + 2 <= N && r() > .3){
+            var qx = cx + Math.cos(th2) * 3.35, qz = cz + Math.sin(th2) * 3.35, len = Math.hypot(qx - px, qz - pz2, y2 - y);
+            var rail = mesh(new THREE.CylinderGeometry(.05, .05, len, 6), railM, (px + qx) / 2, (y + y2) / 2 + 1, (pz2 + qz) / 2);
+            rail.lookAt(new THREE.Vector3(qx, y2 + 1, qz)); rail.rotateX(Math.PI / 2); S.add(rail);
+          }
+        }
+      }
+      var fallen = mesh(new THREE.BoxGeometry(3, .2, 1.2), M('#4f3d2b'), cx - 2.5, LOW + .15, cz - 3.4); fallen.rotation.set(.2, .7, .1); if(clear(fallen.position.x, fallen.position.z)) S.add(fallen);
+      // stubs of the old deck beams sticking out of the hold walls
+      for(var bz = holeZ - 4; bz > bowZ + 3; bz -= 7) [-1, 1].forEach(function(side){ var bl = 1 + r() * 1.6; S.add(mesh(new THREE.BoxGeometry(bl, .4, .4), trimM, side * (d.half - bl / 2), UP - .4, bz)); });
+    }
+
+    // masts: one on the top deck, one snapped, one rising out of the hold; each leans, with a torn sail and a lantern
+    var mains = sp.slice(0, o.mainN), sailTex = reef3dSailTex(THREE);
+    var sailMat = new THREE.MeshLambertMaterial({ map: sailTex, color: '#9aa9a3', transparent: true, alphaTest: .4, side: THREE.DoubleSide });
+    var mastTops = [];
+    [.14, .36, .82].forEach(function(fr, k){
+      var s = mains[Math.round((mains.length - 1) * fr)]; if(s.stair) s = mains[Math.max(0, s.i - 2)];
+      var side = s.x > 0 ? -1 : 1, mx = Math.max(-d.half + 1.6, Math.min(d.half - 1.6, s.x + side * 3.6)), mz = s.z - 1.2;
+      var base = st && mz < holeZ ? LOW : UP, broken = k === 1, h = (broken ? 5 : 13) + (base === LOW ? 4 : 0), lean = side * .07;
+      var mast = new THREE.Group(); mast.position.set(mx, base, mz); mast.rotation.z = lean; S.add(mast);
+      mast.add(mesh(new THREE.CylinderGeometry(.26, .4, h, 10), mastM, 0, h / 2, 0));
+      S.add(mesh(new THREE.CylinderGeometry(.62, .62, .3, 10), trimM, mx, base + .15, mz));
+      if(broken){ var stub2 = mesh(new THREE.CylinderGeometry(.24, .26, 7, 10), mastM, mx - side * 3.4, base + .4, mz + 1.4); stub2.rotation.set(0, .5, side * (Math.PI / 2 - .1)); if(clear(stub2.position.x, stub2.position.z, 3.6)) S.add(stub2); return; }
+      var yard = mesh(new THREE.CylinderGeometry(.11, .11, 7, 8), mastM, 0, h * .72, 0); yard.rotation.z = Math.PI / 2; yard.rotation.y = .25; mast.add(yard);
+      mast.add(mesh(new THREE.CylinderGeometry(.85, .6, .7, 12, 1, true), M('#3f3024', { side: THREE.DoubleSide }), 0, h - .8, 0));
+      var sail = new THREE.Mesh(new THREE.PlaneGeometry(6.2, 4.6, 8, 4), sailMat); sail.position.set(mx, base + h * .72 - 2.4, mz + .2); sail.rotation.set(0, .25, lean);
+      var sa = sail.geometry.attributes.position; for(var v = 0; v < sa.count; v++) sa.setZ(v, Math.sin((sa.getX(v) + 3.1) / 6.2 * Math.PI) * .5);
+      sail.geometry.computeVertexNormals(); sail.raycast = function(){}; D.add(sail);
+      var lan = B.lantern(); lan.position.set(mx + side * .55, base + 3.3, mz + .5); lan.scale.setScalar(.7); D.add(lan); o.deckObjs.push(lan);
+      mastTops.push({ x: mx, z: mz, top: base + h, base: base, side: side });
+    });
+    // the pirate flag on the tallest mast: black, with a white seashell and crossed anchors (no skull)
+    var tall = mastTops.reduce(function(a, m){ return !a || m.top > a.top ? m : a; }, null);
+    if(tall){
+      var fc = document.createElement('canvas'); fc.width = 256; fc.height = 160; var fg = fc.getContext('2d');
+      fg.fillStyle = '#16181c'; fg.fillRect(0, 0, 256, 160); fg.strokeStyle = '#f2efe6'; fg.fillStyle = '#f2efe6'; fg.lineWidth = 9; fg.lineCap = 'round';
+      [[-1], [1]].forEach(function(q){ fg.save(); fg.translate(128, 80); fg.rotate(q[0] * .7); fg.beginPath(); fg.moveTo(0, -58); fg.lineTo(0, 52); fg.moveTo(-14, -44); fg.lineTo(14, -44); fg.stroke();
+        fg.beginPath(); fg.arc(0, 40, 22, .15 * Math.PI, .85 * Math.PI); fg.stroke(); fg.beginPath(); fg.arc(0, -64, 8, 0, Math.PI * 2); fg.stroke(); fg.restore(); });   // two crossed anchors
+      fg.beginPath(); fg.moveTo(128, 104); for(var fa = 0; fa <= 8; fa++){ var an = Math.PI + fa / 8 * Math.PI; fg.lineTo(128 + Math.cos(an) * 34, 104 + Math.sin(an) * 34); } fg.closePath(); fg.fill();   // a scallop shell
+      fg.strokeStyle = '#16181c'; fg.lineWidth = 4; for(var fr2 = 1; fr2 < 8; fr2++){ var a2 = Math.PI + fr2 / 8 * Math.PI; fg.beginPath(); fg.moveTo(128, 104); fg.lineTo(128 + Math.cos(a2) * 32, 104 + Math.sin(a2) * 32); fg.stroke(); }
+      var flag = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.6, 12, 4), new THREE.MeshLambertMaterial({ map: new THREE.CanvasTexture(fc), side: THREE.DoubleSide }));
+      flag.geometry.translate(1.3, 0, 0); flag.position.set(tall.x, tall.top - .3, tall.z); flag.userData.rest = flag.geometry.attributes.position.array.slice(); flag.raycast = function(){}; D.add(flag); out.flag = flag;
+    }
+    // an octopus that has made the first mast its home: a head in the crow's nest, tentacles curling down the mast
+    var om = mastTops[0];
+    if(om){
+      var octo = new THREE.Group(); octo.position.set(om.x, om.base, om.z); D.add(octo);
+      var oM = M('#7b4a9a'), sM = M('#e8b6d6');
+      var head = mesh(new THREE.SphereGeometry(.85, 20, 14), oM, 0, om.top - om.base - .1, .1); head.scale.set(1, 1.15, 1); octo.add(head);
+      [-.3, .3].forEach(function(ex){ var eye = mesh(new THREE.SphereGeometry(.2, 12, 8), M('#fff6d8'), ex, om.top - om.base - .05, .82); octo.add(eye); var pu = new THREE.Mesh(new THREE.SphereGeometry(.1, 10, 8), new THREE.MeshBasicMaterial({ color: '#13202a' })); pu.position.set(ex, om.top - om.base - .08, .98); octo.add(pu); });
+      var tents = [];
+      for(var t = 0; t < 4; t++){
+        var pts = [], ph = t / 4 * Math.PI * 2, top2 = om.top - om.base - .9;
+        for(var q = 0; q <= 24; q++){ var u = q / 24, ang = ph + u * Math.PI * 3.2, rr = .42 + (t % 2 ? .05 : 0), yy = top2 - u * (top2 - 1.2); pts.push(new THREE.Vector3(Math.cos(ang) * rr, yy, Math.sin(ang) * rr)); }
+        var tip = pts[pts.length - 1]; pts.push(new THREE.Vector3(tip.x * 2.2, tip.y - .1, tip.z * 2.2), new THREE.Vector3(tip.x * 2.8, tip.y + .5, tip.z * 2.8));   // the tip curls outward
+        var tg = new THREE.Group(), curve = new THREE.CatmullRomCurve3(pts);
+        tg.add(mesh(new THREE.TubeGeometry(curve, 60, .13, 8), oM));
+        for(var su = 1; su < 14; su++){ var pp = curve.getPointAt(su / 14), sk = mesh(new THREE.SphereGeometry(.055, 6, 5), sM, pp.x * 1.25, pp.y, pp.z * 1.25); tg.add(sk); }
+        octo.add(tg); tents.push(tg);
+      }
+      out.octo = { g: octo, tents: tents };
+    }
+    // the captain's cabin at the stern, beside the start: warm light in its windows, a door, a bell and the wheel
+    var startX = sp[0].x, cabSide = startX > 0 ? -1 : 1, cabX = cabSide * (d.half - 3), cabZ = zc0 - 4;
+    if(clear(cabX, cabZ, 3.4)){
+      S.add(mesh(new THREE.BoxGeometry(4.6, 2.8, 3.6), M('#3b2c22'), cabX, UP + 1.4, cabZ));
+      var roof = mesh(new THREE.BoxGeometry(5.2, .28, 4.2), M('#241a14'), cabX, UP + 2.95, cabZ); roof.rotation.z = cabSide * .06; S.add(roof);
+      S.add(mesh(new THREE.BoxGeometry(.9, 1.7, .1), M('#2a1f17'), cabX + cabSide * 1.2, UP + .85, cabZ + 1.81));
+      [[-.6, 1.82, 0], [.9, 1.82, 0], [0, 0, 1]].forEach(function(w, i){
+        var win = new THREE.Mesh(new THREE.PlaneGeometry(.9, .8), new THREE.MeshBasicMaterial({ color: '#ffcf70', fog: false }));
+        if(w[2]){ win.position.set(cabX - cabSide * 2.31, UP + 1.6, cabZ); win.rotation.y = -cabSide * Math.PI / 2; }
+        else win.position.set(cabX - cabSide * w[0], UP + 1.6, cabZ + w[1]);
+        D.add(win);
+        var mul = mesh(new THREE.BoxGeometry(.08, .8, .04), trimM, win.position.x, win.position.y, win.position.z + (w[2] ? 0 : .02)); mul.rotation.y = win.rotation.y; S.add(mul);
+        var hg = glowSprite('#ffb648', 2.4, .55); hg.position.copy(win.position); hg.position.z += w[2] ? 0 : .4; hg.position.x += w[2] ? -cabSide * .4 : 0; D.add(hg); out.glints.push(hg);
+      });
+      var wheel = B.wheel(r); wheel.position.set(cabX, UP + 3.1, cabZ + .4); wheel.scale.setScalar(.8); S.add(wheel);
+      S.add(mesh(new THREE.CylinderGeometry(.08, .08, 2, 6), railM, cabX - cabSide * 2.9, UP + 1, cabZ + 1.4));
+      var bell = mesh(new THREE.LatheGeometry([new THREE.Vector2(0, .5), new THREE.Vector2(.18, .48), new THREE.Vector2(.26, .2), new THREE.Vector2(.36, 0)], 16), M('#b88a2c', { side: THREE.DoubleSide }), cabX - cabSide * 2.9, UP + 1.45, cabZ + 1.4); S.add(bell);
+    }
+    // the treasure-strewn hold: spilled chests, heaps of gold, goblets, gems and pearls
+    var holdZ0 = st ? holeZ - 1 : zc0 - L * .6, holdZ1 = bowZ + 1, lvlT = st ? LOW : UP, gold = M('#e2b13c');
+    for(var tn = 0, tries = 0; tn < Math.round((holdZ0 - holdZ1) / 2.2) && tries < 300; tries++){
+      var tx = (r() - .5) * (W - 3), tz = holdZ1 + r() * (holdZ0 - holdZ1); if(!clear(tx, tz, 2.3)) continue; tn++;
+      var kind = tn % 5, obj = new THREE.Group();
+      if(kind === 0){ obj.add(mesh(new THREE.ConeGeometry(.75 + r() * .4, .55, 14), gold, 0, .27, 0)); for(var cc = 0; cc < 6; cc++){ var cn = mesh(new THREE.CylinderGeometry(.12, .12, .03, 10), gold, (r() - .5) * 2, .03, (r() - .5) * 2); cn.rotation.x = r() * .4; obj.add(cn); } }
+      else if(kind === 1){ var ch = (o.models && reef3dModel(o.models, 'chest', .9, o.kit.grad)) || B.treasure(r); obj.add(ch); obj.rotation.z = (r() - .5) * .4; var cg = glowSprite('#ffd36a', 2.2, .4); cg.position.y = .8; obj.add(cg); out.glints.push(cg); }
+      else if(kind === 2){ obj.add(mesh(new THREE.LatheGeometry([new THREE.Vector2(.2, 0), new THREE.Vector2(.06, .1), new THREE.Vector2(.05, .35), new THREE.Vector2(.22, .55), new THREE.Vector2(.24, .75)], 14), M('#d9a933', { side: THREE.DoubleSide }))); if(r() < .5) obj.rotation.z = Math.PI / 2 - .2; }
+      else if(kind === 3){ var gm = o.models && reef3dModel(o.models, r() < .5 ? 'gemPink' : 'gemBlue', .45, o.kit.grad); if(gm){ gm.position.y = .2; obj.add(gm); } var gg = glowSprite(r() < .5 ? '#ff7ac0' : '#6fd7ff', 1.3, .45); gg.position.y = .3; obj.add(gg); out.glints.push(gg); }
+      else { for(var pr = 0; pr < 7; pr++) obj.add(mesh(new THREE.SphereGeometry(.08, 8, 6), M('#f4efe6'), (r() - .5) * 1.2, .08, (r() - .5) * 1.2)); obj.add(mesh(new THREE.BoxGeometry(.9, .55, .7), M('#5a4330'), 0, .27, 0)); }
+      obj.position.set(tx, lvlT, tz); obj.rotation.y = r() * 6;
+      (kind === 1 || kind === 3 ? D : S).add(obj);
+    }
+    // cargo, rope and cannons on the top deck
+    for(var cz2 = zc0 - 6, ci = 0; cz2 > (st ? holeZ + 2 : bowZ + 4); cz2 -= 8, ci++){
+      [-1, 1].forEach(function(side){
+        if(exitNear(cz2, side, 3)) return;
+        var cn2 = (o.models && reef3dModel(o.models, 'cannon', .9, o.kit.grad)) || B.cannon(r);
+        cn2.position.set(side * (d.half - 1), UP, cz2); cn2.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2; S.add(cn2);
+        if((ci + (side > 0 ? 1 : 0)) % 2){ var kp = B.kelp(r); kp.position.set(side * (d.half + .5), d.sand, cz2 + 3); kp.scale.setScalar(.9); S.add(kp); }
+      });
+    }
+    for(var n = 0, tr = 0; n < Math.round(L / 7) && tr < 300; tr++){
+      var x = (r() - .5) * (W - 3), z2 = bowZ + 2 + r() * (L - 4); if(!clear(x, z2)) continue; n++;
+      var lv = st && z2 < holeZ ? LOW : UP, pick = r(), ob;
+      if(pick < .45) ob = (o.models && reef3dModel(o.models, r() < .5 ? 'crate' : 'barrel', .8 + r() * .4, o.kit.grad)) || B.plank(r);
+      else if(pick < .7){ ob = new THREE.Group(); var coil = mesh(new THREE.TorusGeometry(.42, .13, 8, 20), M('#8f7a58'), 0, .13, 0); coil.rotation.x = Math.PI / 2; ob.add(coil); var c2 = mesh(new THREE.TorusGeometry(.26, .12, 8, 16), M('#8f7a58'), 0, .3, 0); c2.rotation.x = Math.PI / 2; ob.add(c2); }
+      else ob = B.plank(r);
+      ob.position.set(x, lv, z2); ob.rotation.y = r() * 6; S.add(ob);
+    }
+    // an eel peeking out of a hole in the hull, with glowing eyes
+    var eelSide = -cabSide, eelZ = (st ? holeZ - 6 : zc0 - L * .5);
+    if(!exitNear(eelZ, eelSide, 3)){
+      S.add(mesh(new THREE.CircleGeometry(.55, 14), new THREE.MeshBasicMaterial({ color: '#05090b' }), eelSide * (d.half + .53), -2.5, eelZ).rotateY(eelSide * Math.PI / 2));
+      var eel = new THREE.Group(); eel.position.set(eelSide * (d.half + .5), -2.5, eelZ); D.add(eel);
+      var eb = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(eelSide * .8, .3, .2), new THREE.Vector3(eelSide * 1.4, .9, 0)]);
+      eel.add(mesh(new THREE.TubeGeometry(eb, 20, .2, 8), M('#4f6b3a')));
+      var eh = mesh(new THREE.SphereGeometry(.26, 12, 10), M('#5b7a42'), eelSide * 1.5, 1, 0); eh.scale.set(1.3, .9, .9); eel.add(eh);
+      [-.1, .1].forEach(function(ez){ var ey = new THREE.Mesh(new THREE.SphereGeometry(.05, 8, 6), new THREE.MeshBasicMaterial({ color: '#fff27a', fog: false })); ey.position.set(eelSide * 1.62, 1.1, ez); eel.add(ey); });
+      out.eel = eel;
+    }
+    // jellyfish drifting over the deck, and ghost lights wandering about the masts
+    var jellyCols = ['#ff8fd0', '#7fe9ff', '#b78cff', '#9effc8'];
+    for(var j = 0; j < 8; j++){
+      var jg = new THREE.Group(), col = jellyCols[j % jellyCols.length];
+      var bell2 = new THREE.Mesh(new THREE.SphereGeometry(.42, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: .55, fog: false, depthWrite: false }));
+      jg.add(bell2);
+      for(var tt = 0; tt < 5; tt++){ var ten = new THREE.Mesh(new THREE.CylinderGeometry(.015, .015, 1.1, 4), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: .5, depthWrite: false })); var ta = tt / 5 * Math.PI * 2; ten.position.set(Math.cos(ta) * .22, -.55, Math.sin(ta) * .22); jg.add(ten); }
+      var jglow = glowSprite(col, 2, .35); jg.add(jglow);
+      jg.traverse(function(c){ c.raycast = function(){}; });
+      jg.userData = { x: (r() - .5) * (W - 2), y: 2.5 + r() * 3, z: zc0 - r() * L, ph: r() * 6, sp: .3 + r() * .4, bell: bell2 };
+      o.scene.add(jg); out.jellies.push(jg);
+    }
+    for(var g2 = 0; g2 < 8; g2++){ var wsp = glowSprite('#8dffd0', .9 + r() * .6, .5); var mt = mastTops[g2 % Math.max(1, mastTops.length)] || { x: 0, z: zc0 - 5, top: 6, base: UP };
+      wsp.userData = { x: mt.x, z: mt.z, y: mt.base + 2 + r() * (mt.top - mt.base - 2), ph: r() * 6, rad: 1.5 + r() * 2.5 }; o.scene.add(wsp); out.wisps.push(wsp); }
+    return out;
+  }
+  // Every frame at night: jellyfish pulse and drift (staying near her, like the bubbles), ghost lights wander and
+  // flicker, the flag ripples, the octopus's tentacles sway, the eel bobs and the treasure glints.
+  function reef3dWreckTick(view, t){
+    var w = view.wreck; if(!w) return;
+    var g = view.guide.position;
+    w.jellies.forEach(function(j, i){
+      var u = j.userData, z = g.z + 8 - (((g.z + 8 - u.z) % 30) + 30) % 30;
+      j.position.set(u.x + Math.sin(t * .2 + u.ph) * 1.5, u.y + (g.y - .3) * .7 + Math.sin(t * u.sp + u.ph) * .5, z);
+      var pulse = 1 + .12 * Math.sin(t * 2.2 + u.ph); u.bell.scale.set(pulse, 1 / pulse, pulse);
+    });
+    w.wisps.forEach(function(s){ var u = s.userData; s.position.set(u.x + Math.cos(t * .4 + u.ph) * u.rad, u.y + Math.sin(t * .7 + u.ph) * .6, u.z + Math.sin(t * .4 + u.ph) * u.rad); s.material.opacity = .25 + .3 * (.5 + .5 * Math.sin(t * 3 + u.ph * 3)); });
+    if(w.flag){ var a = w.flag.geometry.attributes.position, rest = w.flag.userData.rest; for(var i = 0; i < a.count; i++){ var x = rest[i * 3]; a.setZ(i, Math.sin(x * 2.2 - t * 3) * .18 * (x / 2.6)); } a.needsUpdate = true; }
+    if(w.octo) w.octo.tents.forEach(function(tg, i){ tg.rotation.y = Math.sin(t * .6 + i * 1.7) * .12; });
+    if(w.eel){ w.eel.rotation.y = Math.sin(t * .9) * .25; w.eel.position.y = -2.5 + Math.sin(t * 1.3) * .08; }
+    w.glints.forEach(function(s, i){ s.material.opacity = .3 + .25 * (.5 + .5 * Math.sin(t * 2.5 + i * 1.9)); });
   }
 
   /* ---------- The dice block (after leaving a deck): it floats over the guide's head and flicks through its
