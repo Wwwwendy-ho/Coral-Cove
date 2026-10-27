@@ -72,6 +72,29 @@ See `CHANGELOG.md` for what's in the current version (Version 99).
   kept; new decks and cards in `seed-data.js` are added the next time the app opens, without changing
   progress already saved on that device.
 
+## Claude helper
+
+The Library's tutor, worksheet maker and writing and photo feedback can use Claude when the iPad is online.
+If Claude can't be reached, or the iPad is offline, every Library feature uses its built-in version instead.
+The Anthropic API key stays on Cloudflare, in a small Worker, so it never appears in the public app.
+
+Set it up once, with a grown-up:
+
+1. In the Cloudflare dashboard, go to Workers & Pages, choose Create, then Worker. Paste in the whole of
+   `tools/claude-proxy-worker.js` and click Deploy.
+2. Open the Worker's Settings, then Variables and Secrets, and add:
+   - `ANTHROPIC_API_KEY` (Secret): your key from console.anthropic.com
+   - `CORAL_CODE` (Secret): any long passphrase. You'll type the same one into Coral Cove.
+   - `MODEL` (Text, optional): the Claude model to use. Defaults to `claude-opus-5-5`.
+   - `ALLOW_ORIGIN` (Text, optional): where Coral Cove runs, e.g. `https://wwwwendy-ho.github.io`.
+     Defaults to `*`.
+3. In Coral Cove, open 📚 Library, then Settings (grown-up PIN). Paste in the Worker's URL and the
+   passphrase, then tap "Test it".
+
+Each request is billed to your Anthropic account. Replies are kept short to keep the cost low.
+
+To turn it off, open Library Settings and tap "Turn off". The Library goes back to its offline versions.
+
 ## Credits
 
 - 3D models: Quaternius (Ultimate Platformer Pack, Fish Pack) and the Kenney Pirate Kit (kenney.nl), all CC0.

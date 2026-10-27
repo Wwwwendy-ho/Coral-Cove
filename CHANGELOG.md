@@ -1,5 +1,21 @@
 # Changelog
 
+## Library and night fixes (October 27, 2026)
+
+**The Library**
+- New 📚 Library (button in the top bar), kept off the board:
+  - **Tutor:** ask anything, Socratic help, big-question talks, role-plays in Korean, Chinese and English, debates, explain it 3 ways, teach-back, question of the day, and voice input.
+  - **Worksheets:** from a deck, maths, a topic, spiral review, word problems from her interests, cloze, handwriting tracing, put in order, label a diagram, or from a photo. Easy, medium or stretch. Checks on screen with step-by-step explanations. Print or save as PDF with an answer key.
+  - **Check my work:** writing feedback with rubrics as "two stars and a wish", and photo marking.
+  - **My progress:** mastery per deck and maths skill, tricky spots and misconceptions, sure-or-guessing confidence, an adaptive maths placement check, and a weekly letter for grown-ups.
+  - **Maths lab:** facts practice, visual models, manipulatives, mental strategies, geometry, clocks and money, and puzzles.
+- Works fully offline with built-in algorithms. When online, it uses Claude through an optional helper that a grown-up runs (`tools/claude-proxy-worker.js`), and falls back to offline if the helper can't be reached.
+
+**Night shipwreck**
+- The camera now shows the sails and the spiral stair down to the hold clearly.
+- Branch-path hops arc over the hull instead of through it.
+- Fish no longer swim through the sails.
+
 ## Party board update (October 26, 2026, GitHub copy)
 
 Made on GitHub, not in the Claude version. Syncing from Claude with `tools/sync_from_artifact.py` would overwrite these changes.
