@@ -11821,6 +11821,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   }
   function reefWinSound(full){
     try { if(!Sound.isEnabled()) return; } catch(e){ return; }
+    if(!(S.profile && S.profile.mode === 'child')){ try { Sound.correct(); } catch(e){} return; }   // the "I Like to Move It" clip is just for the child's profile
     var ctx = null; try { ctx = Sound.getCtx(); } catch(e){}
     if(!ctx) return;
     if(!reefWinBuf){ var p = reefWinLoad(); if(p && p.then) p.then(function(buf){ if(buf && full) reefWinSound(true); }); else { try { Sound.correct(); } catch(e){} } return; }
@@ -17995,6 +17996,12 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
     g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = 10; g.setLineDash(kind === 'plain' ? [] : [18, 14]);
     g.beginPath(); g.arc(128, 128, 104, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
+    if(/^deck/.test(kind)){   // decks: a white badge behind a big emoji, and a gold star once it's all done
+      g.fillStyle = night ? 'rgba(255,246,222,.92)' : 'rgba(255,255,255,.92)'; g.beginPath(); g.arc(128, 128, 82, 0, Math.PI * 2); g.fill();
+      g.font = '128px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(icon, 128, 136);
+      if(kind === 'deck-done'){ g.font = '900 64px "Baloo 2", system-ui, sans-serif'; g.fillStyle = '#ffcf3f'; g.strokeStyle = '#8a5a12'; g.lineWidth = 6; g.strokeText('★', 200, 58); g.fillText('★', 200, 58); }
+      var dt = new window.THREE.CanvasTexture(c); dt.anisotropy = 4; return (R3tex[key] = dt);
+    }
     if(icon === '?'){ g.fillStyle = night ? '#ffe29a' : '#ffffff'; g.font = '900 150px "Baloo 2", system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('?', 128, 140); }
     else if(icon){ g.font = (kind === 'plain' ? 90 : 120) + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(icon, 128, 138); }
     else { g.fillStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.arc(128, 128, 26, 0, Math.PI * 2); g.fill(); }
@@ -18013,8 +18020,11 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       faceY = .335; faceR = R - .06;
     } else {
       parts.push(mesh(reef3dTileGeo(R), M(reef3dShade(top, -.18)), s.x, 0, s.z));
+      if(s.kind === 'deck'){   // a deck stands out from every other space: a raised gold rim
+        var rim = mesh(new THREE.TorusGeometry(R - .04, .1, 8, 44), M(night ? '#e0b44a' : '#f2c14e'), s.x, .37, s.z); rim.rotation.x = Math.PI / 2; parts.push(rim);
+      }
     }
-    var face = new THREE.Mesh(new THREE.CircleGeometry(faceR, 48), new THREE.MeshToonMaterial({ map: style === 'classic' ? reef3dTileTex(top, icon, night, s.kind) : reef3dTileTex2(style, top, icon, night, s.kind), gradientMap: kit.grad }));
+    var face = new THREE.Mesh(new THREE.CircleGeometry(faceR, 48), new THREE.MeshToonMaterial({ map: style === 'classic' ? reef3dTileTex(top, icon, night, s.kind === 'deck' ? 'deck-' + s.item.state : s.kind) : reef3dTileTex2(style, top, icon, night, s.kind), gradientMap: kit.grad }));
     face.rotation.x = -Math.PI / 2; face.position.set(s.x, faceY, s.z);
     return { parts: parts, face: face };
   }
@@ -18617,15 +18627,19 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       var st = view.spaces.stair;
       if(st && Math.hypot(g.x - st.cx, g.z - st.cz) < 4.4 && gy < -.5 && gy > st.low + .5){
         var sd = st.cx > 0 ? -1 : 1;   // from above the open hold, a little to the side, looking down into the spiral
-        out.set(st.cx + sd * 3, st.low + 12.5, st.cz - 6.5); look.set(st.cx, gy - .8, st.cz + .3); return;
+        out.set(st.cx + sd * 3, st.low + 12.5, st.cz - 6.5); look.set(st.cx, gy - .8, st.cz + .3); view.camMode = 'stair'; return;
+      }
+      if(st && gy < st.low + .8){   // down in the hold: high above and looking steeply down, so the broken deck edge
+        // and the top deck's things don't block her, and the path ahead along the hold stays in view
+        out.set(g.x * f, gy + 15.5, g.z + 7.5); look.set(g.x * (f + .05), gy + .2, g.z - 5.5); view.camMode = 'hold'; return;
       }
       var sd2 = view.shipDeck, side = g.x > 0 ? 1 : -1;
       if(sd2 && Math.abs(g.x) > sd2.half + .5){   // off the ship on the sand: the camera goes out there too, not behind the hull
-        out.set(g.x + side * 5, 9 + gy * .3, g.z + 9); look.set(g.x - side * .5, gy + .5, g.z - 3); return;   // from outside and above the gangplank
+        out.set(g.x + side * 5, 9 + gy * .3, g.z + 9); look.set(g.x - side * .5, gy + .5, g.z - 3); view.camMode = 'sand'; return;   // from outside and above the gangplank
       }
       // Elsewhere on the ship it sits lower and looks ahead, so the masts, sails and the drop to the hold show.
       out.set(g.x * f, 10.5 + gy * .55, g.z + 12.5 + (gy < -1 ? -gy * .25 : 0));
-      look.set(g.x * (f + .05), gy + 1.4, g.z - 4.5);
+      look.set(g.x * (f + .05), gy + 1.4, g.z - 4.5); view.camMode = 'deck';
       // a mast standing between the camera and her: slide the camera sideways until it clears
       var ms = view.wreck && view.wreck.masts;
       (ms || []).forEach(function(m){
@@ -18654,7 +18668,10 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     var up = view.themeFx || view.themeIn ? reef3dThemeFrame(view, now, t) : 0;
     if(!up && view.wrap.classList.contains('r3-sky')) view.wrap.classList.remove('r3-sky');
     if(up){ tl.y += 15 * up; tl.z -= 12 * up; tp.y -= 4 * up; tp.z += 2 * up; }
-    var k = calm || up ? 1 : 1 - Math.pow(.84, dt * 30);
+    // A change of view (onto the stairs, into the hold, out onto the sand) glides over about two seconds
+    // instead of snapping; the rest of the time the camera keeps up with her briskly.
+    if(view.camMode !== view.camModeWas){ if(view.camModeWas) view.camGlide = now + 2200; view.camModeWas = view.camMode; }
+    var k = calm || up ? 1 : 1 - Math.pow(view.camGlide > now ? .955 : .84, dt * 30);
     view.camPos.lerp(tp, k); view.camLook.lerp(tl, k);
     view.cam.position.copy(view.camPos); view.cam.lookAt(view.camLook);
     var g = view.guide.position;
@@ -18785,7 +18802,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     var busy = view.moving || view.fx.length || view.camPos.distanceToSquared(tp) > .0004;
     if(busy || view.frameN % (view.every === 2 ? 6 : 12) === 0) view.renderer.shadowMap.needsUpdate = true;
     view.renderer.render(view.scene, view.cam);
-    reef3dLabels(view);
+    // reef3dLabels(view) is off: the deck names no longer hover over the board (the tiles show which deck is which,
+    // and the treasure map lists them). The label buttons stay, hidden, for screen readers and keyboards.
     // nothing important moving: a device that has shown it struggles may draw the gentle idle motion at half speed
     view.idle = !busy && !view.emote && !view.dice && !view.themeFx && !view.themeIn && now - (view.touchAt || 0) > 2000 &&
       !view.schools.some(function(sc){ return sc.flee; });
@@ -19989,7 +20007,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   }
 
   /* ---- story mode: today's plan (Coral Calendar's schedule) is the adventure. The next planned deck is the goal;
-     dice moves head toward it and stop there, then she dives in and the plan records it. Free play is the board
+     she hops straight to it (no dice), then dives in and the plan records it. Free play is the board
      as before. Only profiles with a daily plan have the switch. ---- */
   function reef3dStoryOn(){ if(!planOn()) return false; var m = reefBoard().mode; return m !== 'free'; }
   function reef3dStoryTarget(view){
@@ -20006,6 +20024,13 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     reef3dPrize(view, '📖', 'Next stop!', 'Today\'s plan says: ' + (s.kind === 'deck' ? s.item.d.name : 'Story Bottle') + '.');
     S.reefReturnY = window.scrollY;
     setTimeout(function(){ reefGo('dive', s.label, function(){ R3.fromDeck = true; if(s.kind === 'deck') R3.lastDeckId = s.item.d.id; planStartNext(); }); }, reefCalm() ? 400 : 2200);
+  }
+  // Story mode has no dice: she hops straight along the path to today's next deck (or the Story Bottle) and dives in.
+  function reef3dStoryGo(view){
+    var tg = reef3dStoryTarget(view); if(tg < 0 || tg === view.at || view.moving || view.dice) return false;
+    reef3dStoryMark(view);
+    reef3dTravel(view, tg, function(){ reef3dStoryArrive(view, view.spaces[tg]); });
+    return true;
   }
   function reef3dStoryMark(view){
     var tg = reef3dStoryTarget(view); if(tg < 0) return false;
@@ -20272,6 +20297,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       e.stopPropagation(); var b = reefBoard(); b.mode = reef3dStoryOn() ? 'free' : 'story'; reefBoardSave(); reef3dHud(view);
       if(!reef3dStoryMark(view)){ var nx = view.spaces.find(function(x){ return x.kind === 'deck' && x.item.state === 'ready'; }); view.ring.visible = !!nx; if(nx) view.ring.position.set(nx.x, .34 + (nx.y || 0), nx.z); }
       try { Sound.tap(); } catch(err){}
+      if(reef3dStoryOn()) setTimeout(function(){ if(!view.moving) reef3dStoryGo(view); }, 600);   // story mode: off to the next stop
     });
     view.wrap.querySelector('[data-r3-theme]').addEventListener('click', function(){ reef3dThemeShow(view); });
   }
@@ -20407,8 +20433,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     setTimeout(function(){
       if(!document.body.contains(view.wrap) || view.moving) return;
       if(finished){ reef3dShells(view, 2); reef3dEmote(view, 'cheer'); var sp = view.spaces[view.at]; if(sp && !reefCalm()) reef3dStars(view, sp); if(!reefCalm()) reef3dCrabAct(view, 'Dance', true);
-        setTimeout(function(){ if(!view.moving) reef3dDice(view); }, reefCalm() ? 200 : 2000); }   // then the dice block comes out
-      else { reef3dEmote(view, 'hello'); if(reef3dStoryTarget(view) >= 0 && reef3dStoryTarget(view) !== view.at) setTimeout(function(){ if(!view.moving) reef3dDice(view); }, 1800); }
+        setTimeout(function(){ if(!view.moving && !reef3dStoryGo(view)) reef3dDice(view); }, reefCalm() ? 200 : 2000); }   // then story mode's next stop, or the dice block
+      else { reef3dEmote(view, 'hello'); setTimeout(function(){ if(!view.moving) reef3dStoryGo(view); }, 1800); }
     }, 650);
   }
 
@@ -21465,6 +21491,7 @@ body.reef-calm .rw-light, body.reef-calm .rw-obj, body.reef-calm .rw-post, body.
 .r3::after{ content:""; position:absolute; inset:0; pointer-events:none; z-index:1; box-shadow:inset 0 -70px 70px -40px rgba(30,70,80,.35), inset 0 60px 60px -40px rgba(255,255,255,.35); border-radius:inherit; }
 .r3.night::after{ box-shadow:inset 0 -80px 80px -40px rgba(0,0,0,.5), inset 0 60px 60px -40px rgba(120,200,210,.12); }
 .r3-labels{ position:absolute; inset:0; z-index:2; pointer-events:none; }
+.r3-labels .r3-label, .r3-labels .r3-sign{ position:absolute !important; width:1px !important; height:1px !important; padding:0 !important; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
 .r3-label{ position:absolute; left:0; top:0; pointer-events:auto; display:flex; align-items:center; gap:7px; padding:5px 12px 5px 6px; border:none; border-radius:999px; cursor:pointer;
   background:#fbf6ea; color:#3f2c1b; font:inherit; box-shadow:0 3px 0 rgba(74,59,44,.22), 0 8px 16px rgba(30,60,60,.18); white-space:nowrap; will-change:transform; -webkit-tap-highlight-color:transparent; }
 .r3-label:active{ box-shadow:0 1px 0 rgba(74,59,44,.22); margin-top:2px; }

@@ -22,7 +22,13 @@
   - **Maths lab:** facts practice, visual models, manipulatives, mental strategies, geometry, clocks and money, and puzzles.
 - Works fully offline with built-in algorithms. When online, it uses Claude through an optional helper that a grown-up runs (`tools/claude-proxy-worker.js`), and falls back to offline if the helper can't be reached.
 
+**Board**
+- Deck names no longer float over the board. Deck tiles stand out on their own instead: a raised gold rim, a white badge behind the deck's emoji, and a gold star once a deck is all done. The treasure map still lists every deck by name.
+- Story mode has no dice: Shelly hops straight to today's next deck (or the Story Bottle) and dives in.
+- "I Like to Move It" plays only on the child's profile; other profiles get the usual short chime.
+
 **Night shipwreck**
+- The camera glides (about two seconds) instead of snapping when it changes view at the stairs, in the hold and on the sand. In the hold it looks down from high above, so the broken deck edge no longer hides Shelly and the path ahead stays in view.
 - The camera now shows the sails and the spiral stair down to the hold clearly.
 - Branch-path hops arc over the hull instead of through it.
 - Fish no longer swim through the sails.
