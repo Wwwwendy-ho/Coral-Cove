@@ -12,8 +12,8 @@ See `CHANGELOG.md` for what's in the current version (Version 99).
 | `seed-data.js` | Starting decks, cards and progress, exported from Claude on Oct 26, 2026 |
 | `three.min.js` | three.js r128, the 3D engine for the reef board and the profile lobby |
 | `reef-models.js` | The 3D models (Shelly's friends, fish, scenery, ? blocks), loaded when the board first opens |
-| `day-song.mp3`, `night-song.mp3` | Background music for day and night |
-| `deck-song.mp3`, `game-song.mp3` | Quiet music inside decks and bouncy music for minigames: original loops made by `tools/compose_music.py`. Swap in any MP3 with the same name to change them. |
+| `day-song.mp3`, `night-song.mp3` | Background music for day and night (softened copies: highs rolled off, a little more space at night) |
+| `lobby-song.mp3`, `deck-song.mp3`, `timer-song.mp3`, `game-song.mp3` | Profile screen, inside decks, Timed Choice cards (a kalimba ticking in time with the countdown) and minigames: original loops played on sampled instruments by `tools/compose_music.py`. Swap in any MP3 with the same name to change them. |
 | `win.mp3` | Celebration music when a deck is finished |
 | `audio-clips.js` | Recorded pronunciation clips |
 | `voice/` | Natural-voice speech packs (English, Korean, Chinese) used to read cards aloud |

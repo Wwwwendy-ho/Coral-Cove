@@ -3,7 +3,13 @@
 ## Library and night fixes (October 27, 2026)
 
 **Music**
-- Decks have their own calm music, and minigames their own bouncy music, instead of a quieter copy of the reef song. Both are original loops made for Coral Cove (`tools/compose_music.py`), set low as background: the deck music sits well under Shelly's voice, and the game music under the minigame sounds.
+- Every place has its own background music, played on real sampled instruments instead of 8-bit synth sounds:
+  - **Profile screen:** easy jazz (vibraphone, walking bass, brushes).
+  - **Inside decks:** a dreamy harp over a warm pad, quiet and spacious so it sits well under Shelly's voice.
+  - **Timed Choice cards:** a kalimba that ticks firmly on every second, started in step with each card's countdown.
+  - **Minigames:** a steel-drum tune with marimba, guitar, upright bass and brushed drums.
+- The day and night reef songs are softened: the harsh highs are rolled off, with a little more space at night. The tune is unchanged.
+- All the new music is original, made by `tools/compose_music.py`.
 
 **The Library**
 - New 📚 Library (button in the top bar), kept off the board:

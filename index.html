@@ -8020,7 +8020,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
   }
 
   function clearTimedChoiceTimer(){
-    if(S.timedChoiceTimerHandle){ clearInterval(S.timedChoiceTimerHandle); S.timedChoiceTimerHandle = null; }
+    if(S.timedChoiceTimerHandle){ clearInterval(S.timedChoiceTimerHandle); S.timedChoiceTimerHandle = null; reefMusicUpdate(); }   // back to the deck song
   }
 
   // Drives the countdown bar via direct DOM updates (not render()) every 100ms so it animates
@@ -8046,14 +8046,17 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
       var leftEl = document.getElementById('tcTimeLeft');
       if(leftEl) leftEl.textContent = formatSecondsLeft(remaining);
       if(remaining <= 0){
-        clearTimedChoiceTimer();
         tc.expired = true;
+        clearTimedChoiceTimer();
         Sound.wrong();
         render();
         var elapsed = (tc.totalSeconds + tc.secondsAdded) * 1000;
         setTimeout(function(){ grade(timedChoiceRating(tc, false, elapsed), true); }, 1400 + WRONG_EXTRA_MS);
       }
     }, 100);
+    // the timer song's kalimba ticks once a second: start it in step with this card's countdown
+    var tc0 = S.timedChoiceState;
+    if(tc0 && !tc0.reefCalm) reefMusicTimerSync(tc0.deadline - (tc0.totalSeconds + tc0.secondsAdded) * 1000);
   }
 
   /* ---------- sound-out blend ("Blend" mode) ----------
@@ -20699,8 +20702,10 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     view.raf = requestAnimationFrame(tick);
   }
   /* ---------- Background music: day-song.mp3 on the sunlit reef, night-song.mp3 on the shipwreck,
-     deck-song.mp3 (calm, quiet) inside decks and game-song.mp3 (bouncy) in minigames. The deck and game songs
-     are original loops made for Coral Cove (tools/compose_music.py). Plays in the lobby and in every profile's game,
+     lobby-song.mp3 (easy jazz) on the profile screen, deck-song.mp3 (calm, quiet) inside decks, timer-song.mp3
+     (a kalimba ticking every second, in step with the countdown) on Timed Choice cards, and game-song.mp3
+     (bouncy) in minigames. All but the day and night songs are original loops made for Coral Cove
+     (tools/compose_music.py). Plays in the lobby and in every profile's game,
      dips under the celebration clip, and follows a 🎵 switch saved on this device. ---------- */
   var RM = { el: {}, cur: null, duck: 1, started: false };
   var RM_KEY = 'cc-music';
@@ -20784,7 +20789,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   }
   function reefMusicPaused(m){ return m.buf ? !m.src : m.a.paused; }
   function reefMusicPlay(m){
-    if(m.buf){ if(m.src || !m.g) return; var ctx = reefMusicCtx(), s = ctx.createBufferSource(); s.buffer = m.buf; s.loop = true; s.connect(m.g); s.start(); m.src = s; return; }
+    if(m.buf){ if(m.src || !m.g) return; var ctx = reefMusicCtx(), s = ctx.createBufferSource(); s.buffer = m.buf; s.loop = true; s.connect(m.g);
+      s.start(0, m.name === 'timer-song' && RM.timerStart ? Math.max(0, (Date.now() - RM.timerStart) / 1000) % m.buf.duration : 0); m.src = s; return; }
     if(m.stage !== 2) return;   // still loading, or nothing worked
     var pr = m.a.play();
     if(pr && pr.catch) pr.catch(function(e){ m.level = -1; reefMusicNote(m.name, 'play refused (' + (e && e.name || e) + '), next tap tries again'); });
@@ -20803,22 +20809,34 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     if(!reefMusicOn() || document.hidden) return null;
     try { if(!Sound.isEnabled()) return null; } catch(e){}
     var name = reefNight() ? 'night-song' : 'day-song';
-    if(!S.profile) return { name: name, vol: 1 };               // the lobby
+    if(!S.profile) return { name: 'lobby-song', vol: 1 };       // the profile screen
     if(!reefGame()) return null;
+    if(S.view === 'study' && S.timedChoiceTimerHandle && S.timedChoiceState && !S.timedChoiceState.reefCalm) return { name: 'timer-song', vol: RM_DECK };
     if(reefInDeck() || S.view === 'summary') return { name: 'deck-song', vol: RM_DECK };   // kept low so speech stays clear
     if(document.querySelector('.r3-mini')) return { name: 'game-song', vol: RM_GAME };    // under the minigame's sound effects
     return { name: name, vol: 1 };
+  }
+  var RM_SONGS = ['day-song', 'night-song', 'lobby-song', 'deck-song', 'timer-song', 'game-song'];
+  // Lines the timer song up with a countdown that started at startMs, so its firm kalimba notes land on the seconds.
+  function reefMusicTimerSync(startMs){
+    RM.timerStart = startMs; reefMusicUpdate();
+    var m = RM.el['timer-song']; if(!m) return;
+    var at = function(d){ return Math.max(0, (Date.now() - RM.timerStart) / 1000) % (d || 32); };
+    if(m.buf){ if(m.src){ reefMusicPause(m); reefMusicPlay(m); } return; }   // reefMusicPlay starts the buffer at the right point
+    var seek = function(){ try { if(Math.abs(m.a.currentTime - at(m.a.duration)) > .06) m.a.currentTime = at(m.a.duration); } catch(e){} };
+    if(!m.a.paused) seek(); else m.a.addEventListener('playing', seek, { once: true });
   }
   var RM_DECK = .5, RM_GAME = .7;   // the deck song is mastered at about -21 LUFS, the game song -18, the reef songs -15 to -17
   var RM_BASE = .5;   // the songs' overall level under Coral Cove's own sounds and voice
   function reefMusicUpdate(){
     if(!RM.started) return;
     var tg = reefMusicTarget();
-    ['day-song', 'night-song', 'deck-song', 'game-song'].forEach(function(name){
+    RM_SONGS.forEach(function(name){
       var on = !!tg && tg.name === name;
       if(!on && !RM.el[name]) return;
       var m = reefMusicEl(name); if(!m) return;
-      reefMusicLevel(m, on ? tg.vol * RM_BASE * RM.duck : 0, on && RM.cur === name ? .8 : 1.2);   // switching songs crossfades
+      var fade = name === 'timer-song' || RM.cur === 'timer-song' ? .25 : on && RM.cur === name ? .8 : 1.2;   // switching songs crossfades; the timer comes in quickly
+      reefMusicLevel(m, on ? tg.vol * RM_BASE * RM.duck : 0, fade);
     });
     RM.cur = tg ? tg.name : null;
   }
