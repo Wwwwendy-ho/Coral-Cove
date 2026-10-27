@@ -19464,7 +19464,11 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     if(view.dice || !reef3dWays(view.spaces, view.at).length || !document.body.contains(view.wrap)) return;
     var THREE = window.THREE, b = reefBoard(), kinds = reef3dDiceKinds(view);
     var kind = kinds.find(function(k){ return k.id === b.die; }) || kinds[0];
-    var n = reef3dDiceRoll(kind), tex = reef3dDiceTex(n, view.night);
+    var n = reef3dDiceRoll(kind);
+    // Story mode: the dice always lands on exactly the number of spaces to today's next deck (no picking a die)
+    var storyTo = reef3dStoryTarget(view), storyN = storyTo >= 0 && storyTo !== view.at ? reef3dRoute(view.spaces, view.at, storyTo).length : 0;
+    if(storyN){ n = storyN; kind = kinds[0]; }   // a plain die, so no special-die effects either
+    var tex = reef3dDiceTex(n, view.night);
     var mat = new THREE.MeshLambertMaterial({ map: tex, emissive: view.night ? '#38e6d6' : '#7fb0ff', emissiveIntensity: view.night ? .45 : .12 });
     var box = new THREE.Mesh(reef3dRoundBox(1.05, .16, 4), mat), dg = new THREE.Group(); dg.add(box);
     var halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: reef3dBlobTex(true), color: view.night ? '#5ff0e0' : '#bfe0ff', transparent: true, opacity: .55, depthWrite: false, blending: THREE.AdditiveBlending }));
@@ -19474,7 +19478,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     var d = view.dice = { g: dg, box: box, mat: mat, tex: tex, halo: halo, n: n, kind: kind, rolling: true, t0: performance.now(), flick: 0, here: here };
     var ui = document.createElement('div'); ui.className = 'r3-dice-ui';
     function pickHTML(){ return reef3dDiceKinds(view).map(function(k){ return '<button type="button" class="r3-die-pick" data-die="' + k.id + '" aria-pressed="' + (k.id === d.kind.id) + '">' + esc(k.label) + '</button>'; }).join(''); }
-    ui.innerHTML = '<div class="r3-die-picks" role="group" aria-label="Pick a die">' + pickHTML() + '</div><button type="button" class="r3-dice-tip">🎲 Tap to roll!</button>';
+    ui.innerHTML = (storyN ? '' : '<div class="r3-die-picks" role="group" aria-label="Pick a die">' + pickHTML() + '</div>') + '<button type="button" class="r3-dice-tip">🎲 Tap to roll!</button>';
     ui.addEventListener('click', function(e){
       e.stopPropagation();
       var pk = e.target.closest('[data-die]');
@@ -19549,7 +19553,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
           }
           if(next == null) next = opts[0];
         }
-        if(reef3dGateShut(view, at, next)){ gateStop = true; break; }
+        if(story < 0 && reef3dGateShut(view, at, next)){ gateStop = true; break; }   // in story mode the clam lets her through
         route.push(next); at = next; next = null;
         if(sp[at].end || at === story) break;
         if(left - route.length > 0 && (at === reefBoard().pearlAt || sp[at].kind === 'shop')){
@@ -20007,7 +20011,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   }
 
   /* ---- story mode: today's plan (Coral Calendar's schedule) is the adventure. The next planned deck is the goal;
-     she hops straight to it (no dice), then dives in and the plan records it. Free play is the board
+     the dice always rolls exactly the number of spaces to it, she hops there, dives in and the plan records it. Free play is the board
      as before. Only profiles with a daily plan have the switch. ---- */
   function reef3dStoryOn(){ if(!planOn()) return false; var m = reefBoard().mode; return m !== 'free'; }
   function reef3dStoryTarget(view){
@@ -20024,13 +20028,6 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     reef3dPrize(view, '📖', 'Next stop!', 'Today\'s plan says: ' + (s.kind === 'deck' ? s.item.d.name : 'Story Bottle') + '.');
     S.reefReturnY = window.scrollY;
     setTimeout(function(){ reefGo('dive', s.label, function(){ R3.fromDeck = true; if(s.kind === 'deck') R3.lastDeckId = s.item.d.id; planStartNext(); }); }, reefCalm() ? 400 : 2200);
-  }
-  // Story mode has no dice: she hops straight along the path to today's next deck (or the Story Bottle) and dives in.
-  function reef3dStoryGo(view){
-    var tg = reef3dStoryTarget(view); if(tg < 0 || tg === view.at || view.moving || view.dice) return false;
-    reef3dStoryMark(view);
-    reef3dTravel(view, tg, function(){ reef3dStoryArrive(view, view.spaces[tg]); });
-    return true;
   }
   function reef3dStoryMark(view){
     var tg = reef3dStoryTarget(view); if(tg < 0) return false;
@@ -20297,7 +20294,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       e.stopPropagation(); var b = reefBoard(); b.mode = reef3dStoryOn() ? 'free' : 'story'; reefBoardSave(); reef3dHud(view);
       if(!reef3dStoryMark(view)){ var nx = view.spaces.find(function(x){ return x.kind === 'deck' && x.item.state === 'ready'; }); view.ring.visible = !!nx; if(nx) view.ring.position.set(nx.x, .34 + (nx.y || 0), nx.z); }
       try { Sound.tap(); } catch(err){}
-      if(reef3dStoryOn()) setTimeout(function(){ if(!view.moving) reef3dStoryGo(view); }, 600);   // story mode: off to the next stop
+      if(reef3dStoryOn() && reef3dStoryTarget(view) >= 0 && reef3dStoryTarget(view) !== view.at) setTimeout(function(){ if(!view.moving) reef3dDice(view); }, 600);   // story mode: roll for the next stop
     });
     view.wrap.querySelector('[data-r3-theme]').addEventListener('click', function(){ reef3dThemeShow(view); });
   }
@@ -20433,8 +20430,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     setTimeout(function(){
       if(!document.body.contains(view.wrap) || view.moving) return;
       if(finished){ reef3dShells(view, 2); reef3dEmote(view, 'cheer'); var sp = view.spaces[view.at]; if(sp && !reefCalm()) reef3dStars(view, sp); if(!reefCalm()) reef3dCrabAct(view, 'Dance', true);
-        setTimeout(function(){ if(!view.moving && !reef3dStoryGo(view)) reef3dDice(view); }, reefCalm() ? 200 : 2000); }   // then story mode's next stop, or the dice block
-      else { reef3dEmote(view, 'hello'); setTimeout(function(){ if(!view.moving) reef3dStoryGo(view); }, 1800); }
+        setTimeout(function(){ if(!view.moving) reef3dDice(view); }, reefCalm() ? 200 : 2000); }   // then the dice block comes out
+      else { reef3dEmote(view, 'hello'); if(reef3dStoryTarget(view) >= 0 && reef3dStoryTarget(view) !== view.at) setTimeout(function(){ if(!view.moving) reef3dDice(view); }, 1800); }
     }, 650);
   }
 

@@ -24,7 +24,7 @@
 
 **Board**
 - Deck names no longer float over the board. Deck tiles stand out on their own instead: a raised gold rim, a white badge behind the deck's emoji, and a gold star once a deck is all done. The treasure map still lists every deck by name.
-- Story mode has no dice: Shelly hops straight to today's next deck (or the Story Bottle) and dives in.
+- Story mode keeps the dice, but it always rolls exactly the number of spaces to today's next deck (or the Story Bottle), so Shelly lands right on it and dives in. There's no die to pick in story mode, and the clam gate lets her through.
 - "I Like to Move It" plays only on the child's profile; other profiles get the usual short chime.
 
 **Night shipwreck**
