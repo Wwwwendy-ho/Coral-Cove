@@ -20404,21 +20404,41 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     if(lift != null) sk.bubs.forEach(function(bb){ var u = bb.userData, k = Math.max(0, Math.min(1, (lift - u.d) / (1 - u.d)));
       bb.position.set(u.x + Math.sin(t * 3 + u.z) * .25, .6 + k * 13, u.z); bb.material.opacity = Math.sin(k * Math.PI) * .7 * fade; });
   }
-  function reef3dThemeShow(view, preview){   // preview: a test holds the show still at one moment, no switch
+  // Day ⇄ night: she swims up to the surface, the water drops away below the horizon and the sky plays a sunset
+  // (sun sinking into an orange glow, stars, the moon rising) or a sunrise, then she dives back down into the new
+  // board. The sky scene covers the whole screen while the board is rebuilt for the new theme (a heavy moment), and
+  // the dive back down waits until the new board has drawn, so nothing is seen to freeze.
+  function reef3dThemeShow(view, preview){   // preview: a test holds the sky still, no switch
     var toDark = !view.night, mode = toDark ? 'dark' : 'light';
     function swap(){ try { setThemeMode(mode, true); } catch(e){} }
-    if(view.themeFx || view.moving) return;
+    if(view.themeFx || view.moving || document.querySelector('.r3-cycle')) return;
     if(reefCalm()){ var w0 = reef3dWash(toDark); setTimeout(swap, 280); setTimeout(function(){ reef3dWashOut(w0); }, 420); return; }
     try { reefThemeSting(toDark); } catch(e){}
-    view.emote = null;
-    var THREE = window.THREE;
-    var grade = document.createElement('div'); grade.className = 'r3-grade ' + (toDark ? 'dusk' : 'dawn'); grade.setAttribute('aria-hidden', 'true');
-    grade.innerHTML = '<i class="g1"></i><i class="g2"></i>';   // g1: the sunset (or dawn) glow; g2: the new light settling in
-    view.wrap.insertBefore(grade, view.wrap.querySelector('.r3-labels'));
-    view.themeFx = { t0: performance.now(), dark: toDark, sky: reef3dSky(view, toDark, true), grade: grade, fog0: view.scene.fog.color.clone(), fog1: new THREE.Color(toDark ? '#0d2b35' : '#8fcfd2') };
+    view.emote = null; view.themeFx = { cycle: true };
+    var stars = '', glints = '', k;
+    for(k = 0; k < 34; k++) stars += '<i style="left:' + (Math.random() * 100).toFixed(1) + '%;top:' + (Math.random() * 52).toFixed(1) + '%;animation-delay:' + (Math.random() * 2).toFixed(2) + 's"></i>';
+    for(k = 0; k < 10; k++) glints += '<i style="left:' + (6 + Math.random() * 88).toFixed(1) + '%;top:' + (2 + Math.random() * 20).toFixed(1) + '%;animation-delay:' + (Math.random() * 2).toFixed(2) + 's"></i>';
+    var wave = function(c){ return '<svg class="cy-wave ' + c + '" viewBox="0 0 1200 80" preserveAspectRatio="none"><path d="M0 40 C100 14 200 14 300 40 S500 66 600 40 S800 14 900 40 S1100 66 1200 40 V80 H0 Z"/></svg>'; };
+    var el = document.createElement('div'); el.className = 'r3-cycle ' + (toDark ? 'to-night' : 'to-day'); el.setAttribute('aria-hidden', 'true');
+    el.innerHTML = '<div class="cy-sky"><i class="cy-s day"></i><i class="cy-s dusk"></i><i class="cy-s night"></i><span class="cy-stars">' + stars + '</span>' +
+        '<span class="cy-sun"></span><span class="cy-moon"></span><span class="cy-horizon"></span>' +
+        '<svg class="cy-island" viewBox="0 0 220 120"><path d="M0 120 C30 92 80 84 120 88 C160 92 196 104 220 120 Z M118 92 C116 70 120 50 132 30 L136 31 C125 50 122 70 124 92 Z M132 30 C110 18 92 24 84 36 C102 30 118 30 132 30 Z M132 30 C126 10 140 2 156 4 C144 12 138 20 132 30 Z M132 30 C150 18 170 22 178 36 C162 30 146 30 132 30 Z M132 30 C116 32 106 46 108 58 C116 44 124 36 132 30 Z M132 30 C150 34 160 48 156 60 C150 46 142 38 132 30 Z"/></svg></div>' +
+      '<div class="cy-sea"><i class="cy-w day"></i><i class="cy-w night"></i>' + wave('w2') + wave('w1') + '<span class="cy-glints">' + glints + '</span><span class="cy-path"></span>' +
+        '<span class="cy-bubs"><i></i><i></i><i></i><i></i><i></i><i></i></span></div>';
+    document.body.appendChild(el);
     if(preview) return;
-    setTimeout(function(){ R3.themeArrive = { t0: performance.now(), dark: toDark }; R3.wash = reef3dWash(toDark); }, REEF3D_THEME_UP - 300);
-    setTimeout(swap, REEF3D_THEME_UP);
+    var t0 = performance.now(), swapped = false;
+    setTimeout(function(){ R3.themeArrive = { t0: performance.now(), dark: toDark, cycle: true }; swap(); swapped = true; }, 1150);   // under the sky: rebuild the board
+    // back down once the sky has played and the new board has drawn a few frames
+    (function wait(){
+      var v = R3.view, ready = swapped && v && v.night === toDark && (v.frameN || 0) > 3;
+      if(!ready || performance.now() - t0 < 2900){ if(performance.now() - t0 < 9000) return requestAnimationFrame(wait); }
+      if(!document.body.contains(el)) document.body.appendChild(el);   // (the board's wrapper may have been rebuilt)
+      el.classList.add('down');
+      if(v && v.themeIn) v.themeIn.t0 = performance.now();   // the camera's tilt back down starts with the dive
+      setTimeout(function(){ el.classList.add('gone'); }, 520);
+      setTimeout(function(){ el.remove(); var vv = R3.view; if(vv) vv.themeFx = null; }, 900);
+    })();
   }
   function reef3dWash(dark){
     var w = document.createElement('div'); w.className = 'r3-wash ' + (dark ? 'night' : 'day'); w.setAttribute('aria-hidden', 'true');
@@ -20428,7 +20448,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   // The new board's first moments after a switch: looking up at the sky, tilting back down.
   function reef3dThemeArrive(view){
     var a = R3.themeArrive; R3.themeArrive = null;
-    if(!a || performance.now() - a.t0 > 4000 || a.dark !== view.night){ reef3dWashOut(R3.wash); R3.wash = null; return false; }
+    if(!a || performance.now() - a.t0 > 9000 || a.dark !== view.night){ reef3dWashOut(R3.wash); R3.wash = null; return false; }
     view.themeIn = { t0: performance.now(), sky: reef3dSky(view, view.night) };
     setTimeout(function(){ reef3dWashOut(R3.wash); R3.wash = null; }, 120);
     setTimeout(function(){ if(document.body.contains(view.wrap) && !view.moving) reef3dEmote(view, 'hello'); }, 1500);
@@ -20437,6 +20457,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   // Per frame: how far the camera looks up (0 = at Shelly, 1 = at the sky), and the sky's state.
   function reef3dThemeFrame(view, now, t){
     var THREE = window.THREE, fx = view.themeFx, inn = view.themeIn, up = 0;
+    if(fx && fx.cycle) fx = null;   // the sky scene is drawn over the board (see reef3dThemeShow)
     if(fx){
       var p = fx.hold != null ? fx.hold : Math.min(1, (now - fx.t0) / REEF3D_THEME_UP);
       up = reef3dEase(reef3dSeg(p, 0, .36));
@@ -20453,7 +20474,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       (view.rayList || []).forEach(function(rm){ rm.material.opacity = rm.userData.base * (1 + 1.5 * up); });
     }
     if(inn){
-      var q = Math.min(1, (now - inn.t0) / 1700);
+      var q = Math.max(0, Math.min(1, (now - inn.t0) / 1700));
       up = 1 - reef3dEase(reef3dSeg(q, .15, 1));
       reef3dSkyStep(view, inn.sky, 1, 1 - reef3dEase(reef3dSeg(q, .4, 1)), t);
       if(q >= 1){ view.scene.remove(inn.sky.group); view.themeIn = null; }
@@ -21901,6 +21922,53 @@ body.r3-lobby{ background:linear-gradient(180deg, #d9f0ec 0%, #b2e0de 35%, #9fd6
   background:rgba(10,30,40,.92); color:#fff; font:600 .9rem/1.4 system-ui, sans-serif; overflow-wrap:anywhere; }
 
 /* Day ⇄ night on the 3D board: a soft wash of light covers the moment the board switches (see reef3dThemeShow). */
+/* day ⇄ night: up to the surface, a sunset or sunrise over the sea, and back down (see reef3dThemeShow) */
+.r3-cycle{ position:fixed; inset:0; z-index:96; overflow:hidden; pointer-events:auto; animation:cyIn .35s ease-out both; }
+.r3-cycle.gone{ opacity:0; transition:opacity .38s ease; }
+@keyframes cyIn{ from{ opacity:0; } to{ opacity:1; } }
+.cy-sky{ position:absolute; left:0; right:0; top:0; height:58%; overflow:hidden; }
+.cy-s{ position:absolute; inset:0; opacity:0; animation:cyFade .9s ease both; }
+.cy-s.day{ background:linear-gradient(#5ec4f5, #bfe8ff 60%, #fff1d2); } .cy-s.dusk{ background:linear-gradient(#3a3f7a, #b0598a 45%, #ff8e5a 80%, #ffc36b); } .cy-s.night{ background:linear-gradient(#071431, #173663 65%, #2c4f7c); }
+.to-night .cy-s.day{ opacity:1; animation:cyOut .8s ease .95s both; } .to-night .cy-s.dusk{ animation-delay:.8s; } .to-night .cy-s.night{ animation:cyFade 1s ease 1.6s both; }
+.to-day .cy-s.night{ opacity:1; animation:cyOut .8s ease .95s both; } .to-day .cy-s.dusk{ background:linear-gradient(#4b5d9e, #d98aa8 45%, #ffb38a 78%, #ffe0a0); animation-delay:.8s; } .to-day .cy-s.day{ animation:cyFade 1s ease 1.6s both; }
+@keyframes cyFade{ from{ opacity:0; } to{ opacity:1; } } @keyframes cyOut{ from{ opacity:1; } to{ opacity:0; } }
+.cy-horizon{ position:absolute; left:-10%; right:-10%; bottom:-30px; height:110px; border-radius:50%; background:radial-gradient(ellipse at 50% 60%, rgba(255,170,90,.95), rgba(255,120,80,.5) 45%, transparent 72%); opacity:0; animation:cyGlow 2.2s ease .7s both; }
+.to-day .cy-horizon{ background:radial-gradient(ellipse at 50% 60%, rgba(255,200,140,.95), rgba(255,150,170,.5) 45%, transparent 72%); }
+@keyframes cyGlow{ 0%{ opacity:0; } 40%,65%{ opacity:1; } 100%{ opacity:.15; } }
+.cy-sun, .cy-moon{ position:absolute; left:62%; width:min(18vw,96px); aspect-ratio:1; border-radius:50%; }
+.cy-sun{ background:radial-gradient(circle at 40% 38%, #fffbe6, #ffd966 55%, #ff9a4a); box-shadow:0 0 0 12px rgba(255,210,120,.35), 0 0 70px 30px rgba(255,190,110,.45); }
+.cy-moon{ left:28%; background:radial-gradient(circle at 38% 36%, #ffffff, #fff3cf 60%, #e9dcb0); box-shadow:0 0 50px 16px rgba(255,244,207,.35); }
+.to-night .cy-sun{ top:18%; animation:cySet 1.5s cubic-bezier(.45,0,.6,1) .55s both; } .to-night .cy-moon{ top:110%; animation:cyRise 1.3s cubic-bezier(.2,.7,.3,1) 1.55s both; }
+.to-day .cy-moon{ top:18%; animation:cySet 1.5s cubic-bezier(.45,0,.6,1) .55s both; } .to-day .cy-sun{ top:110%; animation:cyRise 1.3s cubic-bezier(.2,.7,.3,1) 1.55s both; }
+@keyframes cySet{ from{ transform:translateY(0); } to{ transform:translateY(68vh); } }
+@keyframes cyRise{ from{ transform:translateY(0); } to{ transform:translateY(-38vh); } }
+.cy-stars i{ position:absolute; width:3px; height:3px; border-radius:50%; background:#fff; opacity:0; }
+.to-night .cy-stars i{ animation:cyStar 2s ease 1.7s infinite; } .to-day .cy-stars i{ opacity:.9; animation:cyOut .9s ease .8s both; }
+@keyframes cyStar{ 0%{ opacity:0; } 40%{ opacity:1; } 70%{ opacity:.5; } 100%{ opacity:.9; } }
+.cy-island{ position:absolute; left:5%; bottom:-2px; width:min(36vw,200px); height:auto; } .cy-island path{ fill:#2f6b5c; transition:fill 1s; }
+.to-night .cy-island path{ animation:cyIsleN 1.6s ease .8s both; } .to-day .cy-island path{ fill:#1e3a46; animation:cyIsleD 1.6s ease .9s both; }
+@keyframes cyIsleN{ to{ fill:#14283a; } } @keyframes cyIsleD{ to{ fill:#2f8f5b; } }
+/* the sea: covers the screen at first (she's under water), drops to the horizon as she surfaces, rises again as she dives */
+.cy-sea{ position:absolute; left:0; right:0; top:58%; height:100%; transform:translateY(-58vh); animation:cySurface .6s cubic-bezier(.3,.7,.3,1) .25s both; }
+.r3-cycle.down .cy-sea{ animation:cyDive .5s cubic-bezier(.6,0,.8,.4) both; }
+@keyframes cySurface{ from{ transform:translateY(-58vh); } to{ transform:translateY(0); } }
+@keyframes cyDive{ from{ transform:translateY(0); } to{ transform:translateY(-58vh); } }
+.cy-w{ position:absolute; inset:0; } .cy-w.day{ background:linear-gradient(#29b3cf, #0d7aa3 40%, #06395c); } .cy-w.night{ background:linear-gradient(#105d78, #063a55 40%, #021a2c); opacity:0; }
+.to-night .cy-w.night{ animation:cyFade 1.4s ease 1s both; } .to-day .cy-w.night{ opacity:1; animation:cyOut 1.4s ease 1s both; }
+.cy-wave{ position:absolute; left:0; width:200%; height:44px; animation:cyWave 6s linear infinite; } .cy-wave.w1{ top:-22px; } .cy-wave.w2{ top:-30px; opacity:.7; animation-duration:9s; animation-direction:reverse; }
+.cy-wave.w1 path{ fill:#29b3cf; } .cy-wave.w2 path{ fill:#6ad4e6; }
+.to-night .cy-wave.w1 path{ animation:cyWaveN 1.4s ease 1s both; } .to-night .cy-wave.w2 path{ animation:cyWaveN2 1.4s ease 1s both; }
+.to-day .cy-wave.w1 path{ fill:#105d78; animation:cyWaveD 1.4s ease 1s both; } .to-day .cy-wave.w2 path{ fill:#1b7d96; animation:cyWaveD2 1.4s ease 1s both; }
+@keyframes cyWaveN{ to{ fill:#105d78; } } @keyframes cyWaveN2{ to{ fill:#1b7d96; } } @keyframes cyWaveD{ to{ fill:#29b3cf; } } @keyframes cyWaveD2{ to{ fill:#6ad4e6; } }
+@keyframes cyWave{ to{ transform:translateX(-50%); } }
+.cy-glints i{ position:absolute; width:14px; height:3px; border-radius:2px; background:#fff; opacity:0; animation:cyGlint 1.8s ease-in-out infinite; }
+@keyframes cyGlint{ 0%,100%{ opacity:0; } 50%{ opacity:.8; } }
+.cy-path{ position:absolute; left:50%; top:0; width:min(30vw,170px); height:30%; transform:translateX(-50%); opacity:0; background:repeating-linear-gradient(180deg, rgba(255,214,140,.7) 0 4px, transparent 4px 14px); -webkit-mask:linear-gradient(#000, transparent); mask:linear-gradient(#000, transparent); animation:cyGlow 2.2s ease .7s both; }
+.to-night .cy-path{ left:60%; } .to-day .cy-path{ left:66%; }
+.cy-bubs i{ position:absolute; top:10%; width:12px; height:12px; border-radius:50%; border:2px solid rgba(255,255,255,.7); opacity:0; }
+.r3-cycle.down .cy-bubs i{ animation:cyBub .7s ease-out both; }
+.cy-bubs i:nth-child(1){ left:18%; } .cy-bubs i:nth-child(2){ left:34%; animation-delay:.06s; width:18px; height:18px; } .cy-bubs i:nth-child(3){ left:50%; animation-delay:.12s; } .cy-bubs i:nth-child(4){ left:63%; animation-delay:.03s; width:9px; height:9px; } .cy-bubs i:nth-child(5){ left:77%; animation-delay:.1s; width:16px; height:16px; } .cy-bubs i:nth-child(6){ left:88%; animation-delay:.15s; }
+@keyframes cyBub{ from{ transform:translateY(40vh); opacity:.9; } to{ transform:translateY(-10vh); opacity:0; } }
 .r3-wash{ position:fixed; inset:0; z-index:95; pointer-events:none; opacity:0; transition:opacity .3s cubic-bezier(.33,0,.2,1); }
 .r3-wash.on{ opacity:1; }
 .r3 .r3-labels{ transition:opacity .35s ease; }

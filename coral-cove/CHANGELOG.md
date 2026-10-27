@@ -26,6 +26,10 @@
 - Opening the app shows a title screen: a sunny sea with drifting clouds, a palm island, sparkles on the water, light rays, fish and a reef below, and Shelly bobbing at the waterline. At night it's a moonlit sea with stars and glowing jellyfish. "Tap to dive in" plays the dive into the water and starts the music (browsers won't play sound before a first tap, so the music is already playing on the profile screen).
 - The dive from the title screen is smooth: the profile screen is built underneath while the title shows, instead of during the dive.
 
+**Day ⇄ night**
+- Switching between day and night is a little show: Shelly swims up to the surface and the water drops below the horizon. The sky then plays a sunset (the sun sinks into an orange glow, the stars come out, the moon rises) or a sunrise (the moon sets, the sky turns pink and gold, the sun comes up), and she dives back down into the new board.
+- No visible freeze: the board is rebuilt for the new theme while the sky covers the screen, and the dive back down waits until the new board is ready.
+
 **Board**
 - Deck names no longer float over the board. Deck tiles stand out on their own instead: a raised gold rim, a white badge behind the deck's emoji, and a gold star once a deck is all done. The treasure map still lists every deck by name.
 - Story mode keeps the dice, but it always rolls exactly the number of spaces to today's next deck (or the Story Bottle), so Shelly lands right on it and dives in. There's no die to pick in story mode, and the clam gate lets her through.
