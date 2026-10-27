@@ -1,8 +1,8 @@
 /* Coral Cove offline support: keeps a copy of the app's files so it still opens without Wi-Fi.
    Network first, so a new upload to GitHub shows up the next time the iPad is online. */
-var CACHE = 'coral-cove-20261026';
+var CACHE = 'coral-cove-20261028';
 var FILES = ['./', 'index.html', 'seed-data.js?v=20261026', 'audio-clips.js?v=20261026', 'storage.js?v=20261026',
-             'library.js', 'three.min.js', 'reef-models.js', 'win.mp3', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
+             'library.js', 'three.min.js', 'reef-models.js', 'win.mp3', 'lobby-song.mp3', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FILES); }).then(function () { return self.skipWaiting(); }));
@@ -15,7 +15,8 @@ self.addEventListener('activate', function (e) {
 });
 
 // Music streams in pieces (Range requests). A piece can't be stored, so the whole song is saved once in the
-// background, and later pieces come from that saved copy (offline too).
+// background, and later pieces come from that saved copy (offline too). A saved song is only replaced when
+// CACHE above changes, so change it whenever a song file changes.
 function rangeFromCache(req, cached) {
   return cached.arrayBuffer().then(function (buf) {
     var m = /bytes=(\d*)-(\d*)/.exec(req.headers.get('range') || ''), size = buf.byteLength;

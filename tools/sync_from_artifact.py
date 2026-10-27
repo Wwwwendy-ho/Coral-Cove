@@ -13,6 +13,7 @@ Writes the site to the repo root and mirrors it into coral-cove/, because device
 either URL saved. storage.js (the on-device database) is kept as is. The iPad PIN changes in
 tools/ipad_patches.py are applied to every build.
 """
+import re
 import json
 import pathlib
 import shutil
@@ -64,6 +65,10 @@ def main(src, dbdir, date, swap=None):
     # The cache-busting version changes with every sync so iPads fetch the new files.
     v = date.replace("-", "")
     html = html.replace("</head>", HEAD_TAGS.format(v=v) + "</head>", 1)
+    # The Claude version carries its songs packed inside the page. The GitHub copy streams the .mp3 files
+    # instead (smaller page, and the files can be updated on their own), so drop the packed copies.
+    html = re.sub(r'<script type="text/plain" id="reef-song-[a-z-]+" data-type="audio/mpeg">[^<]*</script>\n', '', html)
+    html = re.sub(r'<script id="reef-models-inline">[\s\S]*?</script>\n', '', html)   # loaded from reef-models.js instead
     html = ipad_patches.apply(html)
     # The 3D reef loads three.js from a CDN inside Claude; the iPad copy uses its own copy so it works offline.
     html = html.replace(THREE_CDN, "three.min.js")
@@ -81,7 +86,7 @@ def main(src, dbdir, date, swap=None):
     sw = sw.replace(sw[sw.index("var CACHE"):sw.index("self.addEventListener")],
                     f"var CACHE = 'coral-cove-{v}';\n"
                     f"var FILES = ['./', 'index.html', 'seed-data.js?v={v}', 'audio-clips.js?v={v}', 'storage.js?v={v}',\n"
-                    "             'library.js', 'three.min.js', 'reef-models.js', 'win.mp3', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];\n\n")
+                    "             'library.js', 'three.min.js', 'reef-models.js', 'win.mp3', 'lobby-song.mp3', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];\n\n")
 
     # The offline list must only name files this build has, or the iPad's offline copy fails to install.
     for optional in ("reef-models.js", "win.mp3"):

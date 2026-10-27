@@ -8,7 +8,9 @@
   - **Inside decks:** a dreamy harp over a warm pad, quiet and spacious so it sits well under Shelly's voice.
   - **Timed Choice cards:** a kalimba that ticks firmly on every second, started in step with each card's countdown.
   - **Minigames:** a steel-drum tune with marimba, guitar, upright bass and brushed drums.
-- The day and night reef songs are softened: the harsh highs are rolled off, with a little more space at night. The tune is unchanged.
+- The day and night reef songs are softened. The harsh, high 8-bit lead melody is turned down (the 1.5–3 kHz range where it sits, and the buzz above it), with a little more space at night. The tune is unchanged.
+- Music starts almost as soon as you tap: songs download in the background from the moment the app opens, instead of after the first tap.
+- The app page is much smaller (8.9 MB → 1.4 MB), so it opens faster: the songs and 3D models load from their own files instead of being packed inside it. This also fixes the reef songs, which had been playing older copies packed into the page.
 - All the new music is original, made by `tools/compose_music.py`.
 
 **The Library**

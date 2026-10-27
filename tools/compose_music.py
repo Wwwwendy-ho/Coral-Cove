@@ -179,7 +179,10 @@ def game_song(out):
 
 def smooth_reef_song(src, out, lufs, night=False):
     echo = 'aecho=0.85:0.55:90|180|300:0.2|0.14|0.08' if night else 'aecho=0.85:0.5:70|140:0.16|0.1'
-    af = 'highshelf=f=4500:g=-4.5,lowpass=f=12500,acompressor=threshold=-22dB:ratio=2:attack=25:release=300,%s,loudnorm=I=%s:TP=-1.5:LRA=9' % (echo, lufs)
+    # The harsh part is the 8-bit lead: a buzzy square-wave melody pitched around 1.5-2.7 kHz. Turn that range down
+    # (a wide dip centred on it), take the buzz above it down hard, and roll off the very top.
+    af = ('equalizer=f=2100:width_type=o:width=1.3:g=-6,highshelf=f=3500:g=-9,lowpass=f=7500,'
+          'acompressor=threshold=-22dB:ratio=2:attack=25:release=300,%s,loudnorm=I=%s:TP=-1.5:LRA=9') % (echo, lufs)
     subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', src, '-af', af, '-b:a', '128k', out], check=True)
 
 if __name__ == '__main__':
