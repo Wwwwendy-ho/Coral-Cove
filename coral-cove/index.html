@@ -4025,7 +4025,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     try { Ocean.apply(!(S.activeProfileId && S.profile && S.profile.oceanTheme === false)); } catch(e){} // on for everyone unless a profile turned it off
     applyThemeMode(reefThemeFor(S.activeProfileId && S.profile ? S.profile : null));
     if(!S.booted) return; // wait for settings to load before showing anything (avoids a lock-screen flash)
-    if(!S.splashDone) return renderSplash();   // the title screen: its tap is also what lets the music start
+    if(!S.splashDone) renderSplash();   // the title screen floats over the profiles (built underneath meanwhile); its tap starts the music
     reefSyncBody();
     /* coveqa: opening a deck from a scrolled home list left the new screen scrolled (header cut off) */
     try {
@@ -4238,25 +4238,48 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
   }
 
   // The title screen, once each time the app opens. Browsers won't play sound until the first tap, so this
-  // tap is it: the music starts as she dives in, and is already playing when the profiles appear.
+  // tap is it: the music starts as she dives in. It sits over the profile screen, which is built (3D sea and
+  // all) underneath while the title shows, so the dive doesn't stutter: at its middle the title is just removed.
   function renderSplash(){
-    var wave = function(cls){ return '<svg class="ccs-wave ' + cls + '" viewBox="0 0 1200 80" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40 C100 14 200 14 300 40 S500 66 600 40 S800 14 900 40 S1100 66 1200 40 V80 H0 Z"/></svg>'; };
-    app.innerHTML = '<button type="button" class="cc-splash' + (reefNight() ? ' night' : '') + '" aria-label="Coral Cove. Tap to dive in.">' +
-      '<span class="ccs-sky" aria-hidden="true"><span class="ccs-sun"></span></span>' +
-      '<span class="ccs-title" aria-hidden="true">Coral Cove</span>' +
-      '<span class="ccs-sea" aria-hidden="true">' + wave('w2') + wave('w1') +
-        '<span class="ccs-shelly">' + mascotTurtleSVG('ccs-shelly-svg') + '</span>' +
-        '<span class="ccs-bub b1"></span><span class="ccs-bub b2"></span><span class="ccs-bub b3"></span>' +
-      '</span>' +
-      '<span class="ccs-tap" aria-hidden="true">Tap to dive in</span>' +
-    '</button>';
-    var b = app.querySelector('.cc-splash');
-    b.addEventListener('click', function(){
+    if(document.querySelector('.cc-splash')) return;
+    var night = reefNight(), i, h = '';
+    var wave = function(cls){ return '<svg class="ccs-wave ' + cls + '" viewBox="0 0 1200 80" preserveAspectRatio="none"><path d="M0 40 C100 14 200 14 300 40 S500 66 600 40 S800 14 900 40 S1100 66 1200 40 V80 H0 Z"/></svg>'; };
+    var cloud = '<svg viewBox="0 0 200 80"><path d="M30 70 C5 70 5 42 30 42 C32 22 62 14 78 30 C90 8 132 8 140 34 C168 26 192 44 182 64 C180 70 172 70 168 70 Z"/></svg>';
+    var fish = '<svg viewBox="0 0 60 30"><path d="M8 15 C18 2 40 2 48 15 C40 28 18 28 8 15 Z M48 15 L60 5 L58 15 L60 25 Z"/></svg>';
+    var jelly = '<svg viewBox="0 0 40 60"><path d="M4 22 C4 6 36 6 36 22 Z"/><path d="M10 22 q-3 12 2 26 M18 22 q3 14 -1 32 M26 22 q-3 12 2 28 M33 22 q3 10 -1 22" fill="none" stroke-width="2.4" stroke-linecap="round"/></svg>';
+    var sky = night ? '<span class="ccs-stars">' + (function(){ var t = ''; for(i = 0; i < 26; i++) t += '<i style="left:' + (Math.random() * 100).toFixed(1) + '%;top:' + (Math.random() * 80).toFixed(1) + '%;animation-delay:' + (Math.random() * 3).toFixed(2) + 's"></i>'; return t; })() + '</span>' : '';
+    for(i = 0; i < 9; i++) h += '<i style="left:' + (8 + Math.random() * 84).toFixed(1) + '%;top:' + (4 + Math.random() * 22).toFixed(1) + '%;animation-delay:' + (Math.random() * 2.4).toFixed(2) + 's"></i>';
+    var el = document.createElement('div');
+    el.className = 'cc-splash' + (night ? ' night' : '');
+    el.setAttribute('role', 'button'); el.tabIndex = 0; el.setAttribute('aria-label', 'Coral Cove. Tap to dive in.');
+    el.innerHTML = '<div class="ccs-sky" aria-hidden="true">' + sky + '<span class="ccs-sun"><span class="ccs-rays"></span></span>' +
+        '<span class="ccs-cloud c1">' + cloud + '</span><span class="ccs-cloud c2">' + cloud + '</span><span class="ccs-cloud c3">' + cloud + '</span>' +
+        (night ? '' : '<span class="ccs-gull g1">︶︶</span><span class="ccs-gull g2">︶︶</span>') +
+        '<svg class="ccs-island" viewBox="0 0 220 120"><path class="ccs-sand" d="M0 120 C30 92 80 84 120 88 C160 92 196 104 220 120 Z"/><path class="ccs-trunk" d="M118 92 C116 70 120 50 132 30" fill="none" stroke-width="7" stroke-linecap="round"/>' +
+          '<path class="ccs-leaf" d="M132 30 C110 18 92 24 84 36 C102 30 118 30 132 30 Z M132 30 C126 10 140 2 156 4 C144 12 138 20 132 30 Z M132 30 C150 18 170 22 178 36 C162 30 146 30 132 30 Z M132 30 C116 32 106 46 108 58 C116 44 124 36 132 30 Z M132 30 C150 34 160 48 156 60 C150 46 142 38 132 30 Z"/></svg>' +
+      '</div>' +
+      '<div class="ccs-title" aria-hidden="true"><span class="ccs-name">Coral Cove</span><span class="ccs-sub">' + (night ? 'A night on the shipwreck' : 'A sea of things to learn') + '</span></div>' +
+      '<div class="ccs-sea" aria-hidden="true">' + wave('w3') + wave('w2') + wave('w1') +
+        '<span class="ccs-glints">' + h + '</span><span class="ccs-shafts"></span>' +
+        '<span class="ccs-shelly"><span class="ccs-ripple"></span>' + mascotTurtleSVG('ccs-shelly-svg') + '</span>' +
+        (night ? '<span class="ccs-jelly j1">' + jelly + '</span><span class="ccs-jelly j2">' + jelly + '</span>'
+               : '<span class="ccs-fish f1">' + fish + '</span><span class="ccs-fish f2">' + fish + '</span><span class="ccs-fish f3">' + fish + '</span>') +
+        '<span class="ccs-bub b1"></span><span class="ccs-bub b2"></span><span class="ccs-bub b3"></span><span class="ccs-bub b4"></span>' +
+        '<svg class="ccs-reef" viewBox="0 0 1200 200" preserveAspectRatio="none"><path class="r2" d="M0 200 V120 C60 96 90 130 140 110 S230 70 280 100 S380 140 440 104 S560 60 620 96 S740 138 800 108 S900 70 960 100 S1080 132 1200 96 V200 Z"/>' +
+          '<path class="r1" d="M0 200 V160 C40 150 70 120 90 150 C100 120 130 110 140 150 C170 140 200 152 230 160 C260 130 290 128 300 158 C340 150 380 166 420 160 C440 120 470 118 480 156 C520 150 560 170 600 162 C630 140 650 136 660 160 C700 156 760 170 800 160 C820 126 850 122 860 158 C900 152 950 168 1000 160 C1030 132 1060 130 1070 158 C1110 152 1160 166 1200 158 V200 Z"/></svg>' +
+      '</div>' +
+      '<div class="ccs-tap" aria-hidden="true"><span class="ccs-tap-e">🐚</span> Tap to dive in</div>';
+    document.body.appendChild(el);
+    var go = function(e){
+      if(e && e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
       if(S.splashDone) return;
       S.splashDone = true;   // (the music itself starts from this same tap: see reefMusicStart)
-      reefGo('dive', null, render, true);
-    });
-    try { b.focus({ preventScroll: true }); } catch(e){}
+      el.classList.add('ccs-out');
+      reefGo('dive', null, function(){ el.remove(); }, true);
+      if(reefCalm()) el.remove();
+    };
+    el.addEventListener('click', go); el.addEventListener('keydown', go);
+    try { el.focus({ preventScroll: true }); } catch(e){}
   }
   function renderProfilePicker(){
     var tiles = S.profiles.map(function(p){
@@ -21510,30 +21533,73 @@ body.reef-calm .rw-light, body.reef-calm .rw-obj, body.reef-calm .rw-post, body.
 .r3::after{ content:""; position:absolute; inset:0; pointer-events:none; z-index:1; box-shadow:inset 0 -70px 70px -40px rgba(30,70,80,.35), inset 0 60px 60px -40px rgba(255,255,255,.35); border-radius:inherit; }
 .r3.night::after{ box-shadow:inset 0 -80px 80px -40px rgba(0,0,0,.5), inset 0 60px 60px -40px rgba(120,200,210,.12); }
 .r3-labels{ position:absolute; inset:0; z-index:2; pointer-events:none; }
-/* the title screen: sky over the sea, Shelly bobbing at the waterline, "Tap to dive in" */
-.cc-splash{ position:fixed; inset:0; z-index:60; display:block; width:100%; height:100%; margin:0; padding:0; border:0; cursor:pointer; overflow:hidden; font:inherit; color:#fff;
-  --sky1:#9fdcff; --sky2:#e6f7ff; --sea1:#22a9c9; --sea2:#0a5a80; --wave2:#5fcbe0; --sun:#fff3b0; --title:#0e5a78; background:var(--sea2); -webkit-tap-highlight-color:transparent; }
-.cc-splash.night{ --sky1:#0a1834; --sky2:#1f3c63; --sea1:#0f5470; --sea2:#04223a; --wave2:#1d7590; --sun:#fff4cf; --title:#fff1c9; }
+/* the title screen: a sunny (or moonlit) sea, Shelly bobbing at the waterline, "Tap to dive in". Every
+   animation moves or fades things (transform, opacity) so it stays smooth on an iPad. */
+.cc-splash{ position:fixed; inset:0; z-index:9800; overflow:hidden; cursor:pointer; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none;
+  --sky1:#5ec4f5; --sky2:#bfe8ff; --sky3:#fff1d2; --sea1:#29b3cf; --sea2:#0d7aa3; --sea3:#06395c; --w2:#6ad4e6; --w3:#a6e6f0;
+  --sun:#fff2a8; --glow:rgba(255,236,160,.55); --title:#ffffff; --title-edge:#0b6b8c; --sub:#0b5372; --cloud:#ffffff; --sand:#f5d79a; --palm:#2f8f5b; --trunk:#9a6b3f;
+  --reef1:#0a4f6e; --reef2:#0e6a8a; --fish:#ffb35c; --tap:#ff7a59; --tap-ink:#ffffff; background:var(--sea3); }
+.cc-splash.night{ --sky1:#071431; --sky2:#173663; --sky3:#2c4f7c; --sea1:#105d78; --sea2:#063a55; --sea3:#021a2c; --w2:#1b7d96; --w3:#2a8fa6;
+  --sun:#fff6d8; --glow:rgba(255,240,200,.28); --title:#fff3cf; --title-edge:#0d2848; --sub:#cfe2f5; --cloud:#5c7398; --sand:#3d4f66; --palm:#1f4d4a; --trunk:#3b3a3a;
+  --reef1:#021627; --reef2:#05283f; --tap:#ffd27a; --tap-ink:#1a2c46; }
 .cc-splash:focus-visible{ outline:4px solid #ffd45c; outline-offset:-8px; }
-.ccs-sky{ position:absolute; left:0; right:0; top:0; height:46%; background:linear-gradient(var(--sky1), var(--sky2)); }
-.ccs-sun{ position:absolute; right:16%; top:22%; width:min(22vw,120px); aspect-ratio:1; border-radius:50%; background:var(--sun); box-shadow:0 0 60px 24px color-mix(in srgb, var(--sun) 55%, transparent); }
-.cc-splash.night .ccs-sun{ width:min(14vw,80px); box-shadow:0 0 50px 14px rgba(255,244,207,.35); }
-.ccs-title{ position:absolute; left:0; right:0; top:calc(14% + env(safe-area-inset-top, 0px)); text-align:center; font:900 clamp(2.8rem, 11vw, 5rem)/1 'Baloo 2', system-ui, sans-serif; color:var(--title); letter-spacing:.01em; text-shadow:0 3px 0 rgba(255,255,255,.55), 0 10px 30px rgba(0,40,70,.18); }
-.cc-splash.night .ccs-title{ text-shadow:0 3px 0 rgba(0,0,0,.35), 0 0 30px rgba(255,230,160,.35); }
-.ccs-sea{ position:absolute; left:0; right:0; top:46%; bottom:0; background:linear-gradient(var(--sea1), var(--sea2)); }
-.ccs-wave{ position:absolute; top:-26px; left:0; width:200%; height:46px; animation:ccsWave 7s linear infinite; }
-.ccs-wave.w1 path{ fill:var(--sea1); } .ccs-wave.w2 path{ fill:var(--wave2); } .ccs-wave.w2{ top:-34px; opacity:.75; animation-duration:11s; animation-direction:reverse; }
+.cc-splash *{ pointer-events:none; }
+.ccs-sky{ position:absolute; left:0; right:0; top:0; height:47%; background:linear-gradient(var(--sky1) 0%, var(--sky2) 62%, var(--sky3) 100%); overflow:hidden; }
+.ccs-sun{ position:absolute; right:13%; top:16%; width:min(20vw,108px); aspect-ratio:1; border-radius:50%; background:radial-gradient(circle at 40% 38%, #fffbe6, var(--sun) 60%); box-shadow:0 0 0 14px var(--glow), 0 0 80px 40px var(--glow); }
+.ccs-rays{ position:absolute; left:50%; top:50%; width:360%; aspect-ratio:1; transform:translate(-50%,-50%); border-radius:50%; opacity:.35;
+  background:repeating-conic-gradient(from 0deg, rgba(255,247,210,.55) 0deg 6deg, transparent 6deg 22deg);
+  -webkit-mask:radial-gradient(circle, #000 18%, transparent 62%); mask:radial-gradient(circle, #000 18%, transparent 62%); animation:ccsSpin 60s linear infinite; }
+.cc-splash.night .ccs-rays{ display:none; }
+@keyframes ccsSpin{ to{ transform:translate(-50%,-50%) rotate(360deg); } }
+.ccs-stars i{ position:absolute; width:3px; height:3px; border-radius:50%; background:#fff; animation:ccsTwinkle 3s ease-in-out infinite; }
+@keyframes ccsTwinkle{ 0%,100%{ opacity:.25; } 50%{ opacity:1; } }
+.ccs-cloud{ position:absolute; width:min(34vw,190px); opacity:.95; animation:ccsDrift 70s linear infinite; }
+.ccs-cloud svg{ display:block; width:100%; height:auto; } .ccs-cloud path{ fill:var(--cloud); }
+.ccs-cloud.c1{ top:8%; left:-10%; } .ccs-cloud.c2{ top:30%; left:30%; width:min(24vw,130px); opacity:.8; animation-duration:95s; animation-delay:-40s; } .ccs-cloud.c3{ top:14%; left:62%; width:min(28vw,150px); opacity:.85; animation-duration:80s; animation-delay:-20s; }
+.cc-splash.night .ccs-cloud{ opacity:.45; }
+@keyframes ccsDrift{ from{ transform:translateX(-30vw); } to{ transform:translateX(110vw); } }
+.ccs-gull{ position:absolute; color:#33576b; font-size:1rem; letter-spacing:-6px; animation:ccsGull 26s linear infinite; }
+.ccs-gull.g1{ top:24%; left:-10%; } .ccs-gull.g2{ top:19%; left:-14%; font-size:.8rem; animation-duration:32s; animation-delay:-12s; }
+@keyframes ccsGull{ 0%{ transform:translate(0,0); } 50%{ transform:translate(60vw,-12px); } 100%{ transform:translate(120vw,4px); } }
+.ccs-island{ position:absolute; left:4%; bottom:-2px; width:min(42vw,230px); height:auto; }
+.ccs-sand{ fill:var(--sand); } .ccs-trunk{ stroke:var(--trunk); } .ccs-leaf{ fill:var(--palm); }
+.ccs-title{ position:absolute; left:0; right:0; top:calc(11% + env(safe-area-inset-top, 0px)); display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; padding:0 16px; animation:ccsTitleIn .9s cubic-bezier(.2,.9,.3,1.2) both; }
+.ccs-name{ font:900 clamp(3rem, 12.5vw, 5.6rem)/.95 'Baloo 2', system-ui, sans-serif; color:var(--title); -webkit-text-stroke:clamp(5px, 1.3vw, 9px) var(--title-edge); paint-order:stroke fill; text-shadow:0 7px 0 var(--title-edge), 0 14px 26px rgba(0,30,60,.3); letter-spacing:.01em; }
+.ccs-sub{ font:800 clamp(.95rem, 3.6vw, 1.25rem) 'Baloo 2', system-ui, sans-serif; color:var(--sub); background:rgba(255,255,255,.55); padding:2px 14px; border-radius:999px; }
+.cc-splash.night .ccs-sub{ background:rgba(10,30,60,.45); }
+@keyframes ccsTitleIn{ from{ transform:translateY(-24px) scale(.92); opacity:0; } to{ transform:none; opacity:1; } }
+.ccs-sea{ position:absolute; left:0; right:0; top:47%; bottom:0; background:linear-gradient(var(--sea1) 0%, var(--sea2) 45%, var(--sea3) 100%); }
+.ccs-wave{ position:absolute; left:0; width:200%; height:44px; animation:ccsWave 8s linear infinite; }
+.ccs-wave.w1{ top:-22px; } .ccs-wave.w1 path{ fill:var(--sea1); }
+.ccs-wave.w2{ top:-30px; animation-duration:12s; animation-direction:reverse; } .ccs-wave.w2 path{ fill:var(--w2); }
+.ccs-wave.w3{ top:-38px; animation-duration:17s; opacity:.6; } .ccs-wave.w3 path{ fill:var(--w3); }
 @keyframes ccsWave{ to{ transform:translateX(-50%); } }
-.ccs-shelly{ position:absolute; left:50%; top:0; width:min(34vw,160px); transform:translate(-50%,-62%); animation:ccsBob 3.2s ease-in-out infinite; filter:drop-shadow(0 8px 10px rgba(0,30,50,.25)); }
-.ccs-shelly svg{ width:100%; height:auto; display:block; }
-@keyframes ccsBob{ 0%,100%{ transform:translate(-50%,-62%) rotate(-3deg); } 50%{ transform:translate(-50%,-52%) rotate(3deg); } }
-.ccs-bub{ position:absolute; bottom:-20px; width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,.6); animation:ccsBub 6s ease-in infinite; }
-.ccs-bub.b1{ left:22%; } .ccs-bub.b2{ left:64%; width:10px; height:10px; animation-delay:2s; } .ccs-bub.b3{ left:80%; width:18px; height:18px; animation-delay:3.6s; }
-@keyframes ccsBub{ 0%{ transform:translateY(0); opacity:0; } 15%{ opacity:1; } 100%{ transform:translateY(-46vh); opacity:0; } }
-.ccs-tap{ position:absolute; left:50%; bottom:calc(16% + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); padding:14px 30px; border-radius:999px; background:rgba(255,255,255,.92); color:#0e5a78; font:800 1.3rem 'Baloo 2', system-ui, sans-serif; white-space:nowrap; box-shadow:0 6px 0 rgba(0,40,70,.18); animation:ccsPulse 2.2s ease-in-out infinite; }
-.cc-splash.night .ccs-tap{ background:rgba(255,241,201,.95); color:#14324f; }
+.ccs-glints i{ position:absolute; width:14px; height:3px; border-radius:2px; background:#fff; opacity:0; animation:ccsGlint 2.4s ease-in-out infinite; }
+@keyframes ccsGlint{ 0%,100%{ opacity:0; transform:scaleX(.4); } 50%{ opacity:.85; transform:scaleX(1); } }
+.ccs-shafts{ position:absolute; inset:0; opacity:.22; background:repeating-linear-gradient(105deg, rgba(255,255,255,.55) 0 18px, transparent 18px 90px); -webkit-mask:linear-gradient(#000, transparent 75%); mask:linear-gradient(#000, transparent 75%); animation:ccsShaft 9s ease-in-out infinite alternate; }
+.cc-splash.night .ccs-shafts{ opacity:.08; }
+@keyframes ccsShaft{ from{ transform:translateX(-30px); opacity:.14; } to{ transform:translateX(30px); opacity:.26; } }
+.ccs-shelly{ position:absolute; left:50%; top:0; width:min(32vw,150px); animation:ccsBob 3.2s ease-in-out infinite; }
+.ccs-shelly svg{ position:relative; width:100%; height:auto; display:block; }
+.ccs-ripple{ position:absolute; left:-12%; right:-12%; top:52%; height:26%; border-radius:50%; border:3px solid rgba(255,255,255,.55); animation:ccsRipple 3.2s ease-out infinite; }
+@keyframes ccsBob{ 0%,100%{ transform:translate(-50%,-64%) rotate(-4deg); } 50%{ transform:translate(-50%,-54%) rotate(4deg); } }
+@keyframes ccsRipple{ 0%{ transform:scale(.7); opacity:.8; } 100%{ transform:scale(1.35); opacity:0; } }
+.ccs-fish{ position:absolute; width:46px; animation:ccsSwim 18s linear infinite; } .ccs-fish svg{ display:block; width:100%; height:auto; } .ccs-fish path{ fill:var(--fish); }
+.ccs-fish.f1{ top:30%; left:-12%; } .ccs-fish.f2{ top:44%; left:-12%; width:34px; animation-duration:24s; animation-delay:-9s; } .ccs-fish.f2 path{ fill:#ffd166; } .ccs-fish.f3{ top:36%; left:-12%; width:28px; animation-duration:15s; animation-delay:-5s; } .ccs-fish.f3 path{ fill:#ff8fa3; }
+@keyframes ccsSwim{ 0%{ transform:translate(0,0); } 50%{ transform:translate(62vw,-14px); } 100%{ transform:translate(125vw,0); } }
+.ccs-jelly{ position:absolute; width:40px; animation:ccsJelly 9s ease-in-out infinite; } .ccs-jelly svg{ display:block; width:100%; height:auto; }
+.ccs-jelly path{ fill:rgba(255,140,220,.55); stroke:rgba(255,170,230,.7); } .ccs-jelly.j1{ left:18%; top:40%; } .ccs-jelly.j2{ left:74%; top:30%; width:30px; animation-delay:-4s; } .ccs-jelly.j2 path{ fill:rgba(120,230,255,.5); stroke:rgba(150,240,255,.7); }
+@keyframes ccsJelly{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-26px); } }
+.ccs-bub{ position:absolute; bottom:18%; width:12px; height:12px; border-radius:50%; border:2px solid rgba(255,255,255,.6); opacity:0; animation:ccsBub 6s ease-in infinite; }
+.ccs-bub.b1{ left:20%; } .ccs-bub.b2{ left:58%; width:9px; height:9px; animation-delay:1.6s; } .ccs-bub.b3{ left:82%; width:16px; height:16px; animation-delay:3.2s; } .ccs-bub.b4{ left:40%; width:8px; height:8px; animation-delay:4.4s; }
+@keyframes ccsBub{ 0%{ transform:translateY(0); opacity:0; } 15%{ opacity:1; } 100%{ transform:translateY(-40vh); opacity:0; } }
+.ccs-reef{ position:absolute; left:0; right:0; bottom:0; width:100%; height:24%; } .ccs-reef .r1{ fill:var(--reef1); } .ccs-reef .r2{ fill:var(--reef2); opacity:.8; }
+.ccs-tap{ position:absolute; left:50%; bottom:calc(9% + env(safe-area-inset-bottom, 0px)); display:flex; align-items:center; gap:10px; padding:15px 32px 15px 24px; border-radius:999px; background:var(--tap); color:var(--tap-ink);
+  font:800 clamp(1.2rem, 4.6vw, 1.5rem) 'Baloo 2', system-ui, sans-serif; white-space:nowrap; box-shadow:0 6px 0 rgba(0,0,0,.18), 0 0 0 6px rgba(255,255,255,.28); transform:translateX(-50%); animation:ccsPulse 2.2s ease-in-out infinite; }
+.ccs-tap-e{ font-size:1.25em; }
 @keyframes ccsPulse{ 0%,100%{ transform:translateX(-50%) scale(1); } 50%{ transform:translateX(-50%) scale(1.06); } }
-@media (prefers-reduced-motion: reduce){ .ccs-wave, .ccs-shelly, .ccs-bub, .ccs-tap{ animation:none !important; } }
+.cc-splash.ccs-out .ccs-tap, .cc-splash.ccs-out .ccs-title{ opacity:0; transition:opacity .25s ease; }
+@media (prefers-reduced-motion: reduce){ .cc-splash *{ animation:none !important; } }
 .r3-labels .r3-label, .r3-labels .r3-sign{ position:absolute !important; width:1px !important; height:1px !important; padding:0 !important; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
 .r3-label{ position:absolute; left:0; top:0; pointer-events:auto; display:flex; align-items:center; gap:7px; padding:5px 12px 5px 6px; border:none; border-radius:999px; cursor:pointer;
   background:#fbf6ea; color:#3f2c1b; font:inherit; box-shadow:0 3px 0 rgba(74,59,44,.22), 0 8px 16px rgba(30,60,60,.18); white-space:nowrap; will-change:transform; -webkit-tap-highlight-color:transparent; }

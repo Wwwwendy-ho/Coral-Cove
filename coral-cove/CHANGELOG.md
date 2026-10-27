@@ -23,7 +23,8 @@
 - Works fully offline with built-in algorithms. When online, it uses Claude through an optional helper that a grown-up runs (`tools/claude-proxy-worker.js`), and falls back to offline if the helper can't be reached.
 
 **Title screen**
-- Opening the app shows a title screen: the sea, the sky, Shelly bobbing at the waterline and "Tap to dive in". The tap plays the dive into the water, opens the profiles and starts the music (browsers won't play sound before a first tap, so the music is now already playing on the profile screen).
+- Opening the app shows a title screen: a sunny sea with drifting clouds, a palm island, sparkles on the water, light rays, fish and a reef below, and Shelly bobbing at the waterline. At night it's a moonlit sea with stars and glowing jellyfish. "Tap to dive in" plays the dive into the water and starts the music (browsers won't play sound before a first tap, so the music is already playing on the profile screen).
+- The dive from the title screen is smooth: the profile screen is built underneath while the title shows, instead of during the dive.
 
 **Board**
 - Deck names no longer float over the board. Deck tiles stand out on their own instead: a raised gold rim, a white badge behind the deck's emoji, and a gold star once a deck is all done. The treasure map still lists every deck by name.
