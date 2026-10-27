@@ -17735,14 +17735,17 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     }
     [{ name: 'treasure', at: .42, kinds: ['plain', 'surprise', 'plain', 'treasure'] },
      { name: 'story', at: .78, kinds: ['plain', 'surprise', 'story'] }].forEach(function(br){
-      var j = forkNear(br.at), side = j.x >= 0 ? 1 : -1, prev = j, step = innerWidth < 640 ? 2 : 2.4;
+      var j = forkNear(br.at), side = j.x >= 0 ? 1 : -1, prev = j, step = innerWidth < 640 ? 2 : 2.4, sandN = 0;
       j.fork = br.name;
       br.kinds.forEach(function(kind, k){
         var s = { kind: kind, i: list.length, branch: br.name, jn: j.i, links: [prev.i], end: k === br.kinds.length - 1, y: j.y };
         s.x = j.x + side * step * (k + 1); s.z = j.z - .7 * (k + 1) + Math.sin(k * 1.3) * .5;
-        if(list.ship){   // at night a branch steps off the wreck, down a plank, onto the sand outside
+        if(list.ship && list.stair && j.i > list.stair.k0){   // from the hold the hull walls are too high to climb: the branch runs along the wall inside
+          var lim = list.ship.half - 2;
+          s.x = side * Math.min(lim, Math.abs(j.x) + step); s.z = j.z - .6 - step * .95 * k; s.y = j.y + (s.x - j.x) * list.ship.roll;
+        } else if(list.ship){   // at night a branch steps off the wreck, down a plank, onto the sand outside
           var sh = list.ship, ax = Math.abs(s.x);
-          if(ax > sh.half - .6){ if(ax < sh.half + 1.7) s.x = side * (sh.half + 1.7); s.y = sh.sand; }
+          if(ax > sh.half - .6){ s.x = side * Math.max(ax, sh.half + 1.7 + step * sandN); sandN++; s.y = sh.sand; }   // each space on the sand a full step further out
           else s.y = j.y + (s.x - j.x) * sh.roll;
         }
         prev.links.push(s.i); list.push(s); prev = s;
@@ -18589,7 +18592,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       caus: caus, rays: rays, rayList: rayList, schools: schools, fx: [], kit: kit,
       fishMixers: fishMixers, bigOne: bigOne, models: models, baked: true, blobG: blobG, blobC: blobC, glowG: glowG, groundY: groundY,
       crab: crab, crabFit: crabFit, crabGap: reefCrabExtent(guide) / 2 + crabFit / 2 + .2, leaving: null, spareCrab: null, chestMixer: chestMixer, chestActs: chestActs, nextStar: nextStar, spinners: spinners, lastT: performance.now(),
-      plume: plume, lamp: lamp, wreck: wreckFx, reefFx: reefFx
+      plume: plume, lamp: lamp, wreck: wreckFx, reefFx: reefFx, shipDeck: shipDeck
     };
     reef3dPartyBuild(view);
     reef3dQApply(view);
@@ -18613,9 +18616,21 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
         var sd = st.cx > 0 ? -1 : 1;   // from above the open hold, a little to the side, looking down into the spiral
         out.set(st.cx + sd * 3, st.low + 12.5, st.cz - 6.5); look.set(st.cx, gy - .8, st.cz + .3); return;
       }
+      var sd2 = view.shipDeck, side = g.x > 0 ? 1 : -1;
+      if(sd2 && Math.abs(g.x) > sd2.half + .5){   // off the ship on the sand: the camera goes out there too, not behind the hull
+        out.set(g.x + side * 5, 9 + gy * .3, g.z + 9); look.set(g.x - side * .5, gy + .5, g.z - 3); return;   // from outside and above the gangplank
+      }
       // Elsewhere on the ship it sits lower and looks ahead, so the masts, sails and the drop to the hold show.
       out.set(g.x * f, 10.5 + gy * .55, g.z + 12.5 + (gy < -1 ? -gy * .25 : 0));
       look.set(g.x * (f + .05), gy + 1.4, g.z - 4.5);
+      // a mast standing between the camera and her: slide the camera sideways until it clears
+      var ms = view.wreck && view.wreck.masts;
+      (ms || []).forEach(function(m){
+        var dx = g.x - out.x, dz = g.z - out.z, L2 = dx * dx + dz * dz, u = ((m.x - out.x) * dx + (m.z - out.z) * dz) / L2;
+        if(u < .08 || u > .92) return;
+        var px = out.x + dx * u - m.x, pz = out.z + dz * u - m.z, dist = Math.sqrt(px * px + pz * pz);
+        if(dist < 2.8){ var push = (2.8 - dist) / (1 - u) + .4, dir = px !== 0 ? Math.sign(px) : (m.x > g.x ? -1 : 1); out.x += dir * push; }
+      });
       return;
     }
     out.set(g.x * f, 13 + gy, g.z + 10.5);
@@ -18701,11 +18716,21 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
         if(fl && fa > fl.dur) sc.flee = fl = null;
         var mx = sc.tx - sc.hx, mz = sc.tz - sc.hz, md = Math.sqrt(mx * mx + mz * mz), step = Math.min(md, dt * (fl ? 4 : 1.8));
         if(md > .01){ sc.hx += mx / md * step; sc.hz += mz / md * step; }
-        var a = t * sc.spd + sc.ph, cx = sc.hx + Math.cos(a) * sc.rad, cz = sc.hz + Math.sin(a) * sc.rad * .7;
+        var sdk = view.shipDeck, rad = sc.rad;
+        if(sdk){   // night: the schools stay inside the wreck (never through the hull, never down in the sand)
+          rad = Math.min(sc.rad, sdk.half - 3); var room = sdk.half - 1.8 - rad;
+          sc.hx = Math.max(-room, Math.min(room, sc.hx)); sc.tx = Math.max(-room, Math.min(room, sc.tx));
+        }
+        var a = t * sc.spd + sc.ph, cx = sc.hx + Math.cos(a) * rad, cz = sc.hz + Math.sin(a) * rad * .7;
+        if(sdk){   // swim over whichever deck is below the school: the top deck, or down in the open hold
+          var floor = (sdk.stair && cz < sdk.holeZ - 1 ? sdk.stair.low + sdk.y : sdk.y) + cx * sdk.roll;
+          sc.lvl = sc.lvl == null ? floor : sc.lvl + (floor - sc.lvl) * Math.min(1, dt * 1.2);
+        }
+        var lvl = sdk ? sc.lvl : view.fishLvl;
         sc.fish.forEach(function(f, j){
           var o = f.userData.o, px = f.position.x, pz = f.position.z;
           var fo = fl ? reef3dFleeOff(fl, j, fa) : null;
-          f.position.set(cx + o.x + Math.sin(t * .9 + j) * .12 + (fo ? fo.x : 0), sc.h + view.fishLvl + o.y + Math.sin(t * 2 + j) * .12 + (fo ? Math.min(.5, fo.y) : 0), cz + o.z + (fo ? fo.z : 0));
+          f.position.set(cx + o.x + Math.sin(t * .9 + j) * .12 + (fo ? fo.x : 0), sc.h + lvl + o.y + Math.sin(t * 2 + j) * .12 + (fo ? Math.min(.5, fo.y) : 0), cz + o.z + (fo ? fo.z : 0));
           var vx = f.position.x - px, vz = f.position.z - pz;
           if(vx * vx + vz * vz > 1e-6){   // turn smoothly toward the direction of travel
             var want = Math.atan2(vx, vz), d = Math.atan2(Math.sin(want - f.rotation.y), Math.cos(want - f.rotation.y));
@@ -19184,6 +19209,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       var side = s.x > 0 ? -1 : 1, mx = Math.max(-d.half + 1.6, Math.min(d.half - 1.6, s.x + side * 3.6)), mz = s.z - 1.2;
       var base = st && mz < holeZ ? LOW : UP, broken = k === 1, h = (broken ? 5 : 13) + (base === LOW ? 4 : 0), lean = side * .07;
       var mast = new THREE.Group(); mast.position.set(mx, base, mz); mast.rotation.z = lean; S.add(mast);
+      (out.masts = out.masts || []).push({ x: mx, z: mz });   // the camera steps around these (see reef3dCamTarget)
       mast.add(mesh(new THREE.CylinderGeometry(.26, .4, h, 10), mastM, 0, h / 2, 0));
       S.add(mesh(new THREE.CylinderGeometry(.62, .62, .3, 10), trimM, mx, base + .15, mz));
       if(broken){ var stub2 = mesh(new THREE.CylinderGeometry(.24, .26, 7, 10), mastM, mx - side * 3.4, base + .4, mz + 1.4); stub2.rotation.set(0, .5, side * (Math.PI / 2 - .1)); if(clear(stub2.position.x, stub2.position.z, 3.6)) S.add(stub2); return; }
@@ -19304,7 +19330,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       o.scene.add(jg); out.jellies.push(jg);
     }
     for(var g2 = 0; g2 < 5; g2++){ var wsp = glowSprite('#8dffd0', .9 + r() * .6, .5); var mt = mastTops[g2 % Math.max(1, mastTops.length)] || { x: 0, z: zc0 - 5, top: 6, base: UP };
-      wsp.userData = { x: mt.x, z: mt.z, y: mt.base + 2 + r() * (mt.top - mt.base - 2), ph: r() * 6, rad: 1.5 + r() * 2.5 }; o.scene.add(wsp); out.wisps.push(wsp); }
+      wsp.userData = { x: mt.x, z: mt.z, y: mt.base + 2 + r() * (Math.min(mt.top, UP + 4.4) - mt.base - 2), ph: r() * 6, rad: 1.5 + r() * 2.5 }; o.scene.add(wsp); out.wisps.push(wsp); }   // kept under the sails
     return out;
   }
   // Every frame at night: jellyfish pulse and drift (staying near her, like the bubbles), ghost lights wander and
