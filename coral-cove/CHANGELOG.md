@@ -15,6 +15,11 @@
 - The camera now shows the sails and the spiral stair down to the hold clearly.
 - Branch-path hops arc over the hull instead of through it.
 - Fish no longer swim through the sails.
+- Fish stay inside the wreck and swim over the deck below them, so they no longer sink into the deck or hull when Shelly steps onto the sand.
+- The Story branch, which starts in the hold, runs along the hold wall instead of through the hull.
+- Spaces on the sand are spread a full step apart (two overlapped on phones).
+- On the sand the camera moves outside the hull. On deck it slides aside when a mast is in the way.
+- Ghost lights drift below the sails instead of through them.
 
 ## Party board update (October 26, 2026, GitHub copy)
 
