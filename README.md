@@ -18,6 +18,7 @@ See `CHANGELOG.md` for what's in the current version (Version 99).
 | `audio-clips.js` | Recorded pronunciation clips |
 | `voice/` | Natural-voice speech packs (English, Korean, Chinese) used to read cards aloud |
 | `storage.js` | Saves decks and progress on the device itself |
+| `words.js`, `words-data.js` | Ask Shelly's offline dictionary: English meanings, Chinese words and character parts (built by the scripts in `tools/words/`; loads the first time Ask Shelly opens) |
 | `manifest.webmanifest`, `icon-*.png` | Home Screen app name and icon |
 | `sw.js` | Lets the app open without Wi-Fi |
 | `.nojekyll` | Tells GitHub Pages to serve the files as they are |
@@ -55,7 +56,7 @@ See `CHANGELOG.md` for what's in the current version (Version 99).
   instead of the PIN. Grown-up profiles need the PIN to open. (`tools/ipad_patches.py` makes the PIN
   changes on every update.)
 - **Photo uploads are turned off** in this version, since they need Claude's online storage.
-- **Ask Shelly** only explains Korean word parts on this copy. Full answers need the Claude version.
+- **Ask Shelly** works offline for single words and short sentences in Korean, English and Chinese (traditional characters, pinyin with tone marks). Open questions need the Claude version.
 - **The party board** (dice, shells, pearls, shop, minigames, story mode, the night shipwreck) exists only in this
   GitHub copy. Shells, pearls and hats are saved with each profile on the device. Story mode appears for profiles
   with a daily plan.
@@ -100,3 +101,7 @@ To turn it off, open Library Settings and tap "Turn off". The Library goes back 
 
 - 3D models: Quaternius (Ultimate Platformer Pack, Fish Pack) and the Kenney Pirate Kit (kenney.nl), all CC0.
 - 3D engine: [three.js](https://threejs.org) r128, MIT licence.
+- English backup definitions: [WordNet 3.0](https://wordnet.princeton.edu), Princeton University (WordNet licence). The child-friendly definitions were written for Coral Cove.
+- Chinese words and meanings: [CC-CEDICT](https://cc-cedict.org), CC BY-SA 4.0. The Chinese part of `words-data.js` is shared under the same licence.
+- Chinese character parts: [cjk-decomp](https://github.com/amake/cjk-decomp) by Aaron Madlon-Kay, Apache License 2.0.
+- Word frequencies for choosing which words to include: [wordfreq](https://github.com/rspeer/wordfreq) (data CC BY-SA 4.0).

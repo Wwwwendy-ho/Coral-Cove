@@ -1,5 +1,13 @@
 # Changelog
 
+## Ask Shelly word help, offline (October 28, 2026)
+
+- **Ask Shelly works without the internet** for Korean, English and Chinese words. Type a word or a short sentence, or tap a question about the card on screen.
+- **English:** what the word means, in simple words, with an example sentence. Over 5,000 common words (and every English word in the decks) have child-friendly definitions; about 20,000 more have a shorter grown-up definition, marked as one. Word forms are understood: "puppies" is a form of "puppy", "running" of "run".
+- **Chinese (traditional characters):** pinyin with tone marks and the meaning, then each character with its own meaning and the parts it is built from (好 = 女 woman + 子 child). Sentences are split into words. Simplified characters typed in are shown in traditional.
+- **Korean** keeps its word parts and letters, as before.
+- The dictionary (about 3 MB) loads the first time Ask Shelly opens and is saved for offline use.
+
 ## Library and night fixes (October 27, 2026)
 
 **Music**

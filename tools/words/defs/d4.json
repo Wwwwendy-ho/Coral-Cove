@@ -1,0 +1,3261 @@
+{
+ "defs": {
+  "grace": [
+   {
+    "pos": "noun",
+    "def": "a smooth, gentle and beautiful way of moving",
+    "ex": "The swan moved with grace on the water."
+   }
+  ],
+  "hopefully": [
+   {
+    "pos": "adverb",
+    "def": "a word that shows you wish something will happen",
+    "ex": "Hopefully it will be sunny tomorrow."
+   }
+  ],
+  "importance": [
+   {
+    "pos": "noun",
+    "def": "how much something matters",
+    "ex": "We talk about the importance of sleep."
+   }
+  ],
+  "latter": [
+   {
+    "pos": "adjective",
+    "def": "the second of two things that were just named",
+    "ex": "I like tea and milk. The latter is cold."
+   }
+  ],
+  "manufacture": [
+   {
+    "pos": "verb",
+    "def": "to make things in large numbers, often with machines",
+    "ex": "This factory will manufacture toys."
+   }
+  ],
+  "object": [
+   {
+    "pos": "noun",
+    "def": "a thing that you can see or touch",
+    "ex": "The ball is a round object."
+   }
+  ],
+  "pattern": [
+   {
+    "pos": "noun",
+    "def": "shapes or colors that repeat again and again",
+    "ex": "The shirt has a pattern of stripes."
+   }
+  ],
+  "personnel": [
+   {
+    "pos": "noun",
+    "def": "the people who work for a company or group",
+    "ex": "All the school personnel wore name tags."
+   }
+  ],
+  "perspective": [
+   {
+    "pos": "noun",
+    "def": "the way you see or think about something",
+    "ex": "Each child sees the park from a new perspective."
+   }
+  ],
+  "pregnant": [
+   {
+    "pos": "adjective",
+    "def": "having a baby growing inside the body",
+    "ex": "The pregnant cat is resting in a box."
+   }
+  ],
+  "premier": [
+   {
+    "pos": "adjective",
+    "def": "best or most important of its kind",
+    "ex": "This is the premier school in town."
+   }
+  ],
+  "promote": [
+   {
+    "pos": "verb",
+    "def": "to help something become known or liked by more people",
+    "ex": "The shop will promote its new cakes."
+   }
+  ],
+  "revolution": [
+   {
+    "pos": "noun",
+    "def": "a big change in how people live or how a country is run",
+    "ex": "The book tells about a revolution long ago."
+   }
+  ],
+  "severe": [
+   {
+    "pos": "adjective",
+    "def": "very bad or very strong",
+    "ex": "We stayed home during the severe storm."
+   }
+  ],
+  "tournament": [
+   {
+    "pos": "noun",
+    "def": "a set of games used to find the best player or team",
+    "ex": "Our team played in a chess tournament."
+   }
+  ],
+  "turkey": [
+   {
+    "pos": "noun",
+    "def": "a large bird with a round body that lives on farms",
+    "ex": "We saw a turkey at the farm."
+   },
+   {
+    "pos": "noun",
+    "def": "a country between Europe and Asia",
+    "ex": "Turkey is a country with many beaches."
+   }
+  ],
+  "victim": [
+   {
+    "pos": "noun",
+    "def": "a person or animal that has been hurt by something",
+    "ex": "The helpers gave food to each victim."
+   }
+  ],
+  "amazon": [
+   {
+    "pos": "noun",
+    "def": "a very long river in South America",
+    "ex": "The Amazon has many colorful birds."
+   }
+  ],
+  "attend": [
+   {
+    "pos": "verb",
+    "def": "to go to a place and be there",
+    "ex": "I attend school every weekday."
+   }
+  ],
+  "ban": [
+   {
+    "pos": "verb",
+    "def": "to say that something is not allowed",
+    "ex": "The park will ban bikes on the path."
+   }
+  ],
+  "brilliant": [
+   {
+    "pos": "adjective",
+    "def": "very bright and shining",
+    "ex": "The sun was brilliant in the sky."
+   },
+   {
+    "pos": "adjective",
+    "def": "very clever and quick to understand",
+    "ex": "My friend had a brilliant idea."
+   }
+  ],
+  "carbon": [
+   {
+    "pos": "noun",
+    "def": "a material found in coal, pencils and all living things",
+    "ex": "Pencil lead is made of carbon."
+   }
+  ],
+  "catholic": [
+   {
+    "pos": "adjective",
+    "def": "belonging to the Christian church whose leader is the Pope",
+    "ex": "We passed a Catholic church on our walk."
+   }
+  ],
+  "circle": [
+   {
+    "pos": "noun",
+    "def": "a perfectly round shape, like a ring",
+    "ex": "We sat in a circle on the grass."
+   }
+  ],
+  "concert": [
+   {
+    "pos": "noun",
+    "def": "a show where people play or sing music",
+    "ex": "We heard a concert in the park."
+   }
+  ],
+  "crash": [
+   {
+    "pos": "verb",
+    "def": "to hit something hard and make a loud noise",
+    "ex": "The toy blocks crash onto the floor."
+   }
+  ],
+  "declare": [
+   {
+    "pos": "verb",
+    "def": "to say something clearly so that everyone hears it",
+    "ex": "The teacher will declare the winner."
+   }
+  ],
+  "depth": [
+   {
+    "pos": "noun",
+    "def": "the distance from the top down to the bottom",
+    "ex": "The pool has a depth of one meter."
+   }
+  ],
+  "deputy": [
+   {
+    "pos": "noun",
+    "def": "a person who helps the leader and can take the leader's place",
+    "ex": "The deputy helped at the school."
+   }
+  ],
+  "dirty": [
+   {
+    "pos": "adjective",
+    "def": "not clean, covered with mud or marks",
+    "ex": "My boots are dirty from the mud."
+   }
+  ],
+  "earn": [
+   {
+    "pos": "verb",
+    "def": "to get money or a prize for work you did",
+    "ex": "I earn stars for reading each day."
+   }
+  ],
+  "electronic": [
+   {
+    "pos": "adjective",
+    "def": "using electricity in tiny parts, like a phone or computer",
+    "ex": "The tablet is an electronic toy."
+   }
+  ],
+  "error": [
+   {
+    "pos": "noun",
+    "def": "a mistake that makes something not correct",
+    "ex": "I found an error in my math."
+   }
+  ],
+  "existence": [
+   {
+    "pos": "noun",
+    "def": "the fact of being real or being alive",
+    "ex": "The class learned about the existence of coral reefs."
+   }
+  ],
+  "expression": [
+   {
+    "pos": "noun",
+    "def": "a look on a face that shows a feeling",
+    "ex": "The baby had a happy expression."
+   }
+  ],
+  "factory": [
+   {
+    "pos": "noun",
+    "def": "a building where machines make things",
+    "ex": "This factory makes bread."
+   }
+  ],
+  "interior": [
+   {
+    "pos": "noun",
+    "def": "the inside part of something",
+    "ex": "The interior of the shell is smooth."
+   }
+  ],
+  "joy": [
+   {
+    "pos": "noun",
+    "def": "a very happy feeling",
+    "ex": "The puppy jumped with joy."
+   }
+  ],
+  "legislation": [
+   {
+    "pos": "noun",
+    "def": "laws made by a government",
+    "ex": "New legislation helps keep rivers clean."
+   }
+  ],
+  "maintenance": [
+   {
+    "pos": "noun",
+    "def": "work done to keep something in good shape",
+    "ex": "The boat needs regular maintenance."
+   }
+  ],
+  "manner": [
+   {
+    "pos": "noun",
+    "def": "the way something is done",
+    "ex": "The teacher spoke in a kind manner."
+   }
+  ],
+  "mate": [
+   {
+    "pos": "noun",
+    "def": "a friend or someone you spend time with",
+    "ex": "My mate and I built a sandcastle."
+   }
+  ],
+  "nearby": [
+   {
+    "pos": "adverb",
+    "def": "close to where you are",
+    "ex": "There is a park nearby."
+   }
+  ],
+  "noise": [
+   {
+    "pos": "noun",
+    "def": "a sound, often a loud one",
+    "ex": "I heard a noise by the window."
+   }
+  ],
+  "origin": [
+   {
+    "pos": "noun",
+    "def": "the place or time where something starts",
+    "ex": "The origin of the river is a spring."
+   }
+  ],
+  "pakistan": [
+   {
+    "pos": "noun",
+    "def": "a country in South Asia",
+    "ex": "Pakistan has tall snowy mountains."
+   }
+  ],
+  "panel": [
+   {
+    "pos": "noun",
+    "def": "a flat piece that is part of a wall, door or machine",
+    "ex": "The door has a wooden panel."
+   }
+  ],
+  "personality": [
+   {
+    "pos": "noun",
+    "def": "all the ways a person acts and feels that make them special",
+    "ex": "My cat has a funny personality."
+   }
+  ],
+  "plate": [
+   {
+    "pos": "noun",
+    "def": "a flat dish that you eat food from",
+    "ex": "I put an apple on my plate."
+   }
+  ],
+  "relief": [
+   {
+    "pos": "noun",
+    "def": "a calm feeling when a worry goes away",
+    "ex": "I felt relief when I found my hat."
+   }
+  ],
+  "resistance": [
+   {
+    "pos": "noun",
+    "def": "a push that makes it harder for something to move",
+    "ex": "Swimmers feel resistance from the water."
+   }
+  ],
+  "retail": [
+   {
+    "pos": "noun",
+    "def": "selling things to people in a shop",
+    "ex": "My aunt works in retail at a shop."
+   }
+  ],
+  "rice": [
+   {
+    "pos": "noun",
+    "def": "small white or brown grains that people cook and eat",
+    "ex": "We ate rice with vegetables."
+   }
+  ],
+  "roads": [
+   {
+    "pos": "noun",
+    "def": "hard paths where cars and buses drive",
+    "ex": "The roads were quiet this morning."
+   }
+  ],
+  "roof": [
+   {
+    "pos": "noun",
+    "def": "the top of a house that covers it",
+    "ex": "Rain tapped on the roof."
+   }
+  ],
+  "shame": [
+   {
+    "pos": "noun",
+    "def": "an uncomfortable feeling when you think you did something wrong",
+    "ex": "I felt shame after I broke the cup."
+   }
+  ],
+  "somewhat": [
+   {
+    "pos": "adverb",
+    "def": "a little bit, but not very much",
+    "ex": "The soup is somewhat hot."
+   }
+  ],
+  "surely": [
+   {
+    "pos": "adverb",
+    "def": "a word showing you have no doubt that something is true",
+    "ex": "Surely the sun will come out soon."
+   }
+  ],
+  "absolute": [
+   {
+    "pos": "adjective",
+    "def": "complete, with nothing left out",
+    "ex": "The room was in absolute quiet."
+   }
+  ],
+  "advertise": [
+   {
+    "pos": "verb",
+    "def": "to tell people about something so they will want it",
+    "ex": "The bakery will advertise its new bread."
+   }
+  ],
+  "baseball": [
+   {
+    "pos": "noun",
+    "def": "a game where players hit a ball with a bat and run",
+    "ex": "We play baseball after school."
+   }
+  ],
+  "bathroom": [
+   {
+    "pos": "noun",
+    "def": "a room with a toilet, a sink and a bath or shower",
+    "ex": "I wash my hands in the bathroom."
+   }
+  ],
+  "bible": [
+   {
+    "pos": "noun",
+    "def": "the holy book of the Christian religion",
+    "ex": "There is a Bible on the shelf."
+   }
+  ],
+  "cable": [
+   {
+    "pos": "noun",
+    "def": "a long, thick wire that carries electricity or signals",
+    "ex": "Plug the cable into the wall."
+   }
+  ],
+  "calm": [
+   {
+    "pos": "adjective",
+    "def": "quiet and not upset",
+    "ex": "The sea is calm today."
+   }
+  ],
+  "championship": [
+   {
+    "pos": "noun",
+    "def": "a contest to find the best player or team",
+    "ex": "Our team won the swimming championship."
+   }
+  ],
+  "client": [
+   {
+    "pos": "noun",
+    "def": "a person who pays someone for their help or work",
+    "ex": "The baker spoke with a client."
+   }
+  ],
+  "constant": [
+   {
+    "pos": "adjective",
+    "def": "always the same, or never stopping",
+    "ex": "The waves make a constant sound."
+   }
+  ],
+  "democrat": [
+   {
+    "pos": "noun",
+    "def": "a member of one of the two main political parties in the United States",
+    "ex": "My neighbor is a Democrat."
+   }
+  ],
+  "dumb": [
+   {
+    "pos": "adjective",
+    "def": "a word for silly or not smart that can hurt feelings",
+    "ex": "Calling someone dumb can hurt their feelings."
+   }
+  ],
+  "empire": [
+   {
+    "pos": "noun",
+    "def": "many lands and people ruled by one leader",
+    "ex": "The old empire had a great castle."
+   }
+  ],
+  "expansion": [
+   {
+    "pos": "noun",
+    "def": "the act of becoming bigger",
+    "ex": "The zoo is planning an expansion."
+   }
+  ],
+  "heavily": [
+   {
+    "pos": "adverb",
+    "def": "very much or in a large amount",
+    "ex": "It rained heavily all night."
+   }
+  ],
+  "hide": [
+   {
+    "pos": "verb",
+    "def": "to put yourself or a thing where it cannot be seen",
+    "ex": "The crab will hide under a rock."
+   }
+  ],
+  "incident": [
+   {
+    "pos": "noun",
+    "def": "an event, or something that happens at one time",
+    "ex": "There was a funny incident at lunch."
+   }
+  ],
+  "irish": [
+   {
+    "pos": "adjective",
+    "def": "from or about the country of Ireland",
+    "ex": "We heard Irish music at the fair."
+   }
+  ],
+  "michigan": [
+   {
+    "pos": "noun",
+    "def": "a state in the north of the United States",
+    "ex": "Michigan has many big lakes."
+   }
+  ],
+  "politician": [
+   {
+    "pos": "noun",
+    "def": "a person who works in the government",
+    "ex": "The politician visited our school."
+   }
+  ],
+  "print": [
+   {
+    "pos": "verb",
+    "def": "to put words or pictures on paper with a machine",
+    "ex": "I will print my drawing."
+   }
+  ],
+  "quit": [
+   {
+    "pos": "verb",
+    "def": "to stop doing something",
+    "ex": "I will not quit learning to swim."
+   }
+  ],
+  "refuse": [
+   {
+    "pos": "verb",
+    "def": "to say no to something",
+    "ex": "The little goat will refuse the hay."
+   }
+  ],
+  "sight": [
+   {
+    "pos": "noun",
+    "def": "the ability to see with your eyes",
+    "ex": "Owls have very good sight."
+   },
+   {
+    "pos": "noun",
+    "def": "something that you see",
+    "ex": "The sunset was a lovely sight."
+   }
+  ],
+  "significantly": [
+   {
+    "pos": "adverb",
+    "def": "by a large amount",
+    "ex": "The sea is significantly deeper here."
+   }
+  ],
+  "soviet": [
+   {
+    "pos": "adjective",
+    "def": "of a large old country in Europe and Asia that no longer exists",
+    "ex": "We saw a Soviet stamp in the book."
+   }
+  ],
+  "wet": [
+   {
+    "pos": "adjective",
+    "def": "covered with water or another liquid",
+    "ex": "My socks are wet."
+   }
+  ],
+  "widely": [
+   {
+    "pos": "adverb",
+    "def": "in many places or by many people",
+    "ex": "This book is widely read."
+   }
+  ],
+  "worldwide": [
+   {
+    "pos": "adverb",
+    "def": "in every country on Earth",
+    "ex": "Children play games worldwide."
+   }
+  ],
+  "anniversary": [
+   {
+    "pos": "noun",
+    "def": "a day each year that remembers something that happened on that date",
+    "ex": "Today is my grandparents' anniversary."
+   }
+  ],
+  "attractive": [
+   {
+    "pos": "adjective",
+    "def": "nice to look at",
+    "ex": "The garden is very attractive."
+   }
+  ],
+  "bike": [
+   {
+    "pos": "noun",
+    "def": "a vehicle with two wheels that you ride by pushing pedals",
+    "ex": "I ride my bike to school."
+   }
+  ],
+  "broad": [
+   {
+    "pos": "adjective",
+    "def": "wide from one side to the other",
+    "ex": "The river is broad here."
+   }
+  ],
+  "burn": [
+   {
+    "pos": "verb",
+    "def": "to be damaged by fire or heat",
+    "ex": "Logs burn in the fireplace."
+   }
+  ],
+  "cake": [
+   {
+    "pos": "noun",
+    "def": "a soft, sweet food baked from flour and eggs",
+    "ex": "We shared a cake at the party."
+   }
+  ],
+  "closely": [
+   {
+    "pos": "adverb",
+    "def": "near, or with great attention",
+    "ex": "I watched the ants closely."
+   }
+  ],
+  "constantly": [
+   {
+    "pos": "adverb",
+    "def": "all the time without stopping",
+    "ex": "The bird sang constantly."
+   }
+  ],
+  "contest": [
+   {
+    "pos": "noun",
+    "def": "a game where people try to win",
+    "ex": "I entered a drawing contest."
+   }
+  ],
+  "fee": [
+   {
+    "pos": "noun",
+    "def": "money you pay to do or use something",
+    "ex": "There is a small fee to enter the zoo."
+   }
+  ],
+  "hardly": [
+   {
+    "pos": "adverb",
+    "def": "almost not at all",
+    "ex": "It was so dark I could hardly see."
+   }
+  ],
+  "hat": [
+   {
+    "pos": "noun",
+    "def": "something you wear on your head",
+    "ex": "I wear a hat in the sun."
+   }
+  ],
+  "height": [
+   {
+    "pos": "noun",
+    "def": "how tall something is",
+    "ex": "We measured the height of the tree."
+   }
+  ],
+  "invite": [
+   {
+    "pos": "verb",
+    "def": "to ask someone to come to an event",
+    "ex": "I will invite my friends to lunch."
+   }
+  ],
+  "loud": [
+   {
+    "pos": "adjective",
+    "def": "making a lot of sound",
+    "ex": "The drum is very loud."
+   }
+  ],
+  "manchester": [
+   {
+    "pos": "noun",
+    "def": "a city in England",
+    "ex": "Manchester is a big city in England."
+   }
+  ],
+  "marine": [
+   {
+    "pos": "adjective",
+    "def": "of the sea or living in the sea",
+    "ex": "Turtles are marine animals."
+   }
+  ],
+  "motor": [
+   {
+    "pos": "noun",
+    "def": "a machine that makes things move",
+    "ex": "The boat has a small motor."
+   }
+  ],
+  "officially": [
+   {
+    "pos": "adverb",
+    "def": "in a way that is decided by the people in charge",
+    "ex": "The park officially opens today."
+   }
+  ],
+  "peak": [
+   {
+    "pos": "noun",
+    "def": "the pointed top of a mountain",
+    "ex": "We saw snow on the peak."
+   }
+  ],
+  "portion": [
+   {
+    "pos": "noun",
+    "def": "a part of something, or an amount of food for one person",
+    "ex": "I ate a small portion of rice."
+   }
+  ],
+  "pound": [
+   {
+    "pos": "noun",
+    "def": "a unit for measuring how heavy something is",
+    "ex": "The pumpkin weighs one pound."
+   }
+  ],
+  "princess": [
+   {
+    "pos": "noun",
+    "def": "a girl or woman in a royal family, like the child of a king or queen",
+    "ex": "The princess lived in a castle."
+   }
+  ],
+  "protein": [
+   {
+    "pos": "noun",
+    "def": "a part of food like beans, eggs and meat that helps the body grow",
+    "ex": "Beans and eggs have protein."
+   }
+  ],
+  "raw": [
+   {
+    "pos": "adjective",
+    "def": "not yet cooked or made ready to eat",
+    "ex": "I ate a raw carrot."
+   }
+  ],
+  "reform": [
+   {
+    "pos": "verb",
+    "def": "to change something to make it better",
+    "ex": "The school will reform its lunch menu."
+   }
+  ],
+  "respond": [
+   {
+    "pos": "verb",
+    "def": "to answer or react",
+    "ex": "Please respond to my message."
+   }
+  ],
+  "retirement": [
+   {
+    "pos": "noun",
+    "def": "the time of life after a person stops working",
+    "ex": "My neighbor enjoys retirement and works in the garden."
+   }
+  ],
+  "sample": [
+   {
+    "pos": "noun",
+    "def": "a small piece that shows what the whole thing is like",
+    "ex": "We tasted a sample of the cheese."
+   }
+  ],
+  "secondary": [
+   {
+    "pos": "adjective",
+    "def": "coming after the first one",
+    "ex": "Red is the main color. Green is secondary."
+   }
+  ],
+  "solar": [
+   {
+    "pos": "adjective",
+    "def": "coming from or using the sun",
+    "ex": "The house has solar panels."
+   }
+  ],
+  "somehow": [
+   {
+    "pos": "adverb",
+    "def": "in a way that is not known",
+    "ex": "Somehow the cat got on the roof."
+   }
+  ],
+  "suffer": [
+   {
+    "pos": "verb",
+    "def": "to feel pain or something bad",
+    "ex": "Plants suffer without water."
+   }
+  ],
+  "sydney": [
+   {
+    "pos": "noun",
+    "def": "a big city in Australia",
+    "ex": "Sydney is next to the sea."
+   }
+  ],
+  "ultimate": [
+   {
+    "pos": "adjective",
+    "def": "the best or the last",
+    "ex": "This is the ultimate sandcastle."
+   }
+  ],
+  "unknown": [
+   {
+    "pos": "adjective",
+    "def": "not known by anyone",
+    "ex": "The deep sea has many unknown fish."
+   }
+  ],
+  "attach": [
+   {
+    "pos": "verb",
+    "def": "to join one thing to another",
+    "ex": "Attach the string to the kite."
+   }
+  ],
+  "automatically": [
+   {
+    "pos": "adverb",
+    "def": "by itself, without a person doing it",
+    "ex": "The light turns on automatically."
+   }
+  ],
+  "battery": [
+   {
+    "pos": "noun",
+    "def": "a small thing that stores power for toys and phones",
+    "ex": "The clock needs a new battery."
+   }
+  ],
+  "blind": [
+   {
+    "pos": "adjective",
+    "def": "not able to see",
+    "ex": "A blind person can use a cane."
+   }
+  ],
+  "breath": [
+   {
+    "pos": "noun",
+    "def": "the air you take in and let out through your nose or mouth",
+    "ex": "Take a big breath."
+   }
+  ],
+  "brief": [
+   {
+    "pos": "adjective",
+    "def": "short and lasting only a little time",
+    "ex": "We took a brief rest."
+   }
+  ],
+  "chest": [
+   {
+    "pos": "noun",
+    "def": "the upper front part of your body",
+    "ex": "I put my hand on my chest."
+   },
+   {
+    "pos": "noun",
+    "def": "a big strong box with a lid",
+    "ex": "The old chest held blankets."
+   }
+  ],
+  "debut": [
+   {
+    "pos": "noun",
+    "def": "the first time someone shows or does something in public",
+    "ex": "The band made its debut at school."
+   }
+  ],
+  "engage": [
+   {
+    "pos": "verb",
+    "def": "to get and hold someone's interest",
+    "ex": "Good stories engage children."
+   }
+  ],
+  "external": [
+   {
+    "pos": "adjective",
+    "def": "on the outside of something",
+    "ex": "The external wall is painted blue."
+   }
+  ],
+  "fantasy": [
+   {
+    "pos": "noun",
+    "def": "a story or idea about things that are not real",
+    "ex": "I read a fantasy about dragons."
+   }
+  ],
+  "grab": [
+   {
+    "pos": "verb",
+    "def": "to take something quickly with your hand",
+    "ex": "Grab your coat, it is cold."
+   }
+  ],
+  "hollywood": [
+   {
+    "pos": "noun",
+    "def": "a place in California where many movies are made",
+    "ex": "Many movies are made in Hollywood."
+   }
+  ],
+  "immediate": [
+   {
+    "pos": "adjective",
+    "def": "happening right now, with no wait",
+    "ex": "We need an immediate answer."
+   }
+  ],
+  "introduction": [
+   {
+    "pos": "noun",
+    "def": "the start of a book or talk",
+    "ex": "The book has a short introduction."
+   }
+  ],
+  "license": [
+   {
+    "pos": "noun",
+    "def": "a paper that says you are allowed to do something",
+    "ex": "My aunt has a fishing license."
+   }
+  ],
+  "pilot": [
+   {
+    "pos": "noun",
+    "def": "a person who flies an airplane",
+    "ex": "The pilot flew above the clouds."
+   }
+  ],
+  "pink": [
+   {
+    "pos": "adjective",
+    "def": "having a light red color, like some flowers",
+    "ex": "The shell is pink."
+   }
+  ],
+  "presidential": [
+   {
+    "pos": "adjective",
+    "def": "about the leader of a country",
+    "ex": "The presidential house is white."
+   }
+  ],
+  "principal": [
+   {
+    "pos": "noun",
+    "def": "the leader of a school",
+    "ex": "The principal visited our class."
+   }
+  ],
+  "recognize": [
+   {
+    "pos": "verb",
+    "def": "to know who or what something is because you saw it before",
+    "ex": "I recognize that song."
+   }
+  ],
+  "regularly": [
+   {
+    "pos": "adverb",
+    "def": "again and again at the same times",
+    "ex": "We water the plants regularly."
+   }
+  ],
+  "singer": [
+   {
+    "pos": "noun",
+    "def": "a person who makes music with their voice",
+    "ex": "The singer has a lovely voice."
+   }
+  ],
+  "steam": [
+   {
+    "pos": "noun",
+    "def": "the white, hot cloud that rises from boiling water",
+    "ex": "Steam rose from the soup."
+   }
+  ],
+  "survive": [
+   {
+    "pos": "verb",
+    "def": "to stay alive after a hard time",
+    "ex": "Cactus plants survive in dry places."
+   }
+  ],
+  "tall": [
+   {
+    "pos": "adjective",
+    "def": "high from bottom to top",
+    "ex": "The giraffe is very tall."
+   }
+  ],
+  "theatre": [
+   {
+    "pos": "noun",
+    "def": "a place where people watch plays",
+    "ex": "We saw a play at the theatre."
+   }
+  ],
+  "therapy": [
+   {
+    "pos": "noun",
+    "def": "help that makes a person feel or get better",
+    "ex": "Swimming is good therapy for my arm."
+   }
+  ],
+  "witness": [
+   {
+    "pos": "noun",
+    "def": "a person who sees something happen",
+    "ex": "A witness saw the bird build its nest."
+   }
+  ],
+  "adopt": [
+   {
+    "pos": "verb",
+    "def": "to take a pet home to look after as your own",
+    "ex": "We will adopt a kitten."
+   }
+  ],
+  "aim": [
+   {
+    "pos": "verb",
+    "def": "to point something at a target",
+    "ex": "I aim the ball at the basket."
+   }
+  ],
+  "campus": [
+   {
+    "pos": "noun",
+    "def": "the land and buildings of a school or college",
+    "ex": "The campus has a big green lawn."
+   }
+  ],
+  "cap": [
+   {
+    "pos": "noun",
+    "def": "a soft hat with a flat piece at the front",
+    "ex": "I wear a blue cap in the sun."
+   }
+  ],
+  "childhood": [
+   {
+    "pos": "noun",
+    "def": "the early years of life when you are young",
+    "ex": "My grandmother tells stories of her childhood."
+   }
+  ],
+  "clinical": [
+   {
+    "pos": "adjective",
+    "def": "having to do with doctors and their patients",
+    "ex": "The doctor did clinical tests."
+   }
+  ],
+  "comedy": [
+   {
+    "pos": "noun",
+    "def": "a funny show or movie that makes people laugh",
+    "ex": "We watched a comedy together."
+   }
+  ],
+  "commander": [
+   {
+    "pos": "noun",
+    "def": "a person in charge of a group of soldiers or sailors",
+    "ex": "The ship's commander waved at us."
+   }
+  ],
+  "comparison": [
+   {
+    "pos": "noun",
+    "def": "looking at things to see how they are alike or different",
+    "ex": "Make a comparison of the two shells."
+   }
+  ],
+  "defeat": [
+   {
+    "pos": "verb",
+    "def": "to win against someone in a game",
+    "ex": "Our team can defeat the red team."
+   }
+  ],
+  "defence": [
+   {
+    "pos": "noun",
+    "def": "something that keeps a person or place safe",
+    "ex": "A shell is the turtle's defence."
+   }
+  ],
+  "democracy": [
+   {
+    "pos": "noun",
+    "def": "a way of running a country where people vote for leaders",
+    "ex": "In a democracy, people vote for leaders."
+   }
+  ],
+  "entitle": [
+   {
+    "pos": "verb",
+    "def": "to give a person the right to have something",
+    "ex": "This ticket will entitle you to a snack."
+   }
+  ],
+  "exact": [
+   {
+    "pos": "adjective",
+    "def": "completely correct, with no mistakes",
+    "ex": "Tell me the exact time."
+   }
+  ],
+  "expose": [
+   {
+    "pos": "verb",
+    "def": "to uncover something so it can be seen",
+    "ex": "Low tide will expose the rocks."
+   }
+  ],
+  "injure": [
+   {
+    "pos": "verb",
+    "def": "to hurt a body",
+    "ex": "Be careful not to injure your hand."
+   }
+  ],
+  "lock": [
+   {
+    "pos": "noun",
+    "def": "a thing that keeps a door shut until you use a key",
+    "ex": "The door has a metal lock."
+   },
+   {
+    "pos": "verb",
+    "def": "to close something with a key so it will not open",
+    "ex": "Please lock the gate at night."
+   }
+  ],
+  "musical": [
+   {
+    "pos": "adjective",
+    "def": "about or made of songs and tunes",
+    "ex": "The flute is a musical instrument."
+   }
+  ],
+  "nose": [
+   {
+    "pos": "noun",
+    "def": "the part of the face you smell with",
+    "ex": "The dog has a wet nose."
+   }
+  ],
+  "oppose": [
+   {
+    "pos": "verb",
+    "def": "to be against something",
+    "ex": "Some people oppose the new road."
+   }
+  ],
+  "organize": [
+   {
+    "pos": "verb",
+    "def": "to put things in a neat order",
+    "ex": "I organize my books by color."
+   }
+  ],
+  "plastic": [
+   {
+    "pos": "noun",
+    "def": "a light material made by people, used for bottles and toys",
+    "ex": "This cup is made of plastic."
+   }
+  ],
+  "quote": [
+   {
+    "pos": "verb",
+    "def": "to say the exact words that someone else said",
+    "ex": "I will quote my favorite poem."
+   }
+  ],
+  "suspect": [
+   {
+    "pos": "verb",
+    "def": "to think something is probably true but not be sure",
+    "ex": "I suspect it will rain soon."
+   }
+  ],
+  "swear": [
+   {
+    "pos": "verb",
+    "def": "to make a serious promise",
+    "ex": "I swear to feed the fish every day."
+   }
+  ],
+  "technique": [
+   {
+    "pos": "noun",
+    "def": "a way of doing something well",
+    "ex": "My teacher showed me a drawing technique."
+   }
+  ],
+  "tie": [
+   {
+    "pos": "verb",
+    "def": "to fasten with string or rope",
+    "ex": "I tie my shoes."
+   },
+   {
+    "pos": "noun",
+    "def": "a long strip of cloth worn around the neck with a shirt",
+    "ex": "He wore a blue tie."
+   }
+  ],
+  "trend": [
+   {
+    "pos": "noun",
+    "def": "something many people are doing or liking right now",
+    "ex": "Bright hats are a trend this summer."
+   }
+  ],
+  "valuable": [
+   {
+    "pos": "adjective",
+    "def": "worth a lot of money or very useful",
+    "ex": "The old coin is very valuable."
+   }
+  ],
+  "wealth": [
+   {
+    "pos": "noun",
+    "def": "a lot of money and things",
+    "ex": "The old ship held great wealth."
+   }
+  ],
+  "wise": [
+   {
+    "pos": "adjective",
+    "def": "having good sense from learning and knowing a lot",
+    "ex": "The wise old turtle gave good help."
+   }
+  ],
+  "approval": [
+   {
+    "pos": "noun",
+    "def": "saying yes or that something is good",
+    "ex": "I asked my teacher for approval."
+   }
+  ],
+  "aspect": [
+   {
+    "pos": "noun",
+    "def": "one part of something",
+    "ex": "Color is one aspect of a painting."
+   }
+  ],
+  "bread": [
+   {
+    "pos": "noun",
+    "def": "a food baked from flour",
+    "ex": "I eat bread with butter."
+   }
+  ],
+  "convention": [
+   {
+    "pos": "noun",
+    "def": "a big meeting of many people with the same interest",
+    "ex": "We went to a book convention."
+   }
+  ],
+  "egg": [
+   {
+    "pos": "noun",
+    "def": "an oval thing laid by a hen or bird, with a baby animal growing inside",
+    "ex": "The hen laid an egg."
+   }
+  ],
+  "equivalent": [
+   {
+    "pos": "adjective",
+    "def": "equal to something else",
+    "ex": "Two halves are equivalent to one whole."
+   }
+  ],
+  "fairly": [
+   {
+    "pos": "adverb",
+    "def": "in a way that treats everyone the same",
+    "ex": "We shared the cake fairly."
+   }
+  ],
+  "finger": [
+   {
+    "pos": "noun",
+    "def": "one of the long parts that move on the end of your hand",
+    "ex": "I have a ring on my finger."
+   }
+  ],
+  "gang": [
+   {
+    "pos": "noun",
+    "def": "a group of people who do things together",
+    "ex": "A gang of ducks swam by."
+   }
+  ],
+  "graduate": [
+   {
+    "pos": "verb",
+    "def": "to finish school and get a paper that says so",
+    "ex": "My cousin will graduate this spring."
+   }
+  ],
+  "greek": [
+   {
+    "pos": "adjective",
+    "def": "from or about the country of Greece",
+    "ex": "We ate Greek food."
+   }
+  ],
+  "inner": [
+   {
+    "pos": "adjective",
+    "def": "on the inside, far from the outside",
+    "ex": "The inner part of the fruit is sweet."
+   }
+  ],
+  "lift": [
+   {
+    "pos": "verb",
+    "def": "to pick something up and raise it",
+    "ex": "I can lift the small box."
+   }
+  ],
+  "monthly": [
+   {
+    "pos": "adjective",
+    "def": "happening once every four weeks or so",
+    "ex": "We have a monthly visit to the beach."
+   }
+  ],
+  "neighborhood": [
+   {
+    "pos": "noun",
+    "def": "the area around your home and the people there",
+    "ex": "My neighborhood has a small park."
+   }
+  ],
+  "outstanding": [
+   {
+    "pos": "adjective",
+    "def": "very good, better than others",
+    "ex": "The singer gave an outstanding show."
+   }
+  ],
+  "permission": [
+   {
+    "pos": "noun",
+    "def": "saying yes so someone may do something",
+    "ex": "I asked for permission to swim."
+   }
+  ],
+  "regulation": [
+   {
+    "pos": "noun",
+    "def": "a rule made by people in charge",
+    "ex": "There is a regulation about boat speed."
+   }
+  ],
+  "reply": [
+   {
+    "pos": "verb",
+    "def": "to answer someone who has asked you something",
+    "ex": "I will reply to your letter."
+   }
+  ],
+  "rid": [
+   {
+    "pos": "verb",
+    "def": "to free a place from something unwanted",
+    "ex": "We rid the beach of litter."
+   }
+  ],
+  "roman": [
+   {
+    "pos": "adjective",
+    "def": "from or about the ancient city of Rome",
+    "ex": "We saw Roman coins at the museum."
+   }
+  ],
+  "scientist": [
+   {
+    "pos": "noun",
+    "def": "a person who studies how the natural world works",
+    "ex": "A scientist studies sea animals."
+   }
+  ],
+  "shoulder": [
+   {
+    "pos": "noun",
+    "def": "the part of the body where your arm joins your body",
+    "ex": "A bird sat on my shoulder."
+   }
+  ],
+  "shower": [
+   {
+    "pos": "noun",
+    "def": "a spray of water that you stand under to wash",
+    "ex": "I take a shower each morning."
+   },
+   {
+    "pos": "noun",
+    "def": "a short time of light rain",
+    "ex": "We had a shower of rain."
+   }
+  ],
+  "tower": [
+   {
+    "pos": "noun",
+    "def": "a very tall, thin building or part of a building",
+    "ex": "We climbed the tower and saw the sea."
+   }
+  ],
+  "tradition": [
+   {
+    "pos": "noun",
+    "def": "something a family or group does the same way for many years",
+    "ex": "Eating pie on Sunday is our tradition."
+   }
+  ],
+  "visual": [
+   {
+    "pos": "adjective",
+    "def": "about seeing or what you can see",
+    "ex": "A picture is a visual aid."
+   }
+  ],
+  "wheel": [
+   {
+    "pos": "noun",
+    "def": "a round thing that turns, like on a car",
+    "ex": "The wagon has a red wheel."
+   }
+  ],
+  "appointment": [
+   {
+    "pos": "noun",
+    "def": "a time you have planned to meet someone",
+    "ex": "I have an appointment with the dentist."
+   }
+  ],
+  "barely": [
+   {
+    "pos": "adverb",
+    "def": "only just, with almost nothing left over",
+    "ex": "The room is barely big enough."
+   }
+  ],
+  "bush": [
+   {
+    "pos": "noun",
+    "def": "a plant with many branches, smaller than a tree",
+    "ex": "A rabbit hid under the bush."
+   }
+  ],
+  "cabinet": [
+   {
+    "pos": "noun",
+    "def": "a cupboard with doors or drawers",
+    "ex": "The cups are in the kitchen cabinet."
+   }
+  ],
+  "celebrate": [
+   {
+    "pos": "verb",
+    "def": "to do something fun for a special day",
+    "ex": "We celebrate with cake."
+   }
+  ],
+  "chocolate": [
+   {
+    "pos": "noun",
+    "def": "a sweet brown food made from cocoa beans",
+    "ex": "I ate a piece of chocolate."
+   }
+  ],
+  "coal": [
+   {
+    "pos": "noun",
+    "def": "a hard black rock that burns to give heat",
+    "ex": "Long ago, trains ran on coal."
+   }
+  ],
+  "colour": [
+   {
+    "pos": "noun",
+    "def": "something like red, blue or green that you see",
+    "ex": "Blue is my favorite colour."
+   }
+  ],
+  "contemporary": [
+   {
+    "pos": "adjective",
+    "def": "belonging to the present time",
+    "ex": "We saw contemporary art at the museum."
+   }
+  ],
+  "criticism": [
+   {
+    "pos": "noun",
+    "def": "saying what you think is wrong with something",
+    "ex": "Kind criticism can help us learn."
+   }
+  ],
+  "dna": [
+   {
+    "pos": "noun",
+    "def": "tiny parts in every living thing that carry its features",
+    "ex": "Every living thing has DNA."
+   }
+  ],
+  "effectively": [
+   {
+    "pos": "adverb",
+    "def": "in a way that works well",
+    "ex": "The brush cleans the shells effectively."
+   }
+  ],
+  "extensive": [
+   {
+    "pos": "adjective",
+    "def": "very large or covering a lot of space",
+    "ex": "The zoo has an extensive garden."
+   }
+  ],
+  "formation": [
+   {
+    "pos": "noun",
+    "def": "a shape made by things placed in a pattern",
+    "ex": "The birds flew in a V formation."
+   }
+  ],
+  "gallery": [
+   {
+    "pos": "noun",
+    "def": "a room or building where art is shown",
+    "ex": "We looked at paintings in the gallery."
+   }
+  ],
+  "highway": [
+   {
+    "pos": "noun",
+    "def": "a big, wide road for fast cars",
+    "ex": "The highway goes past the sea."
+   }
+  ],
+  "historic": [
+   {
+    "pos": "adjective",
+    "def": "important in the past",
+    "ex": "We visited a historic castle."
+   }
+  ],
+  "hunt": [
+   {
+    "pos": "verb",
+    "def": "to look hard for something",
+    "ex": "We hunt for shells on the beach."
+   }
+  ],
+  "improvement": [
+   {
+    "pos": "noun",
+    "def": "a change that makes something better",
+    "ex": "My drawing shows great improvement."
+   }
+  ],
+  "inch": [
+   {
+    "pos": "noun",
+    "def": "a small unit for measuring length",
+    "ex": "The worm was one inch long."
+   }
+  ],
+  "initially": [
+   {
+    "pos": "adverb",
+    "def": "at the very start of something",
+    "ex": "Initially the water felt cold."
+   }
+  ],
+  "junior": [
+   {
+    "pos": "adjective",
+    "def": "younger or lower in rank",
+    "ex": "I am in the junior class."
+   }
+  ],
+  "jury": [
+   {
+    "pos": "noun",
+    "def": "a group of people who decide who is right in a court",
+    "ex": "The jury listened carefully."
+   }
+  ],
+  "korean": [
+   {
+    "pos": "adjective",
+    "def": "from a country in East Asia with a city called Seoul",
+    "ex": "I like Korean food."
+   },
+   {
+    "pos": "noun",
+    "def": "the language that people in that country speak",
+    "ex": "I am learning Korean."
+   }
+  ],
+  "monster": [
+   {
+    "pos": "noun",
+    "def": "a make-believe animal in stories, often big and strange",
+    "ex": "The monster in the book was friendly."
+   }
+  ],
+  "obtain": [
+   {
+    "pos": "verb",
+    "def": "to get something that you want or need",
+    "ex": "You can obtain books at the library."
+   }
+  ],
+  "olympic": [
+   {
+    "pos": "adjective",
+    "def": "of the big sports games held every four years",
+    "ex": "I watched an Olympic swimmer."
+   }
+  ],
+  "philosophy": [
+   {
+    "pos": "noun",
+    "def": "thinking about big questions about life",
+    "ex": "I read a book about philosophy."
+   }
+  ],
+  "pride": [
+   {
+    "pos": "noun",
+    "def": "a happy feeling about something good you did",
+    "ex": "I felt pride after I finished my painting."
+   }
+  ],
+  "repeat": [
+   {
+    "pos": "verb",
+    "def": "to say or do again",
+    "ex": "Please repeat the word."
+   }
+  ],
+  "rough": [
+   {
+    "pos": "adjective",
+    "def": "not smooth, with bumps on it",
+    "ex": "The tree bark is rough."
+   }
+  ],
+  "santa": [
+   {
+    "pos": "noun",
+    "def": "a kind man in stories who brings gifts at Christmas",
+    "ex": "Children draw Santa with a red hat."
+   }
+  ],
+  "settlement": [
+   {
+    "pos": "noun",
+    "def": "a small place where people have come to live",
+    "ex": "The old settlement was by the sea."
+   }
+  ],
+  "smell": [
+   {
+    "pos": "verb",
+    "def": "to notice something with your nose",
+    "ex": "I smell fresh bread."
+   },
+   {
+    "pos": "noun",
+    "def": "the scent that something has",
+    "ex": "The flower has a sweet smell."
+   }
+  ],
+  "speaker": [
+   {
+    "pos": "noun",
+    "def": "a machine that plays sound out loud",
+    "ex": "Music came from the speaker."
+   },
+   {
+    "pos": "noun",
+    "def": "a person who talks to a group",
+    "ex": "The speaker told a story about whales."
+   }
+  ],
+  "surround": [
+   {
+    "pos": "verb",
+    "def": "to be on all sides of something",
+    "ex": "Water will surround the small island."
+   }
+  ],
+  "tone": [
+   {
+    "pos": "noun",
+    "def": "the way a voice sounds",
+    "ex": "My teacher spoke in a soft tone."
+   }
+  ],
+  "topic": [
+   {
+    "pos": "noun",
+    "def": "the subject that you talk or write about",
+    "ex": "Our topic today is frogs."
+   }
+  ],
+  "toronto": [
+   {
+    "pos": "noun",
+    "def": "a big city in Canada",
+    "ex": "Toronto is next to a big lake."
+   }
+  ],
+  "universal": [
+   {
+    "pos": "adjective",
+    "def": "true for or used by everyone everywhere",
+    "ex": "Smiling is a universal sign of joy."
+   }
+  ],
+  "vast": [
+   {
+    "pos": "adjective",
+    "def": "very, very big and wide",
+    "ex": "The sea is vast."
+   }
+  ],
+  "visitor": [
+   {
+    "pos": "noun",
+    "def": "a person who comes to see a place or a person",
+    "ex": "A visitor came to our school."
+   }
+  ],
+  "consistent": [
+   {
+    "pos": "adjective",
+    "def": "always acting or staying the same way",
+    "ex": "Our class has a consistent daily plan."
+   }
+  ],
+  "grey": [
+   {
+    "pos": "adjective",
+    "def": "having a color between black and white",
+    "ex": "The clouds are grey today."
+   }
+  ],
+  "guitar": [
+   {
+    "pos": "noun",
+    "def": "a musical instrument with strings that you pick or strum",
+    "ex": "I play the guitar."
+   }
+  ],
+  "ignore": [
+   {
+    "pos": "verb",
+    "def": "to not pay attention to something",
+    "ex": "Try to ignore the noise and read."
+   }
+  ],
+  "latin": [
+   {
+    "pos": "noun",
+    "def": "the language of ancient Rome",
+    "ex": "Some old books are written in Latin."
+   }
+  ],
+  "meal": [
+   {
+    "pos": "noun",
+    "def": "food eaten at one time, like breakfast or dinner",
+    "ex": "Dinner is my favorite meal."
+   }
+  ],
+  "meanwhile": [
+   {
+    "pos": "adverb",
+    "def": "at the same time as something else is happening",
+    "ex": "I washed the dishes. Meanwhile, my friend dried them."
+   }
+  ],
+  "meeting": [
+   {
+    "pos": "noun",
+    "def": "when people come together to talk",
+    "ex": "We have a meeting at school."
+   }
+  ],
+  "naturally": [
+   {
+    "pos": "adverb",
+    "def": "in the normal way, without help from people",
+    "ex": "Flowers grow naturally in the rain."
+   }
+  ],
+  "necessarily": [
+   {
+    "pos": "adverb",
+    "def": "a word showing that something has to be true",
+    "ex": "Big animals are not necessarily fast."
+   }
+  ],
+  "pant": [
+   {
+    "pos": "verb",
+    "def": "to breathe fast with the mouth open",
+    "ex": "The dog will pant after running."
+   }
+  ],
+  "partnership": [
+   {
+    "pos": "noun",
+    "def": "when people or groups work together for the same goal",
+    "ex": "The two schools have a partnership."
+   }
+  ],
+  "percentage": [
+   {
+    "pos": "noun",
+    "def": "an amount shown out of one hundred",
+    "ex": "A small percentage of the class was away."
+   }
+  ],
+  "pocket": [
+   {
+    "pos": "noun",
+    "def": "a small bag sewn into clothes",
+    "ex": "I put a shell in my pocket."
+   }
+  ],
+  "practical": [
+   {
+    "pos": "adjective",
+    "def": "useful and sensible in everyday life",
+    "ex": "Rain boots are practical for wet days."
+   }
+  ],
+  "primarily": [
+   {
+    "pos": "adverb",
+    "def": "mostly, or for the most part",
+    "ex": "Rabbits eat primarily grass."
+   }
+  ],
+  "regardless": [
+   {
+    "pos": "adverb",
+    "def": "without being stopped by something",
+    "ex": "We played outside regardless of the cold."
+   }
+  ],
+  "relative": [
+   {
+    "pos": "noun",
+    "def": "a member of your family",
+    "ex": "My relative lives near the sea."
+   }
+  ],
+  "rescue": [
+   {
+    "pos": "verb",
+    "def": "to save someone from danger",
+    "ex": "The helpers rescue the lost kitten."
+   }
+  ],
+  "rush": [
+   {
+    "pos": "verb",
+    "def": "to go or do something very fast",
+    "ex": "We rush to catch the bus."
+   }
+  ],
+  "sessions": [
+   {
+    "pos": "noun",
+    "def": "times when people meet to do an activity",
+    "ex": "We have swimming sessions on Monday."
+   }
+  ],
+  "sharp": [
+   {
+    "pos": "adjective",
+    "def": "having a thin edge that can cut",
+    "ex": "Be careful, the knife is sharp."
+   }
+  ],
+  "soccer": [
+   {
+    "pos": "noun",
+    "def": "a game where players kick a ball into a goal",
+    "ex": "We play soccer in the park."
+   }
+  ],
+  "stable": [
+   {
+    "pos": "adjective",
+    "def": "steady and not likely to fall",
+    "ex": "The table is stable."
+   },
+   {
+    "pos": "noun",
+    "def": "a building where horses live",
+    "ex": "The horse rests in the stable."
+   }
+  ],
+  "symptom": [
+   {
+    "pos": "noun",
+    "def": "a sign in the body that a person is sick",
+    "ex": "A cough is a symptom of a cold."
+   }
+  ],
+  "temporary": [
+   {
+    "pos": "adjective",
+    "def": "lasting only a short time",
+    "ex": "The rain is only temporary."
+   }
+  ],
+  "trick": [
+   {
+    "pos": "noun",
+    "def": "a clever act that surprises people",
+    "ex": "My dog learned a new trick."
+   }
+  ],
+  "audio": [
+   {
+    "pos": "noun",
+    "def": "sound that is recorded or played",
+    "ex": "The audio on the video is loud."
+   }
+  ],
+  "bone": [
+   {
+    "pos": "noun",
+    "def": "a hard white part inside the body",
+    "ex": "The dog buried a bone."
+   }
+  ],
+  "chamber": [
+   {
+    "pos": "noun",
+    "def": "a room used for a special purpose",
+    "ex": "The old castle has a quiet chamber."
+   }
+  ],
+  "chart": [
+   {
+    "pos": "noun",
+    "def": "a picture that shows facts using lines or boxes",
+    "ex": "We made a chart of the weather."
+   }
+  ],
+  "circuit": [
+   {
+    "pos": "noun",
+    "def": "a path that electricity goes around",
+    "ex": "The toy has a small circuit."
+   }
+  ],
+  "complicate": [
+   {
+    "pos": "verb",
+    "def": "to make something harder to do or understand",
+    "ex": "Too many rules complicate the game."
+   }
+  ],
+  "confuse": [
+   {
+    "pos": "verb",
+    "def": "to make someone unsure about what is right",
+    "ex": "The two twins confuse me."
+   }
+  ],
+  "consequence": [
+   {
+    "pos": "noun",
+    "def": "something that happens because of something else",
+    "ex": "Wet shoes are a consequence of jumping in puddles."
+   }
+  ],
+  "defend": [
+   {
+    "pos": "verb",
+    "def": "to keep someone or something safe from harm",
+    "ex": "Turtles defend themselves with a hard shell."
+   }
+  ],
+  "divide": [
+   {
+    "pos": "verb",
+    "def": "to split into smaller parts",
+    "ex": "We divide the pizza into four pieces."
+   }
+  ],
+  "everyday": [
+   {
+    "pos": "adjective",
+    "def": "ordinary, happening or used all the time",
+    "ex": "Shoes are an everyday thing."
+   }
+  ],
+  "extent": [
+   {
+    "pos": "noun",
+    "def": "how far or how big something goes",
+    "ex": "We saw the whole extent of the beach."
+   }
+  ],
+  "format": [
+   {
+    "pos": "noun",
+    "def": "the way something is arranged",
+    "ex": "Write the date in this format."
+   }
+  ],
+  "gap": [
+   {
+    "pos": "noun",
+    "def": "an empty space between two things",
+    "ex": "There is a gap in the fence."
+   }
+  ],
+  "gate": [
+   {
+    "pos": "noun",
+    "def": "a door in a fence or wall",
+    "ex": "Please close the gate."
+   }
+  ],
+  "harm": [
+   {
+    "pos": "verb",
+    "def": "to hurt or damage",
+    "ex": "Do not harm the little fish."
+   }
+  ],
+  "healthcare": [
+   {
+    "pos": "noun",
+    "def": "the help doctors and nurses give to keep people well",
+    "ex": "Clinics give healthcare to families."
+   }
+  ],
+  "household": [
+   {
+    "pos": "noun",
+    "def": "all the people who live in one home",
+    "ex": "Our household has four people."
+   }
+  ],
+  "immigration": [
+   {
+    "pos": "noun",
+    "def": "people moving to live in a new country",
+    "ex": "Immigration brings new foods to a town."
+   }
+  ],
+  "impressive": [
+   {
+    "pos": "adjective",
+    "def": "so good that it makes people say wow",
+    "ex": "The tall waterfall is impressive."
+   }
+  ],
+  "killer": [
+   {
+    "pos": "noun",
+    "def": "someone or something that makes another living thing stop living",
+    "ex": "A big frost can be a plant killer."
+   }
+  ],
+  "lesson": [
+   {
+    "pos": "noun",
+    "def": "a time when you learn something",
+    "ex": "I have a piano lesson today."
+   }
+  ],
+  "membership": [
+   {
+    "pos": "noun",
+    "def": "being part of a group or club",
+    "ex": "I have a membership at the library."
+   }
+  ],
+  "miami": [
+   {
+    "pos": "noun",
+    "def": "a city in Florida by the sea",
+    "ex": "Miami has warm beaches."
+   }
+  ],
+  "mirror": [
+   {
+    "pos": "noun",
+    "def": "a glass that shows you your face",
+    "ex": "I smile in the mirror."
+   }
+  ],
+  "mount": [
+   {
+    "pos": "verb",
+    "def": "to climb up onto something",
+    "ex": "Riders mount their horses slowly."
+   }
+  ],
+  "proposal": [
+   {
+    "pos": "noun",
+    "def": "a plan that you suggest to others",
+    "ex": "Our class made a proposal for a garden."
+   }
+  ],
+  "province": [
+   {
+    "pos": "noun",
+    "def": "a big part of a country, like a state",
+    "ex": "Canada has ten provinces."
+   }
+  ],
+  "recognition": [
+   {
+    "pos": "noun",
+    "def": "knowing someone or something because you saw them before",
+    "ex": "The dog showed recognition and wagged its tail."
+   }
+  ],
+  "reputation": [
+   {
+    "pos": "noun",
+    "def": "what people think about someone or something",
+    "ex": "The bakery has a good reputation."
+   }
+  ],
+  "shortly": [
+   {
+    "pos": "adverb",
+    "def": "in just a little while from now",
+    "ex": "Dinner will be ready shortly."
+   }
+  ],
+  "strongly": [
+   {
+    "pos": "adverb",
+    "def": "with a lot of power or feeling",
+    "ex": "The wind blew strongly on the beach."
+   }
+  ],
+  "tear": [
+   {
+    "pos": "verb",
+    "def": "to pull paper or cloth into pieces",
+    "ex": "Please do not tear the page."
+   },
+   {
+    "pos": "noun",
+    "def": "a drop of water that comes from the eye",
+    "ex": "I laughed so hard a tear came out."
+   }
+  ],
+  "thin": [
+   {
+    "pos": "adjective",
+    "def": "not wide from one side to the other",
+    "ex": "The paper is thin."
+   }
+  ],
+  "accuse": [
+   {
+    "pos": "verb",
+    "def": "to say that someone did something wrong",
+    "ex": "Please do not accuse people without facts."
+   }
+  ],
+  "adventure": [
+   {
+    "pos": "noun",
+    "def": "an exciting trip or happening",
+    "ex": "We went on a boat adventure."
+   }
+  ],
+  "argue": [
+   {
+    "pos": "verb",
+    "def": "to speak angrily with someone who thinks differently",
+    "ex": "Friends should not argue over a toy."
+   }
+  ],
+  "assessment": [
+   {
+    "pos": "noun",
+    "def": "a way of checking how well someone knows or does something",
+    "ex": "We had a reading assessment."
+   }
+  ],
+  "atmosphere": [
+   {
+    "pos": "noun",
+    "def": "the layers of air around the Earth",
+    "ex": "The atmosphere keeps us warm."
+   }
+  ],
+  "awful": [
+   {
+    "pos": "adjective",
+    "def": "very bad or very unpleasant",
+    "ex": "The smell was awful."
+   }
+  ],
+  "bedroom": [
+   {
+    "pos": "noun",
+    "def": "a room where you sleep",
+    "ex": "My bedroom has a blue bed."
+   }
+  ],
+  "belief": [
+   {
+    "pos": "noun",
+    "def": "something you think is true",
+    "ex": "My belief is that cats are kind."
+   }
+  ],
+  "bound": [
+   {
+    "pos": "verb",
+    "def": "to jump with long, strong steps",
+    "ex": "Rabbits bound across the field."
+   }
+  ],
+  "carefully": [
+   {
+    "pos": "adverb",
+    "def": "with close attention, so nothing goes wrong",
+    "ex": "Carry the eggs carefully."
+   }
+  ],
+  "cloud": [
+   {
+    "pos": "noun",
+    "def": "a white or grey shape in the sky made of tiny water drops",
+    "ex": "A cloud covered the sun."
+   }
+  ],
+  "colorado": [
+   {
+    "pos": "noun",
+    "def": "a state in the western United States",
+    "ex": "Colorado has tall mountains."
+   }
+  ],
+  "contrast": [
+   {
+    "pos": "noun",
+    "def": "a big difference between two things",
+    "ex": "There is a contrast between day and night."
+   }
+  ],
+  "element": [
+   {
+    "pos": "noun",
+    "def": "one basic part of something",
+    "ex": "Music is an element of the show."
+   }
+  ],
+  "elsewhere": [
+   {
+    "pos": "adverb",
+    "def": "in or to another place",
+    "ex": "The cat went elsewhere to nap."
+   }
+  ],
+  "extension": [
+   {
+    "pos": "noun",
+    "def": "a part added to make something longer or bigger",
+    "ex": "The house has a new extension."
+   }
+  ],
+  "founder": [
+   {
+    "pos": "noun",
+    "def": "a person who starts a group or a place",
+    "ex": "The founder of the school planted trees."
+   }
+  ],
+  "gear": [
+   {
+    "pos": "noun",
+    "def": "the tools and clothes you need for an activity",
+    "ex": "I packed my swim gear."
+   }
+  ],
+  "georgia": [
+   {
+    "pos": "noun",
+    "def": "a state in the southern United States",
+    "ex": "Georgia grows many peaches."
+   }
+  ],
+  "hip": [
+   {
+    "pos": "noun",
+    "def": "the part of the body where the leg joins the body",
+    "ex": "The hula hoop spun around my hip."
+   }
+  ],
+  "infrastructure": [
+   {
+    "pos": "noun",
+    "def": "roads, bridges and pipes that a place needs",
+    "ex": "A town needs good infrastructure."
+   }
+  ],
+  "loose": [
+   {
+    "pos": "adjective",
+    "def": "not tight or not held firmly",
+    "ex": "My tooth is loose."
+   }
+  ],
+  "moral": [
+   {
+    "pos": "noun",
+    "def": "the lesson that a story teaches",
+    "ex": "The moral of the story is to share."
+   }
+  ],
+  "offensive": [
+   {
+    "pos": "adjective",
+    "def": "likely to make people feel upset",
+    "ex": "An offensive word can hurt feelings."
+   }
+  ],
+  "package": [
+   {
+    "pos": "noun",
+    "def": "a box or wrapped thing that is sent or carried",
+    "ex": "A package came for me."
+   }
+  ],
+  "poverty": [
+   {
+    "pos": "noun",
+    "def": "not having enough money for the things people need",
+    "ex": "The town helps families who live in poverty."
+   }
+  ],
+  "qualify": [
+   {
+    "pos": "verb",
+    "def": "to be good enough to take part",
+    "ex": "Our team can qualify for the final."
+   }
+  ],
+  "railway": [
+   {
+    "pos": "noun",
+    "def": "a track with metal rails for trains",
+    "ex": "The railway goes by the sea."
+   }
+  ],
+  "ridiculous": [
+   {
+    "pos": "adjective",
+    "def": "so silly that it makes people laugh",
+    "ex": "The clown's big shoes looked ridiculous."
+   }
+  ],
+  "sensitive": [
+   {
+    "pos": "adjective",
+    "def": "easily affected by touch or feelings",
+    "ex": "My skin is sensitive to the sun."
+   }
+  ],
+  "server": [
+   {
+    "pos": "noun",
+    "def": "a person who brings food to people at a restaurant",
+    "ex": "The server brought our soup."
+   },
+   {
+    "pos": "noun",
+    "def": "a computer that shares information with other computers",
+    "ex": "The school has a server for its website."
+   }
+  ],
+  "shock": [
+   {
+    "pos": "noun",
+    "def": "a big surprise that happens suddenly",
+    "ex": "The cold water was a shock."
+   }
+  ],
+  "silence": [
+   {
+    "pos": "noun",
+    "def": "no sound at all",
+    "ex": "We sat in silence by the lake."
+   }
+  ],
+  "superior": [
+   {
+    "pos": "adjective",
+    "def": "better or higher than others",
+    "ex": "The new boat is superior to the old one."
+   }
+  ],
+  "supporter": [
+   {
+    "pos": "noun",
+    "def": "a person who likes and helps a team or group",
+    "ex": "Every supporter cheered for our team."
+   }
+  ],
+  "thick": [
+   {
+    "pos": "adjective",
+    "def": "wide from one side to the other, not thin",
+    "ex": "The book is very thick."
+   }
+  ],
+  "tons": [
+   {
+    "pos": "noun",
+    "def": "a very large amount of something",
+    "ex": "There are tons of stars tonight."
+   }
+  ],
+  "transition": [
+   {
+    "pos": "noun",
+    "def": "a change from one thing to another",
+    "ex": "The transition from summer to fall was gentle."
+   }
+  ],
+  "violent": [
+   {
+    "pos": "adjective",
+    "def": "using hard force that can hurt",
+    "ex": "We stayed inside during the violent storm."
+   }
+  ],
+  "voter": [
+   {
+    "pos": "noun",
+    "def": "a person who chooses by voting",
+    "ex": "Each voter picked a name."
+   }
+  ],
+  "wash": [
+   {
+    "pos": "verb",
+    "def": "to clean with water",
+    "ex": "I wash my hands before dinner."
+   }
+  ],
+  "acid": [
+   {
+    "pos": "noun",
+    "def": "a liquid that tastes sour",
+    "ex": "Lemon juice has a mild acid."
+   }
+  ],
+  "actress": [
+   {
+    "pos": "noun",
+    "def": "a woman who acts in plays or movies",
+    "ex": "The actress waved to the crowd."
+   }
+  ],
+  "administrative": [
+   {
+    "pos": "adjective",
+    "def": "about running an office or a school",
+    "ex": "The school office does administrative work."
+   }
+  ],
+  "alongside": [
+   {
+    "pos": "preposition",
+    "def": "close to the side of something",
+    "ex": "Walk alongside me on the path."
+   }
+  ],
+  "angel": [
+   {
+    "pos": "noun",
+    "def": "a kind helper with wings in stories",
+    "ex": "We made an angel from paper."
+   }
+  ],
+  "anxiety": [
+   {
+    "pos": "noun",
+    "def": "a worried and nervous feeling",
+    "ex": "Slow breaths help calm my anxiety."
+   }
+  ],
+  "bonus": [
+   {
+    "pos": "noun",
+    "def": "an extra good thing",
+    "ex": "A bonus star was a nice surprise."
+   }
+  ],
+  "castle": [
+   {
+    "pos": "noun",
+    "def": "a big old stone building with thick walls where kings and queens lived",
+    "ex": "We drew a castle on the beach."
+   }
+  ],
+  "charity": [
+   {
+    "pos": "noun",
+    "def": "a group that gives help to people who need it",
+    "ex": "We gave old toys to charity."
+   }
+  ],
+  "curious": [
+   {
+    "pos": "adjective",
+    "def": "wanting to know or learn",
+    "ex": "The kitten is curious about the box."
+   }
+  ],
+  "discovery": [
+   {
+    "pos": "noun",
+    "def": "the act of finding something new",
+    "ex": "The scientist made a discovery under the sea."
+   }
+  ],
+  "discuss": [
+   {
+    "pos": "verb",
+    "def": "to talk about something with others",
+    "ex": "We discuss the book in class."
+   }
+  ],
+  "duke": [
+   {
+    "pos": "noun",
+    "def": "a man of high rank in some countries",
+    "ex": "The duke lived in a big house."
+   }
+  ],
+  "egypt": [
+   {
+    "pos": "noun",
+    "def": "a country in Africa with old pyramids",
+    "ex": "Egypt has a long river called the Nile."
+   }
+  ],
+  "encourage": [
+   {
+    "pos": "verb",
+    "def": "to give someone hope to keep trying",
+    "ex": "I encourage my friend to try."
+   }
+  ],
+  "enforcement": [
+   {
+    "pos": "noun",
+    "def": "making sure rules are followed",
+    "ex": "Enforcement keeps the roads safe."
+   }
+  ],
+  "flash": [
+   {
+    "pos": "noun",
+    "def": "a quick bright light",
+    "ex": "We saw a flash of lightning."
+   }
+  ],
+  "formal": [
+   {
+    "pos": "adjective",
+    "def": "proper and serious, used for special times",
+    "ex": "We wore formal clothes to the party."
+   }
+  ],
+  "formula": [
+   {
+    "pos": "noun",
+    "def": "a set of letters or numbers that shows a rule",
+    "ex": "Math has a formula for area."
+   }
+  ],
+  "fort": [
+   {
+    "pos": "noun",
+    "def": "a strong building with thick walls",
+    "ex": "The old fort stands by the sea."
+   }
+  ],
+  "gray": [
+   {
+    "pos": "adjective",
+    "def": "having a color between black and white",
+    "ex": "The clouds are gray today."
+   }
+  ],
+  "gross": [
+   {
+    "pos": "adjective",
+    "def": "very unpleasant to see or smell",
+    "ex": "The old milk smelled gross."
+   }
+  ],
+  "hungry": [
+   {
+    "pos": "adjective",
+    "def": "wanting to eat food",
+    "ex": "I am hungry for lunch."
+   }
+  ],
+  "inform": [
+   {
+    "pos": "verb",
+    "def": "to tell someone something",
+    "ex": "Please inform me about the plan."
+   }
+  ],
+  "innocent": [
+   {
+    "pos": "adjective",
+    "def": "not having done anything wrong",
+    "ex": "The puppy looked innocent."
+   }
+  ],
+  "losses": [
+   {
+    "pos": "noun",
+    "def": "times when you do not win a game",
+    "ex": "Our team had two losses."
+   }
+  ],
+  "math": [
+   {
+    "pos": "noun",
+    "def": "the study of numbers and shapes",
+    "ex": "I like math class."
+   }
+  ],
+  "mystery": [
+   {
+    "pos": "noun",
+    "def": "something that no one can explain",
+    "ex": "The missing sock is a mystery."
+   }
+  ],
+  "olympics": [
+   {
+    "pos": "noun",
+    "def": "big sports games held every four years",
+    "ex": "I watched swimming in the Olympics."
+   }
+  ],
+  "palace": [
+   {
+    "pos": "noun",
+    "def": "a very large home of a king or queen",
+    "ex": "The palace has a big garden."
+   }
+  ],
+  "penalty": [
+   {
+    "pos": "noun",
+    "def": "a loss of points for breaking a rule",
+    "ex": "There is a small penalty for late books."
+   }
+  ],
+  "pet": [
+   {
+    "pos": "noun",
+    "def": "an animal kept at home as a friend",
+    "ex": "My pet is a small fish."
+   }
+  ],
+  "photography": [
+   {
+    "pos": "noun",
+    "def": "the art of taking pictures with a camera",
+    "ex": "I like nature photography."
+   }
+  ],
+  "protest": [
+   {
+    "pos": "noun",
+    "def": "when people gather to show they disagree",
+    "ex": "People held signs at a peaceful protest."
+   }
+  ],
+  "publication": [
+   {
+    "pos": "noun",
+    "def": "a book, paper or magazine that is printed",
+    "ex": "This publication has many pictures."
+   }
+  ],
+  "respectively": [
+   {
+    "pos": "adverb",
+    "def": "in the same order as the things just named",
+    "ex": "The cat and dog are brown and black, respectively."
+   }
+  ],
+  "rome": [
+   {
+    "pos": "noun",
+    "def": "the capital city of Italy",
+    "ex": "Rome has many old buildings."
+   }
+  ],
+  "silent": [
+   {
+    "pos": "adjective",
+    "def": "making no sound at all",
+    "ex": "The library is silent."
+   }
+  ],
+  "successfully": [
+   {
+    "pos": "adverb",
+    "def": "in a way that reaches the goal",
+    "ex": "I successfully baked the bread."
+   }
+  ],
+  "temple": [
+   {
+    "pos": "noun",
+    "def": "a building where people go to pray",
+    "ex": "We visited a quiet temple."
+   }
+  ],
+  "trail": [
+   {
+    "pos": "noun",
+    "def": "a path through the woods or hills",
+    "ex": "We walked on a forest trail."
+   }
+  ],
+  "uncle": [
+   {
+    "pos": "noun",
+    "def": "the brother of your mother or father",
+    "ex": "My uncle gave me a shell."
+   }
+  ],
+  "unusual": [
+   {
+    "pos": "adjective",
+    "def": "not normal or common",
+    "ex": "A pink shell is unusual."
+   }
+  ],
+  "woods": [
+   {
+    "pos": "noun",
+    "def": "a place with many trees growing close together",
+    "ex": "We walked in the woods."
+   }
+  ],
+  "arrival": [
+   {
+    "pos": "noun",
+    "def": "coming to a place",
+    "ex": "The arrival of spring brings flowers."
+   }
+  ],
+  "assault": [
+   {
+    "pos": "noun",
+    "def": "hurting someone on purpose with force",
+    "ex": "The law says assault is wrong."
+   }
+  ],
+  "awareness": [
+   {
+    "pos": "noun",
+    "def": "knowing that something is there or is true",
+    "ex": "Awareness of the sea helps us protect it."
+   }
+  ],
+  "badly": [
+   {
+    "pos": "adverb",
+    "def": "in a poor way, not well",
+    "ex": "I drew badly but still had fun."
+   }
+  ],
+  "bath": [
+   {
+    "pos": "noun",
+    "def": "washing yourself in a tub of water",
+    "ex": "I take a bath before bed."
+   }
+  ],
+  "capture": [
+   {
+    "pos": "verb",
+    "def": "to catch and hold something",
+    "ex": "A camera can capture a smile."
+   }
+  ],
+  "chase": [
+   {
+    "pos": "verb",
+    "def": "to run after something to catch it",
+    "ex": "The puppy will chase the ball."
+   }
+  ],
+  "component": [
+   {
+    "pos": "noun",
+    "def": "one of the parts that make up something",
+    "ex": "A wheel is a component of a bike."
+   }
+  ],
+  "concrete": [
+   {
+    "pos": "noun",
+    "def": "a hard gray material used for roads and buildings",
+    "ex": "The path is made of concrete."
+   }
+  ],
+  "deeply": [
+   {
+    "pos": "adverb",
+    "def": "very much, or far down inside",
+    "ex": "I breathed deeply by the sea."
+   }
+  ],
+  "expectation": [
+   {
+    "pos": "noun",
+    "def": "what you think will happen",
+    "ex": "My expectation is a sunny day."
+   }
+  ],
+  "explanation": [
+   {
+    "pos": "noun",
+    "def": "words that make something clear",
+    "ex": "The teacher gave an explanation."
+   }
+  ],
+  "exposure": [
+   {
+    "pos": "noun",
+    "def": "being out in the open where something can touch you",
+    "ex": "Too much sun exposure can burn skin."
+   }
+  ],
+  "fiction": [
+   {
+    "pos": "noun",
+    "def": "stories that are made up",
+    "ex": "I like to read fiction."
+   }
+  ],
+  "guarantee": [
+   {
+    "pos": "noun",
+    "def": "a promise that something will work or happen",
+    "ex": "The toy has a one-year guarantee."
+   }
+  ],
+  "happiness": [
+   {
+    "pos": "noun",
+    "def": "a joyful, good feeling",
+    "ex": "Playing with friends brings me happiness."
+   }
+  ],
+  "hearts": [
+   {
+    "pos": "noun",
+    "def": "body parts in the chest that pump blood",
+    "ex": "Our hearts beat faster when we run."
+   }
+  ],
+  "horrible": [
+   {
+    "pos": "adjective",
+    "def": "very bad or unpleasant",
+    "ex": "The medicine tasted horrible."
+   }
+  ],
+  "ideal": [
+   {
+    "pos": "adjective",
+    "def": "the best that something could be",
+    "ex": "Today is ideal for a picnic."
+   }
+  ],
+  "illinois": [
+   {
+    "pos": "noun",
+    "def": "a state in the middle of the United States",
+    "ex": "Illinois has a big city called Chicago."
+   }
+  ],
+  "islamic": [
+   {
+    "pos": "adjective",
+    "def": "about the religion that Muslims follow",
+    "ex": "We saw Islamic art at the museum."
+   }
+  ],
+  "legend": [
+   {
+    "pos": "noun",
+    "def": "an old story that may not be true",
+    "ex": "We read a legend about the sea."
+   }
+  ],
+  "lieutenant": [
+   {
+    "pos": "noun",
+    "def": "an officer in the army or police",
+    "ex": "The lieutenant waved to the crowd."
+   }
+  ],
+  "mood": [
+   {
+    "pos": "noun",
+    "def": "the way you feel at a time",
+    "ex": "I am in a happy mood."
+   }
+  ],
+  "muscle": [
+   {
+    "pos": "noun",
+    "def": "a part of the body that helps you move",
+    "ex": "Swimming makes every muscle strong."
+   }
+  ],
+  "passion": [
+   {
+    "pos": "noun",
+    "def": "a very strong love for something",
+    "ex": "Music is my passion."
+   }
+  ],
+  "procedure": [
+   {
+    "pos": "noun",
+    "def": "the steps you follow to do something",
+    "ex": "Follow the procedure to wash your hands."
+   }
+  ],
+  "producer": [
+   {
+    "pos": "noun",
+    "def": "a person or company that makes something, like a film",
+    "ex": "The producer made a show about whales."
+   }
+  ],
+  "rank": [
+   {
+    "pos": "noun",
+    "def": "a level or position in a group",
+    "ex": "A captain has a high rank."
+   }
+  ],
+  "replacement": [
+   {
+    "pos": "noun",
+    "def": "a new thing that takes the place of another",
+    "ex": "I got a replacement for my lost pen."
+   }
+  ],
+  "retire": [
+   {
+    "pos": "verb",
+    "def": "to stop working because you are older",
+    "ex": "My neighbor will retire next year."
+   }
+  ],
+  "sand": [
+   {
+    "pos": "noun",
+    "def": "tiny grains of rock on a beach",
+    "ex": "I built a castle with sand."
+   }
+  ],
+  "savings": [
+   {
+    "pos": "noun",
+    "def": "money you keep and do not spend",
+    "ex": "I put coins in my savings jar."
+   }
+  ],
+  "settle": [
+   {
+    "pos": "verb",
+    "def": "to come to rest in a place",
+    "ex": "The birds settle in the nest."
+   }
+  ],
+  "shadow": [
+   {
+    "pos": "noun",
+    "def": "a dark shape made when something blocks light",
+    "ex": "My shadow follows me on the sidewalk."
+   }
+  ],
+  "tag": [
+   {
+    "pos": "noun",
+    "def": "a small label on something",
+    "ex": "The shirt has a tag."
+   },
+   {
+    "pos": "noun",
+    "def": "a game where one person chases the others",
+    "ex": "We play tag at recess."
+   }
+  ],
+  "tape": [
+   {
+    "pos": "noun",
+    "def": "a sticky strip used to stick things together",
+    "ex": "I used tape to fix the paper."
+   }
+  ],
+  "thread": [
+   {
+    "pos": "noun",
+    "def": "a thin string used for sewing",
+    "ex": "I sewed the button with thread."
+   }
+  ],
+  "wage": [
+   {
+    "pos": "noun",
+    "def": "money paid for work",
+    "ex": "The baker earns a fair wage."
+   }
+  ],
+  "avenue": [
+   {
+    "pos": "noun",
+    "def": "a wide street, often with trees on each side",
+    "ex": "We walked down the avenue."
+   }
+  ],
+  "bore": [
+   {
+    "pos": "verb",
+    "def": "to make someone feel tired because something is not interesting",
+    "ex": "Long waits can bore me."
+   }
+  ],
+  "clock": [
+   {
+    "pos": "noun",
+    "def": "a thing that shows what time it is",
+    "ex": "The clock says seven."
+   }
+  ],
+  "commissioner": [
+   {
+    "pos": "noun",
+    "def": "a person in charge of a big group or office",
+    "ex": "The commissioner visited the park."
+   }
+  ],
+  "commitment": [
+   {
+    "pos": "noun",
+    "def": "a promise to do something",
+    "ex": "Feeding the dog is my commitment."
+   }
+  ],
+  "confident": [
+   {
+    "pos": "adjective",
+    "def": "sure that you can do something",
+    "ex": "I feel confident about my swim."
+   }
+  ],
+  "custom": [
+   {
+    "pos": "noun",
+    "def": "something that people in a group usually do",
+    "ex": "It is a custom to bow in some countries."
+   }
+  ],
+  "deny": [
+   {
+    "pos": "verb",
+    "def": "to say that something is not true",
+    "ex": "I cannot deny that cake is tasty."
+   }
+  ]
+ },
+ "skip": [
+  "kevin",
+  "q",
+  "ve",
+  "jr",
+  "matt",
+  "da",
+  "multi",
+  "nfl",
+  "francisco",
+  "haha",
+  "hong",
+  "pc",
+  "wilson",
+  "carolina",
+  "edward",
+  "ft",
+  "joseph",
+  "thats",
+  "dan",
+  "jan",
+  "jordan",
+  "semi",
+  "tim",
+  "en",
+  "ford",
+  "le",
+  "miller",
+  "porn",
+  "stephen",
+  "zealand",
+  "bc",
+  "davis",
+  "eric",
+  "kong",
+  "auto",
+  "howard",
+  "lewis",
+  "rape",
+  "sarah",
+  "simon",
+  "brian",
+  "bullshit",
+  "elizabeth",
+  "jew",
+  "ltd",
+  "z",
+  "ceo",
+  "donald",
+  "jason",
+  "pa",
+  "alan",
+  "jeff",
+  "luke",
+  "mac",
+  "yo",
+  "dave",
+  "harris",
+  "jimmy",
+  "kelly",
+  "mini",
+  "victoria",
+  "andy",
+  "charlie"
+ ]
+}

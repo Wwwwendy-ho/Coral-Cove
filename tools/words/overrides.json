@@ -1,0 +1,86 @@
+{
+ "bride": [
+  {
+   "pos": "noun",
+   "def": "a woman on the day she gets married",
+   "ex": "The bride carried a bunch of flowers."
+  }
+ ],
+ "groom": [
+  {
+   "pos": "noun",
+   "def": "a man on the day he gets married",
+   "ex": "The groom wore a blue suit."
+  }
+ ],
+ "widow": [
+  {
+   "pos": "noun",
+   "def": "a woman whose husband or wife has died",
+   "ex": "The widow told stories about her garden."
+  }
+ ],
+ "uncle": [
+  {
+   "pos": "noun",
+   "def": "the brother of a parent, or the partner of a parent's sister",
+   "ex": "My uncle gave me a shell."
+  }
+ ],
+ "gay": [
+  {
+   "pos": "adjective",
+   "def": "describes a person who loves someone of the same gender",
+   "ex": "My two gay neighbours have a cat."
+  }
+ ],
+ "lesbian": [
+  {
+   "pos": "noun",
+   "def": "a woman who loves women",
+   "ex": "Our lesbian neighbours wave to us."
+  }
+ ],
+ "drug": [
+  {
+   "pos": "noun",
+   "def": "a medicine, or a thing people take that changes how the body works",
+   "ex": "The doctor gave me a drug for my cough."
+  }
+ ],
+ "rob": [
+  {
+   "pos": "verb",
+   "def": "to take things that belong to another person, which is against the law",
+   "ex": "The crow tried to rob the picnic."
+  }
+ ],
+ "cvc": [
+  {
+   "pos": "noun",
+   "def": "a word made of a consonant, a vowel and a consonant, like cat",
+   "ex": "Dog and sun are CVC words."
+  }
+ ],
+ "cvcc": [
+  {
+   "pos": "noun",
+   "def": "a word made of a consonant, a vowel and two consonants, like jump",
+   "ex": "Hand and milk are CVCC words."
+  }
+ ],
+ "ipad": [
+  {
+   "pos": "noun",
+   "def": "a flat computer with a screen you touch",
+   "ex": "I play Coral Cove on my iPad."
+  }
+ ],
+ "jew": [
+  {
+   "pos": "noun",
+   "def": "a person who follows the religion called Judaism, or who is part of the Jewish people",
+   "ex": "My friend is a Jew and lights candles at Hanukkah."
+  }
+ ]
+}
