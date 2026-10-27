@@ -19891,6 +19891,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       '<div class="r3-panel-e" aria-hidden="true">' + g.e + '</div><h3>' + esc(g.name) + '</h3><p>' + esc(g.how) + '</p>' +
       '<div class="r3-panel-row"><button type="button" class="r3-btn main" data-go>Play!</button>' + (practice ? '' : '<button type="button" class="r3-btn" data-skip>Skip</button>') + '</div></div>');
     try { Sound.sessionStart(); } catch(e){}
+    reefMusicUpdate();   // the game song comes in
+    var shut = function(){ el.remove(); reefMusicUpdate(); };
     function finish(won){
       var reward = practice ? 0 : (won ? 3 : 1);
       var card = el.querySelector('.r3-panel-card');
@@ -19900,7 +19902,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       if(won){ try { reefWinSound(false); } catch(e){} reef3dCrabAct(view, 'Dance', true); }
       if(reward) reef3dShells(view, reward);
       var bk = card.querySelector('[data-back]'); bk.focus({ preventScroll: true });
-      bk.addEventListener('click', function(){ el.remove(); if(done) done(); });
+      bk.addEventListener('click', function(){ shut(); if(done) done(); });
       var ag = card.querySelector('[data-again]'); if(ag) ag.addEventListener('click', function(){ el.remove(); reef3dMinigame(view, g.id, true, done); });
     }
     el.querySelector('[data-go]').addEventListener('click', function(){
@@ -19911,7 +19913,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       else if(g.id === 'count') reefGameCount(play, finish);
       else reefGameOdd(play, finish);
     });
-    var sk = el.querySelector('[data-skip]'); if(sk) sk.addEventListener('click', function(){ el.remove(); if(done) done(); });
+    var sk = el.querySelector('[data-skip]'); if(sk) sk.addEventListener('click', function(){ shut(); if(done) done(); });
   }
   function reefShuffle(a){ for(var i = a.length - 1; i > 0; i--){ var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   function reefPlainText(h){ var d = document.createElement('div'); d.innerHTML = String(h || ''); return (d.textContent || '').replace(/\s+/g, ' ').trim(); }
@@ -20696,8 +20698,9 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     }
     view.raf = requestAnimationFrame(tick);
   }
-  /* ---------- Background music: day-song.mp3 on the sunlit reef, night-song.mp3 on the shipwreck.
-     Plays in the lobby and in every profile's game, fades way down inside decks so speech stays clear,
+  /* ---------- Background music: day-song.mp3 on the sunlit reef, night-song.mp3 on the shipwreck,
+     deck-song.mp3 (calm, quiet) inside decks and game-song.mp3 (bouncy) in minigames. The deck and game songs
+     are original loops made for Coral Cove (tools/compose_music.py). Plays in the lobby and in every profile's game,
      dips under the celebration clip, and follows a 🎵 switch saved on this device. ---------- */
   var RM = { el: {}, cur: null, duck: 1, started: false };
   var RM_KEY = 'cc-music';
@@ -20802,13 +20805,16 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     var name = reefNight() ? 'night-song' : 'day-song';
     if(!S.profile) return { name: name, vol: 1 };               // the lobby
     if(!reefGame()) return null;
-    return { name: name, vol: reefInDeck() || S.view === 'summary' ? .22 : 1 };
+    if(reefInDeck() || S.view === 'summary') return { name: 'deck-song', vol: RM_DECK };   // kept low so speech stays clear
+    if(document.querySelector('.r3-mini')) return { name: 'game-song', vol: RM_GAME };    // under the minigame's sound effects
+    return { name: name, vol: 1 };
   }
+  var RM_DECK = .5, RM_GAME = .7;   // the deck song is mastered at about -21 LUFS, the game song -18, the reef songs -15 to -17
   var RM_BASE = .5;   // the songs' overall level under Coral Cove's own sounds and voice
   function reefMusicUpdate(){
     if(!RM.started) return;
     var tg = reefMusicTarget();
-    ['day-song', 'night-song'].forEach(function(name){
+    ['day-song', 'night-song', 'deck-song', 'game-song'].forEach(function(name){
       var on = !!tg && tg.name === name;
       if(!on && !RM.el[name]) return;
       var m = reefMusicEl(name); if(!m) return;

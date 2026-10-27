@@ -2,6 +2,9 @@
 
 ## Library and night fixes (October 27, 2026)
 
+**Music**
+- Decks have their own calm music, and minigames their own bouncy music, instead of a quieter copy of the reef song. Both are original loops made for Coral Cove (`tools/compose_music.py`), set low as background: the deck music sits well under Shelly's voice, and the game music under the minigame sounds.
+
 **The Library**
 - New 📚 Library (button in the top bar), kept off the board:
   - **Tutor:** ask anything, Socratic help, big-question talks, role-plays in Korean, Chinese and English, debates, explain it 3 ways, teach-back, question of the day, and voice input.

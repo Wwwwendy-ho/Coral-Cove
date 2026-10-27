@@ -13,6 +13,7 @@ See `CHANGELOG.md` for what's in the current version (Version 99).
 | `three.min.js` | three.js r128, the 3D engine for the reef board and the profile lobby |
 | `reef-models.js` | The 3D models (Shelly's friends, fish, scenery, ? blocks), loaded when the board first opens |
 | `day-song.mp3`, `night-song.mp3` | Background music for day and night |
+| `deck-song.mp3`, `game-song.mp3` | Quiet music inside decks and bouncy music for minigames: original loops made by `tools/compose_music.py`. Swap in any MP3 with the same name to change them. |
 | `win.mp3` | Celebration music when a deck is finished |
 | `audio-clips.js` | Recorded pronunciation clips |
 | `voice/` | Natural-voice speech packs (English, Korean, Chinese) used to read cards aloud |
