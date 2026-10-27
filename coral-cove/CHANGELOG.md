@@ -22,6 +22,9 @@
   - **Maths lab:** facts practice, visual models, manipulatives, mental strategies, geometry, clocks and money, and puzzles.
 - Works fully offline with built-in algorithms. When online, it uses Claude through an optional helper that a grown-up runs (`tools/claude-proxy-worker.js`), and falls back to offline if the helper can't be reached.
 
+**Title screen**
+- Opening the app shows a title screen: the sea, the sky, Shelly bobbing at the waterline and "Tap to dive in". The tap plays the dive into the water, opens the profiles and starts the music (browsers won't play sound before a first tap, so the music is now already playing on the profile screen).
+
 **Board**
 - Deck names no longer float over the board. Deck tiles stand out on their own instead: a raised gold rim, a white badge behind the deck's emoji, and a gold star once a deck is all done. The treasure map still lists every deck by name.
 - Story mode keeps the dice, but it always rolls exactly the number of spaces to today's next deck (or the Story Bottle), so Shelly lands right on it and dives in. There's no die to pick in story mode, and the clam gate lets her through.

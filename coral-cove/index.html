@@ -4025,6 +4025,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     try { Ocean.apply(!(S.activeProfileId && S.profile && S.profile.oceanTheme === false)); } catch(e){} // on for everyone unless a profile turned it off
     applyThemeMode(reefThemeFor(S.activeProfileId && S.profile ? S.profile : null));
     if(!S.booted) return; // wait for settings to load before showing anything (avoids a lock-screen flash)
+    if(!S.splashDone) return renderSplash();   // the title screen: its tap is also what lets the music start
     reefSyncBody();
     /* coveqa: opening a deck from a scrolled home list left the new screen scrolled (header cut off) */
     try {
@@ -4236,6 +4237,27 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     goToPicker();
   }
 
+  // The title screen, once each time the app opens. Browsers won't play sound until the first tap, so this
+  // tap is it: the music starts as she dives in, and is already playing when the profiles appear.
+  function renderSplash(){
+    var wave = function(cls){ return '<svg class="ccs-wave ' + cls + '" viewBox="0 0 1200 80" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40 C100 14 200 14 300 40 S500 66 600 40 S800 14 900 40 S1100 66 1200 40 V80 H0 Z"/></svg>'; };
+    app.innerHTML = '<button type="button" class="cc-splash' + (reefNight() ? ' night' : '') + '" aria-label="Coral Cove. Tap to dive in.">' +
+      '<span class="ccs-sky" aria-hidden="true"><span class="ccs-sun"></span></span>' +
+      '<span class="ccs-title" aria-hidden="true">Coral Cove</span>' +
+      '<span class="ccs-sea" aria-hidden="true">' + wave('w2') + wave('w1') +
+        '<span class="ccs-shelly">' + mascotTurtleSVG('ccs-shelly-svg') + '</span>' +
+        '<span class="ccs-bub b1"></span><span class="ccs-bub b2"></span><span class="ccs-bub b3"></span>' +
+      '</span>' +
+      '<span class="ccs-tap" aria-hidden="true">Tap to dive in</span>' +
+    '</button>';
+    var b = app.querySelector('.cc-splash');
+    b.addEventListener('click', function(){
+      if(S.splashDone) return;
+      S.splashDone = true;   // (the music itself starts from this same tap: see reefMusicStart)
+      reefGo('dive', null, render, true);
+    });
+    try { b.focus({ preventScroll: true }); } catch(e){}
+  }
   function renderProfilePicker(){
     var tiles = S.profiles.map(function(p){
       return '<button type="button" class="profile-tile" data-profile="'+p.id+'">' +
@@ -11456,8 +11478,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   }
   // Plays a transition and calls fn while the screen is covered. With Calm motion (or in Adult
   // Mode) fn just runs straight away.
-  function reefGo(kind, fromEl, fn){
-    if(!reefGame() || reefCalm() || reefBusy){ fn(); return; }
+  function reefGo(kind, fromEl, fn, always){   // always: play it even outside a profile (the title screen's dive)
+    if((!always && !reefGame()) || reefCalm() || reefBusy){ fn(); return; }
     reefBusy = true; window.__reefTx = true;   // the 3D board pauses underneath while the water covers it
     var ov = document.createElement('div');
     ov.className = 'reef-tx reef-tx-' + kind;
@@ -21488,6 +21510,30 @@ body.reef-calm .rw-light, body.reef-calm .rw-obj, body.reef-calm .rw-post, body.
 .r3::after{ content:""; position:absolute; inset:0; pointer-events:none; z-index:1; box-shadow:inset 0 -70px 70px -40px rgba(30,70,80,.35), inset 0 60px 60px -40px rgba(255,255,255,.35); border-radius:inherit; }
 .r3.night::after{ box-shadow:inset 0 -80px 80px -40px rgba(0,0,0,.5), inset 0 60px 60px -40px rgba(120,200,210,.12); }
 .r3-labels{ position:absolute; inset:0; z-index:2; pointer-events:none; }
+/* the title screen: sky over the sea, Shelly bobbing at the waterline, "Tap to dive in" */
+.cc-splash{ position:fixed; inset:0; z-index:60; display:block; width:100%; height:100%; margin:0; padding:0; border:0; cursor:pointer; overflow:hidden; font:inherit; color:#fff;
+  --sky1:#9fdcff; --sky2:#e6f7ff; --sea1:#22a9c9; --sea2:#0a5a80; --wave2:#5fcbe0; --sun:#fff3b0; --title:#0e5a78; background:var(--sea2); -webkit-tap-highlight-color:transparent; }
+.cc-splash.night{ --sky1:#0a1834; --sky2:#1f3c63; --sea1:#0f5470; --sea2:#04223a; --wave2:#1d7590; --sun:#fff4cf; --title:#fff1c9; }
+.cc-splash:focus-visible{ outline:4px solid #ffd45c; outline-offset:-8px; }
+.ccs-sky{ position:absolute; left:0; right:0; top:0; height:46%; background:linear-gradient(var(--sky1), var(--sky2)); }
+.ccs-sun{ position:absolute; right:16%; top:22%; width:min(22vw,120px); aspect-ratio:1; border-radius:50%; background:var(--sun); box-shadow:0 0 60px 24px color-mix(in srgb, var(--sun) 55%, transparent); }
+.cc-splash.night .ccs-sun{ width:min(14vw,80px); box-shadow:0 0 50px 14px rgba(255,244,207,.35); }
+.ccs-title{ position:absolute; left:0; right:0; top:calc(14% + env(safe-area-inset-top, 0px)); text-align:center; font:900 clamp(2.8rem, 11vw, 5rem)/1 'Baloo 2', system-ui, sans-serif; color:var(--title); letter-spacing:.01em; text-shadow:0 3px 0 rgba(255,255,255,.55), 0 10px 30px rgba(0,40,70,.18); }
+.cc-splash.night .ccs-title{ text-shadow:0 3px 0 rgba(0,0,0,.35), 0 0 30px rgba(255,230,160,.35); }
+.ccs-sea{ position:absolute; left:0; right:0; top:46%; bottom:0; background:linear-gradient(var(--sea1), var(--sea2)); }
+.ccs-wave{ position:absolute; top:-26px; left:0; width:200%; height:46px; animation:ccsWave 7s linear infinite; }
+.ccs-wave.w1 path{ fill:var(--sea1); } .ccs-wave.w2 path{ fill:var(--wave2); } .ccs-wave.w2{ top:-34px; opacity:.75; animation-duration:11s; animation-direction:reverse; }
+@keyframes ccsWave{ to{ transform:translateX(-50%); } }
+.ccs-shelly{ position:absolute; left:50%; top:0; width:min(34vw,160px); transform:translate(-50%,-62%); animation:ccsBob 3.2s ease-in-out infinite; filter:drop-shadow(0 8px 10px rgba(0,30,50,.25)); }
+.ccs-shelly svg{ width:100%; height:auto; display:block; }
+@keyframes ccsBob{ 0%,100%{ transform:translate(-50%,-62%) rotate(-3deg); } 50%{ transform:translate(-50%,-52%) rotate(3deg); } }
+.ccs-bub{ position:absolute; bottom:-20px; width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,.6); animation:ccsBub 6s ease-in infinite; }
+.ccs-bub.b1{ left:22%; } .ccs-bub.b2{ left:64%; width:10px; height:10px; animation-delay:2s; } .ccs-bub.b3{ left:80%; width:18px; height:18px; animation-delay:3.6s; }
+@keyframes ccsBub{ 0%{ transform:translateY(0); opacity:0; } 15%{ opacity:1; } 100%{ transform:translateY(-46vh); opacity:0; } }
+.ccs-tap{ position:absolute; left:50%; bottom:calc(16% + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); padding:14px 30px; border-radius:999px; background:rgba(255,255,255,.92); color:#0e5a78; font:800 1.3rem 'Baloo 2', system-ui, sans-serif; white-space:nowrap; box-shadow:0 6px 0 rgba(0,40,70,.18); animation:ccsPulse 2.2s ease-in-out infinite; }
+.cc-splash.night .ccs-tap{ background:rgba(255,241,201,.95); color:#14324f; }
+@keyframes ccsPulse{ 0%,100%{ transform:translateX(-50%) scale(1); } 50%{ transform:translateX(-50%) scale(1.06); } }
+@media (prefers-reduced-motion: reduce){ .ccs-wave, .ccs-shelly, .ccs-bub, .ccs-tap{ animation:none !important; } }
 .r3-labels .r3-label, .r3-labels .r3-sign{ position:absolute !important; width:1px !important; height:1px !important; padding:0 !important; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
 .r3-label{ position:absolute; left:0; top:0; pointer-events:auto; display:flex; align-items:center; gap:7px; padding:5px 12px 5px 6px; border:none; border-radius:999px; cursor:pointer;
   background:#fbf6ea; color:#3f2c1b; font:inherit; box-shadow:0 3px 0 rgba(74,59,44,.22), 0 8px 16px rgba(30,60,60,.18); white-space:nowrap; will-change:transform; -webkit-tap-highlight-color:transparent; }
