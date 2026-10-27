@@ -1,125 +1,116 @@
-"""Two original background loops for Coral Cove, synthesized from scratch (no samples, no licences needed).
-  deck-song: calm and sparse for studying (72 bpm, soft electric piano + warm pad, no drums)
-  game-song: bouncy and light for minigames (120 bpm, marimba melody, plucked bass, soft kit)
-Each loop is rendered circularly (tails wrap to the start) so it repeats without a bump.
-usage: python3 tools/compose_music.py .   (needs numpy and ffmpeg; writes deck-song.mp3 and game-song.mp3)
+"""Coral Cove's two original background loops, played on real sampled instruments (the FluidR3 General MIDI
+soundfont, MIT licence) instead of raw synth waves, so they sound smooth rather than 8-bit.
+  deck-song: calm, for studying (70 bpm): soft electric piano, warm strings, fretless bass. No drums.
+  game-song: light and bouncy, for minigames (104 bpm, swung): marimba tune, nylon guitar, pizzicato,
+             upright bass, brushed drums.
+Each loop is rendered with its reverb tail folded back onto the start, so it repeats without a bump.
+
+usage: python3 tools/compose_music.py OUTDIR [SOUNDFONT]
+needs: mido (pip), fluidsynth, ffmpeg, numpy; soundfont default /usr/share/sounds/sf2/FluidR3_GM.sf2
 """
-import sys, subprocess, numpy as np
+import sys, os, subprocess, wave, random
+import numpy as np
+import mido
 
 SR = 44100
-rng = np.random.default_rng(7)
-def hz(n): return 440.0 * 2 ** ((n - 69) / 12)
-def env(n, a, d, s, r, hold):
-    t = np.arange(n) / SR; e = np.ones(n) * s
-    ai = t < a; e[ai] = t[ai] / a
-    di = (t >= a) & (t < a + d); e[di] = 1 - (1 - s) * (t[di] - a) / d
-    ri = t >= hold; e[ri] = s * np.exp(-(t[ri] - hold) / r)
-    return e
+SF = sys.argv[2] if len(sys.argv) > 2 else '/usr/share/sounds/sf2/FluidR3_GM.sf2'
+TPB = 480                                     # MIDI ticks per beat
 
-def add(buf, x, at, pan=0.0):
-    """Mix mono x into the stereo loop at sample `at`, wrapping round the end (a seamless loop)."""
-    L = buf.shape[1]; idx = (np.arange(len(x)) + at) % L
-    np.add.at(buf[0], idx, x * np.sqrt(.5 * (1 - pan))); np.add.at(buf[1], idx, x * np.sqrt(.5 * (1 + pan)))
+class Song:
+    def __init__(self, bpm, seed):
+        self.bpm = bpm; self.ev = []; self.rnd = random.Random(seed); self.programs = {}
+    def program(self, ch, prog, vol=100, pan=64, rev=60, bank=0):
+        self.programs[ch] = (prog, vol, pan, rev, bank)
+    def note(self, ch, pitch, beat, beats, vel, human=True):
+        if human:   # a player is never exactly on the grid or exactly as loud
+            beat += self.rnd.uniform(-.012, .012); vel = int(vel * self.rnd.uniform(.9, 1.08))
+        on = int(max(0, beat) * TPB); off = int((beat + beats) * TPB)
+        self.ev.append((on, 1, mido.Message('note_on', channel=ch, note=pitch, velocity=max(1, min(127, vel)))))
+        self.ev.append((off, 0, mido.Message('note_off', channel=ch, note=pitch, velocity=0)))
+    def write(self, path, total_beats):
+        mf = mido.MidiFile(ticks_per_beat=TPB); tr = mido.MidiTrack(); mf.tracks.append(tr)
+        tr.append(mido.MetaMessage('set_tempo', tempo=mido.bpm2tempo(self.bpm)))
+        for ch, (prog, vol, pan, rev, bank) in self.programs.items():
+            if bank: tr.append(mido.Message('control_change', channel=ch, control=0, value=bank))
+            tr.append(mido.Message('program_change', channel=ch, program=prog))
+            for cc, v in ((7, vol), (10, pan), (91, rev), (93, 20)): tr.append(mido.Message('control_change', channel=ch, control=cc, value=v))
+        t = 0
+        for at, _, msg in sorted(self.ev, key=lambda e: (e[0], e[1])):
+            tr.append(msg.copy(time=at - t)); t = at
+        tail = int((total_beats + 8) * TPB)   # let everything ring out; the tail is folded onto the start later
+        tr.append(mido.MetaMessage('end_of_track', time=max(0, tail - t)))
+        mf.save(path)
 
-def epiano(note, dur, vel=.5):
-    n = int((dur + 1.8) * SR); t = np.arange(n) / SR; f = hz(note)
-    mod = np.sin(2 * np.pi * f * t) * 1.6 * np.exp(-t * 2.5)            # FM bell, softening as it rings
-    x = np.sin(2 * np.pi * f * t + mod) + .25 * np.sin(2 * np.pi * 2 * f * t) * np.exp(-t * 3)
-    return x * env(n, .006, .6, .35, .7, dur) * vel
+def render(song, total_beats, out, lufs, gain_db=0):
+    mid = out + '.mid'; wav = out + '.wav'
+    song.write(mid, total_beats)
+    subprocess.run(['fluidsynth', '-ni', '-g', '0.6', '-r', str(SR), '-o', 'synth.reverb.room-size=0.6', '-o', 'synth.reverb.width=0.9',
+                    '-F', wav, SF, mid], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    with wave.open(wav) as w: x = np.frombuffer(w.readframes(w.getnframes()), '<i2').reshape(-1, 2).astype(np.float32) / 32768
+    L = int(round(total_beats * 60 / song.bpm * SR)); loop = x[:L].copy()
+    tail = x[L:]; n = min(len(tail), L); loop[:n] += tail[:n]          # fold the ring-out onto the start: seamless
+    raw = out + '.f32'; loop.astype('<f4').tofile(raw)
+    # gentle polish: roll off the top a little and warm the mids, then loudness-normalise (EBU R128)
+    af = 'highshelf=f=7000:g=-3,lowshelf=f=180:g=1.5,loudnorm=I=%d:TP=-3:LRA=9' % lufs
+    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'f32le', '-ar', str(SR), '-ac', '2', '-i', raw, '-af', af,
+                    '-ar', str(SR), '-b:a', '128k', out], check=True)
+    for f in (mid, wav, raw): os.remove(f)
 
-def pad(note, dur, vel=.2):
-    n = int((dur + 2.5) * SR); t = np.arange(n) / SR; f = hz(note); x = np.zeros(n)
-    for dt in (-.07, 0, .06):                                           # three detuned soft saws, low-passed below
-        ph = (f * 2 ** (dt / 12) * t) % 1; x += 2 * ph - 1
-    return lowpass(x / 3, 900) * env(n, 1.2, .5, .8, 1.4, dur) * vel
-
-def marimba(note, vel=.5):
-    n = int(.9 * SR); t = np.arange(n) / SR; f = hz(note)
-    x = np.sin(2 * np.pi * f * t) * np.exp(-t * 7) + .35 * np.sin(2 * np.pi * 4 * f * t) * np.exp(-t * 22)
-    return x * np.minimum(1, t / .002) * vel
-
-def pluck_bass(note, dur, vel=.6):
-    n = int((dur + .3) * SR); t = np.arange(n) / SR; f = hz(note)
-    x = np.sin(2 * np.pi * f * t) + .3 * np.sin(2 * np.pi * 2 * f * t) * np.exp(-t * 8)
-    return x * env(n, .004, .15, .5, .08, dur) * vel
-
-def kick(vel=.7):
-    n = int(.35 * SR); t = np.arange(n) / SR
-    f = 50 + 90 * np.exp(-t * 30); return np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * 9) * vel
-def snare(vel=.25):
-    n = int(.2 * SR); t = np.arange(n) / SR
-    return (highpass(rng.standard_normal(n), 1500) * np.exp(-t * 22) + .4 * np.sin(2 * np.pi * 190 * t) * np.exp(-t * 30)) * vel
-def hat(vel=.08):
-    n = int(.06 * SR); t = np.arange(n) / SR
-    return highpass(rng.standard_normal(n), 7000) * np.exp(-t * 70) * vel
-def shaker(vel=.035):
-    n = int(.09 * SR); t = np.arange(n) / SR
-    return highpass(rng.standard_normal(n), 5000) * np.sin(np.pi * t / t[-1]) * vel
-
-def lowpass(x, fc):   # a gentle 12 dB/octave low-pass, done in the frequency domain (numpy only)
-    n = len(x); f = np.fft.rfftfreq(n, 1 / SR)
-    return np.fft.irfft(np.fft.rfft(x) / (1 + (f / fc) ** 2), n)
-def highpass(x, fc): return x - lowpass(x, fc)
-
-def reverb(buf, mix=.25, size=1.0):
-    """Circular comb-filter reverb (in the frequency domain, so the tail wraps round the loop)."""
-    L = buf.shape[1]; ir = np.zeros(L); t = np.arange(int(2.2 * size * SR)) / SR
-    noise = rng.standard_normal(len(t)) * np.exp(-t * 3.2 / size); ir[:len(t)] = lowpass(noise, 4500) * .05
-    F = np.fft.rfft(ir)
-    for c in range(2): buf[c] = buf[c] * (1 - mix) + np.fft.irfft(np.fft.rfft(buf[c]) * F, L) * mix * 6
-
-def finish(buf, path, lufs):
-    peak = np.abs(buf).max(); buf = buf / peak * .8
-    raw = path + '.raw'; (buf.T.astype('<f4')).tofile(raw)
-    # loudness-normalise (EBU R128) and encode; background music sits well under voices and sound effects
-    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'f32le', '-ar', str(SR), '-ac', '2', '-i', raw,
-                    '-af', 'loudnorm=I=%d:TP=-3:LRA=7' % lufs, '-ar', str(SR), '-b:a', '112k', path], check=True)
-    subprocess.run(['rm', raw])
-
+# chord shapes as MIDI notes (bass root, then voicing)
 def deck_song(out):
-    bpm = 72; beat = 60 / bpm; bars = 16; L = int(bars * 4 * beat * SR); buf = np.zeros((2, L))
-    # Cmaj7 - Am7 - Fmaj7 - G6sus, twice per 8 bars, then a gentler Em7 - Fmaj7 - Dm7 - Gsus turn
-    chords = [[48, 55, 59, 64], [45, 52, 55, 60], [41, 48, 52, 57], [43, 50, 55, 62]] * 2 + \
-             [[40, 47, 50, 55], [41, 48, 52, 57], [38, 45, 48, 53], [43, 50, 53, 60]] + [[48, 55, 59, 64], [45, 52, 55, 60], [41, 48, 52, 57], [43, 50, 55, 62]]
-    for b, ch in enumerate(chords):
-        t0 = int(b * 4 * beat * SR)
-        for n in ch[1:]: add(buf, pad(n, 4 * beat, .07), t0, pan=rng.uniform(-.4, .4))
-        add(buf, pad(ch[0] - 12, 4 * beat, .09), t0)
-        # a slow broken chord on the e-piano: up on beats 1, 2, 3, then one high note held
-        for k, (beatpos, n) in enumerate([(0, ch[0] + 12), (1, ch[2] + 12), (2, ch[3] + 12), (3, ch[1] + 24)]):
-            if b % 4 == 3 and k == 3: continue   # breathe at the end of every phrase
-            add(buf, epiano(n, beat * 1.5, .22 + .05 * (k == 0)), t0 + int(beatpos * beat * SR), pan=-.25 + .15 * k)
-    reverb(buf, .35, 1.4)
-    finish(buf, out, -20)
+    s = Song(70, 11); EP, STR, BASS, VIB = 0, 1, 2, 3
+    s.program(EP, 4, vol=96, pan=54, rev=70)       # electric piano (Rhodes-like)
+    s.program(STR, 49, vol=62, pan=78, rev=90)     # slow strings
+    s.program(BASS, 35, vol=84, pan=64, rev=30)    # fretless bass
+    s.program(VIB, 11, vol=58, pan=40, rev=95)     # vibraphone, just a few notes
+    prog = [(36, [52, 55, 59, 62]), (33, [52, 55, 57, 60]), (29, [53, 57, 60, 64]), (31, [50, 53, 55, 59]),   # Cmaj9 Am9 Fmaj7 G7sus-ish
+            (36, [52, 55, 59, 62]), (33, [52, 55, 57, 60]), (29, [53, 57, 60, 64]), (31, [50, 55, 57, 59]),
+            (28, [50, 55, 59, 62]), (33, [52, 55, 57, 60]), (26, [53, 57, 60, 64]), (31, [50, 53, 55, 59]),   # Em7 Am9 Dm9 G
+            (29, [52, 55, 57, 60]), (28, [50, 55, 59, 62]), (26, [53, 57, 60, 64]), (31, [50, 53, 57, 59])]
+    tune = {0: [(2, 71, 2)], 2: [(2, 69, 1.5)], 4: [(1, 74, 2)], 6: [(2, 72, 2)], 9: [(2, 71, 2)], 11: [(1, 67, 1), (2.5, 69, 1.5)], 13: [(2, 71, 2)], 15: [(1.5, 72, 2.5)]}
+    for b, (root, v) in enumerate(prog):
+        t = b * 4
+        s.note(BASS, root, t, 3.6, 62); s.note(BASS, root + 7, t + 3, .9, 40)
+        for k, n in enumerate(v): s.note(STR, n, t, 4, 34 + 3 * k)
+        # rolled chord on beat 1, then a soft broken pattern
+        for k, n in enumerate(v): s.note(EP, n, t + k * .06, 2.2, 44 + 4 * k)
+        for off, idx in ((1.5, 3), (2, 1), (2.5, 2), (3.25, 3)):
+            if b % 4 == 3 and off > 2: continue
+            s.note(EP, v[idx] + 12, t + off, 1.2, 30 + s.rnd.randint(0, 8))
+        for off, n, d in tune.get(b, []): s.note(VIB, n, t + off, d, 40)
+    render(s, len(prog) * 4, out, -21)
 
 def game_song(out):
-    bpm = 120; beat = 60 / bpm; bars = 32; L = int(bars * 4 * beat * SR); buf = np.zeros((2, L))
-    prog = [(60, 'M'), (57, 'm'), (53, 'M'), (55, 'M')] * 8          # C  Am  F  G
-    scale = [60, 62, 64, 67, 69, 72, 74, 76]                          # major pentatonic, always happy
-    motif = [0, 2, 4, 2, 5, 4, 2, None, 4, 5, 6, 5, 4, 2, 3, None]    # a little tune in scale steps, 8ths
-    for b, (root, q) in enumerate(prog):
-        t0 = int(b * 4 * beat * SR); third = root + (4 if q == 'M' else 3)
-        for e8 in range(8):                                            # bouncy bass: root, fifth, octave
-            n = [root - 24, root - 17, root - 12, root - 17][e8 % 4]
-            if e8 % 2 == 0 or rng.random() < .35: add(buf, pluck_bass(n, beat * .4, .5), t0 + int(e8 * beat / 2 * SR))
-        for bt in range(4):
-            if bt in (0, 2): add(buf, kick(.55), t0 + int(bt * beat * SR))
-            if bt in (1, 3): add(buf, snare(.11), t0 + int(bt * beat * SR), pan=.1)
-        for e8 in range(8): add(buf, hat(.03 if e8 % 2 else .05), t0 + int((e8 * beat / 2 + (.02 if e8 % 2 else 0)) * SR), pan=.35)
-        for k, n in enumerate([root, third, root + 7]):               # off-beat chord stabs, light
-            add(buf, marimba(n + 12, .12), t0 + int((1.5 + k * .02) * beat * SR), pan=-.3); add(buf, marimba(n + 12, .1), t0 + int((3.5 + k * .02) * beat * SR), pan=-.3)
-        half = b % 2; tune = motif[half * 8:(half + 1) * 8]             # the tune: bars 1-4 and 9-12, an answer an octave down in between
-        if (b // 4) % 2 == 0:
-            for e8, st in enumerate(tune):
-                if st is None: continue
-                n = scale[st] + (12 if 16 <= b < 24 else 0)   # the third time round the tune goes up an octave
-                add(buf, marimba(n, .42), t0 + int(e8 * beat / 2 * SR), pan=.2)
-        else:
-            for e8 in (0, 3, 6):
-                add(buf, marimba(scale[(b + e8) % 5], .3), t0 + int(e8 * beat / 2 * SR), pan=.2)
-    reverb(buf, .18, .8)
-    finish(buf, out, -18)
+    s = Song(104, 23); MAR, GTR, PIZ, BASS, DR, GLK = 0, 1, 2, 3, 9, 4
+    s.program(MAR, 12, vol=100, pan=46, rev=55)    # marimba
+    s.program(GTR, 24, vol=82, pan=86, rev=45)     # nylon guitar
+    s.program(PIZ, 45, vol=70, pan=36, rev=60)     # pizzicato strings
+    s.program(BASS, 32, vol=92, pan=64, rev=25)    # acoustic (upright) bass
+    s.program(GLK, 9, vol=52, pan=74, rev=80)      # glockenspiel sparkle
+    s.program(DR, 40, vol=70, pan=64, rev=35)      # brush drum kit (channel 10)
+    sw = .62                                       # swing: the off-beat 8th sits late, which feels relaxed and smooth
+    def e8(b, i): return b * 4 + i // 2 + (sw if i % 2 else 0)
+    prog = [(48, [60, 64, 67]), (45, [57, 60, 64]), (41, [57, 60, 65]), (43, [55, 59, 62])] * 2 + \
+           [(41, [57, 60, 65]), (43, [55, 59, 62]), (40, [55, 59, 64]), (45, [57, 60, 64]), (41, [57, 60, 65]), (43, [55, 59, 62]), (48, [55, 60, 64]), (43, [55, 59, 62])]
+    prog = prog * 2                                # 32 bars
+    A = [(0, 72), (1, 74), (2, 76), (4, 79), (6, 76)], [(0, 74), (2, 72), (3, 69), (4, 67), (6, 69)]
+    B = [(0, 77), (2, 76), (3, 74), (4, 72), (6, 74)], [(0, 76), (2, 74), (4, 72), (5, 67)]
+    for b, (root, ch) in enumerate(prog):
+        t = b * 4; sec = (b % 16) // 8
+        s.note(BASS, root - 12, t, .9, 70); s.note(BASS, root - 5, t + 2, .9, 60)      # walking-ish bass
+        s.note(BASS, root - 12 + (2 if b % 2 else 4), t + 3 + sw / 2, .4, 46)
+        for i in (1, 3, 5, 7):                                                         # guitar on the off-beats
+            for k, n in enumerate(ch): s.note(GTR, n, e8(b, i) + k * .015, .35, 46)
+        for i in (0, 4): s.note(PIZ, ch[-1] + 12, e8(b, i), .3, 38)
+        s.note(DR, 36, t, .2, 52); s.note(DR, 36, t + 2 + sw / 2, .2, 34)              # soft kick
+        s.note(DR, 38, t + 1, .2, 40); s.note(DR, 38, t + 3, .2, 44)                    # brush snare
+        for i in range(8): s.note(DR, 42, e8(b, i), .1, 18 if i % 2 else 24)            # brushed hats
+        phrase = (A if sec == 0 else B)[b % 2]
+        if b % 8 < 6 or sec == 1:
+            for i, n in phrase: s.note(MAR, n + (12 if b >= 16 and b < 24 else 0), e8(b, i), .45, 70 if i == 0 else 58)
+        if b % 4 == 3: s.note(GLK, ch[-1] + 24, t + 3, 1, 36)
+    render(s, len(prog) * 4, out, -19)
 
 if __name__ == '__main__':
-    od = sys.argv[1]
-    deck_song(od + '/deck-song.mp3'); game_song(od + '/game-song.mp3')
+    od = sys.argv[1] if len(sys.argv) > 1 else '.'
+    deck_song(os.path.join(od, 'deck-song.mp3')); game_song(os.path.join(od, 'game-song.mp3'))
