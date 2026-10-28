@@ -558,13 +558,6 @@
   .lock-screen p{ color:var(--ink-soft); font-weight:600; margin:0 0 22px; }
 
   .pin-wrap{ max-width:300px; margin:0 auto; text-align:center; }
-  .pin-dots{ display:flex; justify-content:center; align-items:center; gap:10px; min-height:26px; margin:4px 0 14px; flex-wrap:wrap; }
-  .pin-dot{ width:16px; height:16px; border-radius:50%; border:2px solid var(--border); background:transparent; flex-shrink:0; }
-  .pin-dot.filled{ background:var(--lagoon); border-color:var(--lagoon); }
-  .pin-dots.shake{ animation: pinshake .4s; }
-  @keyframes pinshake{ 0%,100%{transform:translateX(0);} 20%{transform:translateX(-8px);} 40%{transform:translateX(8px);} 60%{transform:translateX(-6px);} 80%{transform:translateX(6px);} }
-  @media (prefers-reduced-motion: reduce){ .pin-dots.shake{ animation:none; } }
-  .pin-error{ color:var(--bad-ink); font-weight:800; font-size:.86rem; min-height:1.3em; margin-bottom:10px; }
   .pin-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
   .pin-key{
     background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:16px 0;
@@ -836,10 +829,6 @@
   .cc-dialog-actions{ display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
 
   /* PIN pad: a real number field so the iPad's own keyboard (or a hardware keyboard) can type the PIN */
-  .pin-type-input{ display:block; width:100%; max-width:220px; margin:0 auto 14px; text-align:center; font:inherit; font-size:1.3rem; font-weight:800; letter-spacing:.5em;
-    padding:10px 12px; border-radius:var(--r-sm); border:2px solid var(--border); background:var(--surface); color:var(--ink); }
-  .pin-type-input::placeholder{ letter-spacing:normal; font-size:.9rem; font-weight:700; color:var(--ink-soft); }
-  .pin-type-input:focus{ border-color:var(--lagoon); outline:none; }
 
   /* ---------- Hangul Blend (Korean words blended letter by letter into syllable blocks) ---------- */
   .blend-chunk.syl-start{ margin-left:14px; }
@@ -1181,7 +1170,7 @@ h1,h2,h3{ font-weight:600; letter-spacing:.005em; }
 .btn-danger{ color:var(--bad-ink); border-color:var(--bad-ink); background:transparent; }
 .cc-dialog .btn-danger-solid{ background:var(--plum-fill); color:#fff; }
 .cc-dialog .btn-danger-solid:disabled{ opacity:.45; cursor:not-allowed; }
-.field input, .field textarea, .field select, .cc-dialog input[type=text], .name-input, .pin-type-input{
+.field input, .field textarea, .field select, .cc-dialog input[type=text], .name-input{
   border:1.5px solid var(--border); border-radius:var(--r-sm); background:var(--surface); color:var(--ink); min-height:44px;
 }
 .field input:focus, .field textarea:focus, .field select:focus, .cc-dialog input:focus{ border-color:var(--deep-2); outline:none; box-shadow:0 0 0 3px color-mix(in srgb, var(--focus) 30%, transparent); }
@@ -1264,7 +1253,6 @@ h1,h2,h3{ font-weight:600; letter-spacing:.005em; }
 .read-label{ font-size:.8rem; letter-spacing:.06em; }
 .replay-audio-btn{ min-height:40px; padding:9px 16px; font-size:.88rem; }
 .flip-hint{ font-size:.92rem; margin-top:16px; color:var(--ink-soft); }
-@media (prefers-reduced-motion: reduce){ }
 
 /* answer buttons: big, calm, clear */
 .choice-row{ gap:12px; margin-top:18px; max-width:460px; }
@@ -1295,7 +1283,6 @@ h1,h2,h3{ font-weight:600; letter-spacing:.005em; }
 .cove-rise span{ position:absolute; bottom:-30px; width:var(--s); height:var(--s); left:var(--x); border-radius:50%;
   background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.95), rgba(127,211,218,.25) 60%, rgba(127,211,218,0) 72%); border:1px solid rgba(127,211,218,.45);
   opacity:0; }
-@keyframes coveBubble{ 0%{ transform:translateY(0); opacity:0; } 15%{ opacity:.9; } 100%{ transform:translateY(-520px); opacity:0; } }
 .cove-sum .summary-card { position:relative; z-index:1; }
 .summary-card{ border-radius:30px; padding:26px 20px 24px; max-width:520px; margin:0 auto; background:var(--surface); }
 .summary-card h2{ font-weight:600; color:var(--heading); margin:4px 0 2px; }
@@ -1691,35 +1678,28 @@ h1,h2,h3{ font-weight:600; letter-spacing:.005em; }
 }
 
 /* covelumi */
-.mascot-lumi, .cl-lumi{ display:none; }
-.mascot.mascot-lumi{ filter:drop-shadow(0 0 14px rgba(67,211,212,.42)); }
+.cl-lumi{ display:none; }
 .critter-swim svg.cl-lumi{ overflow:visible; }
 .critter-swim:has(.cl-lumi){ }
-.mascot-lumi .ph, .cl-lumi .ph{ filter:drop-shadow(0 0 3px #43D3D4); animation:lumiGlow 3.4s ease-in-out infinite; }
+.cl-lumi .ph{ filter:drop-shadow(0 0 3px #43D3D4); animation:lumiGlow 3.4s ease-in-out infinite; }
 .cl-lumi .ph{ filter:drop-shadow(0 0 5px #43D3D4); }
 @keyframes lumiGlow{ 0%,100%{ opacity:1; } 50%{ opacity:.62; } }
-@media (prefers-reduced-motion: reduce){ .mascot-lumi .ph, .cl-lumi .ph{ animation:none; } }
-:root[data-theme="dark"] .mascot-turtle, :root[data-theme="dark"] .cl-turtle{ display:none; }
-:root[data-theme="dark"] .mascot-lumi{ display:inline; }
+@media (prefers-reduced-motion: reduce){ .cl-lumi .ph{ animation:none; } }
+:root[data-theme="dark"] .cl-turtle{ display:none; }
 :root[data-theme="dark"] .critter-swim{ filter:drop-shadow(0 0 8px rgba(67,211,212,.5)); }
 @media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]) .mascot-turtle, :root:not([data-theme="light"]) .cl-turtle{ display:none; }
-  :root:not([data-theme="light"]) .mascot-lumi{ display:inline; }
+  :root:not([data-theme="light"]) .cl-turtle{ display:none; }
   :root:not([data-theme="light"]) .critter-swim{ filter:drop-shadow(0 0 8px rgba(67,211,212,.5)); }
 }
 /* angler: Lumi the anglerfish sways her lure, tail and fins, and blinks */
-.mascot-lumi .lu-tail, .cl-lumi .lu-tail{ transform-box:fill-box; transform-origin:100% 50%; animation:luTail 2.2s ease-in-out infinite; }
-.mascot-lumi .lu-lure, .cl-lumi .lu-lure{ transform-box:fill-box; transform-origin:0% 100%; animation:luLure 3.8s ease-in-out infinite; }
-.mascot-lumi .lu-bulb, .cl-lumi .lu-bulb{ animation:luBulb 3.8s ease-in-out infinite; }
-.mascot-lumi .lu-fin{ transform-box:fill-box; transform-origin:100% 0%; animation:luFin 2.2s ease-in-out -.6s infinite; }
-.mascot-lumi .lu-eye{ transform-box:fill-box; transform-origin:center; animation:luBlink 5.5s ease-in-out infinite; }
-.mascot.mascot-lumi, .critter-swim svg.cl-lumi{ overflow:visible; }
+.cl-lumi .lu-tail{ transform-box:fill-box; transform-origin:100% 50%; animation:luTail 2.2s ease-in-out infinite; }
+.cl-lumi .lu-lure{ transform-box:fill-box; transform-origin:0% 100%; animation:luLure 3.8s ease-in-out infinite; }
+.cl-lumi .lu-bulb{ animation:luBulb 3.8s ease-in-out infinite; }
+.critter-swim svg.cl-lumi{ overflow:visible; }
 @keyframes luTail{ 0%,100%{ transform:rotate(-7deg); } 50%{ transform:rotate(7deg); } }
 @keyframes luLure{ 0%,100%{ transform:rotate(-5deg); } 50%{ transform:rotate(6deg); } }
 @keyframes luBulb{ 0%,100%{ opacity:.2; } 50%{ opacity:.45; } }
-@keyframes luFin{ 0%,100%{ transform:rotate(0deg); } 50%{ transform:rotate(-14deg); } }
-@keyframes luBlink{ 0%,92%,100%{ transform:scaleY(1); } 95.5%{ transform:scaleY(.08); } }
-@media (prefers-reduced-motion: reduce){ .mascot-lumi .lu-tail, .cl-lumi .lu-tail, .mascot-lumi .lu-lure, .cl-lumi .lu-lure, .mascot-lumi .lu-bulb, .cl-lumi .lu-bulb, .mascot-lumi .lu-fin, .mascot-lumi .lu-eye{ animation:none; } }
+@media (prefers-reduced-motion: reduce){ .cl-lumi .lu-tail, .cl-lumi .lu-lure, .cl-lumi .lu-bulb{ animation:none; } }
 
 /* ---------- polish (v61): tap targets, a stray progress icon ---------- */
 /* Lumi's progress-bar icon only in the Midnight zone (".critter-swim svg" was showing both in light mode) */
@@ -1919,8 +1899,6 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
 /* the helper icon: tail sways, the lure bobs and glows, the eyes blink */
 @keyframes luTail{0%,100%{rotate:-7deg}50%{rotate:7deg}}
 @keyframes luLure{0%,100%{rotate:-5deg}50%{rotate:6deg}}
-@keyframes luGlow{0%,100%{opacity:.18}50%{opacity:.42}}
-@keyframes luFin{0%,100%{rotate:0deg}50%{rotate:-14deg}}
 /* feed: food dropped into the check-in water. Light: a kelp flake or a gold treat for Shelly; dark: a glowing plankton speck for Lumi */
 .ciw .swfd{left:0;top:0;width:14px;height:14px;margin:-7px 0 0 -7px;opacity:0;will-change:transform,opacity}
 .ciw .swfd b{position:absolute;inset:0;display:block}
