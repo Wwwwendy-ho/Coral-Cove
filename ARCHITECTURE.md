@@ -127,6 +127,11 @@ first time Ask Shelly opens. `tools/words/README.md` explains how the dictionary
 `library.js` adds the Library's modes beside the board. It uses the app only through `window.CoralCove`
 (search `window.CoralCove = {`): profiles, decks, cards, the store, speech and the grown-up check.
 
+Its home is built around the profile's learning goals: deck subjects saved on the profile as `goals`, or until a
+grown-up picks them in the Library's settings, the subjects of the profile's live decks (`profileGoals` in
+`src/js/library-api.js`). Each goal has a list of activities in `goalPlan` (`library.js`); the first four are
+today's plan, and what's done today is kept per profile on the device.
+
 ## Styles
 
 `base.css` and `fixes-and-refresh.css` hold the app styles, in order of application, with the colour tokens as

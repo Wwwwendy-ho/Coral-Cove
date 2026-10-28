@@ -12,7 +12,7 @@
 <script src="seed-data.js?v=20261026"></script>
 <script src="audio-clips.js?v=20261026"></script>
 <script src="storage.js?v=20261026"></script>
-<script src="library.js?v=20261027" defer></script>
+<script src="library.js?v=20261028" defer></script>
 <script src="words.js?v=20261028" defer></script>
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v=20261026').catch(function(){});});}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" media="print" id="coveperfFonts" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap">
@@ -12209,8 +12209,23 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
 /* end of src/js/reef-world.js */
 /* from src/js/library-api.js */
   /* ---------- The Library (library.js) sits beside the app, off the board. This is all it can reach. ---------- */
+  // A profile's learning goals are deck subjects (SUBJECTS ids, or a custom subject). Until a grown-up picks them in
+  // the Library's settings, they are the subjects of the profile's live decks, most decks first.
+  function profileGoals(){
+    if(!S.profile) return [];
+    if(Array.isArray(S.profile.goals) && S.profile.goals.length) return S.profile.goals.slice();
+    var n = {};
+    (S.decks || []).forEach(function(d){ if(!d.archived && d.subject) n[d.subject] = (n[d.subject] || 0) + 1; });
+    return Object.keys(n).sort(function(a, b){ return n[b] - n[a]; });
+  }
   window.CoralCove = {
-    profile: function(){ return S.profile ? { id: S.profile.id, name: S.profile.name, child: S.profile.mode === 'child' } : null; },
+    profile: function(){ return S.profile ? { id: S.profile.id, name: S.profile.name, child: S.profile.mode === 'child', goals: profileGoals(), goalsSet: Array.isArray(S.profile.goals) && S.profile.goals.length > 0 } : null; },
+    subjects: function(){ return SUBJECTS.map(function(s){ return { id: s.id, icon: s.icon, label: s.label }; }); },
+    setGoals: function(list){
+      if(!S.profile || !Array.isArray(list)) return Promise.resolve(false);
+      S.profile.goals = list.slice(0, 6);
+      return Promise.resolve(S.store.updateProfile(S.profile.id, { goals: S.profile.goals })).then(function(){ return true; }, function(){ return false; });
+    },
     decks: function(){ return (S.decks || []).filter(function(d){ return !d.archived; }).map(function(d){ return { id: d.id, name: d.name, emoji: d.emoji || '🌊', subject: d.subject || '' }; }); },
     cards: function(id){ return S.store ? S.store.getCardsOnce(id) : Promise.resolve([]); },
     history: function(){ return S.store && S.store.getHistoryOnce ? S.store.getHistoryOnce() : Promise.resolve([]); },

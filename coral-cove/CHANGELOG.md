@@ -1,5 +1,22 @@
 # Changelog
 
+## The Library, built around each profile's goals (October 28, 2026)
+
+- **The Library opens on the profile's learning goals**: Korean for Wendy, Math and Reading for Child. There's a
+  tab for each goal. A big **Next up** card shows one activity to start, and the goal's other activities are listed
+  beside it. Today's four activities have a counter ("1 of 4 done today"), and when all four are done the card says so.
+- **Activities for each goal**:
+  - Korean: her decks, the Korean café role-play, fill-the-gap and match-up worksheets from a Korean deck, Hangul
+    handwriting, Ask Shelly about a word, mastery and tricky spots.
+  - Math: her decks, facts practice, number lines and ten frames, blocks and counters, brain tricks, maths
+    worksheets, clocks and money, shapes, puzzles and the placement check.
+  - Reading: her decks, fill the gaps, handwriting, putting story steps in order, Teach Shelly, writing feedback,
+    the library role-play and big questions.
+- **Goals** start from the subjects of the profile's decks. A grown-up can change them in Library → Settings.
+- Deck lists, deck pickers and role-plays put the goal subjects first. Everything else is still under
+  "Everything else". The question of the day moved to the Tutor page.
+- **A new look** for the whole Library: the app's fonts and sea colours, a colour for each goal, bigger buttons.
+
 ## Done button (October 28, 2026)
 
 - The ✅ Done button on grown-up screens is the same height as the round buttons beside it, instead of a bigger pill.

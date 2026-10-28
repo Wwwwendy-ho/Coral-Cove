@@ -1,6 +1,21 @@
   /* ---------- The Library (library.js) sits beside the app, off the board. This is all it can reach. ---------- */
+  // A profile's learning goals are deck subjects (SUBJECTS ids, or a custom subject). Until a grown-up picks them in
+  // the Library's settings, they are the subjects of the profile's live decks, most decks first.
+  function profileGoals(){
+    if(!S.profile) return [];
+    if(Array.isArray(S.profile.goals) && S.profile.goals.length) return S.profile.goals.slice();
+    var n = {};
+    (S.decks || []).forEach(function(d){ if(!d.archived && d.subject) n[d.subject] = (n[d.subject] || 0) + 1; });
+    return Object.keys(n).sort(function(a, b){ return n[b] - n[a]; });
+  }
   window.CoralCove = {
-    profile: function(){ return S.profile ? { id: S.profile.id, name: S.profile.name, child: S.profile.mode === 'child' } : null; },
+    profile: function(){ return S.profile ? { id: S.profile.id, name: S.profile.name, child: S.profile.mode === 'child', goals: profileGoals(), goalsSet: Array.isArray(S.profile.goals) && S.profile.goals.length > 0 } : null; },
+    subjects: function(){ return SUBJECTS.map(function(s){ return { id: s.id, icon: s.icon, label: s.label }; }); },
+    setGoals: function(list){
+      if(!S.profile || !Array.isArray(list)) return Promise.resolve(false);
+      S.profile.goals = list.slice(0, 6);
+      return Promise.resolve(S.store.updateProfile(S.profile.id, { goals: S.profile.goals })).then(function(){ return true; }, function(){ return false; });
+    },
     decks: function(){ return (S.decks || []).filter(function(d){ return !d.archived; }).map(function(d){ return { id: d.id, name: d.name, emoji: d.emoji || '🌊', subject: d.subject || '' }; }); },
     cards: function(id){ return S.store ? S.store.getCardsOnce(id) : Promise.resolve([]); },
     history: function(){ return S.store && S.store.getHistoryOnce ? S.store.getHistoryOnce() : Promise.resolve([]); },

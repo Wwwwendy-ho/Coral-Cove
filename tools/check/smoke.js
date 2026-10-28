@@ -4,7 +4,7 @@
    - the crab starts beside the guide, tapped fish escape, and a deck opens from the board;
    - the grown-up checks: a wrong answer gives a new question, Cancel goes back, the right answer opens; inside a
      grown-up profile nothing asks again (leaving a deck, Library settings, Edit Mode), while the child's Edit
-     Mode and Library settings still ask;
+     Mode and Library settings still ask; the Library's home has a tab per learning goal, with Next up and today's count;
      a child leaving a deck early gets the subtraction question;
    - Ask Shelly answers English, Chinese and Korean words with the network switched off;
    - the Library opens.
@@ -59,7 +59,12 @@ async function newPage(browser) {
   await p.click('[data-ask="close"]'); await p.context().setOffline(false);
   await p.click('[data-act="open-library"]'); await p.waitForTimeout(800);
   check('the Library opens', await p.evaluate(() => /Tutor/.test(document.body.innerText)));
-  await p.click('text=For grown-ups'); await p.waitForTimeout(800);
+  const tabs = await p.evaluate(() => [...document.querySelectorAll('.clib-tab')].map(t => t.dataset.tab).join(','));
+  check('child: the Library has a tab for each goal (math, reading)', tabs === 'math,reading', tabs);
+  check('child: the Library shows one Next up activity', await p.evaluate(() => document.querySelectorAll('.clib-next .clib-go').length === 1));
+  await p.click('[data-act="facts"]'); await p.waitForTimeout(800); await p.click('.clib .clib-back'); await p.waitForTimeout(800);
+  check('child: an activity done counts toward today', /^1 of 4 done today/.test(await p.textContent('.clib-daybar-t')));
+  await p.click('[data-view="settings"]'); await p.waitForTimeout(800);
   check('child: Library settings ask the maths question', await p.evaluate(() => !!document.getElementById('clibPin')));
   await closeLibrary(p);
   const deck = await p.evaluate(nearestDeck); await p.waitForTimeout(9000);
@@ -101,8 +106,11 @@ async function newPage(browser) {
   check('grown-up: leaving a deck early asks nothing', !!exit2 && !(await p.$('.reef-gate, .lock-screen')) && await p.evaluate(() => !!document.querySelector('.r3 canvas')));
   await p.click('[data-act="toggle-edit-mode"]'); await p.waitForTimeout(1200);
   await p.click('[data-act="open-library"]', { force: true }); await p.waitForTimeout(800);
-  await p.click('text=For grown-ups'); await p.waitForTimeout(800);
+  check('grown-up: the Library opens on the Korean goal', await p.evaluate(() => [...document.querySelectorAll('.clib-tab')].map(t => t.dataset.tab).join(',') === 'korean'));
+  await p.click('[data-view="settings"]'); await p.waitForTimeout(800);
   check('grown-up: Library settings ask nothing', await p.evaluate(() => !document.getElementById('clibPin') && !!document.getElementById('clibUrl')));
+  await p.click('[data-goal="reading"]'); await p.waitForTimeout(600); await p.click('.clib .clib-back'); await p.waitForTimeout(800);
+  check('grown-up: a goal added in settings gets its own tab', await p.evaluate(() => [...document.querySelectorAll('.clib-tab')].map(t => t.dataset.tab).join(',') === 'korean,reading'));
   await closeLibrary(p);
   check('grown-up: Edit Mode asks nothing', !(await p.$('.reef-gate, .lock-screen')) && /Edit Mode/.test(await p.evaluate(() => document.body.innerText)));
   check('grown-up: no page errors', !p.errors.length, p.errors.join(' / '));

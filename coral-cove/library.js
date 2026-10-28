@@ -1,5 +1,7 @@
 /*
  * Coral Cove Library: learning modes and decks that live beside the reef board (not on it).
+ *   Home         built around the profile's learning goals (deck subjects, set in Settings): one tab per goal,
+ *                a "Next up" activity from today's four, and the rest of that goal's activities to pick from
  *   Tutor        ask anything, Socratic help, big-question talks, role-play, debate, explain it 3 ways,
  *                teach-back, question of the day, voice
  *   Worksheets   from a deck, maths, a topic, spiral review, word problems, cloze, handwriting,
@@ -123,28 +125,94 @@
   function wireTiles(el){ $$('[data-view]', el).forEach(function(b){ b.addEventListener('click', function(){ sound('tap'); go(b.dataset.view, b.dataset.arg); }); }); }
   LIB.tiles = tiles; LIB.wireTiles = wireTiles;
 
+  /* ---------- HOME: built around the profile's learning goals (Wendy chose this layout) ----------
+     One tab per goal. Each goal has a list of activities; its first four are today's plan. "Next up" is the first
+     of those not done today, and the rest can be picked any time. An activity counts as done when she comes back
+     to this page from it (a deck: when it starts). Goals come from the app (CoralCove.profile().goals). */
+  var GOAL_LOOK = { math: 'math', reading: 'read', korean: 'ko', science: 'sci', life: 'life' };   // colour class per goal
+  function lookOf(g){ return 'clib-g-' + (GOAL_LOOK[g] || 'other'); }
+  function goalMeta(id){
+    if(id === 'explore') return { id: id, icon: '🌊', label: 'Explore' };
+    var s = (CC() && CC().subjects ? CC().subjects() : []).find(function(x){ return x.id === id; });
+    return s || { id: id, icon: '🏷️', label: id };
+  }
+  function myGoals(){ var p = CC() && CC().profile(), g = p && p.goals || []; return g.length ? g : ['explore']; }
+  function goalDecks(subject){ return decks().filter(function(d){ return d.subject === subject; }); }
+  function act(id, e, name, note, view, arg){ return { id: id, e: e, name: name, note: note, view: view, arg: arg }; }
+  function wsAct(id, e, name, note, o){ return act(id, e, name, note, 'wsMake', JSON.stringify(o)); }
+  function goalPlan(subject){
+    var gd = goalDecks(subject), d0 = gd[0];
+    var deck = gd.length ? { id: 'deck', e: '🗂️', name: 'Practise your decks', note: gd.length === 1 ? d0.name : gd.length + ' decks', deck: true } : null;
+    var plans = {
+      math: [deck, act('facts', '⚡', 'Facts practice', 'The facts you are learning', 'facts'), act('visual', '📏', 'See it', 'Number lines and ten frames', 'visual'),
+        act('manip', '🧱', 'Blocks and counters', 'Build the numbers', 'manip'), act('mental', '🧠', 'Brain tricks', 'Count on, make ten', 'mental'),
+        wsAct('ws-math', '📝', 'Maths worksheet', 'Sums at your level', { src: 'math' }), act('measure', '🕒', 'Clocks and money', 'Tell the time, pay the shop', 'measure'),
+        act('geometry', '🔷', 'Shapes', 'Sides, corners, symmetry', 'geometry'), act('puzzles', '🧩', 'Puzzles', 'Sudoku and patterns', 'puzzles'),
+        act('placement', '🧭', 'Where am I?', 'Maths placement check', 'placement')],
+      reading: [deck, d0 ? wsAct('ws-cloze', '🧩', 'Fill the gaps', 'Words from ' + d0.name, { src: 'cloze', deck: d0.id }) : null,
+        wsAct('ws-trace', '✏️', 'Handwriting', 'Letters a to z', { src: 'trace', script: 'abc' }), wsAct('ws-order', '🔢', 'Put it in order', 'Story steps', { src: 'order' }),
+        act('teach', '🎓', 'Teach Shelly', 'Explain a word to her', 'teachback'), act('writing', '✍️', 'My writing', 'Write, then get kind feedback', 'writing'),
+        act('play-library', '📚', 'Role-play', 'Ask for a book at the library', 'play', 'library'), act('talks', '💭', 'Big questions', 'Talk about ideas', 'talks')],
+      korean: [deck, act('play-cafe', '☕', 'Role-play', 'Order at a Korean café', 'play', 'cafe'),
+        d0 ? wsAct('ws-cloze', '🧩', 'Fill the gaps', 'Words from ' + d0.name, { src: 'cloze', deck: d0.id }) : null,
+        wsAct('ws-trace', '✏️', 'Hangul handwriting', 'Trace the letters', { src: 'trace', script: 'hangul' }), act('ask', '🐢', 'Ask about a word', 'Its parts and meaning', 'chat', 'ask'),
+        d0 ? wsAct('ws-deck', '📝', 'Worksheet', 'Match and answer, from ' + d0.name, { src: 'deck', deck: d0.id }) : null,
+        act('mastery', '🏆', 'Mastery', 'What you know well', 'mastery'), act('tricky', '🔎', 'Tricky spots', 'Mistakes to fix', 'misconceptions')],
+      science: [deck, wsAct('ws-label', '🐠', 'Label a diagram', 'Fish, turtle, plant', { src: 'label' }), act('play-sci', '🔬', 'Role-play', 'Interview a marine biologist', 'play', 'scientist'),
+        wsAct('ws-order', '🔢', 'Put it in order', 'Life cycles', { src: 'order' }), act('ask', '🐢', 'Ask Shelly', 'Any question', 'chat', 'ask'), act('talks', '💭', 'Big questions', 'Talk about ideas', 'talks')]
+    };
+    return (plans[subject] || [deck, d0 ? wsAct('ws-deck', '📝', 'Worksheet', 'From ' + d0.name, { src: 'deck', deck: d0.id }) : null,
+      act('ask', '🐢', 'Ask Shelly', 'Any question', 'chat', 'ask'), act('teach', '🎓', 'Teach Shelly', 'Explain it to her', 'teachback'),
+      act('facts', '⚡', 'Facts practice', 'Maths facts', 'facts')]).filter(Boolean);
+  }
+  function dayRec(){ var r = rec(); if(!r.day || r.day.date !== today()) r.day = { date: today(), done: {} }; return r; }
+  function markDone(goal, id){ var r = dayRec(), l = r.day.done[goal] = r.day.done[goal] || []; if(l.indexOf(id) < 0) l.push(id); saveRec(r); }
+  var pendingAct = null;   // the activity opened from the home page: done when she comes back to it
+  // The goal deck with the most cards ready.
+  function bestDeck(ds){
+    var now = Date.now();
+    return Promise.all(ds.map(function(d){ return cards(d.id).then(function(cs){ return { d: d, due: cs.filter(function(c){ return !c.due || c.due <= now; }).length }; }); }))
+      .then(function(l){ l.sort(function(a, b){ return b.due - a.due; }); return l[0] || null; });
+  }
+  function startAct(goal, a){
+    sound('tap');
+    if(a.deck) return bestDeck(goalDecks(goal)).then(function(best){ if(!best) return; markDone(goal, a.id); close(); CC().startDeck(best.d.id); });
+    pendingAct = { goal: goal, id: a.id }; go(a.view, a.arg);
+  }
   LIB.views.home = { title: 'Library', render: function(el){
-    var p = CC() && CC().profile();
-    el.innerHTML = '<p class="clib-lede">' + (p ? 'Hi ' + esc(p.name) + '! ' : '') + 'Pick something to learn. Everything here works without the internet' + (claudeReady() ? ', and Claude helps when you\'re online.' : '.') + '</p>' +
-      tiles([
-        { e: '🐢', name: 'Tutor', note: 'Ask, talk, role-play', view: 'tutorHome' },
-        { e: '📝', name: 'Worksheets', note: 'Make, print, check', view: 'wsHome' },
-        { e: '🔢', name: 'Maths lab', note: 'Facts, models, puzzles', view: 'mathHome' },
-        { e: '✍️', name: 'Check my work', note: 'Writing and photos', view: 'checkHome' },
-        { e: '📈', name: 'My progress', note: 'Mastery, letter, placement', view: 'progressHome' },
-        { e: '🗂️', name: 'Decks', note: 'All your decks', view: 'decks' },
-        { e: '⚙️', name: 'Settings', note: 'For grown-ups', view: 'settings' }
-      ]);
+    if(pendingAct){ markDone(pendingAct.goal, pendingAct.id); pendingAct = null; }
+    var p = CC() && CC().profile(), goals = myGoals(), r = dayRec();
+    var tab = goals.indexOf(r.tab) >= 0 ? r.tab : goals[0], plan = goalPlan(tab), today4 = plan.slice(0, 4), done = r.day.done[tab] || [];
+    var isDone = function(a){ return done.indexOf(a.id) >= 0; }, next = today4.find(function(a){ return !isDone(a); }), nDone = today4.filter(isDone).length;
+    var html = '<div class="clib-hello"><span class="clib-av" aria-hidden="true">' + esc(p ? p.name.charAt(0) : '🐢') + '</span><div><h2>Hi' + (p ? ' ' + esc(p.name) : '') + '!</h2><p>' +
+      (goals[0] === 'explore' ? 'Pick something to learn.' : 'Your goal' + (goals.length > 1 ? 's' : '') + ': ' + goals.map(function(g){ var m = goalMeta(g); return '<span class="clib-chip ' + lookOf(g) + '">' + m.icon + ' ' + esc(m.label) + '</span>'; }).join(' ')) + '</p></div></div>';
+    html += '<div class="clib-tabs" role="tablist" aria-label="Your goals">' + goals.map(function(g){ var m = goalMeta(g);
+      return '<button type="button" role="tab" class="clib-tab ' + lookOf(g) + '" aria-selected="' + (g === tab) + '" data-tab="' + esc(g) + '">' + m.icon + ' ' + esc(m.label) + '</button>'; }).join('') + '</div>';
+    html += '<div class="clib-path ' + lookOf(tab) + '"><section class="clib-next" aria-label="Next up">' + (next
+      ? '<span class="clib-next-lbl">Next up</span><span class="clib-next-e" aria-hidden="true">' + next.e + '</span><b>' + esc(next.name) + '</b><p data-note="' + next.id + '">' + esc(next.note) + '</p>' +
+        '<button type="button" class="clib-go" data-act="' + next.id + '">Start ▶</button>'
+      : '<span class="clib-next-lbl">Today</span><span class="clib-next-e" aria-hidden="true">🎉</span><b>All ' + today4.length + ' done for today!</b><p>You worked hard. You can pick another one to keep going.</p>') +
+      '<div class="clib-daybar" aria-hidden="true">' + today4.map(function(a){ return '<i class="' + (isDone(a) ? 'on' : '') + '"></i>'; }).join('') + '</div>' +
+      '<p class="clib-daybar-t">' + nDone + ' of ' + today4.length + ' done today</p></section>';
+    html += '<section class="clib-side"><h3>' + (next ? 'Or pick one' : 'Keep going') + '</h3>' + plan.filter(function(a){ return a !== next; }).map(function(a){
+      return '<button type="button" class="clib-pick" data-act="' + a.id + '"><span class="clib-pick-e" aria-hidden="true">' + a.e + '</span><span class="clib-pick-t"><b>' + esc(a.name) +
+        (isDone(a) ? ' <span class="clib-tick">✓ done</span>' : '') + '</b><small data-note="' + a.id + '">' + esc(a.note) + '</small></span></button>'; }).join('') + '</section></div>';
+    html += '<h3 class="clib-more-h">Everything else</h3><div class="clib-more">' + [['🐢', 'Tutor', 'tutorHome'], ['📝', 'Worksheets', 'wsHome'], ['🔢', 'Maths lab', 'mathHome'],
+      ['✍️', 'Check my work', 'checkHome'], ['📈', 'My progress', 'progressHome'], ['🗂️', 'All decks', 'decks'], ['⚙️', 'Settings', 'settings']].map(function(x){
+      return '<button type="button" class="clib-more-b" data-view="' + x[2] + '"><span aria-hidden="true">' + x[0] + '</span> ' + x[1] + '</button>'; }).join('') + '</div>';
+    el.innerHTML = html;
     wireTiles(el);
-    var q = LIB.questionOfDay && LIB.questionOfDay();
-    if(q){ var box = document.createElement('section'); box.className = 'clib-card clib-qotd';
-      box.innerHTML = '<h2>💭 Question of the day</h2><p class="clib-big">' + esc(q.q) + '</p><button type="button" class="clib-btn" data-a>See what Shelly thinks</button><p class="clib-qa" hidden>' + esc(q.a) + '</p>';
-      box.querySelector('[data-a]').addEventListener('click', function(){ var a = box.querySelector('.clib-qa'); a.hidden = false; speak(q.a); });
-      el.appendChild(box); }
+    $$('[data-tab]', el).forEach(function(b){ b.addEventListener('click', function(){ var r2 = dayRec(); r2.tab = b.dataset.tab; saveRec(r2); sound('tap'); go('home', null, true); }); });
+    $$('[data-act]', el).forEach(function(b){ b.addEventListener('click', function(){ var a = plan.find(function(x){ return x.id === b.dataset.act; }); if(a) startAct(tab, a); }); });
+    var gd = goalDecks(tab);   // the deck activity names the deck it will open
+    if(gd.length) bestDeck(gd).then(function(best){ if(best) $$('[data-note="deck"]', el).forEach(function(n){ n.textContent = best.d.name + (best.due ? ' · ' + best.due + ' card' + (best.due === 1 ? '' : 's') + ' ready' : ''); }); });
   } };
+  // Decks in the goal subjects first, for every deck list and picker in the Library.
+  function goalFirst(ds){ var g = myGoals(); return ds.slice().sort(function(a, b){ var x = g.indexOf(a.subject), y = g.indexOf(b.subject); return (x < 0 ? 99 : x) - (y < 0 ? 99 : y); }); }
+  LIB.goalFirst = goalFirst;
 
   LIB.views.decks = { title: 'Decks', render: function(el){
-    var ds = decks();
+    var ds = goalFirst(decks());
     if(!ds.length){ el.innerHTML = '<p class="clib-note">No decks yet. A grown-up can add some in Edit Mode.</p>'; return; }
     el.innerHTML = '<p class="clib-lede">Open a deck to practise it, or make a worksheet from it.</p><ul class="clib-list">' + ds.map(function(d){
       return '<li><span class="clib-li-e" aria-hidden="true">' + esc(d.emoji) + '</span><span class="clib-li-t">' + esc(d.name) + '<small data-count="' + esc(d.id) + '"></small></span>' +
@@ -164,7 +232,7 @@
       $('[data-go]', el).addEventListener('click', go2); inp.addEventListener('keydown', function(e){ if(e.key === 'Enter') go2(); }); inp.focus(); return;
     }
     var s = settings();
-    el.innerHTML = '<section class="clib-card"><h2>✨ Claude helper</h2>' +
+    el.innerHTML = goalsCard() + '<section class="clib-card"><h2>✨ Claude helper</h2>' +
       '<p>When the device is online, the tutor, worksheet maker and feedback can use Claude through your own small helper server. Without it everything works offline. Setup steps are in README.md under "Claude helper".</p>' +
       '<label class="clib-label" for="clibUrl">Helper address</label><input id="clibUrl" class="clib-input" placeholder="https://coral-helper.example.workers.dev" value="' + esc(s.proxyUrl || '') + '">' +
       '<label class="clib-label" for="clibCode">Passphrase</label><input id="clibCode" class="clib-input" type="password" autocomplete="off" value="' + esc(s.proxyCode || '') + '">' +
@@ -183,8 +251,33 @@
     $('[data-test]', el).addEventListener('click', function(){ save(); msg.textContent = 'Asking Claude…';
       ask('chat', [{ role: 'user', content: 'Say hello to a young learner in one short sentence.' }]).then(function(t){ msg.textContent = t ? 'It works! Claude says: ' + t : 'It didn\'t work: ' + (LIB.lastError || 'no reply') + '. Check the address and passphrase.'; }); });
     $('[data-chatlog]', el).addEventListener('click', function(){ go('chatLog'); });
+    wireGoals(el);
     ['#clibVoice', '#clibBig', '#clibLog', '#clibInt'].forEach(function(id){ $(id, el).addEventListener('change', save); });
   } };
+  // The profile's learning goals: the Library's home has one tab for each. Saved with the profile.
+  function goalChoices(){
+    var list = (CC() && CC().subjects ? CC().subjects() : []).slice();
+    decks().forEach(function(d){ if(d.subject && !list.some(function(x){ return x.id === d.subject; })) list.push({ id: d.subject, icon: '🏷️', label: d.subject }); });
+    return list;
+  }
+  function goalsCard(){
+    var p = CC() && CC().profile(); if(!p || !CC().setGoals) return '';
+    var on = p.goals || [];
+    return '<section class="clib-card"><h2>🎯 Learning goals for ' + esc(p.name) + '</h2><p>The Library\'s home has a tab for each goal, with activities for it.' +
+      (p.goalsSet ? '' : ' These were picked from ' + esc(p.name) + '\'s decks; tap to change them.') + '</p><div class="clib-row" role="group" aria-label="Learning goals">' +
+      goalChoices().map(function(g){ return '<button type="button" class="clib-btn" data-goal="' + esc(g.id) + '" aria-pressed="' + (on.indexOf(g.id) >= 0) + '">' + g.icon + ' ' + esc(g.label) + '</button>'; }).join('') +
+      '</div><p class="clib-msg" data-goalmsg aria-live="polite"></p></section>';
+  }
+  function wireGoals(el){
+    $$('[data-goal]', el).forEach(function(b){ b.addEventListener('click', function(){
+      b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true'));
+      var on = $$('[data-goal][aria-pressed="true"]', el).map(function(x){ return x.dataset.goal; }), msg = $('[data-goalmsg]', el);
+      var cur = (CC().profile() || {}).goals || [];   // goals keep their order (it is the order of the tabs); new ones go last
+      var list = cur.filter(function(g){ return on.indexOf(g) >= 0; }).concat(on.filter(function(g){ return cur.indexOf(g) < 0; }));
+      if(!list.length){ b.setAttribute('aria-pressed', 'true'); msg.textContent = 'Keep at least one goal.'; return; }
+      CC().setGoals(list).then(function(ok){ msg.textContent = ok ? 'Saved.' : 'Couldn\'t save. Try again.'; });
+    }); });
+  }
   LIB.views.chatLog = { title: 'Tutor chat log', render: function(el){
     var l = (rec().log || []).filter(function(x){ return x.k === 'chat'; }).slice(-80).reverse();
     el.innerHTML = l.length ? '<ul class="clib-log">' + l.map(function(x){ return '<li><small>' + new Date(x.t).toLocaleString() + ' · ' + esc(x.mode || '') + (x.src === 'claude' ? ' · Claude' : ' · offline') + '</small><p><b>She:</b> ' + esc(x.q) + '</p><p><b>Shelly:</b> ' + esc(x.a) + '</p></li>'; }).join('') + '</ul>'
@@ -193,41 +286,75 @@
 
   var CSS = [
     'body.clib-open{ overflow:hidden; }',
-    '.clib{ position:fixed; inset:0; z-index:9600; display:flex; flex-direction:column; background:var(--clib-bg); color:var(--clib-ink); font-family:"Nunito","Segoe UI",system-ui,sans-serif;',
-    '  --clib-bg:#f4f8f7; --clib-card:#ffffff; --clib-ink:#21363a; --clib-soft:#5b7176; --clib-line:#dde8e6; --clib-accent:#1c8c93; --clib-accent-ink:#ffffff; --clib-good:#2f7a52; --clib-bad:#b5452f; --clib-warm:#f2b544; }',
-    '@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .clib{ --clib-bg:#0f2429; --clib-card:#17333a; --clib-ink:#e7f2ef; --clib-soft:#a6bdbb; --clib-line:#28474d; --clib-accent:#4fc7cf; --clib-accent-ink:#06232a; --clib-good:#8fd9ae; --clib-bad:#f2a08f; } }',
-    ':root[data-theme="dark"] .clib{ --clib-bg:#0f2429; --clib-card:#17333a; --clib-ink:#e7f2ef; --clib-soft:#a6bdbb; --clib-line:#28474d; --clib-accent:#4fc7cf; --clib-accent-ink:#06232a; --clib-good:#8fd9ae; --clib-bad:#f2a08f; }',
+    /* the app's fonts and sea colours; one colour per learning goal (light first, dark below) */
+    '.clib{ position:fixed; inset:0; z-index:9600; display:flex; flex-direction:column; background:var(--clib-bg); color:var(--clib-ink); font-family:var(--font-body, "Nunito Sans", "Nunito", system-ui, sans-serif); line-height:1.4;',
+    '  --clib-display:var(--font-display, "Fredoka", "Baloo 2", ui-rounded, system-ui, sans-serif);',
+    '  --clib-bg:#eaf6f6; --clib-card:#ffffff; --clib-ink:#0b3a44; --clib-soft:#4d6d73; --clib-line:#cfe6e4; --clib-accent:#157a80; --clib-accent-ink:#ffffff; --clib-good:#2f7a52; --clib-bad:#b5452f; --clib-warm:#f2b544;',
+    '  --clib-math:#157a80; --clib-math-bg:#dff3f1; --clib-read:#a8620a; --clib-read-bg:#fff0d6; --clib-ko:#b8364f; --clib-ko-bg:#fde6ea; --clib-sci:#5b4bc4; --clib-sci-bg:#ece9fb; --clib-life:#357a43; --clib-life-bg:#e3f4e6; --clib-other:#3d6470; --clib-other-bg:#e4eef1; }',
+    '@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .clib{ --clib-bg:#071f25; --clib-card:#10313a; --clib-ink:#e4f4f2; --clib-soft:#a2c3c1; --clib-line:#22505a; --clib-accent:#4fc7cf; --clib-accent-ink:#04252b; --clib-good:#8fd9ae; --clib-bad:#f2a08f;',
+    '  --clib-math:#4fc7cf; --clib-math-bg:#0f3a40; --clib-read:#f2b553; --clib-read-bg:#3a2a0e; --clib-ko:#f28aa0; --clib-ko-bg:#3e1822; --clib-sci:#b3a8ff; --clib-sci-bg:#262046; --clib-life:#8fd99d; --clib-life-bg:#163821; --clib-other:#9cc4cf; --clib-other-bg:#1a3640; } }',
+    ':root[data-theme="dark"] .clib{ --clib-bg:#071f25; --clib-card:#10313a; --clib-ink:#e4f4f2; --clib-soft:#a2c3c1; --clib-line:#22505a; --clib-accent:#4fc7cf; --clib-accent-ink:#04252b; --clib-good:#8fd9ae; --clib-bad:#f2a08f;',
+    '  --clib-math:#4fc7cf; --clib-math-bg:#0f3a40; --clib-read:#f2b553; --clib-read-bg:#3a2a0e; --clib-ko:#f28aa0; --clib-ko-bg:#3e1822; --clib-sci:#b3a8ff; --clib-sci-bg:#262046; --clib-life:#8fd99d; --clib-life-bg:#163821; --clib-other:#9cc4cf; --clib-other-bg:#1a3640; }',
+    '.clib-g-math{ --g:var(--clib-math); --gb:var(--clib-math-bg); } .clib-g-read{ --g:var(--clib-read); --gb:var(--clib-read-bg); } .clib-g-ko{ --g:var(--clib-ko); --gb:var(--clib-ko-bg); }',
+    '.clib-g-sci{ --g:var(--clib-sci); --gb:var(--clib-sci-bg); } .clib-g-life{ --g:var(--clib-life); --gb:var(--clib-life-bg); } .clib-g-other{ --g:var(--clib-other); --gb:var(--clib-other-bg); }',
     '.clib[hidden]{ display:none; }',
-    '.clib-head{ display:flex; align-items:center; gap:10px; padding:max(10px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 10px max(16px, env(safe-area-inset-left)); border-bottom:1px solid var(--clib-line); background:var(--clib-card); }',
-    '.clib-title{ flex:1; margin:0; font:800 1.35rem "Baloo 2",sans-serif; }',
-    '.clib-source{ font-size:.8rem; font-weight:800; color:var(--clib-soft); white-space:nowrap; }',
-    '.clib-back{ border:none; background:var(--clib-bg); color:var(--clib-ink); font-weight:800; font-size:.95rem; font-family:inherit; padding:8px 12px; border-radius:12px; cursor:pointer; }',
-    '.clib-body{ flex:1; overflow:auto; -webkit-overflow-scrolling:touch; padding:16px max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }',
-    '.clib-body > *{ max-width:860px; margin-left:auto; margin-right:auto; }',
-    '.clib-lede{ color:var(--clib-soft); font-weight:700; margin:0 auto 14px; }',
+    '.clib-head{ display:flex; align-items:center; gap:12px; padding:max(12px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) 12px max(18px, env(safe-area-inset-left)); border-bottom:1px solid var(--clib-line); background:var(--clib-card); }',
+    '.clib-title{ flex:1; margin:0; font:600 1.5rem var(--clib-display); }',
+    '.clib-source{ font-size:.82rem; font-weight:700; color:var(--clib-soft); white-space:nowrap; }',
+    '.clib-back{ border:none; background:var(--clib-bg); color:var(--clib-ink); font-weight:800; font-size:.95rem; font-family:inherit; min-height:44px; padding:0 16px; border-radius:999px; cursor:pointer; }',
+    '.clib-body{ flex:1; overflow:auto; -webkit-overflow-scrolling:touch; padding:20px max(18px, env(safe-area-inset-right)) max(28px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); }',
+    '.clib-body > *{ max-width:1040px; margin-left:auto; margin-right:auto; }',
+    '.clib-lede{ color:var(--clib-soft); font-weight:600; font-size:1.02rem; margin:0 auto 16px; }',
     '.clib-note{ color:var(--clib-soft); }',
-    '.clib-tiles{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px; }',
-    '.clib-tile{ display:flex; flex-direction:column; align-items:flex-start; gap:2px; text-align:left; padding:14px; border-radius:18px; border:1px solid var(--clib-line); background:var(--clib-card); color:var(--clib-ink); cursor:pointer; font:inherit; min-height:110px; }',
-    '.clib-tile:hover{ border-color:var(--clib-accent); }',
-    '.clib-tile-e{ font-size:1.9rem; line-height:1.1; } .clib-tile b{ font:800 1.08rem "Baloo 2",sans-serif; } .clib-tile small{ color:var(--clib-soft); font-weight:700; }',
-    '.clib-card{ background:var(--clib-card); border:1px solid var(--clib-line); border-radius:18px; padding:16px; margin:14px auto; }',
-    '.clib-card h2{ margin:0 0 6px; font:800 1.2rem "Baloo 2",sans-serif; }',
+    /* home: greeting, goal tabs, Next up, Or pick one, Everything else */
+    '.clib-hello{ display:flex; align-items:center; gap:14px; margin-bottom:16px; }',
+    '.clib-av{ flex:none; width:52px; height:52px; border-radius:50%; display:grid; place-items:center; font:600 1.4rem var(--clib-display); color:var(--clib-accent-ink); background:var(--clib-accent); }',
+    '.clib-hello h2{ margin:0; font:600 1.6rem/1.1 var(--clib-display); } .clib-hello p{ margin:3px 0 0; color:var(--clib-soft); font-weight:600; }',
+    '.clib-chip{ display:inline-flex; align-items:center; gap:4px; font-weight:800; font-size:.85rem; padding:3px 11px; border-radius:999px; background:var(--gb); color:var(--g); }',
+    '.clib-tabs{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px; }',
+    '.clib-tab{ font:600 1.15rem var(--clib-display); min-height:48px; padding:0 22px; border-radius:999px; border:2px solid var(--clib-line); background:var(--clib-card); color:var(--clib-soft); cursor:pointer; }',
+    '.clib-tab[aria-selected="true"]{ background:var(--g); border-color:var(--g); color:var(--clib-card); }',
+    '.clib-path{ display:grid; grid-template-columns:minmax(0, 1.25fr) minmax(0, 1fr); gap:16px; align-items:start; }',
+    '@media (max-width:720px){ .clib-path{ grid-template-columns:1fr; } }',
+    '.clib-next{ background:var(--g); color:var(--clib-card); border-radius:26px; padding:24px; display:grid; gap:8px; align-content:start; box-shadow:0 6px 0 color-mix(in srgb, var(--g) 70%, #000); }',
+    '.clib-next-lbl{ font-weight:800; font-size:.78rem; letter-spacing:.08em; text-transform:uppercase; opacity:.85; }',
+    '.clib-next-e{ font-size:3.2rem; line-height:1; } .clib-next b{ font:600 2rem/1.1 var(--clib-display); } .clib-next p{ margin:0; font-weight:600; opacity:.92; }',
+    '.clib-go{ justify-self:start; margin-top:8px; font:600 1.2rem var(--clib-display); min-height:52px; padding:0 30px; border:none; border-radius:16px; background:var(--clib-card); color:var(--g); cursor:pointer; box-shadow:0 4px 0 rgba(0,0,0,.18); }',
+    '.clib-go:active{ transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.18); }',
+    '.clib-daybar{ display:flex; gap:6px; margin-top:10px; } .clib-daybar i{ width:34px; height:9px; border-radius:99px; background:color-mix(in srgb, var(--clib-card) 35%, transparent); } .clib-daybar i.on{ background:var(--clib-card); }',
+    '.clib-daybar-t{ font-size:.88rem; }',
+    '.clib-side{ display:grid; gap:10px; } .clib-side h3{ margin:0 0 2px; font:600 1.1rem var(--clib-display); color:var(--clib-soft); }',
+    '.clib-pick{ display:flex; align-items:center; gap:12px; text-align:left; width:100%; padding:10px 14px; min-height:60px; border-radius:16px; border:1px solid var(--clib-line); background:var(--clib-card); color:var(--clib-ink); font:inherit; cursor:pointer; }',
+    '.clib-pick:hover{ border-color:var(--g); }',
+    '.clib-pick-e{ flex:none; width:42px; height:42px; display:grid; place-items:center; font-size:1.5rem; border-radius:12px; background:var(--gb); }',
+    '.clib-pick-t{ min-width:0; } .clib-pick b{ display:block; font:600 1.02rem var(--clib-display); } .clib-pick small{ color:var(--clib-soft); font-weight:600; font-size:.82rem; }',
+    '.clib-tick{ font:800 .75rem var(--font-body, sans-serif); color:var(--clib-good); margin-left:4px; }',
+    '.clib-more-h{ margin:24px auto 8px; font:600 1.05rem var(--clib-display); color:var(--clib-soft); }',
+    '.clib-more{ display:flex; flex-wrap:wrap; gap:10px; }',
+    '.clib-more-b{ min-height:44px; padding:0 16px; border-radius:999px; border:1px solid var(--clib-line); background:var(--clib-card); color:var(--clib-ink); font:inherit; font-weight:800; font-size:.92rem; cursor:pointer; }',
+    /* section pages */
+    '.clib-tiles{ display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:14px; }',
+    '.clib-tile{ display:flex; flex-direction:column; align-items:flex-start; gap:4px; text-align:left; padding:16px; border-radius:20px; border:1px solid var(--clib-line); background:var(--clib-card); color:var(--clib-ink); cursor:pointer; font:inherit; min-height:118px; box-shadow:0 3px 0 var(--clib-line); }',
+    '.clib-tile:hover{ border-color:var(--clib-accent); } .clib-tile:active{ transform:translateY(2px); box-shadow:0 1px 0 var(--clib-line); }',
+    '.clib-tile-e{ font-size:2rem; line-height:1.1; } .clib-tile b{ font:600 1.1rem/1.15 var(--clib-display); } .clib-tile small{ color:var(--clib-soft); font-weight:600; }',
+    '.clib-card{ background:var(--clib-card); border:1px solid var(--clib-line); border-radius:22px; padding:18px; margin:16px auto; }',
+    '.clib-card h2{ margin:0 0 8px; font:600 1.25rem var(--clib-display); }',
     '.clib-big{ font-size:1.15rem; font-weight:800; }',
     '.clib-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; align-items:center; }',
-    '.clib-btn{ border:1px solid var(--clib-line); background:var(--clib-bg); color:var(--clib-ink); font-weight:800; font-size:.95rem; font-family:inherit; padding:9px 14px; border-radius:12px; cursor:pointer; }',
+    '.clib-btn{ border:1px solid var(--clib-line); background:var(--clib-bg); color:var(--clib-ink); font-weight:800; font-size:.95rem; font-family:inherit; min-height:44px; padding:0 16px; border-radius:999px; cursor:pointer; }',
     '.clib-btn.main{ background:var(--clib-accent); color:var(--clib-accent-ink); border-color:var(--clib-accent); }',
     '.clib-btn[aria-pressed="true"]{ background:var(--clib-accent); color:var(--clib-accent-ink); border-color:var(--clib-accent); }',
     '.clib-btn:disabled{ opacity:.5; cursor:default; }',
-    '.clib-btn:focus-visible, .clib-tile:focus-visible, .clib-input:focus-visible, .clib-back:focus-visible{ outline:3px solid var(--clib-warm); outline-offset:2px; }',
-    '.clib-input{ width:100%; box-sizing:border-box; font-weight:700; font-size:1rem; font-family:inherit; color:var(--clib-ink); background:var(--clib-bg); border:1px solid var(--clib-line); border-radius:12px; padding:10px 12px; }',
+    '.clib-btn:focus-visible, .clib-tile:focus-visible, .clib-input:focus-visible, .clib-back:focus-visible, .clib-tab:focus-visible, .clib-go:focus-visible, .clib-pick:focus-visible, .clib-more-b:focus-visible{ outline:3px solid var(--clib-warm); outline-offset:2px; }',
+    '.clib-input{ width:100%; box-sizing:border-box; font-weight:700; font-size:1rem; font-family:inherit; color:var(--clib-ink); background:var(--clib-bg); border:1px solid var(--clib-line); border-radius:14px; padding:11px 13px; }',
     'textarea.clib-input{ min-height:120px; resize:vertical; }',
-    '.clib-label{ display:block; font-weight:800; margin:10px 0 4px; }',
+    '.clib-label{ display:block; font-weight:800; margin:12px 0 4px; }',
     '.clib-check{ display:flex; gap:8px; align-items:center; font-weight:700; margin:6px 0; }',
     '.clib-msg{ min-height:1.3em; font-weight:800; color:var(--clib-soft); }',
-    '.clib-list{ list-style:none; padding:0; margin:0; display:grid; gap:8px; }',
-    '.clib-list li{ display:flex; align-items:center; gap:10px; background:var(--clib-card); border:1px solid var(--clib-line); border-radius:14px; padding:10px 12px; flex-wrap:wrap; }',
-    '.clib-li-e{ font-size:1.5rem; } .clib-li-t{ flex:1; min-width:140px; font-weight:800; display:flex; flex-direction:column; } .clib-li-t small{ color:var(--clib-soft); font-weight:700; }',
-    '.clib-qa{ background:var(--clib-bg); border-radius:12px; padding:10px; font-weight:700; }',
+    '.clib-list{ list-style:none; padding:0; margin:0; display:grid; gap:10px; }',
+    '.clib-list li{ display:flex; align-items:center; gap:10px; background:var(--clib-card); border:1px solid var(--clib-line); border-radius:16px; padding:12px 14px; flex-wrap:wrap; }',
+    '.clib-li-e{ font-size:1.5rem; } .clib-li-t{ flex:1; min-width:140px; font-weight:800; display:flex; flex-direction:column; } .clib-li-t small{ color:var(--clib-soft); font-weight:600; }',
+    '.clib-qa{ background:var(--clib-bg); border-radius:14px; padding:12px; font-weight:700; }',
     '.clib-log{ list-style:none; padding:0; } .clib-log li{ border-bottom:1px solid var(--clib-line); padding:8px 0; } .clib-log p{ margin:2px 0; }',
     '.clib-good{ color:var(--clib-good); font-weight:800; } .clib-bad{ color:var(--clib-bad); font-weight:800; }',
     '.clib-pill{ display:inline-block; padding:2px 10px; border-radius:999px; background:var(--clib-bg); border:1px solid var(--clib-line); font-weight:800; font-size:.85rem; }',
@@ -422,6 +549,11 @@
     ];
     if(!s.noBig) list.splice(2, 0, { e: '💭', name: 'Big questions', note: 'Talk about ideas', view: 'talks' });
     el.innerHTML = '<p class="clib-lede">' + esc(memoryLine()) + '</p>' + tiles(list); wireTiles(el);
+    var q = LIB.questionOfDay && LIB.questionOfDay();
+    if(q){ var box = document.createElement('section'); box.className = 'clib-card clib-qotd';
+      box.innerHTML = '<h2>💭 Question of the day</h2><p class="clib-big">' + esc(q.q) + '</p><button type="button" class="clib-btn" data-a>See what Shelly thinks</button><p class="clib-qa" hidden>' + esc(q.a) + '</p>';
+      box.querySelector('[data-a]').addEventListener('click', function(){ var a = box.querySelector('.clib-qa'); a.hidden = false; speak(q.a); });
+      el.appendChild(box); }
   } };
   // What the tutor remembers: her decks and what she did lately.
   function memoryLine(){
@@ -523,7 +655,8 @@
   } };
 
   LIB.views.plays = { title: 'Role-play', render: function(el){
-    el.innerHTML = '<p class="clib-lede">Practise real conversations. Shelly plays the other person.</p>' + tiles(PLAYS.map(function(p){ return { e: p.e, name: p.title, view: 'play', arg: p.id }; })); wireTiles(el);
+    var lang = { korean: 'ko', reading: 'en', science: 'en' }, g = myGoals().map(function(x){ return lang[x]; }), rank = function(p){ var i = g.indexOf(p.lang); return i < 0 ? 99 : i; };
+    el.innerHTML = '<p class="clib-lede">Practise real conversations. Shelly plays the other person.</p>' + tiles(PLAYS.slice().sort(function(a, b){ return rank(a) - rank(b); }).map(function(p){ return { e: p.e, name: p.title, view: 'play', arg: p.id }; })); wireTiles(el);
   } };
   LIB.views.play = { title: 'Role-play', render: function(el, id){
     var p = PLAYS.find(function(x){ return x.id === id; }) || PLAYS[0], i = 0, tries = 0;
@@ -664,7 +797,7 @@
   } };
 
   LIB.views.wsMake = { title: 'Make a worksheet', render: function(el, arg){
-    var o = arg ? JSON.parse(arg) : { src: 'deck' }, ds = decks();
+    var o = arg ? JSON.parse(arg) : { src: 'deck' }, ds = goalFirst(decks());
     var k = KINDS_HOME.find(function(x){ return x.src === o.src; }) || KINDS_HOME[0];
     this.title = k.e + ' ' + k.name;
     var html = '<section class="clib-card">';
@@ -684,6 +817,7 @@
     if(o.src !== 'photo' || claudeReady()) html += '<label class="clib-label">Level</label><div class="clib-row" role="group" aria-label="Level">' + Object.keys(LEVELS).map(function(l, i){ return '<button type="button" class="clib-btn" data-level="' + l + '" aria-pressed="' + (i === 1) + '">' + LEVELS[l].label + '</button>'; }).join('') + '</div>' +
       '<div class="clib-row"><button type="button" class="clib-btn main" data-make>Make it</button></div><p class="clib-msg" aria-live="polite"></p>';
     el.innerHTML = html + '</section>';
+    if(o.script && $('#wsDeck', el)) $('#wsDeck', el).value = o.script;   // handwriting: the letters the home page picked
     var level = 'medium';
     $$('[data-level]', el).forEach(function(b){ b.addEventListener('click', function(){ level = b.dataset.level; $$('[data-level]', el).forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); }); }); });
     var mk = $('[data-make]', el); if(!mk) return;
@@ -1573,14 +1707,14 @@
     '.clib-send .clib-input{ flex:1; width:auto; }',
     '.clib-dots, .clib-arr{ display:flex; flex-wrap:wrap; gap:4px; justify-content:center; font-size:1.8rem; line-height:1.3; margin:8px 0; }',
     '.clib-arr{ flex-direction:column; align-items:center; gap:2px; }',
-    '.clib-huge{ font:800 2.2rem "Baloo 2",sans-serif; text-align:center; margin:10px 0; }',
+    '.clib-huge{ font:600 2.2rem var(--clib-display); text-align:center; margin:10px 0; }',
     '.clib-e3{ font-size:2.4rem; text-align:center; letter-spacing:.2em; margin:8px 0; }',
     '.clib-fb, .clib-tb{ min-height:1.3em; font-weight:800; margin:8px 0; }',
     '.clib-tb{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }',
     '.clib-recent{ margin:8px 0; color:var(--clib-soft); font-weight:700; }',
     '.clib-dim{ opacity:.3; filter:grayscale(1); }',
     '.clib-ws-head{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; border-bottom:2px solid var(--clib-ink); padding-bottom:6px; margin-bottom:12px; font-weight:800; }',
-    '.clib-ws-sec{ margin:18px 0; break-inside:avoid; } .clib-ws-sec h3{ margin:0 0 6px; font:800 1.1rem "Baloo 2",sans-serif; }',
+    '.clib-ws-sec{ margin:18px 0; break-inside:avoid; } .clib-ws-sec h3{ margin:0 0 6px; font:600 1.15rem var(--clib-display); }',
     '.clib-bank{ display:flex; flex-wrap:wrap; gap:8px; padding:8px 12px; border:1px dashed var(--clib-line); border-radius:12px; font-weight:800; margin:6px 0; }',
     '.clib-match{ display:grid; gap:8px; } .clib-mrow{ display:flex; align-items:center; gap:10px; } .clib-mrow > span, .clib-mrow > label{ flex:1; font-weight:700; }',
     '.clib-mrow select, .clib-op, select.clib-ans{ font-weight:700; font-size:1rem; font-family:inherit; color:var(--clib-ink); background:var(--clib-bg); border:1px solid var(--clib-line); border-radius:10px; padding:6px 8px; }',
