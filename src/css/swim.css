@@ -1,0 +1,156 @@
+/*SWIM:BEGIN*/
+:root{--sw-w1:#D3F0F3;--sw-w2:#9AD5DF;--sw-w3:#6CB9C9;--sw-sand:#EADBC2;--sw-sand2:#DCC8A6;--sw-far:rgba(16,96,104,.22);--sw-grass:#4F8F57;--sw-caus:.34;--sw-shell:#4E8A3E;--sw-shell2:#6FA65A;--sw-rim:#2E5E2B;--sw-skin:#9CCB86;--sw-skin-d:#6E9F5C;--sw-farlimb:#7DAE69;--sw-belly:#E9D9A6;--sw-eye:#0C2A3B;--sw-bub:rgba(255,255,255,.85);--sw-chip:rgba(255,255,255,.86);--sw-chip-ink:#0C2A3B}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--sw-w1:#0F3C52;--sw-w2:#0B2E42;--sw-w3:#072231;--sw-sand:#2E2A22;--sw-sand2:#3A342A;--sw-far:rgba(67,211,212,.11);--sw-grass:#3F7A4C;--sw-caus:.12;--sw-shell:#5E9E4E;--sw-shell2:#7DBB67;--sw-rim:#365F30;--sw-skin:#A8D892;--sw-skin-d:#76A866;--sw-farlimb:#6E9C60;--sw-belly:#D9C98F;--sw-eye:#04121B;--sw-bub:rgba(160,240,240,.7);--sw-chip:rgba(10,32,46,.84);--sw-chip-ink:#E1F3F6}}
+:root[data-theme="dark"]{--sw-w1:#0F3C52;--sw-w2:#0B2E42;--sw-w3:#072231;--sw-sand:#2E2A22;--sw-sand2:#3A342A;--sw-far:rgba(67,211,212,.11);--sw-grass:#3F7A4C;--sw-caus:.12;--sw-shell:#5E9E4E;--sw-shell2:#7DBB67;--sw-rim:#365F30;--sw-skin:#A8D892;--sw-skin-d:#76A866;--sw-farlimb:#6E9C60;--sw-belly:#D9C98F;--sw-eye:#04121B;--sw-bub:rgba(160,240,240,.7);--sw-chip:rgba(10,32,46,.84);--sw-chip-ink:#E1F3F6}
+.ciw{position:absolute;inset:0;overflow:hidden;background:linear-gradient(180deg,var(--sw-w1) 0%,var(--sw-w2) 46%,var(--sw-w3) 100%);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;contain:strict}
+.ciw>*{position:absolute;pointer-events:none}
+.ciw .swlay{inset:0 -18px;will-change:transform}
+.ciw svg{display:block;overflow:visible}
+.ciw .swrays{inset:-10px 0 0;background:linear-gradient(105deg,transparent 18%,rgba(255,255,255,.2) 24%,transparent 31%,transparent 52%,rgba(255,255,255,.14) 57%,transparent 63%,transparent 78%,rgba(255,255,255,.12) 82%,transparent 87%);opacity:.7;animation:swRays 11s ease-in-out infinite alternate}
+.ciw .swcaus{inset:-40px -160px -40px -160px;opacity:var(--sw-caus);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='80'%3E%3Cg fill='none' stroke='white' stroke-width='2.8' stroke-opacity='.7' stroke-linecap='round'%3E%3Cpath d='M0 20C20 8 40 30 60 18S100 4 120 22S150 30 160 20'/%3E%3Cpath d='M0 58C25 48 45 70 70 56S110 44 130 62S150 66 160 58'/%3E%3Cpath d='M32 0C24 20 44 30 36 50S28 70 32 80'/%3E%3Cpath d='M106 0C116 18 94 36 106 52S112 70 106 80'/%3E%3C/g%3E%3C/svg%3E");-webkit-mask-image:linear-gradient(180deg,#000 10%,rgba(0,0,0,.25) 85%);mask-image:linear-gradient(180deg,#000 10%,rgba(0,0,0,.25) 85%);will-change:transform}
+.ciw .swcaus.c1{animation:swCa 26s linear infinite}
+.ciw .swcaus.c2{background-size:220px 110px;opacity:calc(var(--sw-caus)*.7);animation:swCb 34s linear infinite}
+.ciw .swfar path{fill:var(--sw-far)}
+.ciw .swmid .bl{fill:var(--sw-grass);opacity:.75;transform-box:fill-box;transform-origin:50% 100%;animation:swSway 6.5s ease-in-out infinite alternate}
+.ciw .swmid .bl:nth-child(2n){animation-duration:8s;animation-delay:-2s;opacity:.6}
+.ciw .swmid .bl:nth-child(3n){animation-duration:7.2s;animation-delay:-4.5s}
+.ciw .swfar .kp{transform-box:fill-box;transform-origin:50% 100%;animation:swSway 9s ease-in-out infinite alternate}
+.ciw .swfar .kp:nth-child(2n){animation-duration:11s;animation-delay:-5s}
+.ciw .swsand{left:0;right:0;bottom:0;height:22px}
+.ciw .swsand path.s1{fill:var(--sw-sand)}.ciw .swsand path.s2{fill:var(--sw-sand2)}
+.ciw .swsurf{left:0;top:0;width:200%;height:12px;animation:swSurf 16s linear infinite;will-change:transform}
+.ciw .swsurf path{fill:rgba(255,255,255,.34)}
+.ciw .swsurf path+path{fill:none;stroke:rgba(255,255,255,.65);stroke-width:1.2}
+.ciw .swmote{left:0;top:0;width:3px;height:3px;border-radius:50%;background:var(--sw-bub);opacity:0;animation:swMote var(--d,14s) linear var(--dl,0s) infinite}
+.ciw .swt{left:0;top:0;width:112px;height:72px;transform-origin:56px 36px;will-change:transform;pointer-events:none}
+.ciw .swt .p-sh{fill:var(--sw-shell);stroke:var(--sw-rim);stroke-width:1.4}
+.ciw .swt .p-sc{fill:var(--sw-shell2)}
+.ciw .swt .p-ln{fill:none;stroke:var(--sw-rim);stroke-width:1.5;stroke-linecap:round;opacity:.5}
+.ciw .swt .p-be{fill:var(--sw-belly)}
+.ciw .swt .p-sk{fill:var(--sw-skin);stroke:var(--sw-skin-d);stroke-width:.9}
+.ciw .swt .p-fl{fill:var(--sw-farlimb)}
+.ciw .swt .p-hl{fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;opacity:.45}
+.ciw .swt .p-ey{fill:var(--sw-eye)}
+.ciw .swt .p-mo{fill:none;stroke:var(--sw-eye);stroke-width:1.5;stroke-linecap:round}
+.ciw .swt .p-ck{fill:#F2A08A;opacity:.5}
+.ciw .swb{left:0;top:0;width:9px;height:9px;border-radius:50%;opacity:0;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.95) 0 18%,transparent 26%),radial-gradient(circle,transparent 52%,var(--sw-bub) 66%,transparent 74%);will-change:transform,opacity}
+.ciw .swring{left:0;top:0;width:40px;height:10px;margin:-5px 0 0 -20px;border-radius:50%;border:1.5px solid rgba(255,255,255,.75);opacity:0}
+.ciw .swglow{left:0;top:0;width:90px;height:90px;margin:-45px 0 0 -45px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.36),transparent 68%);opacity:0;transition:opacity .9s ease}
+.ciw.off *,.ciw.off{animation-play-state:paused!important}
+@keyframes swRays{from{opacity:.45;transform:translateX(-10px)}to{opacity:.85;transform:translateX(10px)}}
+@keyframes swCa{from{transform:translate3d(0,0,0)}to{transform:translate3d(160px,0,0)}}
+@keyframes swCb{from{transform:translate3d(0,0,0)}to{transform:translate3d(-220px,0,0)}}
+@keyframes swSway{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+@keyframes swSurf{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
+@keyframes swMote{0%{transform:translate3d(var(--x0),var(--y0),0);opacity:0}15%{opacity:var(--o,.6)}85%{opacity:var(--o,.6)}100%{transform:translate3d(var(--x1),var(--y1),0);opacity:0}}
+@media (prefers-reduced-motion: reduce){.ciw *,.ciw{animation:none!important}.ciw .swmote{opacity:.45}.ciw .swt{transition:opacity .45s ease}}
+/* lantern: dark mode turns the arrival scene into the deep sea at night, and Shelly hands over to a lanternfish */
+.ciw .swtw,.ciw .swlw{inset:0;transition:opacity .85s ease}
+.ciw .swtw .swt{position:absolute}
+.ciw .swnear,.ciw .swsurf{transition:opacity .85s ease}
+html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.theming .ciw .swsurf,html.theming .ciw .swdeep{transition:opacity .85s ease!important}
+.ciw .swdeep{inset:0;opacity:0;transition:opacity .85s ease;background:radial-gradient(120% 90% at 50% -20%,rgba(36,91,151,.32),transparent 60%),linear-gradient(180deg,#0A2A3D 0%,#061B2A 52%,#030E17 100%)}
+.ciw .swlw{opacity:0}
+.ciw .swl{position:absolute;left:0;top:0;width:112px;height:72px;transform-origin:56px 36px;will-change:transform}
+.ciw .swl .l-pw,.ciw .swl .l-hw{opacity:0}
+.ciw .swsnow{inset:-10px -18px 0;will-change:transform}
+.ciw .swdeep i{position:absolute;display:block;border-radius:50%;pointer-events:none}
+.ciw .swdeep .sn{width:2px;height:2px;background:rgba(214,236,240,.55);opacity:0;animation:lfSnow var(--d,24s) linear var(--dl,0s) infinite}
+.ciw .swdeep .sn.b{width:2.6px;height:2.6px;background:rgba(214,236,240,.42)}
+.ciw .swdeep .sk{width:7px;height:7px;margin:-3.5px 0 0 -3.5px;background:radial-gradient(circle,rgba(200,255,250,.95) 0 14%,rgba(67,211,212,.5) 32%,rgba(67,211,212,0) 70%);opacity:.2;animation:lfSpk var(--d,7s) ease-in-out var(--dl,0s) infinite alternate}
+.ciw .swdeep .sk.f{width:5px;height:5px;margin:-2.5px 0 0 -2.5px}
+/* dark target state */
+.ciw.dk .swdeep,.ciw.dk .swlw{opacity:1}
+.ciw.dk .swtw,.ciw.dk .swnear,.ciw.dk .swsurf{opacity:0}
+/* after the crossfade, the hidden scene is removed from rendering entirely */
+.ciw.dk:not(.xf) :is(.swrays,.swcaus,.swfar,.swmid,.swsand,.swtw,.swnear,.swsurf){display:none}
+.ciw:not(.dk):not(.xf) :is(.swdeep,.swlw){display:none}
+/* light motes, rings and glow at night */
+.ciw.dk .swb{background:radial-gradient(circle,rgba(226,255,252,.98) 0 16%,rgba(67,211,212,.7) 34%,rgba(67,211,212,0) 72%)}
+.ciw.dk .swring{border-color:rgba(67,211,212,.5)}
+.ciw.dk .swglow{background:radial-gradient(circle,rgba(67,211,212,.26),transparent 68%)}
+.ciw.dk.warm .swglow{background:radial-gradient(circle,rgba(240,199,106,.24),transparent 68%)}
+.ciw.dk.warm .swb{background:radial-gradient(circle,rgba(255,243,209,.98) 0 16%,rgba(240,199,106,.65) 34%,rgba(240,199,106,0) 72%)}
+@keyframes lfSnow{0%{transform:translate3d(0,0,0);opacity:0}12%{opacity:var(--o,.6)}85%{opacity:var(--o,.6)}100%{transform:translate3d(var(--dx,6px),var(--dy,80px),0);opacity:0}}
+@keyframes lfSpk{from{opacity:.12}to{opacity:var(--o,.7)}}
+@media (prefers-reduced-motion: reduce){.ciw .swl{transition:opacity .45s ease}.ciw .swl .l-pc,.ciw .swl .l-pw,.ciw .swl .l-ha,.ciw .swl .l-hw{transition:opacity .6s ease}.ciw .swdeep .sn{opacity:.35;transform:translate3d(0,var(--ry,20px),0)}.ciw .swdeep .sk{opacity:.4}}
+.ciw .swt .p-lm{fill:var(--lmf,var(--sw-farlimb));stroke:var(--lms,none);stroke-width:.9}
+
+/* lumi: 3D turn shading on the swimmers */
+.ciw .swt .p-shd{fill:#06303F;opacity:0}
+.ciw .swt .p-shn{fill:#fff;opacity:0}
+.ciw .swl .l-shd{fill:#020C14;opacity:0}
+.ciw .swl .l-shn{fill:#BFF4F2;opacity:0}
+/* lumi: the dark-mode helper (a lanternfish) */
+/* angler: Lumi the little anglerfish (night swimmer + helper icon) and check-in expressions */
+.ciw .swl{overflow:visible}
+.ciw .swl .l-fn{fill:rgba(67,211,212,.17);stroke:rgba(150,224,232,.62);stroke-width:.75;stroke-linejoin:round}
+.ciw .swl .l-ry{fill:none;stroke:rgba(160,230,236,.42);stroke-width:.55;stroke-linecap:round}
+.ciw .swl .l-bd{fill:url(#swlfB);stroke:rgba(126,222,226,.5);stroke-width:.8}
+.ciw .swl .l-ln{fill:none;stroke:rgba(207,246,248,.34);stroke-width:1.7;stroke-linecap:round}
+.ciw .swl .l-gl{fill:none;stroke:rgba(191,240,245,.26);stroke-width:1;stroke-linecap:round}
+.ciw .swl .l-sp{fill:#0A2645;opacity:.55}
+.ciw .swl .l-st{fill:none;stroke:#4C97AC;stroke-width:1.5;stroke-linecap:round}
+.ciw .swl .l-br{fill:#F0C76A}
+.ciw .swl .l-bc{fill:#43D3D4}
+.ciw .swl .l-bh{fill:#F2FFFE}
+.ciw .swl .l-ck{fill:url(#swlfK)}
+.ciw .swl .l-ew{fill:#CDEEF3}
+.ciw .swl .l-ei{fill:#06131D}
+.ciw .swl .l-eg{fill:none;stroke:#2A8CA3;stroke-width:.9;stroke-linecap:round}
+.ciw .swl .l-es{fill:#fff}
+.ciw .swl .l-eh{fill:none;stroke:#E3FBFB;stroke-width:2;stroke-linecap:round}
+.ciw .swl .l-lid{fill:#1D4C70}
+.ciw .swl .l-lsh{fill:none;stroke:#0A1F33;stroke-width:.85;stroke-linecap:round}
+.ciw .swl .l-brw{fill:none;stroke:#C4F0F3;stroke-width:1.35;stroke-linecap:round}
+.ciw .swl .l-mo{fill:none;stroke:#06131D;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.ciw .swl .l-mf,.ciw .swl .l-yw{fill:#06131D}
+.ciw .swl .l-tg{fill:#F2A08A}
+.ciw .swl .l-th{fill:#EAFBFB}
+.ciw .swl .l-pale{display:none;fill:#E4F6F2;opacity:.2;pointer-events:none}
+.ciw[data-ex="unwell"] .swl .l-pale {display:inline}
+.ciw[data-ex="unwell"] .swl .l-ck {opacity:.3}
+.ciw[data-ex="happy"] .swl .l-ck {opacity:1}
+/* Shelly's faces in the check-in water */
+.ciw .swt .p-eh{fill:none;stroke:var(--sw-eye);stroke-width:1.5;stroke-linecap:round}
+.ciw .swt .p-lid{fill:var(--sw-skin)}
+.ciw .swt .p-lsh{fill:none;stroke:var(--sw-eye);stroke-width:.8;stroke-linecap:round}
+.ciw .swt .p-brw{fill:none;stroke:var(--sw-eye);stroke-width:1.1;stroke-linecap:round}
+.ciw .swt .p-yw{fill:var(--sw-eye)}
+.ciw[data-ex="happy"] .swt .p-ck{opacity:.85}
+.ciw[data-ex="unwell"]{--sw-skin:#BCD5AC;--sw-skin-d:#90AE82;--sw-shell:#72986A;--sw-shell2:#90B486;--sw-farlimb:#A0BD93}
+.ciw[data-ex="unwell"] .swt .p-ck{opacity:.15}
+/* the helper icon: tail sways, the lure bobs and glows, the eyes blink */
+@keyframes luTail{0%,100%{rotate:-7deg}50%{rotate:7deg}}
+@keyframes luLure{0%,100%{rotate:-5deg}50%{rotate:6deg}}
+/* feed: food dropped into the check-in water. Light: a kelp flake or a gold treat for Shelly; dark: a glowing plankton speck for Lumi */
+.ciw .swfd{left:0;top:0;width:14px;height:14px;margin:-7px 0 0 -7px;opacity:0;will-change:transform,opacity}
+.ciw .swfd b{position:absolute;inset:0;display:block}
+.ciw .swfd .fdl{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M3.4 11.6L1.6 13.2' stroke='%2314634E' stroke-width='1' stroke-linecap='round'/%3E%3Cpath d='M1.8 10.2C2.6 5.4 6.6 2.2 12.4 2.2C12.6 7.6 8.8 11.6 3.6 11.8Z' fill='%231E8C6E' stroke='%2314634E' stroke-width='.7'/%3E%3Cpath d='M3.2 7.6C4.4 5 7 3.4 10 3.1' fill='none' stroke='%238FD27B' stroke-width='.8' stroke-linecap='round' opacity='.75'/%3E%3Cpath d='M3.8 10.2C6.4 6.6 8.8 4.8 11.6 3.1' fill='none' stroke='%23E9B949' stroke-width='1.1' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;filter:drop-shadow(0 1px 1px rgba(8,60,70,.25))}
+.ciw .swfd.v2 .fdl{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M7 5C7.2 3.2 8.6 2 10.6 2C10.3 3.8 8.9 4.9 7 5Z' fill='%233D7A3A'/%3E%3Ccircle cx='7' cy='8.4' r='3.7' fill='%23E9B949' stroke='%23B5842A' stroke-width='.7'/%3E%3Cpath d='M4.6 9.2C5.6 10.6 8.4 10.8 9.6 9.2' fill='none' stroke='%23C8962E' stroke-width='.7' stroke-linecap='round'/%3E%3Ccircle cx='5.8' cy='7.1' r='1.05' fill='%23FFF3D1'/%3E%3C/svg%3E")}
+.ciw .swfd .fdk{display:none;inset:-4px;border-radius:50%;background:radial-gradient(circle,#F2FFFD 0 12%,rgba(159,245,240,.9) 20%,rgba(67,211,212,.38) 42%,rgba(67,211,212,0) 70%)}
+.ciw .swfd.v2 .fdk{inset:-2px;background:radial-gradient(circle,#F2FFFD 0 13%,rgba(159,245,240,.85) 22%,rgba(67,211,212,.3) 44%,rgba(67,211,212,0) 70%)}
+.ciw.dk .swfd .fdl{display:none}.ciw.dk .swfd .fdk{display:block}
+@media (min-width:760px){.ciw .swfd b{transform:scale(1.12)}}
+/* ---------- Coral Cove hosts ---------- */
+.cove-water{position:relative;isolation:isolate;overflow:hidden;contain:layout paint}
+.cove-water>.ciw{position:absolute;inset:0}
+/* home header: a band of sea along the bottom of the header, full width */
+.cw-home{height:132px;margin:2px -16px 0;border-top:0}
+.cw-home .ciw{background:linear-gradient(180deg,color-mix(in srgb,var(--sw-w1) 0%,transparent) 0%,color-mix(in srgb,var(--sw-w2) 70%,transparent) 42%,var(--sw-w3) 100%)}
+.cw-home .ciw .swsurf,.cw-home .ciw .swrays{display:none}
+.cw-home .ciw .swdeep{background:none}
+@media (min-width:700px){.cw-home{height:156px;margin:4px -26px 0}}
+@media (min-width:900px){.cw-home{height:176px}}
+/* framed window: picker, resting screen, end of a round */
+.cw-frame{height:150px;max-width:440px;margin:4px auto 16px;border-radius:22px;border:1px solid color-mix(in srgb,var(--deep,#0A6C8A) 22%,transparent);box-shadow:0 18px 34px -24px rgba(8,62,88,.55)}
+.cw-frame.cw-sum{height:170px}
+@media (min-width:700px){.cw-frame{height:170px}.cw-frame.cw-sum{height:190px}}
+.cove-water .cihtxt{position:absolute;left:10px;bottom:9px;z-index:5;display:flex;align-items:center;gap:6px;padding:5px 12px 6px;border-radius:999px;background:var(--sw-chip);color:var(--sw-chip-ink);box-shadow:0 1px 3px rgba(4,30,45,.14);pointer-events:none;max-width:calc(100% - 20px);transition:opacity .4s ease,transform .4s ease}
+.cove-water .cihtxt b{font:700 .86rem/1.2 'Nunito',system-ui,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cove-water .cihtxt.bye{opacity:0;transform:translateY(6px)}
+.cove-water .ciw{cursor:pointer}
+.cove-water .ciw .swb{visibility:hidden}
+@media (prefers-reduced-motion: reduce){.cove-water .cihtxt{transition:none}}
+
+/*SWIM:END*/

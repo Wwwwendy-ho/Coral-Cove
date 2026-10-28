@@ -8,12 +8,12 @@ that already have Coral Cove keep their own progress: storage.js only adds docum
 <db-export-dir> holds one JSON file per database document, in folders that mirror the document paths
 (profiles/<id>.json, settings/pin.json, ...). Old=New renames a word everywhere in the data (for example a
 child's real name to "Child"); the export stops if the old word is still there afterwards. The date becomes the
-seed version and the cache version, so every device fetches the new files. Never put Coral Calendar records here.
+seed version and the cache version, so every device fetches the new files. It then rebuilds index.html and
+updates the coral-cove/ copy. Never put Coral Calendar records here.
 """
-import json, pathlib, re, sys
+import json, pathlib, re, subprocess, sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-TARGETS = [ROOT, ROOT / 'coral-cove']
 
 
 def load_db(root):
@@ -50,17 +50,17 @@ def main(dbdir, date, swap=None):
         if old.lower() in (seed_js + audio_js).lower():
             sys.exit(f'{old} is still in the data; nothing written.')
     v = date.replace('-', '')
-    for t in TARGETS:
-        (t / 'seed-data.js').write_text(seed_js, encoding='utf-8')
-        (t / 'audio-clips.js').write_text(audio_js, encoding='utf-8')
-        # new file versions, so iPads fetch the new data instead of their saved copy
-        for name in ('index.html', 'sw.js'):
-            p = t / name
-            text = re.sub(r'(seed-data|audio-clips|storage)\.js\?v=\d+', lambda m: f'{m.group(1)}.js?v={v}', p.read_text(encoding='utf-8'))
-            if name == 'sw.js':
-                text = re.sub(r"var CACHE = 'coral-cove-[^']*';", f"var CACHE = 'coral-cove-{v}';", text)
-            p.write_text(text, encoding='utf-8')
-    print(f'Wrote {len(seed)} documents and {len(audio)} clips into {", ".join(str(t) for t in TARGETS)}')
+    (ROOT / 'seed-data.js').write_text(seed_js, encoding='utf-8')
+    (ROOT / 'audio-clips.js').write_text(audio_js, encoding='utf-8')
+    # new file versions, so iPads fetch the new data instead of their saved copy
+    for p in (ROOT / 'src' / 'page.html', ROOT / 'sw.js'):
+        text = re.sub(r'(seed-data|audio-clips|storage)\.js\?v=\d+', lambda m: f'{m.group(1)}.js?v={v}', p.read_text(encoding='utf-8'))
+        if p.name == 'sw.js':
+            text = re.sub(r"var CACHE = 'coral-cove-[^']*';", f"var CACHE = 'coral-cove-{v}';", text)
+        p.write_text(text, encoding='utf-8')
+    subprocess.run([sys.executable, str(ROOT / 'tools' / 'build.py')], check=True)
+    subprocess.run(['sh', str(ROOT / 'tools' / 'mirror.sh')], check=True)
+    print(f'Wrote {len(seed)} documents and {len(audio)} clips')
 
 
 if __name__ == '__main__':

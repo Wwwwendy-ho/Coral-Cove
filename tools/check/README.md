@@ -1,6 +1,6 @@
 # Checks
 
-Run these before pushing a change to `index.html`, `library.js`, `words.js` or the styles.
+Run these before pushing a change to `src/`, `library.js`, `words.js` or the other site files. Build first (`python3 tools/build.py`).
 
 ```
 sh tools/check/run.sh
@@ -10,7 +10,8 @@ It runs, in order:
 
 | Check | File | What it looks for |
 |---|---|---|
-| Lint | `lint.js` (rules in `.eslintrc.json`) | Undefined names, duplicate declarations, unreachable code, unused variables, and functions nothing can call (followed through chains). The main script is taken out of `index.html`, and line numbers match `index.html`. |
+| Build | `../build.py --check` | `index.html` was rebuilt after the last change in `src/`. |
+| Lint | `lint.js` (rules in `.eslintrc.json`) | Undefined names, duplicate declarations, unreachable code, unused variables, and functions nothing can call (followed through chains). The main script is checked whole, as built into `index.html`, and problems are reported at their `src/` file and line. |
 | Styles | `css_audit.py` | Classes in the styles that nothing uses, `[data-x="…"]` styles for values never set, unused `@keyframes`, and values a later rule with the same selector always overrides. |
 | Word help | `../words/test_words.js` | Ask Shelly's offline English, Chinese and Korean answers. |
 | Browser | `smoke.js` | Both profiles in a real browser: the 3D board, the crab, tapping fish, opening a deck, the grown-up maths question (wrong answer, Cancel, right answer), a child leaving a deck early, Ask Shelly offline, the Library, and no page errors. |
@@ -34,12 +35,12 @@ The practice word on the deck screen is picked at random and can differ between 
 
 ## Cleaning up styles
 
-`cssedit.py` edits only the rules it changes and leaves the rest of the file as it is:
+`cssedit.py` edits only the rules it changes and leaves the rest as it is. It works on the built `index.html` and copies the result back into `src/css/`:
 
-- `python3 tools/check/cssedit.py index.html dead` removes values a later identical rule overrides. It keeps a
+- `python3 tools/check/cssedit.py dead` removes values a later identical rule overrides. It keeps a
   property written twice in one rule (the `100vh` / `100dvh` fallback pattern) and anything overridden by a newer
   CSS feature (`dvh`, `color-mix`, `clamp`, `min`, `max`, `env`), which older iPads need.
-- `python3 tools/check/cssedit.py index.html unused CLASS …` removes the selectors that use those classes.
+- `python3 tools/check/cssedit.py unused CLASS …` removes the selectors that use those classes.
 
 After either, run `sh tools/mirror.sh` and compare screenshots as above.
 

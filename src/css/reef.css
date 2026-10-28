@@ -1,0 +1,287 @@
+/* REEF: Child Mode look. Chunkier tiles and buttons, silly deck transitions, the
+   treasure chest and the Treasure Reef shelf. body.reef-kid is set only on Child Mode screens;
+   body.reef-calm (Settings -> Calm motion, or the device's Reduce Motion) stops every animation. */
+:root{
+  --reef-sun:#ffd166; --reef-sun-ink:#8a5a00;
+  --reef-shallow:#8fe0dc; --reef-mid:#2aa6b3; --reef-deep:#0b5d73; --reef-abyss:#073847;
+  --reef-sand:#f6e2b0; --reef-sand-2:#e8c987;
+  --reef-coral:#ff8a6b; --reef-coral-ink:#b24a2e;
+  --reef-card:#ffffff; --reef-ink:#0b2b33; --reef-soft:#3f6670;
+  --reef-pop:cubic-bezier(.34,1.56,.64,1); --reef-glow:rgba(255,255,255,.65);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --reef-shallow:#1f6f7a; --reef-mid:#145a69; --reef-deep:#0a3746; --reef-abyss:#04161d;
+  --reef-sand:#3a3324; --reef-sand-2:#2d2719; --reef-card:#0f3942; --reef-ink:#eaf6f4; --reef-soft:#a9cbc7; --reef-glow:rgba(160,240,240,.07);
+} }
+:root[data-theme="dark"]{
+  --reef-shallow:#1f6f7a; --reef-mid:#145a69; --reef-deep:#0a3746; --reef-abyss:#04161d;
+  --reef-sand:#3a3324; --reef-sand-2:#2d2719; --reef-card:#0f3942; --reef-ink:#eaf6f4; --reef-soft:#a9cbc7; --reef-glow:rgba(160,240,240,.07);
+}
+
+/* ---------- chunky buttons (Child Mode) ---------- */
+body.reef-kid .btn{ border-radius:18px; font-family:'Baloo 2',system-ui,sans-serif; font-size:1.05rem; letter-spacing:.01em; padding:12px 20px; transition:transform .16s var(--reef-pop), box-shadow .16s ease, filter .16s ease; }
+body.reef-kid .btn-primary{ background:linear-gradient(180deg,#36b9c3,#1c8c93 70%); box-shadow:0 6px 0 #0d5262, 0 10px 18px rgba(10,61,74,.22); }
+body.reef-kid .btn-primary:hover{ filter:brightness(1.06); }
+body.reef-kid .btn-primary:active{ transform:translateY(5px) scale(.98); box-shadow:0 1px 0 #0d5262, 0 4px 8px rgba(10,61,74,.2); }
+body.reef-kid .btn-ghost{ background:var(--reef-card); color:var(--reef-ink); box-shadow:0 5px 0 var(--border), 0 8px 14px rgba(10,61,74,.12); }
+body.reef-kid .btn-ghost:active{ transform:translateY(4px) scale(.98); box-shadow:0 1px 0 var(--border); }
+body.reef-kid .btn:disabled{ filter:grayscale(.6); opacity:.6; }
+body.reef-kid .stats-row{ display:none; } /* no scores on her home screen */
+
+/* ---------- the read-aloud button ---------- */
+.reef-say{ flex:none; width:44px; height:44px; border-radius:50%; border:none; cursor:pointer; font-size:1.15rem; background:var(--reef-card); box-shadow:0 4px 0 var(--border), 0 6px 12px rgba(10,61,74,.12); }
+.reef-say:active{ transform:translateY(3px); box-shadow:0 1px 0 var(--border); }
+
+@keyframes reefBob{ 0%,100%{ transform:translateY(0) rotate(-3deg); } 50%{ transform:translateY(-6px) rotate(3deg); } }
+
+@keyframes reefGuide{ 0%,100%{ transform:scaleX(-1) translateY(0) rotate(4deg); } 50%{ transform:scaleX(-1) translateY(-8px) rotate(-4deg); } }
+
+/* ---------- back button ---------- */
+.reef-back{ align-self:flex-start; border:none; cursor:pointer; border-radius:999px; padding:9px 16px; font:800 .95rem 'Baloo 2',sans-serif;
+  background:rgba(255,255,255,.95); color:#0b2b33; box-shadow:0 4px 0 rgba(0,0,0,.18); }
+.reef-back:active{ transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.18); }
+
+/* ---------- deck tiles (Child Mode) ---------- */
+body.reef-kid .deck-card.kid{ border:none; border-radius:28px; padding:16px; gap:10px;
+  background:linear-gradient(180deg, var(--reef-card), color-mix(in srgb, var(--reef-card) 88%, var(--hue, #1c8c93)));
+  box-shadow:0 8px 0 color-mix(in srgb, var(--hue, #1c8c93) 30%, var(--border)), 0 14px 24px rgba(10,61,74,.14);
+  animation:reefSpotIn2 .5s var(--reef-pop) both; }
+
+@keyframes reefSpotIn2{ from{ transform:translateY(18px) scale(.94); opacity:0; } to{ transform:none; opacity:1; } }
+body.reef-kid .deck-card.kid .deck-emoji{ background:radial-gradient(circle at 35% 30%, #fff, color-mix(in srgb, var(--hue, #1c8c93) 25%, #fff)); }
+body.reef-kid .deck-card.kid .deck-name{ font-size:1.3rem; line-height:1.15; }
+body.reef-kid .deck-card.kid .deck-badge.due{ background:var(--reef-coral); color:#fff; font-size:.85rem; padding:5px 12px; box-shadow:0 3px 0 var(--reef-coral-ink); }
+body.reef-kid .deck-card.kid .btn-primary{ width:100%; padding:14px 16px; font-size:1.15rem; }
+
+/* ---------- study screen (Child Mode) ---------- */
+body.reef-kid .stage{ border:none; border-radius:32px; padding:28px 18px 32px;
+  background:radial-gradient(120% 60% at 50% 0%, var(--reef-glow), transparent 60%), linear-gradient(180deg, color-mix(in srgb, var(--reef-shallow) 45%, var(--foam)), var(--foam) 75%);
+  box-shadow:inset 0 0 0 3px color-mix(in srgb, var(--reef-glow) 80%, transparent), 0 14px 30px rgba(10,61,74,.12); }
+body.reef-kid .face{ border-radius:26px; }
+body.reef-kid .face-front .card-text{ font-size:2.1rem; }
+body.reef-kid .choice-row{ gap:12px; max-width:460px; }
+body.reef-kid .choice-btn{ border:none; border-radius:22px; padding:16px 20px; font-size:1.25rem; text-align:center;
+  background:var(--reef-card); box-shadow:0 6px 0 var(--border), 0 10px 18px rgba(10,61,74,.10); transition:transform .16s var(--reef-pop), box-shadow .16s ease; }
+body.reef-kid .choice-btn:not(:disabled):active{ transform:translateY(5px) scale(.98); box-shadow:0 1px 0 var(--border); }
+body.reef-kid .choice-btn.correct{ background:var(--ok-bg); color:var(--ok-ink); box-shadow:0 6px 0 var(--ok-ink); animation:reefYay .5s var(--reef-pop); }
+body.reef-kid .choice-btn.wrong{ background:var(--bad-bg); color:var(--bad-ink); box-shadow:0 6px 0 color-mix(in srgb, var(--bad-ink) 50%, var(--border)); animation:reefWobble .45s ease; }
+@keyframes reefYay{ 0%{ transform:scale(1); } 40%{ transform:scale(1.07) rotate(-1deg); } 100%{ transform:scale(1); } }
+@keyframes reefWobble{ 0%,100%{ transform:translateX(0); } 30%{ transform:translateX(-5px); } 60%{ transform:translateX(4px); } }
+body.reef-kid .choice-feedback{ font-size:1.1rem; }
+body.reef-kid .choice-feedback.ok{ animation:reefYay .5s var(--reef-pop); }
+.reef-tip{ display:flex; align-items:flex-start; gap:10px; margin:12px auto 0; max-width:440px; padding:10px 14px; border-radius:18px; text-align:left;
+  background:var(--reef-card); color:var(--reef-ink); font-weight:700; font-size:.98rem; line-height:1.35; box-shadow:0 4px 0 var(--border); }
+.reef-tip-face{ font-size:1.6rem; line-height:1; }
+body.reef-kid .tc-timer-row{ display:none; } /* no countdowns in her mode */
+
+/* ---------- round finished: the treasure chest ---------- */
+.reef-sum{ padding-top:6px; }
+.reef-sum-card{ border:none; border-radius:34px; padding:22px 18px 26px; overflow:hidden;
+  background:radial-gradient(100% 60% at 50% 0%, color-mix(in srgb, var(--reef-shallow) 60%, var(--reef-card)), var(--reef-card) 70%);
+  box-shadow:0 10px 0 var(--border), 0 20px 40px rgba(10,61,74,.18); }
+.reef-sum-deck{ font:800 .95rem 'Nunito',sans-serif; color:var(--reef-soft); }
+.reef-sum-card h2{ font-size:2rem; margin:6px 0 4px; }
+.reef-fact{ margin:0 auto; max-width:420px; font-weight:800; font-size:1.1rem; color:var(--reef-ink); }
+.reef-sum-note{ margin:6px 0 0; font-weight:700; color:var(--reef-soft); }
+.reef-sum-actions{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-top:20px; }
+.reef-chest{ position:relative; display:block; width:220px; height:210px; margin:6px auto 0; border:none; background:none; cursor:pointer; padding:0; -webkit-tap-highlight-color:transparent; }
+.reef-chest-rays{ position:absolute; left:50%; top:42%; width:300px; height:300px; margin:-150px 0 0 -150px; border-radius:50%; opacity:0;
+  background:repeating-conic-gradient(from 0deg, rgba(255,209,102,.55) 0 10deg, transparent 10deg 24deg);
+  -webkit-mask-image:radial-gradient(circle, #000 25%, transparent 68%); mask-image:radial-gradient(circle, #000 25%, transparent 68%);
+  animation:reefRaysIn .5s ease .55s forwards, reefSpin 14s linear .55s infinite; }
+@keyframes reefRaysIn{ to{ opacity:1; } }
+@keyframes reefSpin{ to{ transform:rotate(360deg); } }
+.reef-chest-box{ position:absolute; left:50%; bottom:6px; width:150px; height:96px; margin-left:-75px; }
+.reef-chest-box .body{ position:absolute; inset:34px 0 0; border-radius:10px 10px 18px 18px; background:linear-gradient(180deg,#b9732f,#8a4f1c); box-shadow:inset 0 0 0 5px #e8a716, 0 8px 0 #5e3410; }
+.reef-chest-box .body::after{ content:""; position:absolute; left:50%; top:6px; width:22px; height:26px; margin-left:-11px; border-radius:6px; background:#ffd166; box-shadow:0 2px 0 #a8770a; }
+.reef-chest-box .lid{ position:absolute; left:0; right:0; top:0; height:42px; border-radius:60px 60px 8px 8px; background:linear-gradient(180deg,#d08a3f,#a86224); box-shadow:inset 0 0 0 5px #e8a716;
+  transform-origin:50% 100%; animation:reefLid .5s var(--reef-pop) .35s both; z-index:2; }
+@keyframes reefLid{ from{ transform:rotateX(0) translateY(0); } to{ transform:translateY(-28px) rotate(-14deg); } }
+.reef-chest-friend{ position:absolute; left:50%; top:4%; font-size:5.2rem; line-height:1; transform:translate(-50%, 60px) scale(.2); opacity:0;
+  filter:drop-shadow(0 8px 10px rgba(0,0,0,.25)); animation:reefFriendUp .7s var(--reef-pop) .6s forwards, reefBob 3.4s ease-in-out 1.4s infinite; z-index:1; }
+@keyframes reefFriendUp{ to{ transform:translate(-50%, 0) scale(1); opacity:1; } }
+
+/* ---------- Treasure Reef shelf ---------- */
+.reef-collection{ border-radius:34px; padding:20px 16px 24px; color:#fff; overflow:hidden;
+  background:radial-gradient(100% 50% at 50% -10%, rgba(255,255,255,.35), transparent 60%), linear-gradient(180deg, var(--reef-mid), var(--reef-deep) 60%, var(--reef-abyss));
+  box-shadow:0 18px 40px rgba(7,56,71,.28); }
+.reef-collection-head{ display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+.reef-collection-art{ font-size:3.4rem; line-height:1; }
+.reef-collection h2{ margin:0; color:#fff; font-size:1.8rem; }
+.reef-collection p{ margin:2px 0 0; font-weight:700; opacity:.92; }
+.reef-friends{ display:grid; grid-template-columns:repeat(auto-fill, minmax(124px, 1fr)); gap:14px; }
+.reef-friend{ display:flex; flex-direction:column; align-items:center; gap:4px; padding:14px 8px 12px; border-radius:24px; border:none; font:inherit; color:#fff;
+  background:rgba(255,255,255,.08); box-shadow:inset 0 0 0 2px rgba(255,255,255,.12); text-align:center; }
+.reef-friend b{ font:800 .95rem 'Baloo 2',sans-serif; }
+.reef-friend small{ font-weight:800; color:var(--reef-sun); }
+.reef-friend-e{ font-size:3rem; line-height:1.1; filter:brightness(0) opacity(.28); }
+.reef-friend:not(.found) b{ opacity:.55; font-size:.8rem; }
+.reef-friend.found{ cursor:pointer; background:radial-gradient(circle at 50% 30%, rgba(255,255,255,.28), rgba(255,255,255,.08) 70%); box-shadow:inset 0 0 0 2px rgba(255,209,102,.55), 0 6px 0 rgba(0,0,0,.18); }
+.reef-friend.found .reef-friend-e{ filter:drop-shadow(0 4px 4px rgba(0,0,0,.3)); }
+.reef-friend.found:active{ transform:translateY(3px); }
+.reef-friend.on{ box-shadow:inset 0 0 0 3px var(--reef-sun), 0 6px 0 rgba(0,0,0,.18); }
+.reef-fact-box{ display:flex; align-items:center; gap:12px; margin:0 0 14px; padding:12px 16px; border-radius:20px; background:#fff; color:#0b2b33; font-weight:700; font-size:1.05rem; }
+.reef-fact-e{ font-size:2.6rem; line-height:1; }
+
+/* ---------- transitions ---------- */
+.reef-tx{ position:fixed; inset:0; z-index:99990; overflow:hidden; pointer-events:auto; }
+.tx-water{ position:absolute; left:0; right:0; top:0; height:130%; transform:translateY(100%);
+  background:linear-gradient(180deg, #4fc7cf 0%, #1c8c93 30%, #0b5d73 70%, #073847 100%); animation:txDive 1.3s cubic-bezier(.7,0,.3,1) forwards; }
+.tx-crest{ position:absolute; left:0; top:-58px; width:100%; height:60px; }
+.tx-crest path{ fill:#4fc7cf; }
+@keyframes txDive{ 0%{ transform:translateY(100%); } 42%,58%{ transform:translateY(-8%); } 100%{ transform:translateY(-125%); } }
+.reef-tx-surface .tx-water{ animation-name:txSurface; }
+@keyframes txSurface{ 0%{ transform:translateY(-125%); } 42%,58%{ transform:translateY(-8%); } 100%{ transform:translateY(100%); } }
+.reef-tx-surface .tx-crest{ top:auto; bottom:-58px; transform:scaleY(-1); }
+.reef-tx-surface .tx-crest path{ fill:#073847; }
+.tx-bubbles{ position:absolute; inset:0; }
+.tx-bub{ position:absolute; left:var(--x); bottom:-60px; width:var(--s); height:var(--s); border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.95), rgba(255,255,255,.15) 60%, rgba(255,255,255,.35)); box-shadow:inset 0 0 0 2px rgba(255,255,255,.5);
+  animation:txBub 1.1s ease-in var(--d) forwards; }
+@keyframes txBub{ to{ transform:translateY(-125vh) translateX(20px); } }
+.tx-fish{ position:absolute; font-size:3.4rem; line-height:1; left:0; transform:translateX(-25vw); }
+.tx-fish.f1{ top:28%; animation:txFishR .9s ease-in-out .2s forwards; }
+.tx-fish.f2{ top:62%; left:auto; right:0; transform:translateX(25vw) scaleX(-1); animation:txFishL 1s ease-in-out .25s forwards; }
+.tx-fish.f3{ top:46%; animation:txFishR 1.05s ease-in-out .32s forwards; font-size:2.6rem; }
+/* The fish move with transform (not left/right) so the graphics chip animates them on its own: the deck is
+   built behind the water at the same moment, and a layout-based animation would stall while that happens. */
+@keyframes txFishR{ from{ transform:translateX(-25vw); } to{ transform:translateX(120vw); } }
+@keyframes txFishL{ from{ transform:translateX(25vw) scaleX(-1); } to{ transform:translateX(-120vw) scaleX(-1); } }
+.tx-water, .tx-bub, .tx-fish, .tx-shelly{ will-change:transform; }
+.tx-shelly{ position:absolute; left:50%; top:50%; width:min(42vw, 230px); transform:translate(-50%, 70vh) rotate(0); animation:txShelly 1.25s cubic-bezier(.3,1.2,.5,1) forwards; }
+.tx-shelly-svg{ width:100%; height:auto; display:block; filter:drop-shadow(0 12px 16px rgba(0,0,0,.35)); }
+@keyframes txShelly{ 0%{ transform:translate(-50%, 70vh) rotate(-30deg) scale(.6); } 45%{ transform:translate(-50%, -55%) rotate(360deg) scale(1.1); } 60%{ transform:translate(-50%, -50%) rotate(350deg) scale(1); } 100%{ transform:translate(-50%, -120vh) rotate(420deg) scale(.8); } }
+.reef-tx-surface .tx-shelly{ animation-name:txShellyUp; }
+@keyframes txShellyUp{ 0%{ transform:translate(-50%, -120vh) rotate(0) scale(.6); } 45%{ transform:translate(-50%, -55%) rotate(-360deg) scale(1.15); } 60%{ transform:translate(-50%, -50%) rotate(-350deg) scale(1); } 100%{ transform:translate(-50%, 80vh) rotate(-400deg) scale(.7); } }
+
+.tx-splash{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:3; }
+
+.reef-tx-swim{ pointer-events:auto; }
+.tx-iris{ position:absolute; left:var(--cx); top:var(--cy); width:40px; height:40px; margin:-20px 0 0 -20px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #bff3f0, #2aa6b3 55%, #0b5d73); box-shadow:inset 0 0 0 6px rgba(255,255,255,.5);
+  animation:txIris .56s cubic-bezier(.6,0,.3,1) forwards; }
+@keyframes txIris{ 0%{ transform:scale(0); opacity:1; } 45%{ transform:scale(70); opacity:1; } 100%{ transform:scale(70); opacity:0; } }
+
+/* ---------- Calm motion: nothing moves ---------- */
+body.reef-calm .deck-card.kid, body.reef-calm .choice-btn, body.reef-calm .choice-feedback,
+body.reef-calm .reef-chest-rays, body.reef-calm .reef-chest-box .lid, body.reef-calm .reef-chest-friend{ animation:none !important; }
+
+body.reef-calm .reef-chest-rays{ opacity:1; }
+body.reef-calm .reef-chest-box .lid{ transform:translateY(-28px) rotate(-14deg); }
+body.reef-calm .reef-chest-friend{ transform:translate(-50%, 0); opacity:1; }
+
+/* ---------- round 2: drawn art, today's shells, Shelly on the study screen ---------- */
+
+.reef-art-svg{ display:block; width:100%; height:auto; overflow:visible; filter:drop-shadow(0 6px 6px rgba(7,40,52,.25)); }
+
+.reef-collection-art{ width:84px; flex:none; }
+
+.reef-today{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:6px; font-weight:800; font-size:.92rem; color:var(--reef-soft); }
+.reef-today-shells{ display:flex; gap:5px; }
+.reef-today-shells i{ width:16px; height:16px; border-radius:50% 50% 45% 45%; background:var(--border); box-shadow:inset 0 -2px 0 rgba(0,0,0,.08); }
+.reef-today-shells i.on{ background:radial-gradient(circle at 35% 30%, #fff, #ffe9a8 40%, #e8a716); box-shadow:0 0 6px rgba(255,209,102,.8); }
+body .stage.has-buddy, body.reef-kid .stage.has-buddy{ padding-bottom:118px; }   /* room for Shelly at the bottom of every study card, on every profile */
+.reef-buddy{ position:absolute; left:0; right:0; bottom:0; height:110px; pointer-events:none; z-index:0; }
+.reef-seabed{ position:absolute; left:-4%; right:-4%; bottom:-24px; height:56px; border-radius:50% 50% 0 0 / 80% 80% 0 0;
+  background:radial-gradient(60% 120% at 30% 0%, var(--reef-sand), var(--reef-sand-2)); opacity:.9; }
+.reef-buddy-turtle{ position:absolute; right:7%; bottom:8px; width:78px; height:auto; filter:drop-shadow(0 4px 5px rgba(0,0,0,.2)); animation:reefGuide 2.8s ease-in-out infinite; }
+.reef-buddy-say{ position:absolute; right:calc(7% + 84px); bottom:44px; max-width:60%; padding:7px 12px; border-radius:14px 14px 4px 14px; background:#fff; color:#0b2b33;
+  font:800 .95rem 'Nunito',sans-serif; box-shadow:0 4px 10px rgba(7,40,52,.18); }
+.reef-buddy-say:empty{ display:none; }
+.reef-buddy[data-mood="yay"] .reef-buddy-turtle{ animation:reefBuddyYay .7s var(--reef-pop); }
+.reef-buddy[data-mood="hmm"] .reef-buddy-turtle{ animation:reefBuddyHmm 1.2s ease-in-out; }
+.reef-buddy[data-mood="yay"] .reef-buddy-say, .reef-buddy[data-mood="hmm"] .reef-buddy-say{ animation:reefSpotIn2 .4s var(--reef-pop) both; }
+@keyframes reefBuddyYay{ 0%{ transform:none; } 40%{ transform:translateY(-20px) rotate(-20deg) scale(1.1); } 70%{ transform:translateY(-10px) rotate(8deg); } 100%{ transform:none; } }
+@keyframes reefBuddyHmm{ 0%,100%{ transform:none; } 30%{ transform:rotate(-8deg); } 60%{ transform:rotate(6deg); } }
+body.reef-calm .reef-buddy-turtle, body.reef-calm .reef-buddy-say{ animation:none !important; }
+@media (max-width:640px){ .reef-buddy-turtle{ width:62px; } .reef-buddy-say{ right:calc(7% + 66px); font-size:.85rem; } }
+
+/* ---------- round 3: the reef world (a shipwreck at night). Every deck is an object; depth comes from
+   size, haze and shadow by row, far ridges and near kelp that scroll at different speeds, and light. ---------- */
+.rw{ margin:4px 0 26px; }
+.rw-defs{ position:absolute; width:0; height:0; overflow:hidden; }
+.rw-head{ display:flex; align-items:flex-start; gap:10px; margin:0 0 12px; }
+.rw-head-text{ flex:1; min-width:0; }
+.rw-head h2{ margin:0; font-size:1.6rem; color:var(--deep); }
+:root[data-theme="dark"] .rw-head h2{ color:var(--lagoon-light); }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .rw-head h2{ color:var(--lagoon-light); } }
+.rw-head p{ margin:2px 0 0; font-weight:800; font-size:1.02rem; color:var(--reef-soft); }
+/* Storybook scene: soft watercolor water, one painted landscape, decks along a sandy path. */
+.rw-scene{ position:relative; border-radius:32px; overflow:hidden; isolation:isolate; width:100%;
+  background:linear-gradient(180deg, #e3f2ec 0%, #bcdfd9 16%, #8fc3c3 52%, #6aa3a9 100%);
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.45), 0 18px 40px rgba(40,80,86,.22); }
+.rw.night .rw-scene{ background:linear-gradient(180deg, #24505b 0%, #143844 20%, #0b2630 60%, #06161d 100%);
+  box-shadow:inset 0 0 0 3px rgba(233,217,168,.10), 0 18px 40px rgba(0,0,0,.45); }
+.rw-paint{ position:absolute; inset:0; width:100%; height:100%; display:block; z-index:0; }
+.rw-light{ position:absolute; inset:0; z-index:1; pointer-events:none; opacity:.55;
+  background:radial-gradient(14px 9px at 20% 30%, rgba(255,255,255,.35), transparent 70%), radial-gradient(18px 10px at 70% 60%, rgba(255,255,255,.28), transparent 70%);
+  background-size:130px 96px, 170px 120px;
+  -webkit-mask-image:linear-gradient(180deg,#000 0,rgba(0,0,0,.4) 60%,transparent 100%); mask-image:linear-gradient(180deg,#000 0,rgba(0,0,0,.4) 60%,transparent 100%);
+  animation:rwCaustic 18s linear infinite; }
+@keyframes rwCaustic{ to{ background-position:130px 96px, -170px 120px; } }
+.rw.night .rw-light{ opacity:1; -webkit-mask-image:none; mask-image:none;
+  background:radial-gradient(1.5px 1.5px at 10% 20%, rgba(240,230,200,.6), transparent 60%), radial-gradient(1px 1px at 60% 40%, rgba(240,230,200,.5), transparent 60%), radial-gradient(2px 2px at 35% 75%, rgba(240,230,200,.4), transparent 60%);
+  background-size:140px 140px, 90px 90px, 170px 170px; animation:rwSnow 26s linear infinite; }
+@keyframes rwSnow{ to{ background-position:0 140px, 0 90px, 0 170px; } }
+
+/* signposts: a hand-cut painted board on a stick, at the start of each subject's stretch of path */
+.rw-post{ position:absolute; left:var(--x); top:var(--y); z-index:3; transform:translate(-50%, -40%); display:flex; align-items:center; gap:8px;
+  animation:rwRise .7s var(--reef-pop) both; animation-delay:calc(var(--i) * 45ms); }
+.rw-post::before{ content:""; position:absolute; left:calc(50% - 22px); top:60%; width:8px; height:46px; border-radius:3px; background:#8a6a4b; z-index:-1; }
+.rw-post-board{ display:flex; flex-direction:column; align-items:flex-start; padding:7px 16px 8px; border-radius:10px 16px 12px 18px;
+  background:linear-gradient(180deg, #d8b48b, #c09468); color:#3f2c1b; box-shadow:0 4px 0 #8a6a4b, 0 10px 18px rgba(60,50,30,.18);
+  transform:rotate(-2deg); }
+.rw-post.r .rw-post-board{ transform:rotate(2deg); }
+.rw-post-board b{ font:800 1.12rem 'Baloo 2',sans-serif; line-height:1.1; white-space:nowrap; }
+.rw-post-board small{ font-weight:800; font-size:.78rem; opacity:.75; }
+.rw.night .rw-post::before{ background:#4a3a2c; }
+.rw.night .rw-post-board{ background:linear-gradient(180deg, #6e5843, #54412f); color:#f6e9c8; box-shadow:0 4px 0 #34281d, 0 0 26px rgba(255,214,140,.22); }
+.rw-say{ border:none; cursor:pointer; width:38px; height:38px; border-radius:50%; font-size:1rem; background:#fbf6ea; box-shadow:0 3px 0 rgba(74,59,44,.25); }
+.rw-say:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(74,59,44,.25); }
+.rw.night .rw-say{ background:#e9dcc0; }
+
+.rw-obj{ position:absolute; left:var(--x); top:var(--y); z-index:2; width:clamp(140px, 20vw, 188px); padding:0; border:none; background:none; cursor:pointer; font:inherit; color:inherit;
+  transform:translate(-50%, -58%); -webkit-tap-highlight-color:transparent; animation:rwRise .7s var(--reef-pop) both; animation-delay:calc(var(--i) * 45ms); }
+@keyframes rwRise{ from{ opacity:0; margin-top:30px; } to{ opacity:1; margin-top:0; } }
+.rw-obj .rw-art{ display:block; width:100%; height:auto; overflow:visible; position:relative; z-index:1; transform-origin:50% 90%;
+  filter:saturate(.72) sepia(.14) drop-shadow(0 8px 6px rgba(40,60,60,.22)); animation:rwSway 6s ease-in-out infinite; animation-delay:calc(var(--i) * -.7s); transition:transform .18s var(--reef-pop); }
+.rw.night .rw-art{ filter:saturate(.7) sepia(.1) brightness(.92) drop-shadow(0 8px 8px rgba(0,0,0,.4)); }
+@keyframes rwSway{ 0%,100%{ transform:rotate(-1.2deg); } 50%{ transform:rotate(1.2deg) translateY(-3px); } }
+.rw-obj:hover .rw-art{ transform:translateY(-6px) scale(1.04); }
+.rw-obj:active .rw-art{ transform:translateY(6px) scale(.94); animation-play-state:paused; }
+.rw-obj:focus-visible{ outline:none; }
+.rw-obj:focus-visible .rw-plaque{ outline:4px solid var(--reef-sun); outline-offset:3px; }
+.rw-shadow{ position:absolute; left:18%; right:18%; top:74%; height:20px; z-index:0; border-radius:50%; background:radial-gradient(closest-side, rgba(60,70,60,.35), transparent); filter:blur(3px); }
+.rw-badge{ position:absolute; right:6%; top:4%; z-index:3; width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.55rem;
+  background:#fbf6ea; box-shadow:0 0 0 3px rgba(150,120,90,.35), 0 5px 8px rgba(40,60,60,.2); }
+.rw.night .rw-badge{ background:#e9dcc0; box-shadow:0 0 0 3px rgba(255,214,140,.35), 0 0 16px rgba(255,214,140,.25); }
+.rw-pearl{ position:absolute; left:8%; top:10%; z-index:3; width:22px; height:22px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #fff, #fbe7b4 45%, #d9a441);
+  animation:rwPearl 2.2s ease-out infinite; }
+@keyframes rwPearl{ 0%{ box-shadow:0 0 0 0 rgba(240,200,110,.7); } 100%{ box-shadow:0 0 0 16px rgba(240,200,110,0); } }
+.rw-star{ position:absolute; left:8%; top:8%; z-index:3; font-size:1.45rem; color:#efc25a; text-shadow:0 2px 0 #a8803a; }
+.rw-count{ position:absolute; right:12%; top:10%; z-index:3; min-width:30px; height:30px; padding:0 8px; border-radius:15px; display:flex; align-items:center; justify-content:center;
+  font:800 1rem 'Baloo 2',sans-serif; background:#efc25a; color:#3f2c1b; border:3px solid #fbf6ea; }
+.rw-plaque{ position:relative; z-index:2; display:inline-flex; flex-direction:column; align-items:center; margin-top:-8px; max-width:100%; padding:5px 14px 6px;
+  border-radius:12px 16px 12px 16px; background:#fbf6ea; color:#3f2c1b; box-shadow:0 3px 0 rgba(74,59,44,.18); line-height:1.12; }
+.rw-plaque b{ font:800 1rem 'Baloo 2',sans-serif; text-align:center; }
+.rw-plaque small{ font-size:.76rem; font-weight:800; color:#7a6650; }
+.rw-obj.ready .rw-plaque small{ color:#b4553e; }
+.rw-obj.done .rw-plaque small{ color:#3f7a57; }
+.rw.night .rw-plaque{ background:#20343a; color:#f6e9c8; box-shadow:0 0 0 2px rgba(233,217,168,.18), 0 3px 0 rgba(0,0,0,.4); }
+.rw.night .rw-plaque small{ color:#cdbf9f; }
+.rw.night .rw-obj.ready .rw-plaque small{ color:#f2a88f; }
+.rw.night .rw-obj.done .rw-plaque small{ color:#9fd9b4; }
+.rw.night .rw-glow{ animation:rwGlow 3s ease-in-out infinite; transform-origin:80px 74px; }
+@keyframes rwGlow{ 0%,100%{ opacity:.7; } 50%{ opacity:1; } }
+.rw-guide{ position:absolute; left:-16%; top:-18%; z-index:4; width:42%; animation:reefGuide 2.8s ease-in-out infinite; }
+.rw-guide-svg{ display:block; width:100%; height:auto; transform:scaleX(-1); filter:drop-shadow(0 6px 6px rgba(40,60,60,.22)); }
+.rw.night .rw-guide-svg{ transform:none; filter:drop-shadow(0 0 10px rgba(127,245,227,.45)); }
+@media (max-width:640px){
+  .rw-scene{ border-radius:24px; }
+  .rw-obj{ width:clamp(116px, 36vw, 156px); }
+  .rw-badge{ width:38px; height:38px; font-size:1.2rem; }
+  .rw-plaque b{ font-size:.92rem; }
+  .rw-post-board{ padding:5px 12px 6px; } .rw-post-board b{ font-size:.98rem; }
+  .rw-say{ width:34px; height:34px; }
+}
+body.reef-calm .rw-light, body.reef-calm .rw-obj, body.reef-calm .rw-post, body.reef-calm .rw-obj .rw-art, body.reef-calm .rw-pearl, body.reef-calm .rw-guide, body.reef-calm .rw-glow{ animation:none !important; }

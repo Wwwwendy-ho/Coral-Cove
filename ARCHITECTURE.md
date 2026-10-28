@@ -7,7 +7,8 @@ how they fit together. Function names below can be searched for in the files.
 
 | File | What it holds |
 | --- | --- |
-| `index.html` | The whole app: two style blocks, then one script (about 19,000 lines) wrapped in `(function(){ "use strict"; ... })()` |
+| `src/` | The app's code, in about 30 files (see Editing the code) |
+| `index.html` | The whole app in one page, **built from `src/`** by `tools/build.py`. Don't edit it directly |
 | `storage.js` | The on-device database used on GitHub Pages (see Saving) |
 | `seed-data.js`, `audio-clips.js` | Starting decks, profiles and progress, and recorded pronunciation clips |
 | `library.js` | The Library (tutor, worksheets, check my work, progress), exposed through `window.CoralCove` |
@@ -19,8 +20,27 @@ how they fit together. Function names below can be searched for in the files.
 | `coral-cove/` | An exact copy of the site for iPads saved on the old address (`tools/mirror.sh` keeps it in sync) |
 | `tools/` | Build and check scripts (see Tools) |
 
-Both big files start with a table of contents listing their sections in order, by the header text to search for.
-Start there.
+## Editing the code
+
+The app is one page, `index.html`, but its code lives in `src/` so each part can be found and read on its own:
+
+- `src/page.html` is the page: the head, the screen's outline, and a line like `<!-- include: js/learning.js -->`
+  wherever a file goes. Its script block opens with a map of every script file and what it holds. Start there.
+- `src/css/`: `base.css` (the main app styles, with its own contents list), `fixes-and-refresh.css` (later
+  layers: accessibility fixes, the ocean tokens, art direction, status colours), `swim.css` (the swimming
+  mascot), `ask.css` (Ask Shelly), `reef.css` (the Child Mode look) and `reef-3d.css` (the board and lobby).
+- `src/js/`: the script, in order. `src/js/reef3d/` holds the 3D board and lobby, and `src/js/vendor/` the
+  third-party GLTFLoader.
+
+The script files are not separate programs: they are pieces of one function, and `tools/build.py` joins them
+back into one script, in the order `page.html` lists them. So a file can use any variable or function from
+another, as when it was all one file. Keep new code in the file it belongs to, and add a new file with a new
+include line in `page.html`.
+
+After an edit: `python3 tools/build.py` writes `index.html` (each file in it sits between `/* from src/... */` and
+`/* end of src/... */` comment lines, which help when reading errors in the browser), then `sh tools/mirror.sh`,
+then `sh tools/check/run.sh`. The check fails if `index.html` wasn't rebuilt, and lint gives `src/` file names and
+line numbers.
 
 ## The two copies
 
@@ -97,7 +117,7 @@ otherwise.
 ## Ask Shelly
 
 The Ask Shelly button opens a chat about the card on screen. Offline answers come first: `askLocal` tries
-Korean (`koLocalAnswer`, in `index.html`) and then `words.js` (English and Chinese). `words-data.js` loads the
+Korean (`koLocalAnswer`, in `src/js/reef.js`) and then `words.js` (English and Chinese). `words-data.js` loads the
 first time Ask Shelly opens. `tools/words/README.md` explains how the dictionary is built.
 
 ## The Library
@@ -107,16 +127,17 @@ first time Ask Shelly opens. `tools/words/README.md` explains how the dictionary
 
 ## Styles
 
-The first `<style>` holds the base app styles, in order of application, with the colour tokens as custom
-properties on `:root` (each with its dark-mode value beside it). The second, `<style id="reef">`, holds the
-game look: Child Mode, the board, the lobby and Ask Shelly. A later rule with the same selector wins, so look
+`base.css` and `fixes-and-refresh.css` hold the app styles, in order of application, with the colour tokens as
+custom properties on `:root` (each with its dark-mode value beside it). `reef.css` and `reef-3d.css` hold the game
+look: Child Mode, the board and the lobby. A later rule with the same selector wins, so look
 for an existing rule before adding one; `tools/check/css_audit.py` reports values that are overridden.
 
 ## Tools
 
 | Tool | Use |
 | --- | --- |
-| `tools/check/run.sh` | Run before every push: lint, style audit, mirror check, word tests, browser smoke test |
+| `tools/build.py` | Builds `index.html` from `src/` |
+| `tools/check/run.sh` | Run before every push: build check, lint, style audit, mirror check, word tests, browser smoke test |
 | `tools/check/snapshots.js` + `compare.py` | Screenshots and computed styles of 16 screens, to compare before and after a change |
 | `tools/build_claude.py` | Builds the Claude version into `build/` |
 | `tools/export_seed.py` | Replaces the starting data with a database export from the Claude version |
@@ -124,5 +145,5 @@ for an existing rule before adding one; `tools/check/css_audit.py` reports value
 | `tools/words/` | Builds the offline dictionary |
 | `tools/compose_music.py` | Makes the songs |
 
-After changing site files: bump the cache name in `sw.js` (so iPads fetch the new version), run
-`sh tools/mirror.sh`, then `sh tools/check/run.sh`.
+After changing site files: run `python3 tools/build.py`, bump the cache name in `sw.js` (so iPads fetch the new
+version), run `sh tools/mirror.sh`, then `sh tools/check/run.sh`.

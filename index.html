@@ -1,4 +1,7 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}</style><meta name="apple-mobile-web-app-capable" content="yes">
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
+<!-- Built by tools/build.py from the files in src/. Edit those, not index.html (see ARCHITECTURE.md). -->
+<title>Coral Cove</title>
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Coral Cove">
@@ -12,11 +15,14 @@
 <script src="library.js?v=20261027" defer></script>
 <script src="words.js?v=20261028" defer></script>
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v=20261026').catch(function(){});});}</script>
-</head><body>
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap"></noscript><script>(function(){var l=document.getElementById("coveperfFonts");if(!l)return;function on(){l.media="all";}l.addEventListener("load",on);l.addEventListener("error",on);setTimeout(on,2500);})();</script></head><body>
-<title>Coral Cove</title>
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap"></noscript>
+<!-- The font loader below runs before the font link exists, so the web fonts stay off and the device font is used,
+     as it has been since Version 29. Kept that way until a look change is chosen. -->
+<script>(function(){var l=document.getElementById("coveperfFonts");if(!l)return;function on(){l.media="all";}l.addEventListener("load",on);l.addEventListener("error",on);setTimeout(on,2500);})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" media="print" id="coveperfFonts" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap">
+</head><body>
 <style>
+/* from src/css/base.css */
   /* ======================================================================================================
      CORAL COVE STYLES, in the order they apply (later sections build on earlier ones):
        base (tokens, page, top bar, deck grid, study, card types, stats, editor, profiles, badges, feeds) ·
@@ -1008,6 +1014,8 @@
   .ms-end-btns .ms-btn{ font-size:1.05rem; padding:12px 18px; }
   .ms-words{ margin:14px auto 0; max-width:30em; color:#fff; opacity:.92; font-size:.98rem; line-height:1.5; }
   .ms-words b{ color:#F0C76A; }
+/* end of src/css/base.css */
+/* from src/css/fixes-and-refresh.css */
   /* ===== Accessibility and dark-mode fixes (numbered as in the review that listed them) ===== */
   /* 3. dark-mode text that used --deep */
   :root[data-theme="dark"] .plan-home-text b, :root[data-theme="dark"] .plan-time, :root[data-theme="dark"] .badge-earned-item{ color:var(--lagoon-light); }
@@ -1778,6 +1786,8 @@ h1,h2,h3{ font-weight:600; letter-spacing:.005em; }
 .ns-rgroup{ margin:6px 0 10px; font-size:.86rem; }
 .ns-rgroup ul{ margin:4px 0 0; padding-left:20px; display:flex; flex-direction:column; gap:4px; color:var(--ink); line-height:1.4; }
 .hz-word .hz-hear{ margin:0 0 0 6px; min-width:44px; padding:6px 10px; vertical-align:middle; }
+/* end of src/css/fixes-and-refresh.css */
+/* from src/css/swim.css */
 /*SWIM:BEGIN*/
 :root{--sw-w1:#D3F0F3;--sw-w2:#9AD5DF;--sw-w3:#6CB9C9;--sw-sand:#EADBC2;--sw-sand2:#DCC8A6;--sw-far:rgba(16,96,104,.22);--sw-grass:#4F8F57;--sw-caus:.34;--sw-shell:#4E8A3E;--sw-shell2:#6FA65A;--sw-rim:#2E5E2B;--sw-skin:#9CCB86;--sw-skin-d:#6E9F5C;--sw-farlimb:#7DAE69;--sw-belly:#E9D9A6;--sw-eye:#0C2A3B;--sw-bub:rgba(255,255,255,.85);--sw-chip:rgba(255,255,255,.86);--sw-chip-ink:#0C2A3B}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--sw-w1:#0F3C52;--sw-w2:#0B2E42;--sw-w3:#072231;--sw-sand:#2E2A22;--sw-sand2:#3A342A;--sw-far:rgba(67,211,212,.11);--sw-grass:#3F7A4C;--sw-caus:.12;--sw-shell:#5E9E4E;--sw-shell2:#7DBB67;--sw-rim:#365F30;--sw-skin:#A8D892;--sw-skin-d:#76A866;--sw-farlimb:#6E9C60;--sw-belly:#D9C98F;--sw-eye:#04121B;--sw-bub:rgba(160,240,240,.7);--sw-chip:rgba(10,32,46,.84);--sw-chip-ink:#E1F3F6}}
@@ -1934,6 +1944,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
 @media (prefers-reduced-motion: reduce){.cove-water .cihtxt{transition:none}}
 
 /*SWIM:END*/
+/* end of src/css/swim.css */
 </style>
 
 <main id="coveMain"><h1 class="cove-sr" id="coveH1">Coral Cove</h1>
@@ -1947,31 +1958,43 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
 (function(){
   "use strict";
   /* ======================================================================================================
-     CORAL COVE: the app. Everything below runs inside this one function. ARCHITECTURE.md explains how the
-     parts fit together; this list is the order they appear in, by the header text to search for.
+     CORAL COVE: the app. The files below are pieces of this one function: tools/build.py joins them into
+     index.html in this order, so they share their variables as if they were one file. ARCHITECTURE.md explains
+     how the parts fit together.
 
-     Learning engine        scheduler (Anki-style SM-2) · automatic grading · sound + haptics · spoken
-                            answers · real pronunciation clips · natural voice packs · Word Feed ambience
-     Data                   store adapter (db capability, with in-memory fallback) · photo uploads · app state
-     Screens                Drawing the screen (render, afterRender) · LOCK SCREEN and grown-up checks ·
-                            PROFILES · HOME · ANKI IMPORT · STUDY · WORD FEED · shared swipe engine ·
-                            STORY MODE · EQUATION FEED · LANGUAGE FEED · READ-ALONG · FLASH FEED · MINI STORY ·
-                            STORY MAKER · WORD BANK · DAILY PLAN · OCEAN THEME
-     Card types             timed multiple choice · sound-out blend · Hangul Blend · Listen & Pick · Echo ·
-                            Mic · Sentence Builder · Chinese bridge · Native or Sino?
-     Grown-up screens       STATS PAGE · DECK PROGRESS DRILL-DOWN · SETTINGS · EDITOR
-     Swimming mascot        SWIM:BEGIN ... SWIM:END (ported from Coral Calendar) · Coral Cove glue
-     Start-up               generic tap sound · keyboard feed navigation · boot
-     The reef (game look)   REEF art · REEF: the child's cove map · transitions · treasure · Calm motion ·
-                            Shelly on the study screen · grown-up maths question · praise · celebration
-                            bubbles and music · Ask Shelly offline (Korean) · REEF WORLD (2D fallback map) ·
-                            The Library
-     3D                     THIRD-PARTY CODE (three.js GLTFLoader) · Kiko's crabs · Food for Shelly ·
-                            REEF 3D (the board: builders, baked lighting, ? block, acted moments, night ship,
-                            day reef, dice, party board, story mode, day/night) · REEF LOBBY (profile picker)
-     Music and words        Background music · Ask Shelly (Lumi at night)
+     js/learning.js             scheduler (Anki-style SM-2, Leitner) · automatic grading · sound + haptics ·
+                                spoken answers · pronunciation clips · natural voice packs · Word Feed ambience
+     js/data.js                 store adapter (db capability, with in-memory fallback) · photo uploads · app state S
+     js/screens.js              accessibility helpers · Drawing the screen (render, afterRender) · lock screen ·
+                                PROFILES · HOME · ANKI IMPORT
+     js/study-and-feeds.js      STUDY · WORD FEED · shared swipe engine · STORY MODE · EQUATION FEED ·
+                                LANGUAGE FEED · READ-ALONG · FLASH FEED
+     js/stories.js              MINI STORY · STORY MAKER · WORD BANK
+     js/daily-plan.js           DAILY PLAN (from Coral Calendar)
+     js/ocean-theme.js          OCEAN THEME (from Coral Calendar)
+     js/card-types.js           Hangul Blend · Listen & Pick · Echo · Mic · Sentence Builder · Chinese bridge ·
+                                Native or Sino?
+     js/grown-up-screens.js     STATS PAGE · DECK PROGRESS DRILL-DOWN · SETTINGS · EDITOR
+     js/swim.js                 the swimming mascot (SWIM:BEGIN ... SWIM:END, from Coral Calendar)
+     js/boot.js                 generic tap sound · keyboard feed navigation · boot
+     js/reef.js                 the game look: REEF art · the cove map · transitions · treasure · Calm motion ·
+                                Shelly on the study screen · grown-up maths question · praise · celebration ·
+                                Ask Shelly offline (Korean)
+     js/reef-world.js           REEF WORLD (the 2D map, used when 3D can't start)
+     js/library-api.js          window.CoralCove, all the Library (library.js) can reach
+     js/vendor/three-gltfloader.js   THIRD-PARTY CODE: three.js GLTFLoader and BufferGeometryUtils (don't edit)
+     js/reef3d/critters.js      Kiko's crabs · Food for Shelly
+     js/reef3d/board.js         REEF 3D: the board, its builders and baked lighting
+     js/reef3d/scenes.js        the ? block · Shelly's acted moments · the night ship · the day reef
+     js/reef3d/dice.js          the dice block
+     js/reef3d/party.js         party board: shells, pearl, shop, Chance Time, minigames, story mode
+     js/reef3d/day-night.js     day and night switching on the board
+     js/reef3d/lobby.js         REEF LOBBY (the 3D profile picker)
+     js/music.js                background music
+     js/ask.js                  Ask Shelly (Lumi at night)
      ====================================================================================================== */
 
+/* from src/js/learning.js */
   /* ============ scheduler (Anki-style SM-2) ============ */
   var LEARN_STEPS_MIN = [1, 10];      // new cards step through these (minutes) before graduating
   var RELEARN_STEPS_MIN = [10];       // a lapsed review card steps through these before returning to review
@@ -3114,6 +3137,8 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     return { play: play, stop: stop, current: function(){ return currentId; } };
   })();
 
+/* end of src/js/learning.js */
+/* from src/js/data.js */
   /* ============ store adapter (db capability, with in-memory fallback) ============ */
   // A save/delete that fails against the live db capability used to fail SILENTLY -- the edit/trash
   // buttons in the deck editor looked like they "just didn't work" because nothing told the grown-up
@@ -3737,6 +3762,8 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     });
   }
 
+/* end of src/js/data.js */
+/* from src/js/screens.js */
   /* ============ rendering ============ */
   var app = document.getElementById('app');
 
@@ -4971,6 +4998,8 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     reader.readAsText(file);
   }
 
+/* end of src/js/screens.js */
+/* from src/js/study-and-feeds.js */
   /* ---------- STUDY ---------- */
   // Round length now comes from the parent-set difficulty (Easy 4 / Medium 6 / Hard 10) rather than
   // a fixed constant — see DIFFICULTIES up top.
@@ -6052,6 +6081,8 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
       function(){ S.flashFlipped = !S.flashFlipped; Sound.flip(); if(S.view === 'flashFeed') render(); });
   }
 
+/* end of src/js/study-and-feeds.js */
+/* from src/js/stories.js */
   /* ---------- MINI STORY ----------
      A deck-level mode (deck.miniStoryMode) for short picture stories in a new language. Each card is one
      page, in the order the cards were added: its hint/note is the picture (emoji), its front is the
@@ -6886,6 +6917,8 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     render();
   }
 
+/* end of src/js/stories.js */
+/* from src/js/daily-plan.js */
   /* ---------- DAILY PLAN (Coral Calendar, inside Coral Cove) ----------
      For profiles with planOn (Wendy). Each day gets a schedule built automatically from the profile's own
      Coral Cove decks: a warm-up (Sound Blend / Hangul Blend), review of the decks with the most cards
@@ -7322,6 +7355,8 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     }
   }
 
+/* end of src/js/daily-plan.js */
+/* from src/js/ocean-theme.js */
   /* ---------- OCEAN THEME module (from Coral Calendar) ----------
      Ocean.apply(on) switches the look. It's on for every profile and screen (a profile can opt out in Settings). Adds the moving
      sea behind the page (caustics, light rays, bubbles), marine life crossing every 9–23 s, a water ring where
@@ -7920,6 +7955,8 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     if(/\s/.test(str)) return str.split(/\s+/).filter(Boolean);
     return Array.from(str);
   }
+/* end of src/js/ocean-theme.js */
+/* from src/js/card-types.js */
   /* ---------- Hangul Blend ----------
      A Korean word blends letter by letter (jamo), the way Hangul is taught: ㄱ + ㅏ = 가, then ㅂ + ㅏ + ㅇ
      = 방. The consonant alone has no sound of its own to say, so it just lights up; the vowel speaks
@@ -9415,6 +9452,8 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     app.querySelector('[data-act="play-again"]').addEventListener('click', function(){ startStudy(S.currentDeckId); });
   }
 
+/* end of src/js/card-types.js */
+/* from src/js/grown-up-screens.js */
   /* ---------- STATS PAGE ---------- */
   function openStats(){
     S.view = 'stats';
@@ -10516,6 +10555,8 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     } else if(S.__swJoyKey){ S.__swJoyKey = null; coveSwimCalm(); }
   });
 
+/* end of src/js/grown-up-screens.js */
+/* from src/js/swim.js */
 /*SWIM:BEGIN*/
 /* swim: Shelly (Sunlit zone) and Lumi (Midnight zone), ported from Coral Calendar. One swimmer, one rAF loop,
    paused when off screen or hidden. The SWIM:BEGIN / SWIM:END markers fence the ported code (script and styles)
@@ -10992,6 +11033,8 @@ function coveSwimJoy(happy){if(!SW.el||!SW.T)return;try{swExSet(happy?"happy":nu
   const go=()=>{if(SW.el&&SW.el.isConnected&&SW.T.mode!=="enter"){swJoy(3200);swGo();}else setTimeout(go,400);};setTimeout(go,700);}catch(e){}}
 function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
 /*SWIM:END*/
+/* end of src/js/swim.js */
+/* from src/js/boot.js */
   /* ============ generic tap sound (delegated, covers every button not already voiced) ============ */
   document.addEventListener('click', function(e){
     var btn = e.target && e.target.closest ? e.target.closest('button') : null;
@@ -11046,6 +11089,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       });
     };
   }
+/* end of src/js/boot.js */
+/* from src/js/reef.js */
   /* ---------- REEF art: one small drawn scene per map place (viewBox 0 0 120 120) ---------- */
   var REEF_LINE = 'stroke="#173a44" stroke-opacity=".28" stroke-width="2" stroke-linejoin="round"';
   function reefMound(fill, top){
@@ -11763,6 +11808,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     if(unknown && !whole) answer += ' I know the parts that are listed. For the meaning of the main word, ask again when you are online.';
     return { answer: answer.trim(), parts: parts.map(function(p){ return { part: p.part, meaning: p.meaning }; }).slice(0, 8), example: '', offline: true };
   }
+/* end of src/js/reef.js */
+/* from src/js/reef-world.js */
   /* ---------- REEF WORLD: every deck is its own spot in one scrolling reef (a shipwreck at night) ---------- */
   function reefNight(){ try { return themeNow() === 'dark'; } catch(e){ return false; } }
   var REEF_ZONE_NAMES = {
@@ -12154,6 +12201,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     setTimeout(function(){ if(document.body.contains(head)) try { Speech.speak(say.dataset.reefSay); } catch(e){} }, 900);
     setTimeout(function(){ if(!document.body.contains(head)) return; head.classList.add('rw-fading'); setTimeout(function(){ head.classList.add('rw-gone'); }, 450); }, 7000);
   }
+/* end of src/js/reef-world.js */
+/* from src/js/library-api.js */
   /* ---------- The Library (library.js) sits beside the app, off the board. This is all it can reach. ---------- */
   window.CoralCove = {
     profile: function(){ return S.profile ? { id: S.profile.id, name: S.profile.name, child: S.profile.mode === 'child' } : null; },
@@ -12210,6 +12259,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     if(S.reefReturnY != null){ var y = S.reefReturnY; S.reefReturnY = null; requestAnimationFrame(function(){ window.scrollTo(0, y); reefParallax(); }); }
     else reefParallax();
   }
+/* end of src/js/library-api.js */
+/* from src/js/vendor/three-gltfloader.js */
   /* ================= THIRD-PARTY CODE: three.js GLTFLoader and BufferGeometryUtils r128 =================
      MIT licence, (c) the three.js authors (https://github.com/mrdoob/three.js). Copied unchanged except for
      wrapping it in reefInstallGLTF(), which installs it on THREE once three.js has loaded. Don't edit it here;
@@ -17184,6 +17235,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
 
   }
   /* ================= END OF THIRD-PARTY CODE (three.js GLTFLoader, BufferGeometryUtils) ================= */
+/* end of src/js/vendor/three-gltfloader.js */
+/* from src/js/reef3d/critters.js */
   /* ---------- Kiko's crabs: Mochi (squishy pink) and Hermit (in a lavender shell), Wendy's two favourites ----------
      Built from simple shapes in the board's toon style and animated by hand, so they need no model file. One is
      picked at random when Coral Cove opens; tapping the crab makes it wiggle and scuttle off, and the other one
@@ -17416,6 +17469,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       step: function(p){ stars.forEach(function(m){ m.position.copy(pos).addScaledVector(m.userData.v, Math.sin(p * Math.PI / 2)); m.lookAt(view.cam.position); m.rotation.z = p * 5; m.scale.setScalar(1 - p * .6); }); mat.opacity = 1 - p * p; },
       end: function(){ stars.forEach(function(m){ view.scene.remove(m); }); geo.dispose(); mat.dispose(); } });
   }
+/* end of src/js/reef3d/critters.js */
+/* from src/js/reef3d/board.js */
   /* ---------- REEF 3D: a game board on the sea floor (a sunken ship at night). Shelly (Lumi at night)
      stands on a space; tapping a deck or a surprise space makes her hop along the path to it while the
      camera follows. The painted 2D reef stays underneath as the fallback when 3D can't run. ---------- */
@@ -18671,6 +18726,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   }
 
   // Hop along the path one space at a time; Calm motion skips straight there.
+/* end of src/js/reef3d/board.js */
+/* from src/js/reef3d/scenes.js */
   /* ---------- The ? block ----------
      A game-piece block floating over each surprise space: rounded edges, a raised "?" on every side, corner
      rivets, a soft glow and a few sparkles. Gold by day, glowing teal at night. Shelly bonks it from below and
@@ -19243,6 +19300,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       f.position.set(x, u.cy + Math.sin(t * 3 + u.ph) * .08, z); f.rotation.y = -a; });
   }
 
+/* end of src/js/reef3d/scenes.js */
+/* from src/js/reef3d/dice.js */
   /* ---------- The dice block (after leaving a deck): it floats over the guide's head and flicks through its
      numbers; a tap and she jumps up and hits it, then hops that many spaces along the path, counting down.
      Before the tap she can pick a die: the regular one, her guide's own die, Kiko's die, or Double Dice from
@@ -19427,6 +19486,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     view.fx.push({ t0: performance.now(), dur: 300, step: function(p){ d.g.scale.setScalar(s0 * (1 + .3 * Math.sin(p * Math.PI) - p)); d.g.position.y += .02; }, end: fin });
   }
 
+/* end of src/js/reef3d/dice.js */
+/* from src/js/reef3d/party.js */
   /* ---------- Party board: shells, the golden pearl, the shop, Chance Time, whirlpools, the clam gate, minigames
      and story mode. What she owns is saved with the profile's stats (stats.board), so it follows her everywhere. ---------- */
   function reefBoard(){
@@ -20116,6 +20177,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     view.wrap.querySelector('[data-r3-theme]').addEventListener('click', function(){ reef3dThemeShow(view); });
   }
 
+/* end of src/js/reef3d/party.js */
+/* from src/js/reef3d/day-night.js */
   /* ---------- Day ⇄ night: a moonrise or sunrise inside the 3D sea (after Coral Calendar's sun/moon moment) ----------
      1. the camera tilts up from the reef toward the surface while the haze takes on the new colour;
      2. the moon (or sun) rises above the water, glowing through it, with glints and light rays;
@@ -20369,6 +20432,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   // Start fetching three.js and the models as soon as the page opens, so the lobby and the board
   // are ready by the time someone taps a profile.
   setTimeout(function(){ reef3dLoad().then(function(){ return reef3dModels(); }).catch(function(){}); }, 300);
+/* end of src/js/reef3d/day-night.js */
+/* from src/js/reef3d/lobby.js */
   /* ---------- REEF LOBBY: the profile picker as a 3D underwater room. Shelly (Lumi at night) swims
      around; tapping the water drops food she swims over to eat. The profile buttons, title and links
      are the picker's own HTML, styled as game-board spaces floating over the scene. ---------- */
@@ -20598,6 +20663,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     }
     view.raf = requestAnimationFrame(tick);
   }
+/* end of src/js/reef3d/lobby.js */
+/* from src/js/music.js */
   /* ---------- Background music: day-song.mp3 on the sunlit reef, night-song.mp3 on the shipwreck,
      lobby-song.mp3 (easy jazz) on the profile screen, deck-song.mp3 (calm, quiet) inside decks, timer-song.mp3
      (a kalimba ticking every second, in step with the countdown) on Timed Choice cards, and game-song.mp3
@@ -20871,6 +20938,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   // the db handle resolves; nothing needs to wait on it, since Speech.speak() falls back to the
   // synthesized voice until then anyway.
   coveIdle(function(){ AudioClips.init(); VoicePack.warm(); });
+/* end of src/js/music.js */
+/* from src/js/ask.js */
   /* ---------- Ask Shelly (Lumi at night): what a word or sentence means and how it's built ---------- */
   // Needs Claude (the `sample` capability). Where it isn't available (GitHub copy, a view without it)
   // the button never appears. Only the question and the card on screen are sent: no profile data.
@@ -21020,11 +21089,13 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   }
   afterRender('ask', function(){ askSyncBtn(); if(Ask.open) askRender(); });
   askNS().then(function(){ try { askSyncBtn(); } catch(e){} });
+/* end of src/js/ask.js */
 })();
 </script>
 
 
 <style>
+/* from src/css/ask.css */
 /* ---------- Ask Shelly ---------- */
 .ask-btn{ position:fixed; left:max(14px, env(safe-area-inset-left,0px)); bottom:max(14px, env(safe-area-inset-bottom,0px)); z-index:60;
   display:flex; align-items:center; gap:8px; padding:10px 16px 10px 10px; border-radius:999px; border:2px solid var(--border);
@@ -21062,8 +21133,10 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
 .ask-wait, .ask-err{ font-weight:700; color:var(--ink-soft); }
 .ask-read, .ask-done{ align-self:flex-start; }
 .ask-done{ align-self:stretch; padding:12px; }
+/* end of src/css/ask.css */
 </style>
 <style id="reef">
+/* from src/css/reef.css */
 /* REEF: Child Mode look. Chunkier tiles and buttons, silly deck transitions, the
    treasure chest and the Treasure Reef shelf. body.reef-kid is set only on Child Mode screens;
    body.reef-calm (Settings -> Calm motion, or the device's Reduce Motion) stops every animation. */
@@ -21351,6 +21424,8 @@ body.reef-calm .reef-buddy-turtle, body.reef-calm .reef-buddy-say{ animation:non
   .rw-say{ width:34px; height:34px; }
 }
 body.reef-calm .rw-light, body.reef-calm .rw-obj, body.reef-calm .rw-post, body.reef-calm .rw-obj .rw-art, body.reef-calm .rw-pearl, body.reef-calm .rw-guide, body.reef-calm .rw-glow{ animation:none !important; }
+/* end of src/css/reef.css */
+/* from src/css/reef-3d.css */
 /* ---------- REEF 3D board ---------- */
 .r3{ position:relative; height:clamp(420px, 70vh, 660px); border-radius:32px; overflow:hidden; isolation:isolate; touch-action:manipulation;
   background:linear-gradient(180deg, #d9f0ec 0%, #b2e0de 30%, #9fd6d6 60%); box-shadow:inset 0 0 0 3px rgba(255,255,255,.45), 0 18px 40px rgba(40,80,86,.22); }
@@ -21784,8 +21859,7 @@ body.r3-lobby{ background:linear-gradient(180deg, #d9f0ec 0%, #b2e0de 35%, #9fd6
 .r3.r3-sky .r3-labels{ opacity:0; }
 .r3-wash.night{ background:radial-gradient(ellipse 60% 45% at 50% 30%, #dff7f7 0%, #7fcfd6 30%, #1d5a6b 70%, #0d2b35 100%); }
 .r3-wash.day{ background:radial-gradient(ellipse 60% 45% at 50% 30%, #fffdf2 0%, #ffe9a8 30%, #9fd6d6 72%, #8fcfd2 100%); }
+/* end of src/css/reef-3d.css */
 </style>
-
-</body></html>
 
 </body></html>

@@ -1,6 +1,7 @@
 /* Lints Coral Cove's JavaScript and looks for code that can never run.
-   - eslint (rules in .eslintrc.json) on the app's main script (taken out of index.html; line numbers match
-     index.html) and on library.js, words.js, storage.js and sw.js;
+   - eslint (rules in .eslintrc.json) on the app's main script and on library.js, words.js, storage.js and sw.js.
+     The main script is checked whole, as built into index.html (its files in src/js/ share variables), and each
+     problem is reported at its file and line in src/;
    - functions that nothing can call, followed through chains (a function only called by other dead functions
      is dead too), which eslint alone doesn't see.
    Exits with 1 when anything is found. Usage: node lint.js */
@@ -15,6 +16,17 @@ function mainScript() {
   while ((m = re.exec(html))) if (!best || m[1].length > best[1].length) best = m;
   const before = html.slice(0, best.index + '<script>'.length).split('\n').length - 1;
   return '\n'.repeat(before) + best[1];   // padded so line numbers are index.html's
+}
+
+// index.html line -> 'src/js/file.js:line', using the comment lines tools/build.py puts around each file
+const INDEX_LINES = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').split('\n');
+function where(file, line) {
+  if (!file.endsWith('index.html.js')) return path.basename(file) + ':' + line;
+  for (let i = line - 2; i >= 0; i--) {
+    const m = INDEX_LINES[i].match(/^\/\* (from|end of) (src\/\S+) \*\/$/);
+    if (m) return m[1] === 'from' ? m[2] + ':' + (line - 1 - i) : 'src/page.html (index.html:' + line + ')';
+  }
+  return 'src/page.html (index.html:' + line + ')';
 }
 
 function deadFunctions(src) {
@@ -45,10 +57,10 @@ function deadFunctions(src) {
   let problems = 0;
   for (const r of results) for (const m of r.messages) {
     problems++;
-    console.log(`${path.basename(r.filePath).replace('.html.js', '.html')}:${m.line}:${m.column}  ${m.message}  (${m.ruleId})`);
+    console.log(`${where(r.filePath, m.line)}:${m.column}  ${m.message}  (${m.ruleId})`);
   }
   for (const f of files) {
-    for (const d of deadFunctions(fs.readFileSync(f, 'utf8'))) { problems++; console.log(`${path.basename(f).replace('.html.js', '.html')}:${d.line}  function ${d.name} can never run`); }
+    for (const d of deadFunctions(fs.readFileSync(f, 'utf8'))) { problems++; console.log(`${where(f, d.line)}  function ${d.name} can never run`); }
   }
   console.log(problems ? problems + ' problem(s)' : 'lint: clean');
   process.exit(problems ? 1 : 0);

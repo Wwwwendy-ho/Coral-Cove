@@ -1,5 +1,16 @@
 # Changelog
 
+## The code in separate files (October 28, 2026)
+
+Nothing changes on screen.
+- The app's code is now in `src/`, about 30 files by topic (the board, the lobby, card types, music, Ask Shelly,
+  each style layer). `tools/build.py` joins them into `index.html`, so the app itself is still one page and works
+  exactly as before. Edit the files in `src/`, then build; `ARCHITECTURE.md` explains where everything is.
+- The page's head is tidied: one set of page tags instead of two, and the title and fonts in the head.
+- The checks now report problems at their `src/` file and line, and fail if `index.html` wasn't rebuilt.
+- Found while tidying: the web fonts (Baloo 2, Nunito, Fredoka) haven't loaded since Version 29, so the app uses
+  the device's own font. Left as it is until a look is chosen.
+
 ## Code cleanup (October 28, 2026)
 
 Nothing changes on screen; this makes the code easier to look after.

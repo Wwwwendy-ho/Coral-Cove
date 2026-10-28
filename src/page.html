@@ -1,0 +1,113 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
+<!-- Built by tools/build.py from the files in src/. Edit those, not index.html (see ARCHITECTURE.md). -->
+<title>Coral Cove</title>
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Coral Cove">
+<meta name="theme-color" content="#1c8c93">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<script src="seed-data.js?v=20261026"></script>
+<script src="audio-clips.js?v=20261026"></script>
+<script src="storage.js?v=20261026"></script>
+<script src="library.js?v=20261027" defer></script>
+<script src="words.js?v=20261028" defer></script>
+<script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v=20261026').catch(function(){});});}</script>
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap"></noscript>
+<!-- The font loader below runs before the font link exists, so the web fonts stay off and the device font is used,
+     as it has been since Version 29. Kept that way until a look change is chosen. -->
+<script>(function(){var l=document.getElementById("coveperfFonts");if(!l)return;function on(){l.media="all";}l.addEventListener("load",on);l.addEventListener("error",on);setTimeout(on,2500);})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" media="print" id="coveperfFonts" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap">
+</head><body>
+<style>
+<!-- include: css/base.css -->
+<!-- include: css/fixes-and-refresh.css -->
+<!-- include: css/swim.css -->
+</style>
+
+<main id="coveMain"><h1 class="cove-sr" id="coveH1">Coral Cove</h1>
+<div id="app"></div></main>
+
+<template id="tpl-bubbles">
+  <div class="bubbles" aria-hidden="true"></div>
+</template>
+
+<script>
+(function(){
+  "use strict";
+  /* ======================================================================================================
+     CORAL COVE: the app. The files below are pieces of this one function: tools/build.py joins them into
+     index.html in this order, so they share their variables as if they were one file. ARCHITECTURE.md explains
+     how the parts fit together.
+
+     js/learning.js             scheduler (Anki-style SM-2, Leitner) · automatic grading · sound + haptics ·
+                                spoken answers · pronunciation clips · natural voice packs · Word Feed ambience
+     js/data.js                 store adapter (db capability, with in-memory fallback) · photo uploads · app state S
+     js/screens.js              accessibility helpers · Drawing the screen (render, afterRender) · lock screen ·
+                                PROFILES · HOME · ANKI IMPORT
+     js/study-and-feeds.js      STUDY · WORD FEED · shared swipe engine · STORY MODE · EQUATION FEED ·
+                                LANGUAGE FEED · READ-ALONG · FLASH FEED
+     js/stories.js              MINI STORY · STORY MAKER · WORD BANK
+     js/daily-plan.js           DAILY PLAN (from Coral Calendar)
+     js/ocean-theme.js          OCEAN THEME (from Coral Calendar)
+     js/card-types.js           Hangul Blend · Listen & Pick · Echo · Mic · Sentence Builder · Chinese bridge ·
+                                Native or Sino?
+     js/grown-up-screens.js     STATS PAGE · DECK PROGRESS DRILL-DOWN · SETTINGS · EDITOR
+     js/swim.js                 the swimming mascot (SWIM:BEGIN ... SWIM:END, from Coral Calendar)
+     js/boot.js                 generic tap sound · keyboard feed navigation · boot
+     js/reef.js                 the game look: REEF art · the cove map · transitions · treasure · Calm motion ·
+                                Shelly on the study screen · grown-up maths question · praise · celebration ·
+                                Ask Shelly offline (Korean)
+     js/reef-world.js           REEF WORLD (the 2D map, used when 3D can't start)
+     js/library-api.js          window.CoralCove, all the Library (library.js) can reach
+     js/vendor/three-gltfloader.js   THIRD-PARTY CODE: three.js GLTFLoader and BufferGeometryUtils (don't edit)
+     js/reef3d/critters.js      Kiko's crabs · Food for Shelly
+     js/reef3d/board.js         REEF 3D: the board, its builders and baked lighting
+     js/reef3d/scenes.js        the ? block · Shelly's acted moments · the night ship · the day reef
+     js/reef3d/dice.js          the dice block
+     js/reef3d/party.js         party board: shells, pearl, shop, Chance Time, minigames, story mode
+     js/reef3d/day-night.js     day and night switching on the board
+     js/reef3d/lobby.js         REEF LOBBY (the 3D profile picker)
+     js/music.js                background music
+     js/ask.js                  Ask Shelly (Lumi at night)
+     ====================================================================================================== */
+
+<!-- include: js/learning.js -->
+<!-- include: js/data.js -->
+<!-- include: js/screens.js -->
+<!-- include: js/study-and-feeds.js -->
+<!-- include: js/stories.js -->
+<!-- include: js/daily-plan.js -->
+<!-- include: js/ocean-theme.js -->
+<!-- include: js/card-types.js -->
+<!-- include: js/grown-up-screens.js -->
+<!-- include: js/swim.js -->
+<!-- include: js/boot.js -->
+<!-- include: js/reef.js -->
+<!-- include: js/reef-world.js -->
+<!-- include: js/library-api.js -->
+<!-- include: js/vendor/three-gltfloader.js -->
+<!-- include: js/reef3d/critters.js -->
+<!-- include: js/reef3d/board.js -->
+<!-- include: js/reef3d/scenes.js -->
+<!-- include: js/reef3d/dice.js -->
+<!-- include: js/reef3d/party.js -->
+<!-- include: js/reef3d/day-night.js -->
+<!-- include: js/reef3d/lobby.js -->
+<!-- include: js/music.js -->
+<!-- include: js/ask.js -->
+})();
+</script>
+
+
+<style>
+<!-- include: css/ask.css -->
+</style>
+<style id="reef">
+<!-- include: css/reef.css -->
+<!-- include: css/reef-3d.css -->
+</style>
+
+</body></html>

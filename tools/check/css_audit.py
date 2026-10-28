@@ -35,7 +35,7 @@ def main():
         found += 1; print('unused @keyframes:', k)
     _, n = cssedit.apply(html, cssedit.dead())
     if n:
-        found += 1; print(f'{n} rule(s) have values a later identical rule overrides: run  python3 cssedit.py ../../index.html dead')
+        found += 1; print(f'{n} rule(s) have values a later identical rule overrides: run  python3 tools/check/cssedit.py dead')
     print('css audit: clean' if not found else f'{found} finding(s)')
     return 1 if found else 0
 

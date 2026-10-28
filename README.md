@@ -8,7 +8,9 @@ See `CHANGELOG.md` for what changed in each update, and `ARCHITECTURE.md` for ho
 
 | File | What it is |
 |---|---|
-| `index.html` | The Coral Cove app |
+| `src/` | The app's code. Edit these files, then run `python3 tools/build.py` (see `ARCHITECTURE.md`) |
+| `index.html` | The Coral Cove app, built from `src/`. Don't edit it directly |
+| `tools/build.py` | Builds `index.html` from `src/` |
 | `seed-data.js` | Starting decks, cards and progress, exported from Claude on Oct 26, 2026 |
 | `three.min.js` | three.js r128, the 3D engine for the reef board and the profile lobby |
 | `reef-models.js` | The 3D models (Shelly's friends, fish, scenery, ? blocks), loaded when the board first opens |

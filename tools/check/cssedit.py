@@ -1,9 +1,13 @@
-"""CSS clean-up for index.html, editing only the rules it changes (everything else stays byte for byte).
+"""CSS clean-up for the app's styles, editing only the rules it changes (everything else stays byte for byte).
+   It works on the built index.html, where every style block is in order, then copies the changes back into
+   src/css/ (tools/build.py --unbuild).
    unused  <class> ...   remove selectors that use any of these classes (and rules left with no selectors)
    dead                  remove declarations that a later rule with the identical selector, in the same
                          @media/@supports context, overrides (same property, not !important-protected)
-   Usage: python3 cssedit.py index.html unused cls1 cls2 ...  |  python3 cssedit.py index.html dead"""
-import re, sys, tinycss2
+   Usage: python3 cssedit.py unused cls1 cls2 ...  |  python3 cssedit.py dead  |  python3 cssedit.py keyframes"""
+import os, re, subprocess, sys, tinycss2
+
+ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
 
 def blocks(html):
     for m in re.finditer(r'(<style[^>]*>)(.*?)</style>', html, re.S):
@@ -194,10 +198,14 @@ def unused_keyframes(html):
     return sorted(names - used)
 
 if __name__ == '__main__':
-    f, mode = sys.argv[1], sys.argv[2]
+    if len(sys.argv) < 2 or sys.argv[1] not in ('unused', 'dead', 'keyframes'): sys.exit(__doc__)
+    build = os.path.join(ROOT, 'tools', 'build.py')
+    subprocess.run([sys.executable, build, '--check'], check=True)   # don't overwrite src/ with a stale index.html
+    f, mode = os.path.join(ROOT, 'index.html'), sys.argv[1]
     html = open(f, encoding='utf8').read()
     if mode == 'keyframes': print('unused @keyframes:', ' '.join(unused_keyframes(html))); sys.exit(0)
-    html, n = apply(html, unused(sys.argv[3:]) if mode == 'unused' else dead())
+    html, n = apply(html, unused(sys.argv[2:]) if mode == 'unused' else dead())
     html, k = empty_at_rules(html)
     open(f, 'w', encoding='utf8').write(html)
+    subprocess.run([sys.executable, build, '--unbuild'], check=True)
     print(mode, 'rules changed:', n, '· empty @media/@supports removed:', k)
