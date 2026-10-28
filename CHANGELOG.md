@@ -34,6 +34,10 @@
 - Opening the app shows a title screen: a sunny sea with drifting clouds, a palm island, sparkles on the water, light rays, fish and a reef below, and Shelly bobbing at the waterline. At night it's a moonlit sea with stars and glowing jellyfish. "Tap to dive in" plays the dive into the water and starts the music (browsers won't play sound before a first tap, so the music is already playing on the profile screen).
 - The dive from the title screen is smooth: the profile screen is built underneath while the title shows, instead of during the dive.
 
+**Fixes**
+- The fish on the title screen swim forwards (they were swimming tail-first).
+- Shelly no longer covers the hint under a study card (like "Drag the shell all the way to the right" in Sound Blend, or "Tap the card to flip it"). There's room for her below every card, on every profile.
+
 **Day ⇄ night**
 - Switching between day and night is a little show: Shelly swims up to the surface and the water drops below the horizon. The sky then plays a sunset (the sun sinks into an orange glow, the stars come out, the moon rises) or a sunrise (the moon sets, the sky turns pink and gold, the sun comes up), and she dives back down into the new board.
 - No visible freeze: the board is rebuilt for the new theme while the sky covers the screen, and the dive back down waits until the new board is ready.

@@ -21446,8 +21446,8 @@ body.reef-calm .reef-chest-friend{ transform:translate(-50%, 0); opacity:1; }
 .reef-today-shells{ display:flex; gap:5px; }
 .reef-today-shells i{ width:16px; height:16px; border-radius:50% 50% 45% 45%; background:var(--border); box-shadow:inset 0 -2px 0 rgba(0,0,0,.08); }
 .reef-today-shells i.on{ background:radial-gradient(circle at 35% 30%, #fff, #ffe9a8 40%, #e8a716); box-shadow:0 0 6px rgba(255,209,102,.8); }
-body.reef-kid .stage.has-buddy{ padding-bottom:96px; }
-.reef-buddy{ position:absolute; left:0; right:0; bottom:0; height:92px; pointer-events:none; z-index:0; }
+body .stage.has-buddy, body.reef-kid .stage.has-buddy{ padding-bottom:118px; }   /* room for Shelly at the bottom of every study card, on every profile */
+.reef-buddy{ position:absolute; left:0; right:0; bottom:0; height:110px; pointer-events:none; z-index:0; }
 .reef-seabed{ position:absolute; left:-4%; right:-4%; bottom:-24px; height:56px; border-radius:50% 50% 0 0 / 80% 80% 0 0;
   background:radial-gradient(60% 120% at 30% 0%, var(--reef-sand), var(--reef-sand-2)); opacity:.9; }
 .reef-buddy-turtle{ position:absolute; right:7%; bottom:8px; width:78px; height:auto; filter:drop-shadow(0 4px 5px rgba(0,0,0,.2)); animation:reefGuide 2.8s ease-in-out infinite; }
@@ -21457,7 +21457,7 @@ body.reef-kid .stage.has-buddy{ padding-bottom:96px; }
 .reef-buddy[data-mood="yay"] .reef-buddy-turtle{ animation:reefBuddyYay .7s var(--reef-pop); }
 .reef-buddy[data-mood="hmm"] .reef-buddy-turtle{ animation:reefBuddyHmm 1.2s ease-in-out; }
 .reef-buddy[data-mood="yay"] .reef-buddy-say, .reef-buddy[data-mood="hmm"] .reef-buddy-say{ animation:reefSpotIn2 .4s var(--reef-pop) both; }
-@keyframes reefBuddyYay{ 0%{ transform:none; } 40%{ transform:translateY(-34px) rotate(-20deg) scale(1.1); } 70%{ transform:translateY(-10px) rotate(8deg); } 100%{ transform:none; } }
+@keyframes reefBuddyYay{ 0%{ transform:none; } 40%{ transform:translateY(-20px) rotate(-20deg) scale(1.1); } 70%{ transform:translateY(-10px) rotate(8deg); } 100%{ transform:none; } }
 @keyframes reefBuddyHmm{ 0%,100%{ transform:none; } 30%{ transform:rotate(-8deg); } 60%{ transform:rotate(6deg); } }
 body.reef-calm .reef-buddy-turtle, body.reef-calm .reef-buddy-say{ animation:none !important; }
 @media (max-width:640px){ .reef-buddy-turtle{ width:62px; } .reef-buddy-say{ right:calc(7% + 66px); font-size:.85rem; } }
@@ -21610,7 +21610,7 @@ body.reef-calm .rw-light, body.reef-calm .rw-obj, body.reef-calm .rw-post, body.
 .ccs-ripple{ position:absolute; left:-12%; right:-12%; top:52%; height:26%; border-radius:50%; border:3px solid rgba(255,255,255,.55); animation:ccsRipple 3.2s ease-out infinite; }
 @keyframes ccsBob{ 0%,100%{ transform:translate(-50%,-64%) rotate(-4deg); } 50%{ transform:translate(-50%,-54%) rotate(4deg); } }
 @keyframes ccsRipple{ 0%{ transform:scale(.7); opacity:.8; } 100%{ transform:scale(1.35); opacity:0; } }
-.ccs-fish{ position:absolute; width:46px; animation:ccsSwim 18s linear infinite; } .ccs-fish svg{ display:block; width:100%; height:auto; } .ccs-fish path{ fill:var(--fish); }
+.ccs-fish{ position:absolute; width:46px; animation:ccsSwim 18s linear infinite; } .ccs-fish svg{ display:block; width:100%; height:auto; transform:scaleX(-1); }   /* drawn facing left; they swim right */ .ccs-fish path{ fill:var(--fish); }
 .ccs-fish.f1{ top:30%; left:-12%; } .ccs-fish.f2{ top:44%; left:-12%; width:34px; animation-duration:24s; animation-delay:-9s; } .ccs-fish.f2 path{ fill:#ffd166; } .ccs-fish.f3{ top:36%; left:-12%; width:28px; animation-duration:15s; animation-delay:-5s; } .ccs-fish.f3 path{ fill:#ff8fa3; }
 @keyframes ccsSwim{ 0%{ transform:translate(0,0); } 50%{ transform:translate(62vw,-14px); } 100%{ transform:translate(125vw,0); } }
 .ccs-jelly{ position:absolute; width:40px; animation:ccsJelly 9s ease-in-out infinite; } .ccs-jelly svg{ display:block; width:100%; height:auto; }
