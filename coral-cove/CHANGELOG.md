@@ -1,5 +1,12 @@
 # Changelog
 
+## Fewer maths questions for grown-ups (October 28, 2026)
+
+- Inside Wendy's profile, or any grown-up profile, nothing asks the maths question again: it is asked once, when
+  the profile opens. Library settings were the one place that still asked. The child profile's checks are
+  unchanged.
+- The Library's settings no longer ask in the Claude version either, which has no grown-up checks.
+
 ## The code in separate files (October 28, 2026)
 
 Nothing changes on screen.

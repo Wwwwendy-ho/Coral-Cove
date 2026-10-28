@@ -423,6 +423,11 @@
      file, which defines CORAL_COVE_SEED, and asks the grown-up maths question (reefGrownUpGate) wherever a PIN
      used to be asked. Leaving a deck early still asks the subtraction question in both. ---------- */
   function reefNoPin(){ return !window.CORAL_COVE_SEED; }
+  /* Inside a grown-up profile nothing asks again (Wendy's choice): the question was answered on the way in.
+     Opening the profile and Manage Profiles (on the profile screen, outside any profile) still ask. */
+  function reefInsideAdult(kind){
+    return kind !== 'enterAdult' && kind !== 'manageProfiles' && !!(S.activeProfileId && S.profile && S.profile.mode === 'adult');
+  }
   function reefSkipPin(kind){
     S.pinPromptFor = null;
     setTimeout(function(){ grownUpPassed(kind); }, 0);

@@ -663,7 +663,7 @@
 
   function renderPinPad(kind){
     if(kind === 'exit' && reefKid()) return reefMathGate();
-    if(reefNoPin()) return reefSkipPin(kind);
+    if(reefNoPin() || reefInsideAdult(kind)) return reefSkipPin(kind);
     return reefGrownUpGate(kind);   // a grown-up maths question instead of a PIN; pinPadTitles still names each case
   }
 

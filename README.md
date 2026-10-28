@@ -59,10 +59,10 @@ See `CHANGELOG.md` for what changed in each update, and `ARCHITECTURE.md` for ho
   version don't appear here, and changes here don't go back to Claude.
 - **Always open it from the Home Screen icon**, not Safari. Safari can clear a website's saved data
   after a week without visits; Home Screen apps keep theirs.
-- **Grown-up checks on this copy:** there is no PIN. Grown-up profiles, ending a session, switching profiles
-  mid-session, Edit Mode and the other grown-up screens ask a times question a young child can't do yet
-  (like 47 × 6). The child profile opens and starts a session freely; leaving a deck early asks her a
-  subtraction question.
+- **Grown-up checks on this copy:** there is no PIN. Opening a grown-up profile asks a times question a young
+  child can't do yet (like 47 × 6); inside a grown-up profile nothing asks again. On the child profile, ending a
+  session, switching profiles mid-session, Edit Mode and Library settings ask the times question, and leaving a
+  deck early asks her a subtraction question. Manage Profiles on the profile screen also asks.
 - **Photo uploads are turned off** in this version, since they need Claude's online storage.
 - **Ask Shelly** works offline for single words and short sentences in Korean, English and Chinese (traditional characters, pinyin with tone marks). Open questions need the Claude version.
 - **The party board** (dice, shells, pearls, shop, minigames, story mode, the night shipwreck): shells, pearls and

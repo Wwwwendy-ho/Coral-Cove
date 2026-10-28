@@ -4429,7 +4429,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
 
   function renderPinPad(kind){
     if(kind === 'exit' && reefKid()) return reefMathGate();
-    if(reefNoPin()) return reefSkipPin(kind);
+    if(reefNoPin() || reefInsideAdult(kind)) return reefSkipPin(kind);
     return reefGrownUpGate(kind);   // a grown-up maths question instead of a PIN; pinPadTitles still names each case
   }
 
@@ -11516,6 +11516,11 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
      file, which defines CORAL_COVE_SEED, and asks the grown-up maths question (reefGrownUpGate) wherever a PIN
      used to be asked. Leaving a deck early still asks the subtraction question in both. ---------- */
   function reefNoPin(){ return !window.CORAL_COVE_SEED; }
+  /* Inside a grown-up profile nothing asks again (Wendy's choice): the question was answered on the way in.
+     Opening the profile and Manage Profiles (on the profile screen, outside any profile) still ask. */
+  function reefInsideAdult(kind){
+    return kind !== 'enterAdult' && kind !== 'manageProfiles' && !!(S.activeProfileId && S.profile && S.profile.mode === 'adult');
+  }
   function reefSkipPin(kind){
     S.pinPromptFor = null;
     setTimeout(function(){ grownUpPassed(kind); }, 0);
@@ -12215,7 +12220,9 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     sound: function(name){ try { if(Sound[name]) Sound[name](); } catch(e){} },
     startDeck: function(id){ reefStartDeck(id); },
     night: function(){ try { return reefNight(); } catch(e){ return false; } },
-    calm: function(){ try { return reefCalm(); } catch(e){ return false; } }
+    calm: function(){ try { return reefCalm(); } catch(e){ return false; } },
+    // false in the Claude version and inside a grown-up profile, where the app asks no grown-up questions
+    needsGrownUpCheck: function(){ return !reefNoPin() && !reefInsideAdult('library'); }
   };
   // Runs at the end of renderHome(): outside Edit Mode the deck menu becomes the reef (every profile).
   function reefHome(){

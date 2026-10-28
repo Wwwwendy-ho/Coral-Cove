@@ -94,8 +94,10 @@ Chinese bridge, Native or Sino?) has its own section with its state on `S` and a
 
 There is no PIN. On GitHub, `reefGrownUpGate(kind)` shows a times question; a right answer calls
 `grownUpPassed(kind)`, which carries on to what was asked for (a grown-up profile, ending a session, Edit Mode,
-...). Leaving a deck early on the child profile asks a subtraction question instead. In the Claude version
-(`reefNoPin()`) these checks are skipped.
+...). Leaving a deck early on the child profile asks a subtraction question instead. Every check goes through
+`renderPinPad(kind)`, which skips it in the Claude version (`reefNoPin()`) and inside a grown-up profile
+(`reefInsideAdult(kind)`: only opening the profile and Manage Profiles ask). The Library asks the app through
+`window.CoralCove.needsGrownUpCheck()`, so its Settings follow the same rules.
 
 ## 3D (the reef board and lobby)
 

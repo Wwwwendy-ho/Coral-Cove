@@ -2,7 +2,9 @@
    Checks, with no page errors anywhere:
    - each profile opens the 3D board (the grown-up profile through the maths question);
    - the crab starts beside the guide, tapped fish escape, and a deck opens from the board;
-   - the grown-up checks: a wrong answer gives a new question, Cancel goes back, the right answer opens;
+   - the grown-up checks: a wrong answer gives a new question, Cancel goes back, the right answer opens; inside a
+     grown-up profile nothing asks again (leaving a deck, Library settings, Edit Mode), while the child's Edit
+     Mode and Library settings still ask;
      a child leaving a deck early gets the subtraction question;
    - Ask Shelly answers English, Chinese and Korean words with the network switched off;
    - the Library opens.
@@ -12,6 +14,10 @@ const { enter, solveGate } = require('./steps');
 const port = +process.argv[2] || 8820;
 const ARGS = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'];
 let failed = 0;
+// The Library's top-left button is "‹ Back" inside a page and "✕ Close" on its first page
+async function closeLibrary(p) {
+  for (let i = 0; i < 5 && await p.isVisible('.clib .clib-back'); i++) { await p.click('.clib .clib-back'); await p.waitForTimeout(500); }
+}
 function check(name, ok, detail) { console.log((ok ? 'ok    ' : 'FAIL  ') + name + (detail ? '  ' + detail : '')); if (!ok) failed++; }
 const nearestDeck = () => { const v = window.__reef3dView(), here = v.at; const s = v.spaces.filter(s => s.kind === 'deck').sort((a, b) => Math.abs(a.i - here) - Math.abs(b.i - here))[0]; window.__reef3dGo(s.i); return s.item.d.name; };
 
@@ -52,7 +58,9 @@ async function newPage(browser) {
   await p.click('[data-ask="close"]'); await p.context().setOffline(false);
   await p.click('[data-act="open-library"]'); await p.waitForTimeout(800);
   check('the Library opens', await p.evaluate(() => /Tutor/.test(document.body.innerText)));
-  await p.click('text=Close').catch(() => {}); await p.waitForTimeout(800);
+  await p.click('text=For grown-ups'); await p.waitForTimeout(800);
+  check('child: Library settings ask the maths question', await p.evaluate(() => !!document.getElementById('clibPin')));
+  await closeLibrary(p);
   const deck = await p.evaluate(nearestDeck); await p.waitForTimeout(9000);
   check('child: a deck opens from the board', await p.evaluate(() => !document.querySelector('.r3 canvas')), deck);
   const exit = await p.$('[data-act^="exit-"], [data-act="back-home"], [aria-label^="Close"]');
@@ -64,6 +72,9 @@ async function newPage(browser) {
     await p.locator('button', { hasText: /^(OK|Check|Done)$/ }).first().click().catch(() => {}); await p.waitForTimeout(4000);
     check('child: the right answer returns to the board', await p.evaluate(() => !!document.querySelector('.r3 canvas')));
   }
+  await p.click('[data-act="toggle-edit-mode"]'); await p.waitForTimeout(800);
+  check('child: Edit Mode asks the maths question', !!(await p.$('.reef-gate')));
+  await p.click('[data-gate="cancel"]').catch(() => {}); await p.waitForTimeout(800);
   check('child: no page errors', !p.errors.length, p.errors.join(' / '));
   await p.context().close();
 
@@ -80,6 +91,16 @@ async function newPage(browser) {
   check('the right answer opens the board', await p.evaluate(() => !!(window.__reef3dView && window.__reef3dView())));
   const d2 = await p.evaluate(nearestDeck); await p.waitForTimeout(9000);
   check('grown-up: a deck opens from the board', await p.evaluate(() => !document.querySelector('.r3 canvas')), d2);
+  // Inside a grown-up profile nothing asks again: the question was answered on the way in
+  const exit2 = await p.$('[data-act^="exit-"], [data-act="back-home"], [aria-label^="Close"]');
+  if (exit2) { await exit2.click(); await p.waitForTimeout(4000); }
+  check('grown-up: leaving a deck early asks nothing', !!exit2 && !(await p.$('.reef-gate, .lock-screen')) && await p.evaluate(() => !!document.querySelector('.r3 canvas')));
+  await p.click('[data-act="toggle-edit-mode"]'); await p.waitForTimeout(1200);
+  await p.click('[data-act="open-library"]', { force: true }); await p.waitForTimeout(800);
+  await p.click('text=For grown-ups'); await p.waitForTimeout(800);
+  check('grown-up: Library settings ask nothing', await p.evaluate(() => !document.getElementById('clibPin') && !!document.getElementById('clibUrl')));
+  await closeLibrary(p);
+  check('grown-up: Edit Mode asks nothing', !(await p.$('.reef-gate, .lock-screen')) && /Edit Mode/.test(await p.evaluate(() => document.body.innerText)));
   check('grown-up: no page errors', !p.errors.length, p.errors.join(' / '));
   await p.context().close();
 

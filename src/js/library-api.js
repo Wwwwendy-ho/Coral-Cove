@@ -10,7 +10,9 @@
     sound: function(name){ try { if(Sound[name]) Sound[name](); } catch(e){} },
     startDeck: function(id){ reefStartDeck(id); },
     night: function(){ try { return reefNight(); } catch(e){ return false; } },
-    calm: function(){ try { return reefCalm(); } catch(e){ return false; } }
+    calm: function(){ try { return reefCalm(); } catch(e){ return false; } },
+    // false in the Claude version and inside a grown-up profile, where the app asks no grown-up questions
+    needsGrownUpCheck: function(){ return !reefNoPin() && !reefInsideAdult('library'); }
   };
   // Runs at the end of renderHome(): outside Edit Mode the deck menu becomes the reef (every profile).
   function reefHome(){

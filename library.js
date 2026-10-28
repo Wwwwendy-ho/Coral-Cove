@@ -156,7 +156,8 @@
 
   // Settings: the Claude helper and a few preferences. Behind a grown-up maths question.
   LIB.views.settings = { title: 'Settings', render: function(el){
-    if(!LIB.pinOK){   // a grown-up times question (the same kind the app uses instead of a PIN)
+    var ask = !CC() || !CC().needsGrownUpCheck || CC().needsGrownUpCheck();
+    if(ask && !LIB.pinOK){   // a grown-up times question (the same kind the app uses instead of a PIN)
       var q = (window.CoralCoveGrownUpQuestion || function(){ var a = 13 + rnd(75), b = 6 + rnd(4); return { a: a, b: b, ans: a * b }; })();
       el.innerHTML = '<section class="clib-card"><h2>🧮 Grown-ups only</h2><p>Solve this to change Library settings.</p><p class="clib-big">' + q.a + ' × ' + q.b + ' =</p><input id="clibPin" class="clib-input" inputmode="numeric" autocomplete="off" maxlength="3" aria-label="Your answer to ' + q.a + ' times ' + q.b + '"><div class="clib-row"><button type="button" class="clib-btn main" data-go>OK</button></div><p class="clib-msg" aria-live="polite"></p></section>';
       var inp = $('#clibPin', el), go2 = function(){ if(+inp.value.replace(/\D/g, '') === q.ans){ LIB.pinOK = true; go('settings', null, true); } else { go('settings', null, true); setTimeout(function(){ var m = $('.clib-msg'); if(m) m.textContent = 'Not quite. Here\'s a new one.'; }, 0); } };
