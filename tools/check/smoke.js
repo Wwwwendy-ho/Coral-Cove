@@ -1,5 +1,6 @@
 /* Browser smoke test of the GitHub copy, both profiles. The site must be served on the port (run.sh does it).
    Checks, with no page errors anywhere:
+   - the profile screen's super rare plastic bag: Shelly won't eat it, and a note asks to keep the ocean clean;
    - each profile opens the 3D board (the grown-up profile through the maths question);
    - the crab starts beside the guide, tapped fish escape, and a deck opens from the board;
    - the grown-up checks: a wrong answer gives a new question, Cancel goes back, the right answer opens; inside a
@@ -31,8 +32,28 @@ async function newPage(browser) {
 (async () => {
   const browser = await chromium.launch({ args: ARGS });
 
-  // Child: board, crab, fish, Ask Shelly offline, Library, a deck, leaving it early
+  // Profile screen: the super rare plastic bag. Shelly won't eat it, and a note asks to keep the ocean clean.
   let p = await newPage(browser);
+  await enter(p, null, { port });
+  const odds = await p.evaluate(() => window.__reefFoodOdds(400000).bag || 0);
+  check('the plastic bag is under 0.1% of drops', odds > 0 && odds < 400, odds + ' in 400,000');
+  await p.evaluate(() => {
+    window.__reefFoodForce('bag');
+    const c = window.__reefLobbyView().renderer.domElement, r = c.getBoundingClientRect();
+    c.dispatchEvent(new MouseEvent('click', { clientX: r.left + r.width * .3, clientY: r.top + r.height * .45, bubbles: true }));
+  });
+  await p.waitForSelector('.rl-note', { state: 'visible', timeout: 15000 }).catch(() => {});
+  const bag = await p.evaluate(() => { const v = window.__reefLobbyView(), n = document.querySelector('.rl-note');
+    return { note: n && !n.hidden ? n.textContent : '', left: v.food.filter(f => f.userData.kind === 'bag').length, gulped: !!v.gulpAt }; });
+  check('Shelly refuses the plastic bag', !bag.gulped && bag.left === 0);
+  check('a note asks to keep the ocean clean', /plastic/i.test(bag.note) && /clean/i.test(bag.note), bag.note.slice(0, 60));
+  await p.click('.rl-note button').catch(() => {}); await p.waitForTimeout(400);
+  check('the note closes with its button', await p.evaluate(() => { const n = document.querySelector('.rl-note'); return !n || n.hidden; }));
+  check('profile screen: no page errors', !p.errors.length, p.errors.join(' / '));
+  await p.context().close();
+
+  // Child: board, crab, fish, Ask Shelly offline, Library, a deck, leaving it early
+  p = await newPage(browser);
   await enter(p, 'child', { port });
   const b = await p.evaluate(() => {
     const v = window.__reef3dView(); if (!v) return { board: false };

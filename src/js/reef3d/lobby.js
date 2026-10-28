@@ -40,6 +40,7 @@
     var wrap = document.createElement('div');
     wrap.className = 'rl ' + (night ? 'night' : 'day');
     wrap.innerHTML = '<canvas class="rl-canvas" aria-hidden="true"></canvas>' + reefMusicButtonHTML('rl-musicbtn') +
+      '<div class="r3-bubble rl-note" role="status" hidden></div>' +
       '<button type="button" class="rl-themebtn" data-rl-theme aria-label="' + (night ? 'Switch to the sunlit reef (light mode)' : 'Switch to the midnight wreck (dark mode)') + '">' + (night ? '☀️' : '🌙') + '</button>';
     var renderer = new THREE.WebGLRenderer({ canvas: wrap.querySelector('canvas'), antialias: innerWidth * innerHeight <= 700000, alpha: true, powerPreference: 'low-power' });
     renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap; renderer.shadowMap.autoUpdate = false;
@@ -132,7 +133,8 @@
          (ray.intersectObject(view.crab, true).length || reef3dTapDist(view, view.crab.position.clone().setY(.45), e, rc) < 60)){ reefCrabSwap(view, { x: 7.5, z: 2 }, -1); return; }
       if(!ray.ray.intersectPlane(plane, hit)) return;
       hit.x = Math.max(-8, Math.min(8, hit.x)); hit.y = Math.max(1, Math.min(6, hit.y));
-      var pellet = reefFoodBuild(reefFoodPick(), kit.grad, night); pellet.scale.setScalar(1.3); pellet.userData.base = 1.3;
+      var pellet = reefFoodBuild(reefFoodPick(), kit.grad, night), sc = pellet.userData.kind === 'bag' ? 1.7 : 1.3;   // the bag is a bit bigger, so it can be seen
+      pellet.scale.setScalar(sc); pellet.userData.base = sc;
       pellet.position.copy(hit); scene.add(pellet); view.food.push(pellet);
       if(view.food.length > 6){ var old = view.food.shift(); scene.remove(old); }
       try { Sound.unlock(); Sound.bloop(760, 0, .04); } catch(err){}
@@ -154,6 +156,24 @@
     return view;
   }
 
+  // The plastic bag: she won't eat it. It floats up and away, and a note (which stays until OK) explains why.
+  function reefLobbyRefuse(view, bag, now, calm){
+    view.food.shift(); view.refuseAt = now;
+    if(calm) view.scene.remove(bag);
+    else { var from = bag.position.clone(), mats = [];
+      bag.traverse(function(o){ if(o.material && mats.indexOf(o.material) < 0) mats.push(o.material); });
+      (view.fx = view.fx || []).push({ t0: performance.now(), dur: 2600,
+        step: function(p){ bag.position.set(from.x + p * .8, from.y + p * 3, from.z); mats.forEach(function(m){ m.opacity = .85 * (1 - p); }); },
+        end: function(){ view.scene.remove(bag); } }); }
+    var note = view.wrap.querySelector('.rl-note'); if(!note) return;
+    var who = view.night ? 'Lumi' : 'Shelly';
+    note.innerHTML = '<span class="rl-note-e" aria-hidden="true">' + (view.night ? '🐟' : '🐢') + '</span>' +
+      '<span><b>No, thank you!</b> ' + who + ' does not eat plastic bags. Plastic in the sea can make sea animals sick. ' +
+      'Help keep the ocean clean: put trash in a trash can.</span><button type="button" class="rl-note-ok">OK</button>';
+    note.hidden = false; note.classList.remove('show'); void note.offsetWidth; note.classList.add('show');
+    note.querySelector('.rl-note-ok').addEventListener('click', function(){ note.hidden = true; });
+  }
+
   function reefLobbyFrame(view, now){
     var THREE = window.THREE, calm = reefCalm(), t = (now - view.t0) / 1000, dt = Math.min(.05, Math.max(0, (now - view.lastT) / 1000)); view.lastT = now;
     var w = view.wrap.clientWidth || 1, h = view.wrap.clientHeight || 1;
@@ -172,7 +192,9 @@
     else if(dist > .05){ var sp = (food ? 3.2 : 1.1) * dt; g.position.add(to.multiplyScalar(Math.min(1, sp / dist))); }
     var aim = food ? food.position : view.target;   // with food, she turns to face the food itself
     if((dist > .1 || food) && !calm){ var want = Math.atan2(aim.x - g.position.x, aim.z - g.position.z); var dA = ((want - g.rotation.y + Math.PI * 3) % (Math.PI * 2)) - Math.PI; g.rotation.y += dA * Math.min(1, dt * 4); }
-    if(food && (mouthAt ? mouthAt.distanceTo(food.position) < .32 : g.position.distanceTo(food.position) < .55)){ // gulp: the food shrinks into her mouth
+    var reached = food && (mouthAt ? mouthAt.distanceTo(food.position) < .32 : g.position.distanceTo(food.position) < .55);
+    if(reached && food.userData.kind === 'bag'){ reefLobbyRefuse(view, food, now, calm); reached = false; }
+    if(reached){ // gulp: the food shrinks into her mouth
       view.food.shift();
       if(calm || !mouthAt) view.scene.remove(food);
       else { var bite = food, from = food.position.clone(), s0 = food.scale.x;
@@ -192,6 +214,8 @@
       body.scale.setScalar(gs); body.position.y = Math.sin(t * 2) * .12;
       var tw = view.twirlAt ? Math.min(1, (now - view.twirlAt) / 900) : 1;   // the star-treat twirl: one full happy spin
       body.rotation.y = tw < 1 ? (1 - Math.pow(1 - tw, 3)) * Math.PI * 2 : 0;
+      var nope = view.refuseAt ? Math.min(1, (now - view.refuseAt) / 1000) : 1;   // the plastic bag: a slow "no" shake of the head
+      if(nope < 1) body.rotation.y = Math.sin(nope * Math.PI * 4) * .35 * (1 - nope);
       (parts.flippers || []).forEach(function(f, i){
         var sp2 = dist > .3 ? 9 : 2.2, amp = dist > .3 ? .5 : .2;
         if(view.night) f.rotation.z = f.userData.side * Math.sin(t * sp2 * 1.4 + i) * amp;
