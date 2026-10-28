@@ -20470,6 +20470,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       '<div class="cy-sea"><i class="cy-w day"></i><i class="cy-w night"></i>' + wave('w2') + wave('w1') + '<span class="cy-glints">' + glints + '</span><span class="cy-path"></span>' +
         '<span class="cy-bubs"><i></i><i></i><i></i><i></i><i></i><i></i></span></div>';
     document.body.appendChild(el);
+    var oldCv = view.renderer && view.renderer.domElement;
+    if(oldCv){ oldCv.style.transition = 'filter .55s ease'; oldCv.style.filter = 'blur(10px)'; }   // the board goes soft as the sky comes in
     if(preview) return;
     var t0 = performance.now(), swapped = false;
     setTimeout(function(){ R3.themeArrive = { t0: performance.now(), dark: toDark, cycle: true }; swap(); swapped = true; }, 1150);   // under the sky: rebuild the board
@@ -20480,8 +20482,11 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       if(!document.body.contains(el)) document.body.appendChild(el);   // (the board's wrapper may have been rebuilt)
       el.classList.add('down');
       if(v && v.themeIn) v.themeIn.t0 = performance.now();   // the camera's tilt back down starts with the dive
-      setTimeout(function(){ el.classList.add('gone'); }, 520);
-      setTimeout(function(){ el.remove(); var vv = R3.view; if(vv) vv.themeFx = null; }, 900);
+      // like a film dissolve: the sky blurs away while the new board comes into focus out of a blur
+      var cv = v && v.renderer && v.renderer.domElement;
+      if(cv){ cv.style.transition = 'none'; cv.style.filter = 'blur(16px)'; void cv.offsetWidth; cv.style.transition = 'filter 1.3s cubic-bezier(.3,0,.2,1) .15s'; cv.style.filter = 'blur(0px)';
+        setTimeout(function(){ cv.style.transition = ''; cv.style.filter = ''; }, 1600); }
+      setTimeout(function(){ el.remove(); var vv = R3.view; if(vv) vv.themeFx = null; }, 1350);
     })();
   }
   function reef3dWash(dark){
@@ -21643,7 +21648,7 @@ body.reef-calm .rw-light, body.reef-calm .rw-obj, body.reef-calm .rw-post, body.
 .ccs-wave.w2{ top:-30px; animation-duration:12s; animation-direction:reverse; } .ccs-wave.w2 path{ fill:var(--w2); }
 .ccs-wave.w3{ top:-38px; animation-duration:17s; opacity:.6; } .ccs-wave.w3 path{ fill:var(--w3); }
 @keyframes ccsWave{ to{ transform:translateX(-50%); } }
-.ccs-glints i{ position:absolute; width:14px; height:3px; border-radius:2px; background:#fff; opacity:0; animation:ccsGlint 2.4s ease-in-out infinite; }
+.ccs-glints i{ position:absolute; width:7px; height:7px; border-radius:50%; background:radial-gradient(circle, #fff, rgba(255,255,255,0) 70%); opacity:0; animation:ccsGlint 2.4s ease-in-out infinite; }
 @keyframes ccsGlint{ 0%,100%{ opacity:0; transform:scaleX(.4); } 50%{ opacity:.85; transform:scaleX(1); } }
 .ccs-shafts{ position:absolute; inset:0; opacity:.22; background:repeating-linear-gradient(105deg, rgba(255,255,255,.55) 0 18px, transparent 18px 90px); -webkit-mask:linear-gradient(#000, transparent 75%); mask:linear-gradient(#000, transparent 75%); animation:ccsShaft 9s ease-in-out infinite alternate; }
 .cc-splash.night .ccs-shafts{ opacity:.08; }
@@ -21971,9 +21976,10 @@ body.r3-lobby{ background:linear-gradient(180deg, #d9f0ec 0%, #b2e0de 35%, #9fd6
 
 /* Day ⇄ night on the 3D board: a soft wash of light covers the moment the board switches (see reef3dThemeShow). */
 /* day ⇄ night: up to the surface, a sunset or sunrise over the sea, and back down (see reef3dThemeShow) */
-.r3-cycle{ position:fixed; inset:0; z-index:96; overflow:hidden; pointer-events:auto; animation:cyIn .35s ease-out both; }
-.r3-cycle.gone{ opacity:0; transition:opacity .38s ease; }
-@keyframes cyIn{ from{ opacity:0; } to{ opacity:1; } }
+.r3-cycle{ position:fixed; inset:0; z-index:96; overflow:hidden; pointer-events:auto; animation:cyIn .6s ease-out both; }
+.r3-cycle.down{ animation:cyAway 1.15s cubic-bezier(.4,0,.6,1) .1s both; }
+@keyframes cyIn{ from{ opacity:0; filter:blur(14px); } to{ opacity:1; filter:blur(0); } }
+@keyframes cyAway{ from{ opacity:1; filter:blur(0); } 45%{ opacity:.85; filter:blur(10px); } to{ opacity:0; filter:blur(22px); } }
 .cy-sky{ position:absolute; left:0; right:0; top:0; height:58%; overflow:hidden; }
 .cy-s{ position:absolute; inset:0; opacity:0; animation:cyFade .9s ease both; }
 .cy-s.day{ background:linear-gradient(#5ec4f5, #bfe8ff 60%, #fff1d2); } .cy-s.dusk{ background:linear-gradient(#3a3f7a, #b0598a 45%, #ff8e5a 80%, #ffc36b); } .cy-s.night{ background:linear-gradient(#071431, #173663 65%, #2c4f7c); }
@@ -22009,9 +22015,9 @@ body.r3-lobby{ background:linear-gradient(180deg, #d9f0ec 0%, #b2e0de 35%, #9fd6
 .to-day .cy-wave.w1 path{ fill:#105d78; animation:cyWaveD 1.4s ease 1s both; } .to-day .cy-wave.w2 path{ fill:#1b7d96; animation:cyWaveD2 1.4s ease 1s both; }
 @keyframes cyWaveN{ to{ fill:#105d78; } } @keyframes cyWaveN2{ to{ fill:#1b7d96; } } @keyframes cyWaveD{ to{ fill:#29b3cf; } } @keyframes cyWaveD2{ to{ fill:#6ad4e6; } }
 @keyframes cyWave{ to{ transform:translateX(-50%); } }
-.cy-glints i{ position:absolute; width:14px; height:3px; border-radius:2px; background:#fff; opacity:0; animation:cyGlint 1.8s ease-in-out infinite; }
+.cy-glints i{ position:absolute; width:6px; height:6px; border-radius:50%; background:radial-gradient(circle, #fff, rgba(255,255,255,0) 70%); opacity:0; animation:cyGlint 1.8s ease-in-out infinite; }
 @keyframes cyGlint{ 0%,100%{ opacity:0; } 50%{ opacity:.8; } }
-.cy-path{ position:absolute; left:50%; top:0; width:min(30vw,170px); height:30%; transform:translateX(-50%); opacity:0; background:repeating-linear-gradient(180deg, rgba(255,214,140,.7) 0 4px, transparent 4px 14px); -webkit-mask:linear-gradient(#000, transparent); mask:linear-gradient(#000, transparent); animation:cyGlow 2.2s ease .7s both; }
+.cy-path{ position:absolute; left:50%; top:0; width:min(34vw,190px); height:34%; transform:translateX(-50%); opacity:0; background:radial-gradient(ellipse 50% 100% at 50% 0%, rgba(255,214,140,.55), rgba(255,190,120,.18) 55%, transparent 75%); animation:cyGlow 2.2s ease .7s both; }   /* the sun's glow on the water */
 .to-night .cy-path{ left:60%; } .to-day .cy-path{ left:66%; }
 .cy-bubs i{ position:absolute; top:10%; width:12px; height:12px; border-radius:50%; border:2px solid rgba(255,255,255,.7); opacity:0; }
 .r3-cycle.down .cy-bubs i{ animation:cyBub .7s ease-out both; }
