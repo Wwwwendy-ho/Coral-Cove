@@ -1,5 +1,18 @@
 # Changelog
 
+## Code cleanup (October 28, 2026)
+
+Nothing changes on screen; this makes the code easier to look after.
+- Removed code nothing used any more: the old PIN pad, the old mascot drawing, unused helper functions, 16 unused
+  style classes, unused animations, and about 140 style values that a later rule always replaced.
+- Removed old test scripts, offline builds and the zip from the top folder, and the tools that synced from the
+  Claude version (GitHub is the main copy now).
+- Features that react to each redraw now register with `afterRender` instead of wrapping `render()`.
+- Fixed: the keypad on the grown-up maths question played its tap sound twice.
+- New: `ARCHITECTURE.md` (how the code is organised), tables of contents at the top of the script and styles,
+  `tools/check/` (checks to run before pushing), `tools/build_claude.py` (builds the Claude version),
+  `tools/export_seed.py` and `tools/mirror.sh`.
+
 ## Board fixes (October 28, 2026)
 
 - **Tapped fish swim off smoothly.** They used to twitch and spin: the escape had sudden sideways jumps (the zigzag style, now removed) and fast wiggles, and each fish snapped to face whichever way it moved that frame. Now every escape is one smooth glide, a little shorter, and fish turn gently toward the way they are really going.

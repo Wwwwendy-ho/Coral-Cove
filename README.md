@@ -2,7 +2,7 @@
 
 Coral Cove flashcards as a 3D underwater board game, set up to run on GitHub Pages and as an iPad Home Screen app.
 Shelly the turtle (Lumi the anglerfish at night) hops along a path of deck spaces across the reef.
-See `CHANGELOG.md` for what's in the current version (Version 99).
+See `CHANGELOG.md` for what changed in each update, and `ARCHITECTURE.md` for how the code is organised.
 
 ## Files
 
@@ -23,8 +23,14 @@ See `CHANGELOG.md` for what's in the current version (Version 99).
 | `sw.js` | Lets the app open without Wi-Fi |
 | `.nojekyll` | Tells GitHub Pages to serve the files as they are |
 | `coral-cove/` | A copy of the site, kept for devices that saved the older address ending in `/coral-cove/` |
-| `tools/sync_from_artifact.py` | Rebuilds this site (and the `coral-cove/` copy) from a download of the Claude artifact |
-| `tools/ipad_patches.py` | The iPad PIN changes, applied on every rebuild |
+| `tools/build_claude.py` | Builds the Claude version (one self-contained page) from this repository |
+| `tools/export_seed.py` | Replaces the starting data with an export of the Claude version's database |
+| `tools/mirror.sh` | Copies the site into `coral-cove/` after a change |
+| `tools/check/` | Checks to run before pushing: lint, style audit, browser smoke test, screen comparison (see its README) |
+| `tools/words/` | Builds Ask Shelly's offline dictionary |
+| `tools/compose_music.py` | Makes the background songs |
+| `tools/claude-proxy-worker.js` | The optional Claude helper for the Library (see below) |
+| `ARCHITECTURE.md` | How the code is organised: where each part is and how they fit together |
 | `CHANGELOG.md` | What changed in each version |
 
 ## Upload to GitHub
@@ -51,15 +57,14 @@ See `CHANGELOG.md` for what's in the current version (Version 99).
   version don't appear here, and changes here don't go back to Claude.
 - **Always open it from the Home Screen icon**, not Safari. Safari can clear a website's saved data
   after a week without visits; Home Screen apps keep theirs.
-- **PIN on this copy:** the child profile opens and starts a session without the PIN. Ending her session
-  and switching profiles mid-session still need it. Leaving a deck early asks her a subtraction question
-  instead of the PIN. Grown-up profiles need the PIN to open. (`tools/ipad_patches.py` makes the PIN
-  changes on every update.)
+- **Grown-up checks on this copy:** there is no PIN. Grown-up profiles, ending a session, switching profiles
+  mid-session, Edit Mode and the other grown-up screens ask a times question a young child can't do yet
+  (like 47 × 6). The child profile opens and starts a session freely; leaving a deck early asks her a
+  subtraction question.
 - **Photo uploads are turned off** in this version, since they need Claude's online storage.
 - **Ask Shelly** works offline for single words and short sentences in Korean, English and Chinese (traditional characters, pinyin with tone marks). Open questions need the Claude version.
-- **The party board** (dice, shells, pearls, shop, minigames, story mode, the night shipwreck) exists only in this
-  GitHub copy. Shells, pearls and hats are saved with each profile on the device. Story mode appears for profiles
-  with a daily plan.
+- **The party board** (dice, shells, pearls, shop, minigames, story mode, the night shipwreck): shells, pearls and
+  hats are saved with each profile on the device. Story mode appears for profiles with a daily plan.
 - **Music** starts after the first tap, because browsers don't allow sound before one. The 🎵 button turns it
   on or off. If it won't play, hold 🎵 for a second to see a short note on what happened.
 - **3D and offline:** the 3D engine, the models and the celebration music are saved for offline use the first
@@ -68,8 +73,8 @@ See `CHANGELOG.md` for what's in the current version (Version 99).
 - **Fonts:** if Screen Time blocks `fonts.googleapis.com`, Coral Cove uses the iPad's built-in font
   instead. Approve `https://fonts.googleapis.com` and `https://fonts.gstatic.com` to keep the
   rounded Coral Cove fonts.
-- **Syncing from Claude:** `tools/sync_from_artifact.py` replaces `index.html` with the Claude version, which would
-  remove the party board. Bring those changes into the Claude version first, or skip the sync.
+- **This copy is the main one.** Make changes here; `tools/build_claude.py` builds the Claude version from it.
+  Changes made directly in the Claude version don't come back here.
 - **Updating later:** upload changed files over the old ones. Decks already saved on the iPad are
   kept; new decks and cards in `seed-data.js` are added the next time the app opens, without changing
   progress already saved on that device.
