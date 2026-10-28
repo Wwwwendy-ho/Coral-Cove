@@ -1,5 +1,12 @@
 # Changelog
 
+## The designed fonts are back (October 28, 2026)
+
+- Coral Cove uses its designed fonts again: Fredoka for headings, buttons and card words, and Nunito Sans for
+  everything else. Since Version 29 a loading mistake had left them off, so the iPad showed its own font.
+- The fonts are saved for offline use the first time the app opens online, so the look stays the same without
+  Wi-Fi.
+
 ## Fewer maths questions for grown-ups (October 28, 2026)
 
 - Inside Wendy's profile, or any grown-up profile, nothing asks the maths question again: it is asked once, when

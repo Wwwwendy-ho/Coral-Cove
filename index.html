@@ -15,11 +15,10 @@
 <script src="library.js?v=20261027" defer></script>
 <script src="words.js?v=20261028" defer></script>
 <script>if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js?v=20261026').catch(function(){});});}</script>
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap"></noscript>
-<!-- The font loader below runs before the font link exists, so the web fonts stay off and the device font is used,
-     as it has been since Version 29. Kept that way until a look change is chosen. -->
-<script>(function(){var l=document.getElementById("coveperfFonts");if(!l)return;function on(){l.media="all";}l.addEventListener("load",on);l.addEventListener("error",on);setTimeout(on,2500);})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" media="print" id="coveperfFonts" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap">
+<!-- The fonts load without holding up the first paint (media="print" until loaded); this must come after the link. -->
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap"></noscript>
+<script>(function(){var l=document.getElementById("coveperfFonts");if(!l)return;function on(){l.media="all";}l.addEventListener("load",on);l.addEventListener("error",on);setTimeout(on,2500);})();</script>
 </head><body>
 <style>
 /* from src/css/base.css */

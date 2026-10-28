@@ -130,7 +130,8 @@ first time Ask Shelly opens. `tools/words/README.md` explains how the dictionary
 ## Styles
 
 `base.css` and `fixes-and-refresh.css` hold the app styles, in order of application, with the colour tokens as
-custom properties on `:root` (each with its dark-mode value beside it). `reef.css` and `reef-3d.css` hold the game
+custom properties on `:root` (each with its dark-mode value beside it). The fonts are `--font-display` (Fredoka)
+and `--font-body` (Nunito Sans), from Google Fonts; `sw.js` saves them for offline use. `reef.css` and `reef-3d.css` hold the game
 look: Child Mode, the board and the lobby. A later rule with the same selector wins, so look
 for an existing rule before adding one; `tools/check/css_audit.py` reports values that are overridden.
 

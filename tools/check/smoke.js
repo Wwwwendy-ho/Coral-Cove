@@ -44,6 +44,7 @@ async function newPage(browser) {
     return { board: true, crabGap: c ? Math.hypot(c.x - g.x, c.z - g.z) : null, fled: !!sc.flee, warmed: v.warmed };
   });
   check('child: the 3D board opens', b.board);
+  check('the designed fonts are on (Fredoka, Nunito Sans)', await p.evaluate(async () => { await document.fonts.ready; return document.fonts.check('600 20px Fredoka') && [...document.fonts].some(f => f.family.replace(/"/g, '') === 'Fredoka' && f.status === 'loaded'); }));
   check('child: the crab starts beside the guide', b.crabGap > 1 && b.crabGap < 5, 'gap ' + (b.crabGap || 0).toFixed(2));
   check('child: tapped fish escape', b.fled);
   check('child: effect shaders are prepared while loading', b.warmed > 0, b.warmed + ' shaders');

@@ -1,6 +1,6 @@
 /* Coral Cove offline support: keeps a copy of the app's files so it still opens without Wi-Fi.
    Network first, so a new upload to GitHub shows up the next time the iPad is online. */
-var CACHE = 'coral-cove-20261028y';
+var CACHE = 'coral-cove-20261028z';
 var FILES = ['./', 'index.html', 'seed-data.js?v=20261026', 'audio-clips.js?v=20261026', 'storage.js?v=20261026',
              'library.js', 'words.js', 'words-data.js', 'three.min.js', 'reef-models.js', 'win.mp3', 'lobby-song.mp3', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
@@ -29,8 +29,22 @@ function rangeFromCache(req, cached) {
   });
 }
 
+// The app's fonts (Fredoka, Nunito Sans) come from Google Fonts. Saved the first time they load online, so the
+// app keeps its look offline. Kept until CACHE above changes.
+var FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
+function fontFromCache(req) {
+  return caches.match(req).then(function (cached) {
+    return cached || fetch(req).then(function (res) {
+      if (res.ok || res.type === 'opaque') { var copy = res.clone(); caches.open(CACHE).then(function (c) { return c.put(req, copy); }).catch(function () {}); }
+      return res;
+    });
+  });
+}
+
 self.addEventListener('fetch', function (e) {
-  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== self.location.origin) return;
+  if (e.request.method !== 'GET') return;
+  if (FONT_HOSTS.indexOf(new URL(e.request.url).hostname) >= 0) { e.respondWith(fontFromCache(e.request)); return; }
+  if (new URL(e.request.url).origin !== self.location.origin) return;
   if (e.request.headers.has('range')) {
     var url = e.request.url.split('#')[0];
     e.respondWith(caches.match(url, { ignoreSearch: true }).then(function (cached) {
