@@ -355,6 +355,13 @@ body.r3-full .sea, body.r3-lobby .sea{ display:none !important; }
 .rl-musicbtn{ right:max(16px, env(safe-area-inset-right, 0px)); bottom:max(16px, env(safe-area-inset-bottom, 0px)); pointer-events:auto; }
 .rl-themebtn{ position:absolute; z-index:3; right:max(16px, env(safe-area-inset-right, 0px)); bottom:calc(max(16px, env(safe-area-inset-bottom, 0px)) + 62px); width:52px; height:52px; border:none; cursor:pointer; border-radius:50%; font-size:1.5rem; pointer-events:auto;
   background:linear-gradient(180deg, #f6e7c4, #e8d2a0); box-shadow:0 4px 0 #b08d5a, 0 8px 16px rgba(60,50,30,.2); }
+.rl-note{ position:fixed; top:50%; left:50%; z-index:80; transform:translate(-50%, -50%); width:min(92%, 520px); pointer-events:auto; font-weight:600; line-height:1.4; }   /* in front of the profile buttons until OK */
+.rl-note.show{ animation:rlNotePop .45s var(--reef-pop) both; }
+@keyframes rlNotePop{ from{ opacity:0; transform:translate(-50%, -46%) scale(.94); } to{ opacity:1; transform:translate(-50%, -50%) scale(1); } }
+.rl-note b{ font-weight:800; }
+.rl-note-e{ font-size:1.8rem; flex:none; }
+.rl-note-ok{ flex:none; align-self:center; min-width:56px; min-height:44px; border:none; border-radius:999px; cursor:pointer; font:inherit; font-weight:800;
+  background:#1c8c93; color:#fff; }
 .rl-themebtn:active{ transform:translateY(3px); box-shadow:0 1px 0 #b08d5a; }
 .r3-musicbtn.off, .rl-musicbtn.off{ opacity:.55; filter:grayscale(1); }
 .r3-musicbtn.off::after, .rl-musicbtn.off::after{ content:""; position:absolute; left:12px; right:12px; top:50%; height:3px; margin-top:-1.5px; background:#8a3322; border-radius:2px; transform:rotate(-40deg); }

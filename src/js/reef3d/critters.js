@@ -145,8 +145,10 @@
   /* ---------- Food for Shelly (by day) and Lumi (at night) on the profile screen ----------
      Each tap drops one food, picked by chance; Wendy chose the odds. Rare foods get a special reaction when eaten
      (see reefLobbyFrame): the star treat makes her twirl in a burst of sparkles, the jellyfish gives a small sparkle.
+     The super rare plastic bag (1 in 2,000, Wendy's idea) is not food: she shakes her head, it floats away, and a
+     note asks to keep the ocean clean (reefLobbyRefuse).
      At night every food glows softly. Each design is about 0.4 units across, centred on its origin. */
-  var REEF_FOODS = [['flakes', 45], ['leaf', 27], ['shrimp', 15], ['jelly', 11], ['star', 2]];   // percent
+  var REEF_FOODS = [['flakes', 44.95], ['leaf', 27], ['shrimp', 15], ['jelly', 11], ['star', 2], ['bag', .05]];   // percent
   var reefFoodForce = null;
   window.__reefFoodForce = function(k){ reefFoodForce = k; };   // test helper: the next drop is this food
   window.__reefFoodOdds = function(n){ var c = {}; for(var i = 0; i < n; i++){ var k = reefFoodPick(); c[k] = (c[k] || 0) + 1; } return c; };   // test helper
@@ -193,6 +195,15 @@
       add(sg, M('#ffc94d'), 0, 0, 0, 1, 1, 1, cookie).rotation.x = -.3;
       add(new THREE.SphereGeometry(.045, 12, 8), M('#fff4c2'), 0, .01, .055, 1, 1, .5, cookie);
       glow = '#ffe27a';
+    } else if(name === 'bag'){    // the super rare plastic bag: see-through and crinkled, with two handles
+      var bag = new THREE.Group(); bag.rotation.set(.2, .5, .25); g.add(bag); parts.push(bag);
+      var bm = M('#f3f8fb', { transparent: true, opacity: .85, side: THREE.DoubleSide, depthWrite: false });
+      var tube = new THREE.CylinderGeometry(.13, .16, .26, 16, 5, true), tp = tube.attributes.position;
+      for(var w = 0; w < tp.count; w++){ var wx = tp.getX(w), wy = tp.getY(w), wz = tp.getZ(w), cr = 1 + Math.sin(wy * 40 + Math.atan2(wz, wx) * 5) * .07; tp.setX(w, wx * cr); tp.setZ(w, wz * cr); }
+      tube.computeVertexNormals(); add(tube, bm, 0, 0, 0, 1, 1, .55, bag);
+      add(new THREE.SphereGeometry(.16, 16, 6, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), bm, 0, -.13, 0, 1, .3, .55, bag);
+      [-1, 1].forEach(function(q){ add(new THREE.TorusGeometry(.05, .012, 6, 14, Math.PI), bm, q * .075, .13, 0, 1, 1, 1, bag); });
+      glow = '#dfeff5';
     } else {                      // food flakes: three thin flakes that tumble on their own
       [['#ff9a4d', -.09, .05, .02, .6], ['#ffd35c', .08, -.02, -.03, -.5], ['#79c96a', 0, -.1, .05, 1.2]].forEach(function(f){
         var m = add(new THREE.CylinderGeometry(.09, .09, .02, 7), M(f[0]), f[1], f[2], f[3]); m.rotation.set(f[4], f[4] * .7, f[4] * .4); parts.push(m); });
@@ -213,6 +224,7 @@
     if(u.kind === 'jelly'){ var pulse = Math.sin(t * 4 + ph); f.scale.y = f.userData.base * (1 + pulse * .1); P.forEach(function(tn, i){ tn.rotation.x = Math.sin(t * 4 + ph + i) * .25; }); }
     else if(u.kind === 'leaf'){ P[0].rotation.z = .3 + Math.sin(t * 2.2 + ph) * .5; f.position.x += Math.cos(t * 2.2 + ph) * dt * .25; }
     else if(u.kind === 'shrimp'){ P[0].rotation.z = Math.sin(t * 6 + ph) * .12; f.rotation.y += dt * .6; }
+    else if(u.kind === 'bag'){ P[0].rotation.z = .25 + Math.sin(t * 1.3 + ph) * .3; P[0].scale.x = 1 + Math.sin(t * 2 + ph) * .08; f.position.x += Math.cos(t * 1.3 + ph) * dt * .15; }
     else if(u.kind === 'star'){ f.rotation.y += dt * 1.6; if(u.halo) u.halo.material.opacity = .3 + Math.sin(t * 5 + ph) * .12; }
     else P.forEach(function(m, i){ m.rotation.x += dt * (1.2 + i * .5); m.rotation.z += dt * (.8 + i * .3); });
   }
