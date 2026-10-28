@@ -511,7 +511,7 @@
   } };
   LIB.views.talk = { title: 'Big question', render: function(el, id){
     var t = TALKS.find(function(x){ return x.id === id; }) || TALKS[0], step = 0, answers = [];
-    var c = chatScreen(el, { mode: 'talk:' + t.id, greet: t.title + ' ' + t.qs[0], placeholder: 'What do you think?',
+    chatScreen(el, { mode: 'talk:' + t.id, greet: t.title + ' ' + t.qs[0], placeholder: 'What do you think?',
       offline: function(q){
         answers.push(q); step++;
         var react = /because|so that|since/i.test(q) ? 'I like that you gave a reason.' : q.split(/\s+/).length > 6 ? 'You thought about that carefully.' : 'Interesting! Can you tell me a bit more next time?';
@@ -543,7 +543,7 @@
   } };
   LIB.views.debate = { title: 'Debate', render: function(el, id){
     var d = DEBATES.find(function(x){ return x.id === id; }) || DEBATES[0], side = null, round = 0;
-    var c = chatScreen(el, { mode: 'debate:' + d.id, greet: d.q + ' Do you say yes or no?', placeholder: 'Yes or no, and why?',
+    chatScreen(el, { mode: 'debate:' + d.id, greet: d.q + ' Do you say yes or no?', placeholder: 'Yes or no, and why?',
       offline: function(q){
         if(!side){ side = /\bno\b|disagree|shouldn/i.test(q) ? 'no' : 'yes'; }
         var mine = side === 'yes' ? d.no : d.yes, reason = /because|so|since/i.test(q);
@@ -663,7 +663,7 @@
   } };
 
   LIB.views.wsMake = { title: 'Make a worksheet', render: function(el, arg){
-    var o = arg ? JSON.parse(arg) : { src: 'deck' }, ds = decks(), s = settings();
+    var o = arg ? JSON.parse(arg) : { src: 'deck' }, ds = decks();
     var k = KINDS_HOME.find(function(x){ return x.src === o.src; }) || KINDS_HOME[0];
     this.title = k.e + ' ' + k.name;
     var html = '<section class="clib-card">';
