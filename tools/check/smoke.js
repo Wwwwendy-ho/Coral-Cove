@@ -84,6 +84,9 @@ async function newPage(browser) {
   await enter(p, null, { port }); await p.click('[data-profile="wendy"]'); await p.waitForTimeout(1200);
   const q1 = await p.textContent('.reef-gate-q').catch(() => null);
   check('grown-up profile asks the maths question', !!q1);
+  for (const d of '888') await p.click('[data-gate-digit="' + d + '"]');
+  check('a three-digit answer fits in the answer box', await p.evaluate(() => { const i = document.getElementById('adultGateInput'); return i.value === '888' && i.scrollWidth <= i.clientWidth; }));
+  for (let k = 0; k < 3; k++) await p.click('[data-gate="back"]');
   await p.click('[data-gate-digit="1"]'); await p.click('[data-gate="check"]'); await p.waitForTimeout(500);
   check('a wrong answer gives a new question', (await p.textContent('.reef-gate-q')) !== q1);
   await p.click('[data-gate="cancel"]'); await p.waitForTimeout(1500);

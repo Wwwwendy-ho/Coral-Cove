@@ -1,5 +1,10 @@
 # Changelog
 
+## Grown-up maths answer box (October 28, 2026)
+
+- The answer box for the grown-up maths question is wide enough for a three-digit answer (it showed about two and
+  a half digits).
+
 ## The designed fonts are back (October 28, 2026)
 
 - Coral Cove uses its designed fonts again: Fredoka for headings, buttons and card words, and Nunito Sans for
