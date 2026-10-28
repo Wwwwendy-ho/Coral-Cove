@@ -45,6 +45,7 @@
 **Day ⇄ night**
 - Switching between day and night is a little show: Shelly swims up to the surface and the water drops below the horizon. The sky then plays a sunset (the sun sinks into an orange glow, the stars come out, the moon rises) or a sunrise (the moon sets, the sky turns pink and gold, the sun comes up), and she dives back down into the new board.
 - No visible freeze: the board is rebuilt for the new theme while the sky covers the screen, and the dive back down waits until the new board is ready.
+- It dissolves like a film: the board blurs as the sky comes in, and on the dive the sky blurs away while the new board comes into focus. The sun's reflection on the water is a soft glow, and the sparkles on the water are round (they were yellow and white stripes).
 
 **Board**
 - Deck names no longer float over the board. Deck tiles stand out on their own instead: a raised gold rim, a white badge behind the deck's emoji, and a gold star once a deck is all done. The treasure map still lists every deck by name.
