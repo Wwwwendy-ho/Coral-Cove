@@ -7245,7 +7245,9 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     var b = day.blocks[i];
     if(!day.startedAt){ day.startedAt = Date.now(); planSave(); }
     S.planRun = { date: day.date, index: i, startedAt: Date.now(), missed: [], recorded: false };
-    try { Ocean.flurry(); } catch(e){}
+    // The fish flurry marks the start of an activity, except when the dive into a deck is already on screen:
+    // two full-screen animations at once made the dive stutter on the iPad.
+    if(!window.__reefTx){ try { Ocean.flurry(); } catch(e){} }
     if(b.maker){ startStoryMaker(); return; }
     var d = S.decks.find(function(x){ return x.id === b.deckId; });
     if(!d){ b.done = true; b.skipped = true; planSave(); planStartNext(); return; } // deck was deleted since
@@ -7539,7 +7541,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
       const cv=document.createElement("canvas");cv.className="flurry";document.body.appendChild(cv);const ctx=cv.getContext("2d"),dpr=Math.min(2,devicePixelRatio||1);
       const W=innerWidth,H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;ctx.scale(dpr,dpr);
       const cs=getComputedStyle(document.documentElement),tok=(n,f)=>cs.getPropertyValue(n).trim()||f,dark=themeNow()==="dark";
-      const deep=tok("--deep","#0A6C8A"),kelp=tok("--kelp","#3D7A3A"),calm=tok("--calm-ink","#245B97"),coral=tok("--coral","#D9735A"),bub=tok("--bubble","rgba(255,255,255,.7)");
+      const deep=tok("--deep","#0A6C8A"),kelp=tok("--kelp","#3D7A3A"),calm=tok("--calm-ink","#245B97"),coral=tok("--coral","#D9735A"),bub=tok("--bubble","rgba(255,255,255,.7)"),foam=tok("--foam","#DCF1F3");
       const area=W*H,fish=[],flecks=[];
       if(!dark){const cols=[deep,kelp,calm,deep,kelp,coral],N=Math.round(Math.min(220,area/2600));
         for(let i=0;i<N;i++){const sz=8+Math.random()*16;fish.push({k:"reef",y:Math.random()*H,x0:-60-Math.random()*W*1.1,sp:(W+260)/(1.6+Math.random()*.9),sz,c:cols[i%cols.length],ph:Math.random()*6.28,amp:6+Math.random()*16,a:.55+Math.random()*.45});}
@@ -7551,7 +7553,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
       const glowDot=(x,y,r,c,a)=>{const g=ctx.createRadialGradient(x,y,0,x,y,r*4);g.addColorStop(0,c);g.addColorStop(.25,c);g.addColorStop(1,"transparent");ctx.globalAlpha=a;ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r*4,0,6.283);ctx.fill();};
       const T=3800,t0=performance.now();
       function frame(now){const t=(now-t0)/1000,k=(now-t0)/T;ctx.clearRect(0,0,W,H);
-        ctx.globalAlpha=(dark?.7:.55)*Math.sin(Math.min(1,k)*Math.PI);ctx.fillStyle=dark?"#020A10":tok("--foam","#DCF1F3");ctx.fillRect(0,0,W,H);
+        ctx.globalAlpha=(dark?.7:.55)*Math.sin(Math.min(1,k)*Math.PI);ctx.fillStyle=dark?"#020A10":foam;ctx.fillRect(0,0,W,H);
         for(const p of flecks){if(p.snow){const y=p.y0+p.sp*t,x=p.x+Math.sin(t*1.5+p.ph)*6;if(y>H+10)continue;ctx.globalAlpha=.55;ctx.fillStyle="#CFE7EE";ctx.beginPath();ctx.arc(x,y,p.r,0,6.283);ctx.fill();}
           else{const y=p.y0-p.sp*t,x=p.x+Math.sin(t*2.5+p.ph)*8;if(y<-20||y>H+20)continue;ctx.strokeStyle=bub;ctx.lineWidth=1.5;ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(x,y,p.r,0,6.283);ctx.stroke();}}
         for(const f of fish){const x=f.x0+f.sp*t,y=f.y+Math.sin(t*(f.k==="angler"?1.6:3)+f.ph)*f.amp;if(x<-90||x>W+90)continue;const s=f.sz,w=Math.sin(t*(f.k==="angler"?6:14)+f.ph)*.25;
@@ -17714,7 +17716,11 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     try { if(localStorage.getItem('cc-3dq-lock')) return; } catch(e){}   // tests hold the level steady
     var s = view.qs || (view.qs = { n: 0, t0: now, last: now, hold: now + 2500 });
     var gap = now - s.last; s.last = now;
-    if(now < s.hold || gap > 1000){ s.n = 0; s.t0 = now; return; }
+    // Hops, the dive into a deck and the day/night switch are slow on purpose (a deck loads, shadows redraw every
+    // frame). They don't say how the device copes, and changing level then (shadows on or off rebuilds every
+    // material) is what made the dive stutter. So those frames aren't counted, and levels only change when it's calm.
+    var busy = view.moving || window.__reefTx || view.themeFx || view.themeIn || view.dice;
+    if(now < s.hold || gap > 1000 || busy){ s.n = 0; s.t0 = now; if(busy) s.hold = Math.max(s.hold, now + 1000); return; }
     s.n++;
     if(now - s.t0 < 2000) return;
     var fps = s.n * 1000 / (now - s.t0), want = view.every === 2 ? 30 : 60;
@@ -18709,6 +18715,13 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     view.guide.position.set(s.x, .3 + (s.y || 0), s.z);
     var nx = reef3dAhead(view.spaces, i);
     if(nx !== s) view.guide.rotation.y = Math.atan2(nx.x - s.x, nx.z - s.z);
+    // the crab starts at its place beside her (it used to appear on top of her and walk out)
+    if(view.crab && !view.crab.userData.entering){ var cs = reef3dCrabSpot(view); view.crab.position.set(cs.x, view.guide.position.y - .3, cs.z); }
+  }
+  // Where the crab stands: beside the guide on the side away from the middle of the path, a little in front.
+  function reef3dCrabSpot(view){
+    var g = view.guide.position, side = g.x > 0 ? -1 : 1;
+    return { x: g.x + side * view.crabGap, z: g.z + 1.4 };
   }
   function reef3dCamTarget(view, out, look){
     var g = view.guide.position;
@@ -18843,10 +18856,13 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
           var o = f.userData.o, px = f.position.x, pz = f.position.z;
           var fo = fl ? reef3dFleeOff(fl, j, fa) : null;
           f.position.set(cx + o.x + Math.sin(t * .9 + j) * .12 + (fo ? fo.x : 0), sc.h + lvl + o.y + Math.sin(t * 2 + j) * .12 + (fo ? Math.min(.5, fo.y) : 0), cz + o.z + (fo ? fo.z : 0));
-          var vx = f.position.x - px, vz = f.position.z - pz;
-          if(vx * vx + vz * vz > 1e-6){   // turn smoothly toward the direction of travel
-            var want = Math.atan2(vx, vz), d = Math.atan2(Math.sin(want - f.rotation.y), Math.cos(want - f.rotation.y));
-            f.rotation.y += d * Math.min(1, dt * 6);
+          // Face the way the fish is really going: its velocity is smoothed over a few frames, and it turns
+          // no faster than about a half-turn a second, so small wobbles never make it spin on the spot.
+          var sv = f.userData.v || (f.userData.v = { x: 0, z: 0 }), ease = Math.min(1, dt * 4);
+          if(dt > 0){ sv.x += ((f.position.x - px) / dt - sv.x) * ease; sv.z += ((f.position.z - pz) / dt - sv.z) * ease; }
+          if(sv.x * sv.x + sv.z * sv.z > .01){
+            var want = Math.atan2(sv.x, sv.z), d = Math.atan2(Math.sin(want - f.rotation.y), Math.cos(want - f.rotation.y)), turn = dt * 3.2;
+            f.rotation.y += Math.max(-turn, Math.min(turn, d * Math.min(1, dt * 5)));
           }
           if(!f.children[0].userData.gltf && f.children[1]) f.children[1].rotation.y = Math.sin(t * 12 + j) * .5;
         });
@@ -18874,7 +18890,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     view.fx = view.fx.filter(function(fx){ var p = Math.min(1, (now - fx.t0) / fx.dur); fx.step(p); if(p >= 1){ fx.end(); return false; } return true; });
     if(!calm && view.amb && now - (view.ambBlip || 0) > 3500 + Math.random() * 4000){ view.ambBlip = now; try { if(Sound.isEnabled()) Sound.bloop(700 + Math.random() * 500, 0, .012); } catch(e){} }
     if(view.crab){ // the crab trots after the guide, a little to the side
-      var cg = view.guide.position, side = view.guide.position.x > 0 ? -1 : 1, tx = cg.x + side * view.crabGap, tz = cg.z + 1.4;   // side by side, never overlapping
+      var spot = reef3dCrabSpot(view), tx = spot.x, tz = spot.z;   // side by side, never overlapping
       var cp = view.crab.position, dx = tx - cp.x, dz = tz - cp.z, dist = Math.sqrt(dx * dx + dz * dz);
       var entering = view.crab.userData.entering && !calm;   // a crab swapped in scuttles over from the side
       if(!entering && (calm || dist > 6)){ cp.set(tx, 0, tz); dist = 0; }
@@ -20197,19 +20213,20 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     view.crabBusy = false; reefCrabSwap(view, { x: cp.x - out * 7, z: cp.z + 1 }, out);
   }
   // How far a fleeing fish is pushed from its place in the school, fa seconds after the tap.
-  //  burst: straight out from the middle · dart: the whole school shoots one way in a stream · swirl: a spinning
-  //  ring that widens · split: two groups peel off to either side · zigzag: out from the middle in sharp zigzags
-  var REEF3D_FLEE = ['burst', 'dart', 'swirl', 'split', 'zigzag'], reef3dFleeV = { x: 0, y: 0, z: 0 };
+  //  burst: straight out from the middle · dart: the whole school glides off one way in a stream · swirl: a slowly
+  //  turning ring that widens · split: two groups peel off to either side.
+  // Every style is one smooth curve: a quick start that slows down, then a gentle drift back into the school.
+  // (Fast wiggles and sudden side-steps made the fish look like they were twitching, so there are none.)
+  var REEF3D_FLEE = ['burst', 'dart', 'swirl', 'split'], reef3dFleeV = { x: 0, y: 0, z: 0 };
   function reef3dFleeOff(fl, j, fa){
     var p = fl.fish[j], o = reef3dFleeV, ta = Math.max(0, fa - p.lag), back = fl.dur - fl.out - p.lag;
     var k = ta < fl.out ? Math.sin(ta / fl.out * Math.PI / 2) : Math.max(0, 1 - (ta - fl.out) / Math.max(.5, back));
     k = k * k * (3 - 2 * k);   // ease in and out
-    var d = p.d, r = p.r * k;
-    if(fl.style === 'dart'){ var w = Math.sin(ta * 9 + p.ph) * .35 * k; o.x = fl.dir.x * r * 1.6 - fl.dir.z * w; o.y = fl.dir.y * r + d.y * .3; o.z = fl.dir.z * r * 1.6 + fl.dir.x * w; }
-    else if(fl.style === 'swirl'){ var a = Math.atan2(d.z, d.x) + fl.spin * ta * 5 * (1 - ta / fl.dur); o.x = Math.cos(a) * r; o.y = Math.sin(ta * 6 + p.ph) * .4 * k; o.z = Math.sin(a) * r * .8; }
-    else if(fl.style === 'split'){ o.x = p.side * r * 1.3; o.y = (Math.sin(ta * 4 + p.ph) * .5 + d.y) * k; o.z = d.z * r * .5 + Math.sin(ta * 3 + p.ph) * .3 * k; }
-    else if(fl.style === 'zigzag'){ var zz = (Math.floor(ta * 5 + p.ph) % 2 ? 1 : -1) * .5 * k; o.x = d.x * r - d.z * zz; o.y = d.y * r; o.z = d.z * r + d.x * zz; }
-    else { o.x = d.x * r; o.y = d.y * r; o.z = d.z * r; }
+    var d = p.d, r = p.r * k, bob = Math.sin(ta * 2 + p.ph) * .15 * k;
+    if(fl.style === 'dart'){ var w = Math.sin(ta * 1.5 + p.ph) * .25 * k; o.x = fl.dir.x * r * 1.3 - fl.dir.z * w; o.y = fl.dir.y * r + bob; o.z = fl.dir.z * r * 1.3 + fl.dir.x * w; }
+    else if(fl.style === 'swirl'){ var a = Math.atan2(d.z, d.x) + fl.spin * Math.min(ta, fl.dur) * 1.2; o.x = Math.cos(a) * r; o.y = bob; o.z = Math.sin(a) * r * .8; }
+    else if(fl.style === 'split'){ o.x = p.side * r * 1.2; o.y = d.y * r * .5 + bob; o.z = d.z * r * .5; }
+    else { o.x = d.x * r; o.y = d.y * r * .6 + bob; o.z = d.z * r; }
     return o;
   }
   // Tap near a school of fish: they flee (a different way each time), then swim off and regroup at a new home elsewhere on the reef.
@@ -20222,10 +20239,10 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     var styles = REEF3D_FLEE.filter(function(st){ return st !== sc.lastFlee; }), style = styles[Math.floor(Math.random() * styles.length)];
     sc.lastFlee = style;
     var ang = Math.random() * Math.PI * 2, dir = new THREE.Vector3(Math.cos(ang), (Math.random() - .5) * .4, Math.sin(ang) * .6);
-    sc.flee = { t0: performance.now() / 1000, style: style, out: .3 + Math.random() * .3, dur: 2.6 + Math.random() * 1.4, spin: Math.random() < .5 ? -1 : 1, dir: dir,
+    sc.flee = { t0: performance.now() / 1000, style: style, out: .5 + Math.random() * .3, dur: 2.8 + Math.random() * 1.2, spin: Math.random() < .5 ? -1 : 1, dir: dir,
       fish: sc.fish.map(function(f, j){
         var d = f.position.clone().sub(mid); d.y *= .5; if(d.lengthSq() < 1e-4) d.set(Math.random() - .5, 0, Math.random() - .5);
-        return { d: d.normalize(), r: 1.8 + Math.random() * 2.2, lag: style === 'dart' ? j * .06 + Math.random() * .05 : Math.random() * .12, ph: Math.random() * 6.3, side: j % 2 ? 1 : -1 };
+        return { d: d.normalize(), r: 1.2 + Math.random() * 1.3, lag: style === 'dart' ? j * .06 + Math.random() * .05 : Math.random() * .12, ph: Math.random() * 6.3, side: j % 2 ? 1 : -1 };
       }) };
     var g = view.guide.position, other = sc.hx > g.x ? -1 : 1;   // the far side of Shelly, a little way ahead
     sc.tx = Math.max(-9, Math.min(9, g.x + other * (3 + Math.random() * 4))); sc.tz = g.z - 5 - Math.random() * 8;
@@ -20555,6 +20572,36 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
 
   // Swap the painted scene for the 3D board once three.js is ready. The 3D view is kept between
   // renders (one WebGL canvas for the whole visit) and rebuilt only when the decks or theme change.
+  /* Shader warm-up. The first time the board draws a new kind of material (a star burst, a sparkle, a coin),
+     the device stops to compile a shader for it, and on an iPad that pause lands on whatever is happening
+     (the dive into a deck stuttered this way). The effects only use a handful of kinds, so one of each is
+     compiled here while the loading cover is still up. Three.js keeps a compiled shader for as long as a
+     material that uses it exists, so the warm-up materials are kept on the view (never drawn, never disposed). */
+  function reef3dWarm(view){
+    var THREE = window.THREE, R = view.renderer, scene = view.scene, grad = null, before = R.info.programs.length;
+    scene.traverse(function(o){ if(!grad && o.material && o.material.gradientMap) grad = o.material.gradientMap; });
+    var tex = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1); tex.needsUpdate = true;
+    var sides = [THREE.FrontSide, THREE.DoubleSide, THREE.BackSide], mats = [];
+    [null, tex].forEach(function(map){
+      [true, false].forEach(function(fog){
+        sides.forEach(function(side){ mats.push(new THREE.MeshBasicMaterial({ map: map, fog: fog, side: side, transparent: true })); });
+        mats.push(new THREE.SpriteMaterial({ map: map, fog: fog, transparent: true }));
+      });
+      [THREE.FrontSide, THREE.DoubleSide].forEach(function(side){
+        mats.push(new THREE.MeshLambertMaterial({ map: map, side: side }));
+        if(map) mats.push(new THREE.MeshLambertMaterial({ map: map, side: side, alphaTest: .4, transparent: true }));
+        if(grad) mats.push(new THREE.MeshToonMaterial({ map: map, side: side, gradientMap: grad }));
+      });
+    });
+    mats.push(new THREE.MeshBasicMaterial({ map: tex, vertexColors: true }));
+    var g = new THREE.Group(), geo = new THREE.PlaneGeometry(.01, .01);
+    mats.forEach(function(m){ g.add(m.isSpriteMaterial ? new THREE.Sprite(m) : new THREE.Mesh(geo, m)); });
+    scene.add(g);
+    try { R.compile(scene, view.cam); } catch(e){}
+    scene.remove(g);
+    view.warmMats = mats;
+    view.warmed = R.info.programs.length - before;   // for checking: how many shaders this compiled ahead of time
+  }
   function reef3dMount(rw, zones){
     var scene2d = rw.querySelector('.rw-scene');
     if(!scene2d || R3.failed) return;
@@ -20566,6 +20613,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
         if(!view || view.key !== key){
           if(view){ view.renderer.dispose(); view.renderer.forceContextLoss && view.renderer.forceContextLoss(); }
           view = R3.view = reef3dBuild(rw, zones, models); view.key = key;
+          reef3dWarm(view);
           reef3dWire(view);
           var start = S.reef3dAt != null && S.reef3dAt < view.spaces.length ? S.reef3dAt : 0;
           reef3dPlace(view, start);
@@ -21459,12 +21507,15 @@ body.reef-kid .tc-timer-row{ display:none; } /* no countdowns in her mode */
   background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.95), rgba(255,255,255,.15) 60%, rgba(255,255,255,.35)); box-shadow:inset 0 0 0 2px rgba(255,255,255,.5);
   animation:txBub 1.1s ease-in var(--d) forwards; }
 @keyframes txBub{ to{ transform:translateY(-125vh) translateX(20px); } }
-.tx-fish{ position:absolute; font-size:3.4rem; line-height:1; left:-20%; }
+.tx-fish{ position:absolute; font-size:3.4rem; line-height:1; left:0; transform:translateX(-25vw); }
 .tx-fish.f1{ top:28%; animation:txFishR .9s ease-in-out .2s forwards; }
-.tx-fish.f2{ top:62%; left:auto; right:-20%; animation:txFishL 1s ease-in-out .25s forwards; }
+.tx-fish.f2{ top:62%; left:auto; right:0; transform:translateX(25vw) scaleX(-1); animation:txFishL 1s ease-in-out .25s forwards; }
 .tx-fish.f3{ top:46%; animation:txFishR 1.05s ease-in-out .32s forwards; font-size:2.6rem; }
-@keyframes txFishR{ to{ left:120%; } }
-@keyframes txFishL{ from{ transform:scaleX(-1); } to{ right:120%; transform:scaleX(-1); } }
+/* The fish move with transform (not left/right) so the graphics chip animates them on its own: the deck is
+   built behind the water at the same moment, and a layout-based animation would stall while that happens. */
+@keyframes txFishR{ from{ transform:translateX(-25vw); } to{ transform:translateX(120vw); } }
+@keyframes txFishL{ from{ transform:translateX(25vw) scaleX(-1); } to{ transform:translateX(-120vw) scaleX(-1); } }
+.tx-water, .tx-bub, .tx-fish, .tx-shelly{ will-change:transform; }
 .tx-shelly{ position:absolute; left:50%; top:50%; width:min(42vw, 230px); transform:translate(-50%, 70vh) rotate(0); animation:txShelly 1.25s cubic-bezier(.3,1.2,.5,1) forwards; }
 .tx-shelly-svg{ width:100%; height:auto; display:block; filter:drop-shadow(0 12px 16px rgba(0,0,0,.35)); }
 @keyframes txShelly{ 0%{ transform:translate(-50%, 70vh) rotate(-30deg) scale(.6); } 45%{ transform:translate(-50%, -55%) rotate(360deg) scale(1.1); } 60%{ transform:translate(-50%, -50%) rotate(350deg) scale(1); } 100%{ transform:translate(-50%, -120vh) rotate(420deg) scale(.8); } }
@@ -21963,13 +22014,16 @@ body.r3-full .sea, body.r3-lobby .sea{ display:none !important; }
 .r3-musicbtn.off, .rl-musicbtn.off{ opacity:.55; filter:grayscale(1); }
 .r3-musicbtn.off::after, .rl-musicbtn.off::after{ content:""; position:absolute; left:12px; right:12px; top:50%; height:3px; margin-top:-1.5px; background:#8a3322; border-radius:2px; transform:rotate(-40deg); }
 .r3-musicbtn:active, .rl-musicbtn:active{ transform:translateY(3px); box-shadow:0 1px 0 #b08d5a; }
-/* while the 3D board loads the first time: the sea, not the old screen */
-body.r3-loading{ background:linear-gradient(180deg, #d9f0ec 0%, #b2e0de 35%, #9fd6d6 70%) fixed; }
-:root[data-theme="dark"] body.r3-loading{ background:linear-gradient(180deg, #24505b 0%, #143844 40%, #0d2b35 70%) fixed; }
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) body.r3-loading{ background:linear-gradient(180deg, #24505b 0%, #143844 40%, #0d2b35 70%) fixed; } }
-body.r3-loading .rw-scene, body.r3-loading .deck-grid, body.r3-loading .subject-tabs, body.r3-loading .empty-filter-note{ visibility:hidden !important; }
-body.r3-loading .rw::after{ content:"🐢"; position:fixed; left:50%; top:55%; font-size:3rem; transform:translate(-50%, -50%); animation:r3Load 1.6s ease-in-out infinite; }
+/* While the 3D board loads: one calm sheet of sea over the whole screen, with Shelly bobbing in the middle.
+   It covers everything (the top buttons, Ask Shelly, the old deck screen underneath), so nothing half-built
+   shows through, and it takes taps so nothing underneath can be pressed by accident. Removed by reef3dMount. */
+body.r3-loading::before{ content:""; position:fixed; inset:0; z-index:85; pointer-events:auto; background:linear-gradient(180deg, #d9f0ec 0%, #b2e0de 35%, #9fd6d6 70%); }
+:root[data-theme="dark"] body.r3-loading::before{ background:linear-gradient(180deg, #24505b 0%, #143844 40%, #0d2b35 70%); }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) body.r3-loading::before{ background:linear-gradient(180deg, #24505b 0%, #143844 40%, #0d2b35 70%); } }
+body.r3-loading::after{ content:"🐢"; position:fixed; left:50%; top:50%; z-index:86; font-size:3.5rem; pointer-events:none; transform:translate(-50%, -50%); animation:r3Load 1.6s ease-in-out infinite; }
 @keyframes r3Load{ 0%,100%{ transform:translate(-50%, -50%) rotate(-8deg); } 50%{ transform:translate(-50%, -62%) rotate(8deg); } }
+@media (prefers-reduced-motion: reduce){ body.r3-loading::after{ animation:none; } }
+body.reef-calm.r3-loading::after{ animation:none; }
 body.r3-lobby{ background:linear-gradient(180deg, #d9f0ec 0%, #b2e0de 35%, #9fd6d6 70%) fixed; }
 :root[data-theme="dark"] body.r3-lobby{ background:linear-gradient(180deg, #24505b 0%, #143844 40%, #0d2b35 70%) fixed; }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) body.r3-lobby{ background:linear-gradient(180deg, #24505b 0%, #143844 40%, #0d2b35 70%) fixed; } }

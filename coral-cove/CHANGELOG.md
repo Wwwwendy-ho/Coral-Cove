@@ -1,5 +1,16 @@
 # Changelog
 
+## Board fixes (October 28, 2026)
+
+- **Tapped fish swim off smoothly.** They used to twitch and spin: the escape had sudden sideways jumps (the zigzag style, now removed) and fast wiggles, and each fish snapped to face whichever way it moved that frame. Now every escape is one smooth glide, a little shorter, and fish turn gently toward the way they are really going.
+- **No half-built page while the board loads.** The loading screen is now calm water with Shelly in the middle over the whole screen. Before, the top buttons and Ask Shelly showed on an empty page.
+- **Smoother dive into a deck, especially on profiles with a Daily Plan.**
+  - The fish flurry that marks the start of a plan activity no longer plays on top of the dive (two full-screen animations at once).
+  - The shaders for the board's effects (star bursts, sparkles, coins) are prepared while the board loads, instead of the first time each one appears, which paused the iPad mid-dive.
+  - Picture quality no longer changes during a hop, a dive or a day/night switch; turning shadows on or off then rebuilt every material at once.
+  - The dive's fish are moved by the graphics chip, so they keep moving while the deck is built behind the water.
+- The crab starts beside Shelly when the board opens, instead of on top of her.
+
 ## Ask Shelly word help, offline (October 28, 2026)
 
 - **Ask Shelly works without the internet** for Korean, English and Chinese words. Type a word or a short sentence, or tap a question about the card on screen.
