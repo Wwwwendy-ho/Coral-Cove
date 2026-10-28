@@ -1,5 +1,9 @@
 # Changelog
 
+## Done button (October 28, 2026)
+
+- The ✅ Done button on grown-up screens is the same height as the round buttons beside it, instead of a bigger pill.
+
 ## Grown-up maths answer box (October 28, 2026)
 
 - The answer box for the grown-up maths question is wide enough for a three-digit answer (it showed about two and

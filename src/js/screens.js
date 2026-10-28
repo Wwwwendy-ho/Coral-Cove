@@ -1057,7 +1057,7 @@
           '<button type="button" class="icon-btn" data-act="open-library" title="Library" aria-label="Open the Library">📚</button>' +
           '<button type="button" class="icon-btn" data-act="open-stats" title="Progress" aria-label="View progress">📊</button>' +
           '<button type="button" class="icon-btn" data-act="toggle-edit-mode" title="'+(editMode?'Exit Edit Mode':'Edit Mode')+'" aria-label="'+(editMode?'Exit Edit Mode':'Enter Edit Mode')+'">'+(editMode?'🔓':'✏️')+'</button>' +
-          (managing ? '<button type="button" class="btn btn-ghost" data-act="exit-manager">✅ Done</button>' : ctrlRowHTML()) +
+          (managing ? '<button type="button" class="btn btn-ghost done-btn" data-act="exit-manager">✅ Done</button>' : ctrlRowHTML()) +
         '</div>' +
       '</div>' +
       coveWaterHTML('home') +

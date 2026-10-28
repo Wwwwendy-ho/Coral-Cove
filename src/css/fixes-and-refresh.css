@@ -161,6 +161,7 @@ h1,h2,h3{ font-weight:600; letter-spacing:.005em; }
 .btn-primary{ color:#fff; }
 .btn-primary:hover{ filter:brightness(1.06); }
 .btn-primary:disabled{ background:var(--foam-2); color:var(--ink-soft); box-shadow:none; cursor:default; filter:none; }
+.done-btn{ min-height:0; align-self:stretch; padding:0 14px; font-size:.9rem; }   /* stretches to the height of the round buttons beside it (Wendy's choice) */
 .btn-ghost{ background:var(--surface); color:var(--ink); border:1.5px solid var(--border); box-shadow:var(--shadow-sm); }
 .btn-ghost:hover{ background:var(--foam-2); }
 .btn-coral{ background:linear-gradient(180deg,#0D7A98,#0A6C8A); color:#fff; box-shadow:0 3px 0 #08465B; }
