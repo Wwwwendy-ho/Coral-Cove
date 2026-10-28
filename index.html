@@ -18045,10 +18045,13 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       } else {
         var fish = mesh(new THREE.SphereGeometry(.68, 28, 20), M('#3d6f9a'), 0, .95, 0); fish.scale.set(.9, .85, 1.1); body.add(fish);
         body.add(mesh(new THREE.SphereGeometry(.62, 24, 12, 0, Math.PI * 2, Math.PI * .55, Math.PI * .45), M('#9cc6e0'), 0, .93, .05));
-        var mouth = mesh(new THREE.TorusGeometry(.26, .05, 8, 18, Math.PI), M('#1d3550'), 0, .78, .66); mouth.rotation.z = Math.PI; body.add(mouth);
-        parts.mouth = new THREE.Object3D(); parts.mouth.position.set(0, .8, .7); body.add(parts.mouth);
-        for(var tI = 0; tI < 4; tI++){ var tooth = mesh(new THREE.ConeGeometry(.04, .1, 6), M('#ffffff'), -.15 + tI * .1, .8, .7); tooth.rotation.x = Math.PI; body.add(tooth); }
-        var eL2 = eye(.27, 1.2, .5, .15), eR2 = eye(-.27, 1.2, .5, .15); body.add(eL2, eR2); parts.eyes = [eL2, eR2];
+        // A friendly face like Shelly's: round eyes sitting on the surface (not sunk in, which made them slits), a
+        // thin smile in a soft navy, two little rounded teeth and pink cheeks (it was a thick dark jaw with fangs).
+        var smile2 = mesh(new THREE.TorusGeometry(.16, .021, 8, 20, Math.PI * .8), M('#3f6f99'), 0, .82, .72); smile2.rotation.z = Math.PI * 1.1; smile2.rotation.x = -.28; body.add(smile2);
+        [-1, 1].forEach(function(sd){ var tooth = mesh(new THREE.SphereGeometry(.035, 8, 6), M('#ffffff'), sd * .055, .675, .742); tooth.scale.set(1, 1.25, .6); body.add(tooth); });
+        [-1, 1].forEach(function(sd){ var ck = mesh(new THREE.SphereGeometry(.09, 12, 8), M('#f7a3c0', { transparent: true, opacity: .7 }), sd * .33, .93, .62); ck.scale.set(1, .6, .35); ck.rotation.y = sd * .5; body.add(ck); });
+        parts.mouth = new THREE.Object3D(); parts.mouth.position.set(0, .74, .74); body.add(parts.mouth);
+        var eL2 = eye(.25, 1.17, .6, .16), eR2 = eye(-.25, 1.17, .6, .16); body.add(eL2, eR2); parts.eyes = [eL2, eR2];
         parts.hat = new THREE.Group(); parts.hat.position.set(0, 1.47, -.18); parts.hat.userData.size = .42; body.add(parts.hat);
         var tailP = new THREE.Group(); tailP.position.set(0, .95, -.75); body.add(tailP);
         var tail2 = mesh(new THREE.ConeGeometry(.42, .55, 4), M('#2e5878'), 0, 0, -.25); tail2.rotation.x = -Math.PI / 2; tail2.scale.set(.25, 1, 1); tailP.add(tail2);

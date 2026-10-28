@@ -39,6 +39,7 @@
 - The old PIN is no longer stored in the app.
 
 **Fixes**
+- Lumi has a friendly face on the night board: round eyes (they were sunk in, so they looked like angry slits), pink cheeks and a small smile with two little teeth, instead of a thick dark-blue jaw with fangs.
 - The fish on the title screen swim forwards (they were swimming tail-first).
 - Shelly no longer covers the hint under a study card (like "Drag the shell all the way to the right" in Sound Blend, or "Tap the card to flip it"). There's room for her below every card, on every profile.
 
