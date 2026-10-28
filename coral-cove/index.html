@@ -21667,7 +21667,8 @@ body.reef-calm .r3-prize-card, body.reef-calm .r3-prize-e, body.reef-calm .r3-pr
 body.reef-calm .r3-bubble, body.reef-calm .r3-map-card{ animation:none !important; }
 /* leaving a deck: subtraction question */
 .reef-gate-q{ display:flex; align-items:center; justify-content:center; gap:12px; font:800 2.2rem 'Baloo 2',sans-serif; color:var(--ink); margin:0 0 8px; }
-.reef-gate-q input{ width:3.2ch; font:inherit; text-align:center; padding:4px 6px; border-radius:16px; border:3px solid var(--border); background:var(--surface); color:var(--ink); }
+.reef-gate-q input{ width:calc(3ch + 30px);   /* 3 digits, plus the padding and border inside the width */
+  font:inherit; text-align:center; padding:4px 6px; border-radius:16px; border:3px solid var(--border); background:var(--surface); color:var(--ink); }
 .reef-gate-q input:focus{ outline:none; border-color:var(--lagoon); }
 .reef-gate-msg{ min-height:2.6em; font-weight:800; color:var(--ink-soft); margin:4px 0 12px; }
 .reef-gate-msg.ok{ color:var(--ok-ink); font-size:1.1rem; } .reef-gate-msg.no{ color:var(--reef-coral-ink, var(--bad-ink)); }
