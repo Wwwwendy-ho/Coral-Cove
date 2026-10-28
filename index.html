@@ -11080,7 +11080,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   document.addEventListener('click', function(e){
     var btn = e.target && e.target.closest ? e.target.closest('button') : null;
     if(!btn) return;
-    if(btn.hasAttribute('data-outcome') || btn.hasAttribute('data-rating') || btn.hasAttribute('data-choice-idx') || btn.hasAttribute('data-digit')) return;
+    if(btn.hasAttribute('data-outcome') || btn.hasAttribute('data-rating') || btn.hasAttribute('data-choice-idx') || btn.hasAttribute('data-gate-digit')) return;   // these play their own sound
     Sound.tap();
   }, true);
 
