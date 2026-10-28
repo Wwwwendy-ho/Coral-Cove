@@ -4246,7 +4246,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     var night = reefNight(), i, h = '';
     var wave = function(cls){ return '<svg class="ccs-wave ' + cls + '" viewBox="0 0 1200 80" preserveAspectRatio="none"><path d="M0 40 C100 14 200 14 300 40 S500 66 600 40 S800 14 900 40 S1100 66 1200 40 V80 H0 Z"/></svg>'; };
     var cloud = '<svg viewBox="0 0 200 80"><path d="M30 70 C5 70 5 42 30 42 C32 22 62 14 78 30 C90 8 132 8 140 34 C168 26 192 44 182 64 C180 70 172 70 168 70 Z"/></svg>';
-    var fish = '<svg viewBox="0 0 60 30"><path d="M8 15 C18 2 40 2 48 15 C40 28 18 28 8 15 Z M48 15 L60 5 L58 15 L60 25 Z"/></svg>';
+    var fish = '<svg viewBox="0 0 60 30"><path d="M52 15 C42 2 20 2 12 15 C20 28 42 28 52 15 Z M12 15 L0 5 L2 15 L0 25 Z"/><circle class="ccs-eye" cx="43" cy="12" r="2.6"/></svg>';   // facing right, the way they swim
     var jelly = '<svg viewBox="0 0 40 60"><path d="M4 22 C4 6 36 6 36 22 Z"/><path d="M10 22 q-3 12 2 26 M18 22 q3 14 -1 32 M26 22 q-3 12 2 28 M33 22 q3 10 -1 22" fill="none" stroke-width="2.4" stroke-linecap="round"/></svg>';
     var sky = night ? '<span class="ccs-stars">' + (function(){ var t = ''; for(i = 0; i < 26; i++) t += '<i style="left:' + (Math.random() * 100).toFixed(1) + '%;top:' + (Math.random() * 80).toFixed(1) + '%;animation-delay:' + (Math.random() * 3).toFixed(2) + 's"></i>'; return t; })() + '</span>' : '';
     for(i = 0; i < 9; i++) h += '<i style="left:' + (8 + Math.random() * 84).toFixed(1) + '%;top:' + (4 + Math.random() * 22).toFixed(1) + '%;animation-delay:' + (Math.random() * 2.4).toFixed(2) + 's"></i>';
@@ -21610,7 +21610,7 @@ body.reef-calm .rw-light, body.reef-calm .rw-obj, body.reef-calm .rw-post, body.
 .ccs-ripple{ position:absolute; left:-12%; right:-12%; top:52%; height:26%; border-radius:50%; border:3px solid rgba(255,255,255,.55); animation:ccsRipple 3.2s ease-out infinite; }
 @keyframes ccsBob{ 0%,100%{ transform:translate(-50%,-64%) rotate(-4deg); } 50%{ transform:translate(-50%,-54%) rotate(4deg); } }
 @keyframes ccsRipple{ 0%{ transform:scale(.7); opacity:.8; } 100%{ transform:scale(1.35); opacity:0; } }
-.ccs-fish{ position:absolute; width:46px; animation:ccsSwim 18s linear infinite; } .ccs-fish svg{ display:block; width:100%; height:auto; transform:scaleX(-1); }   /* drawn facing left; they swim right */ .ccs-fish path{ fill:var(--fish); }
+.ccs-fish{ position:absolute; width:46px; animation:ccsSwim 18s linear infinite; } .ccs-fish svg{ display:block; width:100%; height:auto; } .ccs-fish .ccs-eye{ fill:#123a4d; } .ccs-fish path{ fill:var(--fish); }
 .ccs-fish.f1{ top:30%; left:-12%; } .ccs-fish.f2{ top:44%; left:-12%; width:34px; animation-duration:24s; animation-delay:-9s; } .ccs-fish.f2 path{ fill:#ffd166; } .ccs-fish.f3{ top:36%; left:-12%; width:28px; animation-duration:15s; animation-delay:-5s; } .ccs-fish.f3 path{ fill:#ff8fa3; }
 @keyframes ccsSwim{ 0%{ transform:translate(0,0); } 50%{ transform:translate(62vw,-14px); } 100%{ transform:translate(125vw,0); } }
 .ccs-jelly{ position:absolute; width:40px; animation:ccsJelly 9s ease-in-out infinite; } .ccs-jelly svg{ display:block; width:100%; height:auto; }
