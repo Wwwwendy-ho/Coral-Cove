@@ -1,5 +1,12 @@
 # Changelog
 
+## A plastic bag in Shelly's food (October 28, 2026)
+
+- On the profile screen, about 1 in 2,000 food drops is a plastic bag instead of food. Shelly (Lumi at night) swims
+  over, slowly shakes her head and doesn't eat it, and the bag floats away. A note in the middle of the screen says
+  why: "Shelly does not eat plastic bags. Plastic in the sea can make sea animals sick. Help keep the ocean clean:
+  put trash in a trash can." It stays until OK is tapped. With Calm motion on, the bag just disappears.
+
 ## The Library, built around each profile's goals (October 28, 2026)
 
 - **The Library opens on the profile's learning goals**: Korean for Wendy, Math and Reading for Child. There's a
