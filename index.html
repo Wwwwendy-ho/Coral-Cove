@@ -17,6 +17,16 @@
 <title>Coral Cove</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" media="print" id="coveperfFonts" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap">
 <style>
+  /* ======================================================================================================
+     CORAL COVE STYLES, in the order they apply (later sections build on earlier ones):
+       base (tokens, page, top bar, deck grid, study, card types, stats, editor, profiles, badges, feeds) ·
+       Accessibility and dark-mode fixes · Coral Cove refresh: ocean design tokens · Home and stats details ·
+       Art direction · Contrast fixes · Performance · Status colours · Spacing · Lumi, the night guide ·
+       tap targets · Chinese bridge · Native or Sino? · SWIM:BEGIN ... SWIM:END (the swimming mascot)
+     Colour tokens are custom properties on :root, in five groups (each with its dark values beside it):
+       core palette (Coral Cove refresh) · home hero (--cv3-*) · status colours · swimmer (--sw-*) · reef (--reef-*)
+     The game look (Child Mode, the 3D board and lobby, Ask Shelly) is in the second big style block, id="reef".
+     ====================================================================================================== */
   :root{
     color-scheme: light;
   }
@@ -828,8 +838,6 @@
   .cc-dialog input{ width:100%; font:inherit; font-size:1rem; padding:10px 12px; border-radius:var(--r-sm); border:1px solid var(--border); background:var(--foam); color:var(--ink); margin-bottom:14px; }
   .cc-dialog-actions{ display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
 
-  /* PIN pad: a real number field so the iPad's own keyboard (or a hardware keyboard) can type the PIN */
-
   /* ---------- Hangul Blend (Korean words blended letter by letter into syllable blocks) ---------- */
   .blend-chunk.syl-start{ margin-left:14px; }
   .blend-built{ font-family:'Baloo 2',sans-serif; font-weight:800; font-size:2.6rem; line-height:1.1; color:var(--deep); min-height:1.2em; letter-spacing:.04em; }
@@ -1000,7 +1008,7 @@
   .ms-end-btns .ms-btn{ font-size:1.05rem; padding:12px 18px; }
   .ms-words{ margin:14px auto 0; max-width:30em; color:#fff; opacity:.92; font-size:.98rem; line-height:1.5; }
   .ms-words b{ color:#F0C76A; }
-  /* ===== v2 fixes ===== */
+  /* ===== Accessibility and dark-mode fixes (numbered as in the review that listed them) ===== */
   /* 3. dark-mode text that used --deep */
   :root[data-theme="dark"] .plan-home-text b, :root[data-theme="dark"] .plan-time, :root[data-theme="dark"] .badge-earned-item{ color:var(--lagoon-light); }
   @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .plan-home-text b, :root:not([data-theme="light"]) .plan-time, :root:not([data-theme="light"]) .badge-earned-item{ color:var(--lagoon-light); } }
@@ -1083,7 +1091,6 @@
   @media (prefers-reduced-motion: reduce){ .sealife, .sea .bubbles{ display:none; } .sea .caustic, .sea .rays{ animation:none; } .dropring, .risebub{ display:none; } }
   .card-text{ overflow-wrap:anywhere; }
   [data-act="open-add-card"]{ margin-bottom:14px; }
-/* cove */
 /* ===== Coral Cove refresh: ocean design tokens matching Coral Calendar (blue-green, plum for "not yet") ===== */
 :root{
   --deep:#0A4F66; --deep-2:#0A6C8A; --lagoon:#0A6C8A; --lagoon-light:#3FA9B8;
@@ -1352,7 +1359,7 @@ h1,h2,h3{ font-weight:600; letter-spacing:.005em; }
   .stats-page{ max-width:780px; margin-inline:auto; }
 }
 
-/* cove2 */
+/* ===== Home and stats details: Story Maker card, grown-up strip, child stat tiles, history list, shells key ===== */
 .story-maker-card{ grid-template-areas:"e n n" "e m m" "e b b" "a a a"!important; grid-template-columns:56px minmax(0,1fr) auto!important; }
 .story-maker-card > .deck-badge{ justify-self:start!important; }
 .story-maker-card.kid{ grid-template-areas:"e n n" "e b b" "a a a"!important; }
@@ -1398,8 +1405,7 @@ h1,h2,h3{ font-weight:600; letter-spacing:.005em; }
 }
 .nav-row .nav-title{ overflow-wrap:anywhere; min-width:0; flex:1 1 0; }
 .stats-section select, .stats-section .field{ max-width:100%; box-sizing:border-box; }
-/* cove3 */
-/* ===== cove3: art direction pass 2 ===== */
+/* ===== Art direction: the home hero scene, sea-glass tiles, tactile buttons, a card with depth ===== */
 :root{
   --cv3-hero:radial-gradient(90% 70% at 50% -12%, rgba(255,255,255,.9) 0%, rgba(255,255,255,0) 60%), linear-gradient(180deg,#DCF2F6 0%,#BDE4EC 48%,#8FCCD9 100%);
   --cv3-ray:rgba(255,255,255,.42);
@@ -1584,15 +1590,14 @@ h1,h2,h3{ font-weight:600; letter-spacing:.005em; }
 .subject-tabs, .filter-tabs{ gap:8px; }
 .subject-tab, .filter-tab{ box-shadow:var(--shadow-sm); }
 
-/* coveqa */
+/* ===== Contrast fixes in dark mode, and touch-friendly sizes ===== */
 .mode-opt.active,.algo-opt .algo-current,.algo-opt.active .algo-name,.sound-tile.active .sound-tile-sub,.read-label,.stat-tile .num,.add-deck-card:hover,.avatar-fallback{ color:var(--accent-text); }
 .mode-opt.active{ color:var(--accent-text); }
 .plan-status.next{ color:#6ED8DC; }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .blend-chunk.lit:nth-of-type(5n+2){ color:#0C2A3B; } }
 :root[data-theme="dark"] .blend-chunk.lit:nth-of-type(5n+2){ color:#0C2A3B; }
-[data-act="pin-cancel"]{ min-height:40px; min-width:72px; }
 
-/* coveperf */
+/* ===== Performance on phones and tablets ===== */
 /* Backdrop blur re-samples the animated sea behind it every frame; on touch phones the 78%-opaque pills and the dim overlays look the same without it. */
 @media (pointer:coarse){
   .cv3-hero .pill, .cv3-hero .icon-btn, .cv3-hero .btn-ghost{ -webkit-backdrop-filter:none; backdrop-filter:none; }
@@ -1602,7 +1607,7 @@ h1,h2,h3{ font-weight:600; letter-spacing:.005em; }
 /* long card lists (300-card decks in the editor) only lay out / paint what is near the viewport */
 .card-list .card-row{ content-visibility:auto; contain-intrinsic-size:auto 76px; }
 
-/* cove4 */
+/* ===== Status colours (right, not yet, hard, gold) ===== */
 /* palette tokens: ocean only (violet urchin for "not yet", kelp for right, reef coral for hard / time low, sunlit gold) */
 :root{
   --bad-ink:#5E4B8B; --bad-bg:#EEEAF6; --plum:#5E4B8B; --plum-fill:#5E4B8B;
@@ -1646,7 +1651,7 @@ h1,h2,h3{ font-weight:600; letter-spacing:.005em; }
 @media (prefers-reduced-motion: reduce){ .flip-card > .face{ transition:none!important; } }
 /* the wave strip at the foot of every card was painted square past the rounded corners */
 .face::after{ border-radius:0 0 27px 27px; }
-/* covemfix */
+/* ===== Spacing: stacked labels and numbers never overlap ===== */
 /* tight stacks of title/number/label text: give every pair a clear 4px+ gap, no overlap */
 .nav-title{ line-height:1.25; }
 .critter-label{ margin-top:8px; }
@@ -1677,7 +1682,7 @@ h1,h2,h3{ font-weight:600; letter-spacing:.005em; }
   .cv3-hero .brand-title{ font-size:1.85rem; }
 }
 
-/* covelumi */
+/* ===== Lumi, the night guide, in place of Shelly in the Midnight zone ===== */
 .cl-lumi{ display:none; }
 .critter-swim svg.cl-lumi{ overflow:visible; }
 .critter-swim:has(.cl-lumi){ }
@@ -1701,7 +1706,7 @@ h1,h2,h3{ font-weight:600; letter-spacing:.005em; }
 @keyframes luBulb{ 0%,100%{ opacity:.2; } 50%{ opacity:.45; } }
 @media (prefers-reduced-motion: reduce){ .cl-lumi .lu-tail, .cl-lumi .lu-lure, .cl-lumi .lu-bulb{ animation:none; } }
 
-/* ---------- polish (v61): tap targets, a stray progress icon ---------- */
+/* ---------- tap targets, and the progress icon (Shelly by day, Lumi by night) ---------- */
 /* Lumi's progress-bar icon only in the Midnight zone (".critter-swim svg" was showing both in light mode) */
 .critter-swim svg.cl-lumi{ display:none; }
 :root[data-theme="dark"] .critter-swim svg.cl-lumi{ display:block; }
@@ -1942,6 +1947,31 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
 <script>
 (function(){
   "use strict";
+  /* ======================================================================================================
+     CORAL COVE: the app. Everything below runs inside this one function. ARCHITECTURE.md explains how the
+     parts fit together; this list is the order they appear in, by the header text to search for.
+
+     Learning engine        scheduler (Anki-style SM-2) · automatic grading · sound + haptics · spoken
+                            answers · real pronunciation clips · natural voice packs · Word Feed ambience
+     Data                   store adapter (db capability, with in-memory fallback) · photo uploads · app state
+     Screens                Drawing the screen (render, afterRender) · LOCK SCREEN and grown-up checks ·
+                            PROFILES · HOME · ANKI IMPORT · STUDY · WORD FEED · shared swipe engine ·
+                            STORY MODE · EQUATION FEED · LANGUAGE FEED · READ-ALONG · FLASH FEED · MINI STORY ·
+                            STORY MAKER · WORD BANK · DAILY PLAN · OCEAN THEME
+     Card types             timed multiple choice · sound-out blend · Hangul Blend · Listen & Pick · Echo ·
+                            Mic · Sentence Builder · Chinese bridge · Native or Sino?
+     Grown-up screens       STATS PAGE · DECK PROGRESS DRILL-DOWN · SETTINGS · EDITOR
+     Swimming mascot        SWIM:BEGIN ... SWIM:END (ported from Coral Calendar) · Coral Cove glue
+     Start-up               generic tap sound · keyboard feed navigation · boot
+     The reef (game look)   REEF art · REEF: the child's cove map · transitions · treasure · Calm motion ·
+                            Shelly on the study screen · grown-up maths question · praise · celebration
+                            bubbles and music · Ask Shelly offline (Korean) · REEF WORLD (2D fallback map) ·
+                            The Library
+     3D                     THIRD-PARTY CODE (three.js GLTFLoader) · Kiko's crabs · Food for Shelly ·
+                            REEF 3D (the board: builders, baked lighting, ? block, acted moments, night ship,
+                            day reef, dice, party board, story mode, day/night) · REEF LOBBY (profile picker)
+     Music and words        Background music · Ask Shelly (Lumi at night)
+     ====================================================================================================== */
 
   /* ============ scheduler (Anki-style SM-2) ============ */
   var LEARN_STEPS_MIN = [1, 10];      // new cards step through these (minutes) before graduating
@@ -3085,9 +3115,6 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     return { play: play, stop: stop, current: function(){ return currentId; } };
   })();
 
-  /* ============ tiny non-cryptographic PIN hash ============ */
-  /* Not real security — just stops a curious kid from reading the PIN straight out of the saved data. */
-
   /* ============ store adapter (db capability, with in-memory fallback) ============ */
   // A save/delete that fails against the live db capability used to fail SILENTLY -- the edit/trash
   // buttons in the deck editor looked like they "just didn't work" because nothing told the grown-up
@@ -3211,7 +3238,8 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
           var prof = mem.profiles.find(function(x){ return x.id === id; }) || null;
           return Promise.resolve({ profile: strip(prof), decks: (m.decks||[]).map(function(d){ return Object.assign({}, strip(d), { cards: strip((m.cards||{})[d.id]||[]) }); }), history: strip(m.history||[]), stats: strip(m.stats||null), studySettings: strip(m.settings||null), badges: strip(m.badges||null) });
         },
-        /* ---------- app-wide parent PIN (not per-profile) ---------- */
+        /* ---------- app-wide grown-up check setting (not per-profile). It used to hold the PIN's hash; it now
+           holds the placeholder 'maths-question' (BAKED_PIN_HASH), kept so saved data stays compatible. ---------- */
         getPin: function(){
           if(live) return db.doc('settings/pin').get().then(function(snap){ return snap.exists ? (snap.data().pinHash||null) : null; });
           return Promise.resolve(mem.pinHash);
@@ -3554,7 +3582,6 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     cardShownAt: null,
     cardFlippedAt: null,
     settings: { sessionActive:false, sessionStartedAt:null, algorithm:'sm2_speed', difficulty:'medium', readingSupport:false },
-    pinHash: null,          // app-wide parent PIN hash -- no longer nested inside per-profile settings
     profiles: [],           // every profile's top-level metadata (name/mode/photo/order), loaded once at boot
     unsubProfiles: null,
     activeProfileId: null,  // null = showing the profile picker; otherwise the id of the profile in use
@@ -3997,14 +4024,12 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     });
   }
 
-  /* ---------- LOCK SCREEN (Adult Mode / Child Mode choice) + PIN PAD ---------- */
-  // The very first choice, every time the app is at rest: Adult Mode (manage decks, settings,
-  // progress -- never asks for the PIN) or Child Mode (today's study session -- always asks for
-  // the PIN to start, since that's the one thing the PIN still gates).
-  // The per-profile "resting" screen for a Child Mode profile -- Adult Mode profiles skip this
-  // entirely (enterProfile drops them straight into Manage Decks, since Adult Mode has never asked
-  // for the PIN). Mode itself isn't chosen here anymore; it's a property of the profile, changed
-  // only from Settings -> requestModeSwitch.
+  /* ---------- LOCK SCREEN and grown-up checks ----------
+     The per-profile "resting" screen for a Child Mode profile (Adult Mode profiles skip it: enterProfile
+     drops them straight into their decks). Starting Child Mode, ending a session, switching profile and
+     other grown-up actions ask the grown-up maths question (renderPinPad -> reefGrownUpGate, which replaced
+     the PIN). A profile's mode isn't chosen here; it is a property of the profile, changed only from
+     Settings -> requestModeSwitch. */
   function renderLocked(){
     if(reefSkipResting()) return;
     var name = S.profile ? S.profile.name : '';
@@ -4518,7 +4543,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     return out;
   }
 
-  // Lumi, a little deep-sea anglerfish: the dark-mode twin of the turtle (CSS shows one or the other, see /* covelumi */).
+  // Lumi, a little deep-sea anglerfish: the dark-mode twin of the turtle (the styles show one or the other: see "Lumi, the night guide").
   // Same drawing as Coral Calendar's Lumi (angler); a wrong answer gives her worried brows and a small frown.
   var LUMI_ART = {n: "<circle cx=\"98\" cy=\"3.4\" r=\"11.5\" fill=\"#43D3D4\" opacity=\".09\"/><g><path fill=\"#43D3D4\" fill-opacity=\".17\" stroke=\"#96E0E8\" stroke-opacity=\".62\" stroke-width=\".75\" stroke-linejoin=\"round\" d=\"M66.6 41.4C60.6 40.8 53.6 43.2 49.8 48.2q2.4.3 3.2 2.7q2.6-.7 4.1 1.3q2.4-1.3 4.6.3C63.8 50.6 66.8 46.2 67.6 43Z\" transform=\"translate(-6 -3) rotate(-14 66 42)\"/></g><g class=\"lu-tail\"><path fill=\"#43D3D4\" fill-opacity=\".17\" stroke=\"#96E0E8\" stroke-opacity=\".62\" stroke-width=\".75\" stroke-linejoin=\"round\" d=\"M32.5 33.2C27.5 28.6 21.5 23.4 15 20.2q-2.8 3.2-1.1 6.6q-3.5 3-1.3 6.7q-3.5 3.4-1 6.8q-2.4 3.8 1.1 6.6q-1 3.4 2.7 5.3C21.6 49 27.6 44 32.5 39.6Z\"/><path fill=\"none\" stroke=\"#A0E6EC\" stroke-opacity=\".42\" stroke-width=\".55\" stroke-linecap=\"round\" d=\"M31.4 34.6L16.4 23.6M31.4 35.6L13.8 30.4M31.4 36.6L13.6 37.6M31.4 37.6L14.8 44.6M31.4 38.6L17.4 50.6\"/></g><g><path fill=\"#43D3D4\" fill-opacity=\".17\" stroke=\"#96E0E8\" stroke-opacity=\".62\" stroke-width=\".75\" stroke-linejoin=\"round\" d=\"M40.5 22.6C39.4 17 41.6 11.6 46.4 9q.2 2.6 2.4 3.1q-.6 2.5 1.6 3.5q-1 2.1.6 3.4C47 19.4 43.6 20.8 40.5 22.6Z\"/><path fill=\"none\" stroke=\"#A0E6EC\" stroke-opacity=\".42\" stroke-width=\".55\" stroke-linecap=\"round\" d=\"M41.6 21.4L45.6 11.2M43.2 20.6L48.4 14M45 19.8L50.2 17.6\"/></g><path fill=\"#43D3D4\" fill-opacity=\".17\" stroke=\"#96E0E8\" stroke-opacity=\".62\" stroke-width=\".75\" stroke-linejoin=\"round\" d=\"M39.6 49.2C37.6 53.4 38.4 57.6 41.8 59.8q.7-2.2 2.7-2.3q.1-2 2-2.9C45.2 53 42.6 51.2 39.6 49.2Z\"/><path fill=\"#1E557A\" stroke=\"#7EDEE2\" stroke-opacity=\".6\" stroke-width=\".9\" d=\"M31 36C33 22 46 11.5 63 11.5C80 11.5 93 22 94.5 34.5C95.6 46 86.5 56.5 69 57.5C51 58.5 34 51 31 36Z\"/><path fill=\"#15345C\" opacity=\".85\" d=\"M32.4 32C37 21 49 13.4 63 13.4C77.5 13.4 88.6 20.2 92.4 29.6C84 23.4 73 20.8 62 21.2C50 21.8 40 25.8 32.4 32Z\"/><path fill=\"#62AEBC\" opacity=\".55\" d=\"M36 44.5C46 53 61 56.4 74 55.6C84 55 90.6 50 93.4 43C87.6 50.6 78 53.6 66 53.6C54 53.6 44 50.6 36 44.5Z\"/><ellipse fill=\"#43D3D4\" opacity=\".16\" cx=\"84\" cy=\"22.5\" rx=\"8.5\" ry=\"5.5\"/><path fill=\"none\" stroke=\"#CFF6F8\" stroke-opacity=\".34\" stroke-width=\"1.7\" stroke-linecap=\"round\" d=\"M43 20.4C50 15 59 12.9 68 13.7\"/><path fill=\"none\" stroke=\"#BFF0F5\" stroke-opacity=\".26\" stroke-width=\"1\" stroke-linecap=\"round\" d=\"M70.4 24.6C67 32 67.2 41 71.4 48\"/><circle fill=\"#0A2645\" opacity=\".55\" cx=\"50\" cy=\"18.6\" r=\"1.1\"/><circle fill=\"#0A2645\" opacity=\".55\" cx=\"58.6\" cy=\"15.9\" r=\"0.8\"/><circle fill=\"#0A2645\" opacity=\".55\" cx=\"44.2\" cy=\"25.2\" r=\"0.9\"/><circle fill=\"#0A2645\" opacity=\".55\" cx=\"55.2\" cy=\"23.6\" r=\"0.7\"/><circle fill=\"#0A2645\" opacity=\".55\" cx=\"66.2\" cy=\"18.6\" r=\"0.8\"/><circle fill=\"#0A2645\" opacity=\".55\" cx=\"39.6\" cy=\"31.2\" r=\"0.7\"/><circle fill=\"#0A2645\" opacity=\".55\" cx=\"48.2\" cy=\"30.2\" r=\"0.6\"/><g class=\"ph\"><circle cx=\"43.4\" cy=\"45.8\" r=\"2.34\" fill=\"#43D3D4\" opacity=\".22\"/><circle cx=\"43.4\" cy=\"45.8\" r=\"0.85\" fill=\"#D8FFFB\"/><circle cx=\"50.8\" cy=\"49.6\" r=\"2.6\" fill=\"#43D3D4\" opacity=\".22\"/><circle cx=\"50.8\" cy=\"49.6\" r=\"0.95\" fill=\"#D8FFFB\"/><circle cx=\"59.2\" cy=\"51.8\" r=\"2.6\" fill=\"#43D3D4\" opacity=\".22\"/><circle cx=\"59.2\" cy=\"51.8\" r=\"0.95\" fill=\"#D8FFFB\"/><circle cx=\"67.6\" cy=\"52\" r=\"2.6\" fill=\"#43D3D4\" opacity=\".22\"/><circle cx=\"67.6\" cy=\"52\" r=\"0.95\" fill=\"#D8FFFB\"/><circle cx=\"75.6\" cy=\"50.2\" r=\"2.34\" fill=\"#43D3D4\" opacity=\".22\"/><circle cx=\"75.6\" cy=\"50.2\" r=\"0.85\" fill=\"#D8FFFB\"/><circle cx=\"82.2\" cy=\"46.8\" r=\"2.08\" fill=\"#43D3D4\" opacity=\".22\"/><circle cx=\"82.2\" cy=\"46.8\" r=\"0.76\" fill=\"#D8FFFB\"/><circle cx=\"49.4\" cy=\"39.8\" r=\"1.56\" fill=\"#43D3D4\" opacity=\".22\"/><circle cx=\"49.4\" cy=\"39.8\" r=\"0.57\" fill=\"#D8FFFB\"/><circle cx=\"60.2\" cy=\"43\" r=\"1.56\" fill=\"#43D3D4\" opacity=\".22\"/><circle cx=\"60.2\" cy=\"43\" r=\"0.57\" fill=\"#D8FFFB\"/></g><path display=\"none\" d=\"M31 36C33 22 46 11.5 63 11.5C80 11.5 93 22 94.5 34.5C95.6 46 86.5 56.5 69 57.5C51 58.5 34 51 31 36Z\"/><g class=\"lu-lure\"><path fill=\"none\" stroke=\"#4C97AC\" stroke-width=\"1.5\" stroke-linecap=\"round\" d=\"M77 13.2C76.6 3.6 92 -5 98 3.4\"/><g transform=\"translate(98 3.4)\"><circle class=\"lu-bulb\" r=\"7.5\" fill=\"#43D3D4\" opacity=\".3\"/><circle fill=\"#F0C76A\" r=\"3.5\"/><circle fill=\"#43D3D4\" r=\"2.6\"/><circle fill=\"#F2FFFE\" cx=\"-.9\" cy=\"-.9\" r=\"1\"/></g></g><ellipse fill=\"#F2A08A\" opacity=\".55\" cx=\"77.6\" cy=\"37.4\" rx=\"3.9\" ry=\"2.5\"/><g class=\"lu-eye\"><circle fill=\"#CDEEF3\" cx=\"80\" cy=\"27\" r=\"6.8\"/><g><circle fill=\"#06131D\" cx=\"80.5\" cy=\"27.4\" r=\"5.44\"/><path fill=\"none\" stroke=\"#2A8CA3\" stroke-width=\".9\" stroke-linecap=\"round\" d=\"M76.74 29.45Q80.5 33.53 84.08 29.04\"/><circle fill=\"#fff\" cx=\"82.04\" cy=\"25.1\" r=\"2.04\"/><circle fill=\"#fff\" cx=\"77.96\" cy=\"29.18\" r=\"0.88\"/></g></g><g><path fill=\"none\" stroke=\"#06131D\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M94.6 38.6Q90.5 46.6 79.6 43.4\"/><path fill=\"#EAFBFB\" d=\"M90.67 41.8Q91.77 44.9 92.87 41.8Z\"/><path fill=\"#EAFBFB\" d=\"M87.7 43.4Q88.8 46.5 89.9 43.4Z\"/></g><g class=\"lu-fin\"><path fill=\"#43D3D4\" fill-opacity=\".17\" stroke=\"#96E0E8\" stroke-opacity=\".62\" stroke-width=\".75\" stroke-linejoin=\"round\" d=\"M66.6 41.4C60.6 40.8 53.6 43.2 49.8 48.2q2.4.3 3.2 2.7q2.6-.7 4.1 1.3q2.4-1.3 4.6.3C63.8 50.6 66.8 46.2 67.6 43Z\"/><path fill=\"none\" stroke=\"#A0E6EC\" stroke-opacity=\".42\" stroke-width=\".55\" stroke-linecap=\"round\" d=\"M66 42.2L51.6 48.4M66.2 43L56.2 51.4M66.6 43.8L61.6 52.4\"/></g>", sad: "<circle cx=\"98\" cy=\"3.4\" r=\"11.5\" fill=\"#43D3D4\" opacity=\".09\"/><g><path fill=\"#43D3D4\" fill-opacity=\".17\" stroke=\"#96E0E8\" stroke-opacity=\".62\" stroke-width=\".75\" stroke-linejoin=\"round\" d=\"M66.6 41.4C60.6 40.8 53.6 43.2 49.8 48.2q2.4.3 3.2 2.7q2.6-.7 4.1 1.3q2.4-1.3 4.6.3C63.8 50.6 66.8 46.2 67.6 43Z\" transform=\"translate(-6 -3) rotate(-14 66 42)\"/></g><g class=\"lu-tail\"><path fill=\"#43D3D4\" fill-opacity=\".17\" stroke=\"#96E0E8\" stroke-opacity=\".62\" stroke-width=\".75\" stroke-linejoin=\"round\" d=\"M32.5 33.2C27.5 28.6 21.5 23.4 15 20.2q-2.8 3.2-1.1 6.6q-3.5 3-1.3 6.7q-3.5 3.4-1 6.8q-2.4 3.8 1.1 6.6q-1 3.4 2.7 5.3C21.6 49 27.6 44 32.5 39.6Z\"/><path fill=\"none\" stroke=\"#A0E6EC\" stroke-opacity=\".42\" stroke-width=\".55\" stroke-linecap=\"round\" d=\"M31.4 34.6L16.4 23.6M31.4 35.6L13.8 30.4M31.4 36.6L13.6 37.6M31.4 37.6L14.8 44.6M31.4 38.6L17.4 50.6\"/></g><g><path fill=\"#43D3D4\" fill-opacity=\".17\" stroke=\"#96E0E8\" stroke-opacity=\".62\" stroke-width=\".75\" stroke-linejoin=\"round\" d=\"M40.5 22.6C39.4 17 41.6 11.6 46.4 9q.2 2.6 2.4 3.1q-.6 2.5 1.6 3.5q-1 2.1.6 3.4C47 19.4 43.6 20.8 40.5 22.6Z\"/><path fill=\"none\" stroke=\"#A0E6EC\" stroke-opacity=\".42\" stroke-width=\".55\" stroke-linecap=\"round\" d=\"M41.6 21.4L45.6 11.2M43.2 20.6L48.4 14M45 19.8L50.2 17.6\"/></g><path fill=\"#43D3D4\" fill-opacity=\".17\" stroke=\"#96E0E8\" stroke-opacity=\".62\" stroke-width=\".75\" stroke-linejoin=\"round\" d=\"M39.6 49.2C37.6 53.4 38.4 57.6 41.8 59.8q.7-2.2 2.7-2.3q.1-2 2-2.9C45.2 53 42.6 51.2 39.6 49.2Z\"/><path fill=\"#1E557A\" stroke=\"#7EDEE2\" stroke-opacity=\".6\" stroke-width=\".9\" d=\"M31 36C33 22 46 11.5 63 11.5C80 11.5 93 22 94.5 34.5C95.6 46 86.5 56.5 69 57.5C51 58.5 34 51 31 36Z\"/><path fill=\"#15345C\" opacity=\".85\" d=\"M32.4 32C37 21 49 13.4 63 13.4C77.5 13.4 88.6 20.2 92.4 29.6C84 23.4 73 20.8 62 21.2C50 21.8 40 25.8 32.4 32Z\"/><path fill=\"#62AEBC\" opacity=\".55\" d=\"M36 44.5C46 53 61 56.4 74 55.6C84 55 90.6 50 93.4 43C87.6 50.6 78 53.6 66 53.6C54 53.6 44 50.6 36 44.5Z\"/><ellipse fill=\"#43D3D4\" opacity=\".16\" cx=\"84\" cy=\"22.5\" rx=\"8.5\" ry=\"5.5\"/><path fill=\"none\" stroke=\"#CFF6F8\" stroke-opacity=\".34\" stroke-width=\"1.7\" stroke-linecap=\"round\" d=\"M43 20.4C50 15 59 12.9 68 13.7\"/><path fill=\"none\" stroke=\"#BFF0F5\" stroke-opacity=\".26\" stroke-width=\"1\" stroke-linecap=\"round\" d=\"M70.4 24.6C67 32 67.2 41 71.4 48\"/><circle fill=\"#0A2645\" opacity=\".55\" cx=\"50\" cy=\"18.6\" r=\"1.1\"/><circle fill=\"#0A2645\" opacity=\".55\" cx=\"58.6\" cy=\"15.9\" r=\"0.8\"/><circle fill=\"#0A2645\" opacity=\".55\" cx=\"44.2\" cy=\"25.2\" r=\"0.9\"/><circle fill=\"#0A2645\" opacity=\".55\" cx=\"55.2\" cy=\"23.6\" r=\"0.7\"/><circle fill=\"#0A2645\" opacity=\".55\" cx=\"66.2\" cy=\"18.6\" r=\"0.8\"/><circle fill=\"#0A2645\" opacity=\".55\" cx=\"39.6\" cy=\"31.2\" r=\"0.7\"/><circle fill=\"#0A2645\" opacity=\".55\" cx=\"48.2\" cy=\"30.2\" r=\"0.6\"/><g class=\"ph\"><circle cx=\"43.4\" cy=\"45.8\" r=\"2.34\" fill=\"#43D3D4\" opacity=\".22\"/><circle cx=\"43.4\" cy=\"45.8\" r=\"0.85\" fill=\"#D8FFFB\"/><circle cx=\"50.8\" cy=\"49.6\" r=\"2.6\" fill=\"#43D3D4\" opacity=\".22\"/><circle cx=\"50.8\" cy=\"49.6\" r=\"0.95\" fill=\"#D8FFFB\"/><circle cx=\"59.2\" cy=\"51.8\" r=\"2.6\" fill=\"#43D3D4\" opacity=\".22\"/><circle cx=\"59.2\" cy=\"51.8\" r=\"0.95\" fill=\"#D8FFFB\"/><circle cx=\"67.6\" cy=\"52\" r=\"2.6\" fill=\"#43D3D4\" opacity=\".22\"/><circle cx=\"67.6\" cy=\"52\" r=\"0.95\" fill=\"#D8FFFB\"/><circle cx=\"75.6\" cy=\"50.2\" r=\"2.34\" fill=\"#43D3D4\" opacity=\".22\"/><circle cx=\"75.6\" cy=\"50.2\" r=\"0.85\" fill=\"#D8FFFB\"/><circle cx=\"82.2\" cy=\"46.8\" r=\"2.08\" fill=\"#43D3D4\" opacity=\".22\"/><circle cx=\"82.2\" cy=\"46.8\" r=\"0.76\" fill=\"#D8FFFB\"/><circle cx=\"49.4\" cy=\"39.8\" r=\"1.56\" fill=\"#43D3D4\" opacity=\".22\"/><circle cx=\"49.4\" cy=\"39.8\" r=\"0.57\" fill=\"#D8FFFB\"/><circle cx=\"60.2\" cy=\"43\" r=\"1.56\" fill=\"#43D3D4\" opacity=\".22\"/><circle cx=\"60.2\" cy=\"43\" r=\"0.57\" fill=\"#D8FFFB\"/></g><path display=\"none\" d=\"M31 36C33 22 46 11.5 63 11.5C80 11.5 93 22 94.5 34.5C95.6 46 86.5 56.5 69 57.5C51 58.5 34 51 31 36Z\"/><g class=\"lu-lure\"><path fill=\"none\" stroke=\"#4C97AC\" stroke-width=\"1.5\" stroke-linecap=\"round\" d=\"M77 13.2C76.6 3.6 92 -5 98 3.4\"/><g transform=\"translate(98 3.4)\"><circle class=\"lu-bulb\" r=\"7.5\" fill=\"#43D3D4\" opacity=\".3\"/><circle fill=\"#F0C76A\" r=\"3.5\"/><circle fill=\"#43D3D4\" r=\"2.6\"/><circle fill=\"#F2FFFE\" cx=\"-.9\" cy=\"-.9\" r=\"1\"/></g></g><ellipse fill=\"#F2A08A\" opacity=\".55\" cx=\"77.6\" cy=\"37.4\" rx=\"3.9\" ry=\"2.5\"/><g class=\"lu-eye\"><circle fill=\"#CDEEF3\" cx=\"80\" cy=\"27\" r=\"6.8\"/><g><circle fill=\"#06131D\" cx=\"80.5\" cy=\"27.4\" r=\"5.44\"/><path fill=\"none\" stroke=\"#2A8CA3\" stroke-width=\".9\" stroke-linecap=\"round\" d=\"M76.74 29.45Q80.5 33.53 84.08 29.04\"/><circle fill=\"#fff\" cx=\"82.04\" cy=\"25.1\" r=\"2.04\"/><circle fill=\"#fff\" cx=\"77.96\" cy=\"29.18\" r=\"0.88\"/></g><path fill=\"#1D4C70\" d=\"M75.5 21.74A6.92 6.92 0 0 1 84.5 21.74Q80 23.84 75.5 21.74Z\"/><path fill=\"none\" stroke=\"#0A1F33\" stroke-width=\".85\" stroke-linecap=\"round\" d=\"M75.5 21.74Q80 23.84 84.5 21.74\"/></g><path fill=\"none\" stroke=\"#C4F0F3\" stroke-width=\"1.35\" stroke-linecap=\"round\" d=\"M74.22 18.8Q79.32 15.6 85.44 17.4\"/><g><path fill=\"none\" stroke=\"#06131D\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M94.2 43.4Q89.4 38.6 83.2 43.8\"/></g><g class=\"lu-fin\"><path fill=\"#43D3D4\" fill-opacity=\".17\" stroke=\"#96E0E8\" stroke-opacity=\".62\" stroke-width=\".75\" stroke-linejoin=\"round\" d=\"M66.6 41.4C60.6 40.8 53.6 43.2 49.8 48.2q2.4.3 3.2 2.7q2.6-.7 4.1 1.3q2.4-1.3 4.6.3C63.8 50.6 66.8 46.2 67.6 43Z\"/><path fill=\"none\" stroke=\"#A0E6EC\" stroke-opacity=\".42\" stroke-width=\".55\" stroke-linecap=\"round\" d=\"M66 42.2L51.6 48.4M66.2 43L56.2 51.4M66.6 43.8L61.6 52.4\"/></g>"};
   function lumiSVG(cls, sad){
@@ -7303,7 +7328,6 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
      sea behind the page (caustics, light rays, bubbles), marine life crossing every 9–23 s, a water ring where
      you press, rising bubbles on right answers, and a fish flurry when a Daily Plan activity starts. */
   var Ocean = (function(){
-    function themeNow(){ var r = document.documentElement; return r.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); }
     function reduced(){ try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){ return false; } }
     let flurryOn=false;
     function flurry(){if(flurryOn||matchMedia("(prefers-reduced-motion: reduce)").matches)return;flurryOn=true;
@@ -10495,7 +10519,8 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
 
 /*SWIM:BEGIN*/
 /* swim: Shelly (Sunlit zone) and Lumi (Midnight zone), ported from Coral Calendar. One swimmer, one rAF loop,
-   paused when off screen or hidden; see tools/swim/port_swim.py */
+   paused when off screen or hidden. The SWIM:BEGIN / SWIM:END markers fence the ported code (script and styles)
+   so it can be replaced in one piece if Coral Calendar's version changes. */
 var LUG={
  body:"M31 36C33 22 46 11.5 63 11.5C80 11.5 93 22 94.5 34.5C95.6 46 86.5 56.5 69 57.5C51 58.5 34 51 31 36Z",
  top:"M32.4 32C37 21 49 13.4 63 13.4C77.5 13.4 88.6 20.2 92.4 29.6C84 23.4 73 20.8 62 21.2C50 21.8 40 25.8 32.4 32Z",
@@ -10946,7 +10971,7 @@ function swGo(){const on=!!(SW.el&&SW.el.isConnected&&SW.vis&&!document.hidden&&
 document.addEventListener("visibilitychange",swGo);
 try{const mq=matchMedia("(prefers-reduced-motion: reduce)");SW.rm=mq.matches;const f=()=>{SW.rm=mq.matches;if(SW.rm){SW.run&&(SW.run=false);if(SW.raf){cancelAnimationFrame(SW.raf);SW.raf=0;}SW.bubs.forEach(b=>{b.on=false;b.el.style.opacity="0";});swStatic();}swGo();};mq.addEventListener?mq.addEventListener("change",f):mq.addListener(f);}catch(e){}
 
-/* ---------- Coral Cove glue ---------- */
+/* ---------- Coral Cove glue: connects the swim module above to the app (theme, where the swimmer sits, the feeding tip) ---------- */
 function themeNow(){var t=document.documentElement.dataset.theme;if(t==="dark"||t==="light")return t;try{return matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}catch(e){return "light";}}
 function swChipRect(){const d=SW.el,lb=d&&d.parentNode&&d.parentNode.querySelector(".cihtxt");if(lb&&lb.offsetWidth){SW.lbR=lb.offsetLeft+lb.offsetWidth+30;SW.lbT=lb.offsetTop;}else{SW.lbR=0;SW.lbT=0;}}
 var COVE_FED_K="cc-fed";
@@ -10995,6 +11020,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   // There's no PIN any more: grown-up screens ask a times question instead (see reefGrownUpGate). The old
   // stored PIN hash is replaced with this placeholder so no real PIN is kept on the device or in this file.
   var BAKED_PIN_HASH = 'maths-question';
+  // A short-lived cache in front of the store: each deck's cards are read on every redraw of the board and the
+  // deck list, so getCardsOnce answers from memory for 45 seconds. Any change to profiles, decks or cards clears it.
   function coveWrapStore(st){
     if(!st || st.__coveperf || typeof st.getCardsOnce !== 'function') return;
     st.__coveperf = 1;
@@ -11605,7 +11632,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     }
   }
 
-  /* ---------- Celebration music (Wendy's clip, win.mp3, published with the Claude version only):
+  /* ---------- Celebration music (Wendy's clip, win.mp3):
      the first four seconds after a right answer, the whole clip after finishing a deck. Played
      through Web Audio so it can fade out on the iPad too. Without the file, the usual chime plays. ---------- */
   var reefWinBuf = null, reefWinLoading = null, reefWinNode = null;
@@ -12184,7 +12211,11 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     if(S.reefReturnY != null){ var y = S.reefReturnY; S.reefReturnY = null; requestAnimationFrame(function(){ window.scrollTo(0, y); reefParallax(); }); }
     else reefParallax();
   }
-  /* three.js GLTFLoader r128 (MIT, three.js authors), installed once three.js has loaded. */
+  /* ================= THIRD-PARTY CODE: three.js GLTFLoader and BufferGeometryUtils r128 =================
+     MIT licence, (c) the three.js authors (https://github.com/mrdoob/three.js). Copied unchanged except for
+     wrapping it in reefInstallGLTF(), which installs it on THREE once three.js has loaded. Don't edit it here;
+     to update, replace everything down to "END OF THIRD-PARTY CODE" with the same files from a newer
+     three.js release (they must match the three.js version in three.min.js). */
   function reefInstallGLTF(){ if(!window.THREE || THREE.GLTFLoader) return;
 ( function () {
 
@@ -17153,6 +17184,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
 } )();
 
   }
+  /* ================= END OF THIRD-PARTY CODE (three.js GLTFLoader, BufferGeometryUtils) ================= */
   /* ---------- Kiko's crabs: Mochi (squishy pink) and Hermit (in a lavender shell), Wendy's two favourites ----------
      Built from simple shapes in the board's toon style and animated by hand, so they need no model file. One is
      picked at random when Coral Cove opens; tapping the crab makes it wiggle and scuttle off, and the other one
@@ -20818,14 +20850,11 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   store.init().then(function(s){
     try { coveWrapStore(s); } catch(e){}
     S.store = s;
-    // The PIN is app-wide now (not nested in any one profile's settings) -- load/seed it, then
-    // subscribe to the profile list. Nothing profile-scoped (decks, stats, settings…) loads until a
-    // profile is actually chosen; render() shows the profile picker in the meantime.
+    // A PIN saved by an older version is replaced with the placeholder, so no real PIN stays on the device.
+    // Then the profile list is loaded; nothing profile-scoped (decks, stats, settings…) loads until a
+    // profile is chosen, and render() shows the profile picker meanwhile.
     S.store.getPin().then(function(hash){
-      S.pinHash = BAKED_PIN_HASH;
-      if(hash !== BAKED_PIN_HASH){
-        S.store.setPin(BAKED_PIN_HASH);
-      }
+      if(hash !== BAKED_PIN_HASH) S.store.setPin(BAKED_PIN_HASH);
       S.view = 'home';
       S.booted = true;
       subscribeProfiles();
