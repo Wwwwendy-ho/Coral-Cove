@@ -34,6 +34,10 @@
 - Opening the app shows a title screen: a sunny sea with drifting clouds, a palm island, sparkles on the water, light rays, fish and a reef below, and Shelly bobbing at the waterline. At night it's a moonlit sea with stars and glowing jellyfish. "Tap to dive in" plays the dive into the water and starts the music (browsers won't play sound before a first tap, so the music is already playing on the profile screen).
 - The dive from the title screen is smooth: the profile screen is built underneath while the title shows, instead of during the dive.
 
+**No more PIN**
+- Grown-up screens (opening a grown-up profile, Edit Mode, switching or managing profiles, changing a profile's mode, starting or ending a session, leaving a deck early on a grown-up profile, Library settings) ask a times question instead of a PIN, like 47 × 6. A wrong answer brings a new question, so guessing doesn't help. Leaving a deck early on the child's profile still asks the easy subtraction question.
+- The old PIN is no longer stored in the app.
+
 **Fixes**
 - The fish on the title screen swim forwards (they were swimming tail-first).
 - Shelly no longer covers the hint under a study card (like "Drag the shell all the way to the right" in Sound Blend, or "Tap the card to flip it"). There's room for her below every card, on every profile.

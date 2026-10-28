@@ -10,7 +10,7 @@
  *        CORAL_CODE         (Secret)  any long passphrase; you type the same one into Coral Cove
  *        MODEL              (Text, optional) defaults to claude-opus-5-5
  *        ALLOW_ORIGIN       (Text, optional) e.g. https://wwwwendy-ho.github.io  (defaults to *)
- *   3. In Coral Cove: Library -> Settings (grown-up PIN) -> paste the worker's URL and the passphrase.
+ *   3. In Coral Cove: Library -> Settings (grown-up maths question) -> paste the worker's URL and the passphrase.
  *
  * Every request costs a little on your Anthropic bill. Replies are kept short (max_tokens below) to keep it low.
  * Written as plain fetch (no SDK) so it can be pasted straight into the Cloudflare dashboard without a build step.

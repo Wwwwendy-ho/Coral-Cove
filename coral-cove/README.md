@@ -90,7 +90,7 @@ Set it up once, with a grown-up:
    - `MODEL` (Text, optional): the Claude model to use. Defaults to `claude-opus-5-5`.
    - `ALLOW_ORIGIN` (Text, optional): where Coral Cove runs, e.g. `https://wwwwendy-ho.github.io`.
      Defaults to `*`.
-3. In Coral Cove, open 📚 Library, then Settings (grown-up PIN). Paste in the Worker's URL and the
+3. In Coral Cove, open 📚 Library, then Settings (answer the grown-up maths question). Paste in the Worker's URL and the
    passphrase, then tap "Test it".
 
 Each request is billed to your Anthropic account. Replies are kept short to keep the cost low.

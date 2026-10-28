@@ -3711,7 +3711,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     photoUploading: false,  // true while a picked photo is being downscaled + uploaded
     cardFormOriginalPhotoId: '' // the photoId the card had (or '') when the current add/edit form opened --
                                  // lets Save/Cancel know which photo, if any, is now an orphan to clean up
-    // No "PIN setup" and no "unlock once per visit" flag anymore -- the PIN is a fixed 3207 and
+    // No "PIN setup" and no "unlock once per visit" flag anymore -- a grown-up times question (reefGrownUpGate) stands in for a PIN, and
     // Adult Mode (Manage Decks / Settings / Progress) never asks for it at all. Only Child Mode --
     // starting a session, ending one, and the mid-round "leave this deck?" guard -- ever prompts,
     // and it prompts every single time on purpose, since that's the one thing the PIN is for now.
@@ -4581,6 +4581,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
   function renderPinPad(kind){
     if(kind === 'exit' && reefKid()) return reefMathGate();
     if(reefNoPin()) return reefSkipPin(kind);
+    return reefGrownUpGate(kind);   // a grown-up maths question instead of a PIN (the PIN screen below is no longer used)
     var t = pinPadTitles(kind);
     app.innerHTML = pinPadHTML(t[0], t[1], 'Cancel');
     wirePinKeys(function(){ submitPin(kind); }, function(){ cancelPinPrompt(kind); });
@@ -11271,10 +11272,9 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   });
 
   /* ============ boot ============ */
-  // The PIN is baked in as a fixed 3207 -- there's no "create your PIN" setup screen anymore.
-  // If the stored settings don't already carry that PIN's hash (fresh app, or a PIN set before
-  // this change), it's forced to 3207 and re-saved right away so it stays that way from then on.
-  var BAKED_PIN_HASH = pinHash('3207');
+  // There's no PIN any more: grown-up screens ask a times question instead (see reefGrownUpGate). The old
+  // stored PIN hash is replaced with this placeholder so no real PIN is kept on the device or in this file.
+  var BAKED_PIN_HASH = 'maths-question';
   function coveWrapStore(st){
     if(!st || st.__coveperf || typeof st.getCardsOnce !== 'function') return;
     st.__coveperf = 1;
@@ -11737,6 +11737,49 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     S.pinPromptFor = null;
     setTimeout(function(){ reefPinBypass = true; try { submitPin(kind); } finally { reefPinBypass = false; } }, 0);
   }
+  /* ---------- Grown-ups only: a times question a young child can't do yet, in place of a PIN ----------
+     Two-digit × one-digit (like 47 × 6). A wrong answer brings a new question, so guessing doesn't work. */
+  function reefGrownUpProblem(){ var a = 13 + Math.floor(Math.random() * 75), b = 6 + Math.floor(Math.random() * 4); return { a: a, b: b, ans: a * b }; }
+  function reefGrownUpGate(kind){
+    if(!S.adultGate || S.adultGate.kind !== kind) S.adultGate = { kind: kind, q: reefGrownUpProblem(), msg: '' };
+    var g = S.adultGate, q = g.q, t = pinPadTitles(kind);
+    var what = t[1].replace(/^(Ask a grown-up to )?[Ee]nter the PIN (to )?/, '').replace(/\.$/, '');
+    var keys = [1,2,3,4,5,6,7,8,9].map(function(k){ return '<button type="button" class="pin-key" data-gate-digit="'+k+'">'+k+'</button>'; }).join('') +
+      '<button type="button" class="pin-key" data-gate="back" aria-label="Delete">⌫</button><button type="button" class="pin-key" data-gate-digit="0">0</button>' +
+      '<button type="button" class="pin-key reef-gate-check" data-gate="check">OK</button>';
+    app.innerHTML = '' +
+      '<div class="lock-screen reef-gate">' +
+        '<h2>' + esc(t[0].replace('🔐', '🧮')) + '</h2>' +
+        '<p>Grown-ups: solve this' + (what ? ' to ' + esc(what) : '') + '.</p>' +
+        '<div class="pin-wrap">' +
+          '<div class="reef-gate-q"><span>'+q.a+' × '+q.b+' =</span>' +
+            '<input id="adultGateInput" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Your answer to '+q.a+' times '+q.b+'" value=""></div>' +
+          '<div class="reef-gate-msg" role="status" aria-live="polite">'+(g.msg || '&nbsp;')+'</div>' +
+          '<div class="pin-grid">'+keys+'</div>' +
+          '<div class="reef-gate-row"><button type="button" class="pin-cancel" data-gate="cancel">Cancel</button></div>' +
+        '</div>' +
+      '</div>';
+    var inp = app.querySelector('#adultGateInput');
+    function check(){
+      var v = inp.value.replace(/\D/g, '');
+      if(!v){ inp.focus(); return; }
+      if(+v === q.ans){ S.adultGate = null; reefPinBypass = true; try { submitPin(kind); } finally { reefPinBypass = false; } return; }
+      try { Sound.bloop(300); } catch(e){}
+      S.adultGate = { kind: kind, q: reefGrownUpProblem(), msg: 'Not quite. Here\'s a new one.' };
+      reefGrownUpGate(kind);
+    }
+    function cancel(){ S.adultGate = null; cancelPinPrompt(kind); }
+    app.querySelectorAll('[data-gate-digit]').forEach(function(b){
+      b.addEventListener('click', function(){ if(inp.value.length < 3){ try { Sound.tap(); } catch(e){} inp.value += b.dataset.gateDigit; } });
+    });
+    app.querySelector('[data-gate="back"]').addEventListener('click', function(){ inp.value = inp.value.slice(0, -1); });
+    app.querySelector('[data-gate="check"]').addEventListener('click', check);
+    app.querySelector('[data-gate="cancel"]').addEventListener('click', cancel);
+    inp.addEventListener('input', function(){ var d = inp.value.replace(/\D/g, '').slice(0, 3); if(d !== inp.value) inp.value = d; });
+    inp.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); check(); } else if(e.key === 'Escape'){ e.preventDefault(); cancel(); } });
+    setTimeout(function(){ try { inp.focus({ preventScroll: true }); } catch(e){} }, 50);
+  }
+  window.CoralCoveGrownUpQuestion = reefGrownUpProblem;   // the Library's settings use the same kind of question
   /* ---------- Leaving a deck early in Child Mode: a subtraction question instead of the PIN ---------- */
   // Same level every time: a two-digit number minus a smaller one, with an answer from 3 to 19 (like 20 − 15).
   function reefNewProblem(){
