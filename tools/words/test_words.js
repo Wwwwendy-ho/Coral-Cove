@@ -1,8 +1,11 @@
-// Unit tests for words.js against the built words-data.json. Run: node test_words.js
-const fs = require('fs'), assert = require('assert');
-global.window = { CORAL_WORDS: JSON.parse(fs.readFileSync(__dirname + '/words-data.json', 'utf8')) };
+// Unit tests for Ask Shelly's offline word help: words.js with the dictionary in words-data.js (both at the
+// top of the repository). Run: node tools/words/test_words.js
+const fs = require('fs'), path = require('path'), assert = require('assert');
+const ROOT = path.join(__dirname, '..', '..');
+global.window = {};
 global.document = { getElementById: () => null };
-new Function(fs.readFileSync(__dirname + '/words.js', 'utf8'))();
+new Function(fs.readFileSync(path.join(ROOT, 'words-data.js'), 'utf8'))();
+new Function(fs.readFileSync(path.join(ROOT, 'words.js'), 'utf8'))();
 const W = window.CoralWords;
 let fails = 0;
 function t(name, fn){ try { fn(); console.log('ok  ', name); } catch(e){ fails++; console.log('FAIL', name, '-', e.message); } }

@@ -1,3 +1,5 @@
 __pycache__/
 words-data.json
 tools/words/words-data.js
+node_modules/
+build/

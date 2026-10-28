@@ -1,0 +1,14 @@
+{
+  "root": true,
+  "env": { "browser": true, "es2020": true },
+  "parserOptions": { "ecmaVersion": 2020, "sourceType": "script" },
+  "globals": { "THREE": "readonly", "CORAL_COVE_SEED": "readonly", "CORAL_COVE_SEED_VERSION": "readonly", "CORAL_COVE_AUDIO": "readonly", "CoralStore": "readonly", "CoralLibrary": "readonly", "CoralWords": "readonly", "CORAL_WORDS": "readonly", "REEF_MODELS": "readonly", "REEF_SONGS": "readonly", "self": "readonly", "caches": "readonly", "clients": "readonly" },
+  "rules": {
+    "no-undef": "error", "no-unused-vars": ["warn", { "vars": "all", "args": "none" }], "no-redeclare": "error",
+    "no-dupe-keys": "error", "no-func-assign": "warn", "no-unreachable": "error", "no-dupe-else-if": "error",
+    "no-self-assign": "error", "no-dupe-args": "error", "no-duplicate-case": "error", "no-cond-assign": ["error", "except-parens"],
+    "no-constant-condition": ["warn", { "checkLoops": false }], "no-empty": "off", "use-isnan": "error", "valid-typeof": "error",
+    "no-unsafe-finally": "error", "no-sparse-arrays": "warn", "no-loss-of-precision": "error", "no-shadow-restricted-names": "error",
+    "no-inner-declarations": "off", "no-use-before-define": "off", "no-global-assign": "error", "no-case-declarations": "off"
+  }
+}

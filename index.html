@@ -1684,9 +1684,8 @@ h1,h2,h3{ font-weight:600; letter-spacing:.005em; }
 
 /* ===== Lumi, the night guide, in place of Shelly in the Midnight zone ===== */
 .cl-lumi{ display:none; }
-.critter-swim svg.cl-lumi{ overflow:visible; }
 .critter-swim:has(.cl-lumi){ }
-.cl-lumi .ph{ filter:drop-shadow(0 0 3px #43D3D4); animation:lumiGlow 3.4s ease-in-out infinite; }
+.cl-lumi .ph{ animation:lumiGlow 3.4s ease-in-out infinite; }
 .cl-lumi .ph{ filter:drop-shadow(0 0 5px #43D3D4); }
 @keyframes lumiGlow{ 0%,100%{ opacity:1; } 50%{ opacity:.62; } }
 @media (prefers-reduced-motion: reduce){ .cl-lumi .ph{ animation:none; } }
