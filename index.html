@@ -2461,6 +2461,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
         tone(1047, 0.19, 0.16, 'triangle', 0.15);  // C6 — the "ta-da"
         tone(1568, 0.20, 0.12, 'sine', 0.05);      // tiny sparkle overlay
         vibrate([10, 15, 10]);
+        try { Ocean.bubbles(6); } catch(e){}       // and a few bubbles rise from where the answer was tapped (ocean theme only)
       },
       // Playful cartoon "womp womp" — a comic downward slide instead of a harsh buzzer, so it stays fun, not discouraging.
       wrong: function(){
@@ -3921,7 +3922,19 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     if(b) b.addEventListener('click', function(){ S.storeError = null; render(); });
   }
 
+  /* ---------- Drawing the screen ----------
+     render() redraws the current screen from the state S, then runs the after-render hooks: features that
+     have to react to whatever is now on screen (the swimming mascot, the study buddy, music, the Ask Shelly
+     button) register with afterRender(name, fn) instead of wrapping render(). They run in the order they were
+     registered, and one that fails is logged without stopping the others. */
+  var afterRenderHooks = [];
+  function afterRender(name, fn){ afterRenderHooks.push({ name: name, fn: fn }); }
   function render(){
+    var out = renderScreen.apply(this, arguments);
+    afterRenderHooks.forEach(function(h){ try { h.fn(); } catch(e){ console.warn('[Coral Cove] ' + h.name, e); } });
+    return out;
+  }
+  function renderScreen(){
     try { Ocean.apply(!(S.activeProfileId && S.profile && S.profile.oceanTheme === false)); } catch(e){} // on for everyone unless a profile turned it off
     applyThemeMode(reefThemeFor(S.activeProfileId && S.profile ? S.profile : null));
     if(!S.booted) return; // wait for settings to load before showing anything (avoids a lock-screen flash)
@@ -7425,8 +7438,6 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     };
   })();
 
-  // Right answers send up a few bubbles from where they were tapped (ocean theme only).
-  (function(){ var c = Sound.correct; Sound.correct = function(){ var r = c.apply(Sound, arguments); try { Ocean.bubbles(6); } catch(e){} return r; }; })();
 
   var OUTCOME_ROW_HTML = '' +
     '<div class="grade-row outcome-row" style="position:relative;z-index:1;">' +
@@ -10495,20 +10506,14 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     var rm = false; try { rm = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(err){}
     if(v && !rm && v.animate) v.animate([{ transform:'none' }, { transform:'translateY(-12px) rotate(-12deg) scale(1.12)' }, { transform:'translateY(0) rotate(4deg)' }, { transform:'none' }], { duration:620, easing:'cubic-bezier(.3,1.4,.5,1)' });
   });
-  (function(){
-    var render0 = render;
-    render = function(){
-      var out = render0.apply(this, arguments);
-      try {
-        coveWaterMount();
-        if(S.view === 'summary' || S.view === 'sessionResults'){
-          var key = S.view + '|' + (S.roundStartedAt || '') + '|' + S.sessionReviewed;
-          if(S.__swJoyKey !== key){ S.__swJoyKey = key; coveSwimJoy(true); }
-        } else if(S.__swJoyKey){ S.__swJoyKey = null; coveSwimCalm(); }
-      } catch(e){ console.warn('[Coral Cove] swimmer', e); }
-      return out;
-    };
-  })();
+  // the swimmer joins in when a round's results are on screen, and calms down when they leave
+  afterRender('swimmer', function(){
+    coveWaterMount();
+    if(S.view === 'summary' || S.view === 'sessionResults'){
+      var key = S.view + '|' + (S.roundStartedAt || '') + '|' + S.sessionReviewed;
+      if(S.__swJoyKey !== key){ S.__swJoyKey = key; coveSwimJoy(true); }
+    } else if(S.__swJoyKey){ S.__swJoyKey = null; coveSwimCalm(); }
+  });
 
 /*SWIM:BEGIN*/
 /* swim: Shelly (Sunlit zone) and Lumi (Midnight zone), ported from Coral Calendar. One swimmer, one rAF loop,
@@ -11454,16 +11459,9 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       bud.querySelector('.reef-buddy-say').textContent = say;
     }
   }
-  (function(){
-    var reefRender0 = render;
-    render = function(){
-      var out = reefRender0.apply(this, arguments);
-      try { reefStudyBuddy(); } catch(e){ console.warn('[Coral Cove] study buddy', e); }
-      try { reefPraiseCheck(); } catch(e){ console.warn('[Coral Cove] praise', e); }
-      try { reefMusicUpdate(); } catch(e){}
-      return out;
-    };
-  })();
+  afterRender('study buddy', reefStudyBuddy);
+  afterRender('praise', reefPraiseCheck);
+  afterRender('music', reefMusicUpdate);
 
   /* ---------- No grown-up check in the Claude version (Wendy's choice). The GitHub/iPad copy loads its seed data
      file, which defines CORAL_COVE_SEED, and asks the grown-up maths question (reefGrownUpGate) wherever a PIN
@@ -21014,15 +21012,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       var i = document.getElementById('askIn'); if(i && !Ask.err) i.value = '';
     });
   }
-  (function(){
-    var askRender0 = render;
-    render = function(){
-      var out = askRender0.apply(this, arguments);
-      try { askSyncBtn(); if(Ask.open) askRender(); } catch(e){ console.warn('[Coral Cove] ask', e); }
-      return out;
-    };
-    askNS().then(function(){ try { askSyncBtn(); } catch(e){} });
-  })();
+  afterRender('ask', function(){ askSyncBtn(); if(Ask.open) askRender(); });
+  askNS().then(function(){ try { askSyncBtn(); } catch(e){} });
 })();
 </script>
 
