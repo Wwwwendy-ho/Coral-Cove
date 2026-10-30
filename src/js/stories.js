@@ -75,7 +75,7 @@
     }
     app.innerHTML = '' +
       '<div class="feed-topbar">' +
-        '<button type="button" class="icon-btn" data-act="exit-mini" aria-label="Close Mini Story" title="Close">✕</button>' +
+        '<button type="button" class="icon-btn" data-act="exit-mini" aria-label="Close Mini Story" title="Close">'+ccIcon('close')+'</button>' +
         '<div class="feed-deck-label">'+deck.emoji+' '+esc(deck.name)+'</div>' +
         '<span class="feed-topbar-spacer" aria-hidden="true"></span>' +
       '</div>' +
@@ -744,7 +744,7 @@
     var LABEL = { known: '✅ Known', learning: '🌱 Learning', 'new': '✨ New' };
     var rows = shown.slice(0, 500).map(function(e){
       return '<li class="wb-row wb-'+e.status+'">' +
-        '<button type="button" class="wb-say" data-wb-say="'+esc(e.word)+'" aria-label="Hear '+esc(e.word)+'">🔊</button>' +
+        '<button type="button" class="wb-say" data-wb-say="'+esc(e.word)+'" aria-label="Hear '+esc(e.word)+'">'+ccIcon('sound')+'</button>' +
         '<div class="wb-text"><b lang="'+(wb.lang === 'ko' ? 'ko' : 'en')+'">'+esc(e.word)+'</b>'+(e.meaning ? '<span>'+esc(e.meaning)+'</span>' : '')+'</div>' +
         '<span class="wb-chip">'+LABEL[e.status]+'</span>' +
         (adult ? (e.marked ? '<button type="button" class="wb-mark" data-wb-unmark="'+esc(e.key)+'">Undo</button>'

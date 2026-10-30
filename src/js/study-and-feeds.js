@@ -114,7 +114,7 @@
 
     app.innerHTML = '' +
       '<div class="feed-topbar">' +
-        '<button type="button" class="icon-btn" data-act="exit-feed" aria-label="Close Word Feed" title="Close">✕</button>' +
+        '<button type="button" class="icon-btn" data-act="exit-feed" aria-label="Close Word Feed" title="Close">'+ccIcon('close')+'</button>' +
         '<div class="feed-deck-label">'+deck.emoji+' '+esc(deck.name)+'</div>' +
         '<button type="button" class="icon-btn" data-act="feed-sounds" aria-label="Feed sounds" title="Sounds">'+(S.feedSoundId?'🎧':'🔈')+'</button>' +
       '</div>' +
@@ -610,7 +610,7 @@
 
     app.innerHTML = '' +
       '<div class="feed-topbar">' +
-        '<button type="button" class="icon-btn" data-act="exit-story" aria-label="Close Story Mode" title="Close">✕</button>' +
+        '<button type="button" class="icon-btn" data-act="exit-story" aria-label="Close Story Mode" title="Close">'+ccIcon('close')+'</button>' +
         '<div class="feed-deck-label">'+deck.emoji+' '+esc(deck.name)+'</div>' +
         '<span class="feed-topbar-spacer" aria-hidden="true"></span>' +
       '</div>' +
@@ -722,7 +722,7 @@
 
     app.innerHTML = '' +
       '<div class="feed-topbar">' +
-        '<button type="button" class="icon-btn" data-act="exit-equation" aria-label="Close Equation Feed" title="Close">✕</button>' +
+        '<button type="button" class="icon-btn" data-act="exit-equation" aria-label="Close Equation Feed" title="Close">'+ccIcon('close')+'</button>' +
         '<div class="feed-deck-label">'+deck.emoji+' '+esc(deck.name)+'</div>' +
         '<span class="feed-topbar-spacer" aria-hidden="true"></span>' +
       '</div>' +
@@ -852,7 +852,7 @@
 
     app.innerHTML = '' +
       '<div class="feed-topbar">' +
-        '<button type="button" class="icon-btn" data-act="exit-lang" aria-label="Close Language Feed" title="Close">✕</button>' +
+        '<button type="button" class="icon-btn" data-act="exit-lang" aria-label="Close Language Feed" title="Close">'+ccIcon('close')+'</button>' +
         '<div class="feed-deck-label">'+deck.emoji+' '+esc(deck.name)+'</div>' +
         '<span class="feed-topbar-spacer" aria-hidden="true"></span>' +
       '</div>' +
@@ -949,7 +949,7 @@
 
     app.innerHTML = '' +
       '<div class="feed-topbar">' +
-        '<button type="button" class="icon-btn" data-act="exit-readalong" aria-label="Close Read-Along" title="Close">✕</button>' +
+        '<button type="button" class="icon-btn" data-act="exit-readalong" aria-label="Close Read-Along" title="Close">'+ccIcon('close')+'</button>' +
         '<div class="feed-deck-label">'+deck.emoji+' '+esc(deck.name)+'</div>' +
         '<span class="feed-topbar-spacer" aria-hidden="true"></span>' +
       '</div>' +
@@ -1050,7 +1050,7 @@
 
     app.innerHTML = '' +
       '<div class="feed-topbar">' +
-        '<button type="button" class="icon-btn" data-act="exit-flash" aria-label="Close Flash Feed" title="Close">✕</button>' +
+        '<button type="button" class="icon-btn" data-act="exit-flash" aria-label="Close Flash Feed" title="Close">'+ccIcon('close')+'</button>' +
         '<div class="feed-deck-label">'+deck.emoji+' '+esc(deck.name)+'</div>' +
         '<button type="button" class="icon-btn" data-act="flash-order" aria-label="'+(S.flashOrdered?'Switch to shuffled order':'Switch to deck order')+'" title="'+(S.flashOrdered?'In order — tap to shuffle':'Shuffled — tap for deck order')+'">'+(S.flashOrdered?'🔢':'🔀')+'</button>' +
       '</div>' +

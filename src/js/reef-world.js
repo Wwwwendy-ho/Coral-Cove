@@ -292,7 +292,7 @@
     zones.forEach(function(z){ z.items.forEach(function(it){ if(!next && it.state === 'ready') next = it; }); });
     var guide = 'Shelly'; try { guide = coveSwimName() || 'Shelly'; } catch(e){}
     var nextZone = next ? zones.find(function(z){ return z.items.indexOf(next) !== -1; }) : null;
-    var line = next ? 'Let\'s dive into ' + next.d.name + (nextZone && names[nextZone.id] ? ' in the ' + names[nextZone.id] : '') + '!' : 'Everything is done! Pick any spot to play again.';
+    var line = next ? 'Let\'s dive into ' + next.d.name + '!' + (nextZone && names[nextZone.id] ? ' It\'s in the ' + names[nextZone.id].replace(/^The /, '') + '.' : '') : 'Everything is done! Pick any spot to play again.';   // two sentences, each with its own voice clip
     var L = reefLayout(zones), tally = reefTally();
     function pos(s, i){ return 'style="--x:'+reefN(s.x / L.W * 100)+'%;--y:'+reefN(s.y / L.H * 100)+'%;--i:'+i+'"'; }
     var html = L.stops.map(function(s, i){
@@ -300,7 +300,7 @@
         var z = s.sign, name = names[z.id] || (z.label + (night ? ' Deck' : ' Cove'));
         return '<div class="rw-post '+(s.x > L.W / 2 ? 'r' : 'l')+'" '+pos(s, i)+' role="heading" aria-level="3">' +
           '<span class="rw-post-board"><b>'+esc(name)+'</b><small>'+esc(z.label)+'</small></span>' +
-          '<button type="button" class="rw-say" data-reef-say="'+esc(name + '. ' + z.items.map(function(it){ return it.d.name; }).join(', ') + '.')+'" aria-label="Read this area aloud">🔊</button>' +
+          '<button type="button" class="rw-say" data-reef-say="'+esc(name + '. ' + z.items.map(function(it){ return it.d.name; }).join(', ') + '.')+'" aria-label="Read this area aloud">'+ccIcon('sound')+'</button>' +
         '</div>';
       }
       if(s.special === 'treasure') return '' +
@@ -329,7 +329,7 @@
         reefDefsSVG() +
         '<div class="rw-head">' +
           '<div class="rw-head-text"><h2>'+(night ? 'Where should we explore?' : 'Where should we swim?')+'</h2><p>'+esc(guide)+' says: '+esc(line)+'</p>'+reefTodayHTML(zones)+'</div>' +
-          '<button type="button" class="reef-say" data-reef-say="'+esc(guide+' says: '+line)+'" aria-label="Read this aloud">🔊</button>' +
+          '<button type="button" class="reef-say" data-reef-say="'+esc(guide+' says: '+line)+'" aria-label="Read this aloud">'+ccIcon('sound')+'</button>' +
         '</div>' +
         '<div class="rw-scene" style="aspect-ratio:'+L.W+' / '+reefN(L.H)+'">' +
           reefPaintSVG(L, night) +

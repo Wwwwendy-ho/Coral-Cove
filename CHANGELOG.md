@@ -1,5 +1,18 @@
 # Changelog
 
+## Natural voice everywhere, and drawn icons on the buttons (October 30, 2026)
+
+- **No more robot voice for the app's own words**: 1,734 new natural-voice clips (the same voice as before) cover
+  every card in the built-in decks, the maths cards and numbers, praise, hints, facts, Shelly's lines and the
+  Library's questions. Longer lines are now split into sentences, and each sentence plays its own clip, so a line
+  only falls back to the device voice for a sentence that has no clip. Words that can't be known ahead of time
+  (a new sum like "17 + 25", Claude's replies, worked maths steps) still use the device voice.
+- **Drawn icons instead of emoji on buttons**: close, hear it, sound, settings, Library, progress, edit, done,
+  profiles, privacy, download, delete, music, map, day/night, games, story mode, ask and the Library's tools now
+  use one set of rounded line icons with a coral fill, so each button's job is clear from its icon. They follow
+  light and dark mode.
+- `tools/voice/` holds the scripts that collect the lines, make the clips and pack them (see its README).
+
 ## A plastic bag in Shelly's food (October 28, 2026)
 
 - On the profile screen, about 1 in 2,000 food drops is a plastic bag instead of food. Shelly (Lumi at night) swims

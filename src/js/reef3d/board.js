@@ -715,13 +715,13 @@
     var wrap = document.createElement('div');
     wrap.className = 'r3 ' + (night ? 'night' : 'day');
     wrap.innerHTML = '<canvas class="r3-canvas" aria-hidden="true"></canvas><div class="r3-labels"></div>' +
-      '<button type="button" class="r3-mapbtn" data-r3-map>🗺️ Treasure map</button>' +
+      '<button type="button" class="r3-mapbtn" data-r3-map>'+ccIcon('map')+'<span>Treasure map</span></button>' +
       reefMusicButtonHTML('r3-musicbtn') +
-      '<button type="button" class="r3-themebtn" data-r3-theme aria-label="'+(night ? 'Switch to the sunlit reef (light mode)' : 'Switch to the midnight wreck (dark mode)')+'">'+(night ? '☀️' : '🌙')+'</button>' +
+      '<button type="button" class="r3-themebtn" data-r3-theme aria-label="'+(night ? 'Switch to the sunlit reef (light mode)' : 'Switch to the midnight wreck (dark mode)')+'">'+ccIcon(night ? 'sun' : 'moon')+'</button>' +
       '<div class="r3-bubble" aria-live="polite" hidden></div>' +
       '<div class="r3-hud" aria-live="polite"><span class="r3-hud-shells" title="Shells">🐚 <b>0</b></span><span class="r3-hud-pearls" title="Golden pearls">🫧 <b>0</b></span></div>' +
       '<button type="button" class="r3-modebtn" data-r3-mode hidden></button>' +
-      '<button type="button" class="r3-gamesbtn" data-r3-games aria-label="Minigame corner">🎮</button>';
+      '<button type="button" class="r3-gamesbtn" data-r3-games aria-label="Minigame corner">'+ccIcon('games')+'</button>';
     var canvas = wrap.querySelector('canvas');
     var big = innerWidth * innerHeight > 700000;   // tablets and larger: skip edge smoothing, the costliest per-pixel step
     var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: !big, alpha: true, powerPreference: 'low-power' });

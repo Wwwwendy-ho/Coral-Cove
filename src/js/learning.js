@@ -847,6 +847,28 @@
     // `opts.rate` lets a caller ask for a slower-than-default reading speed (e.g. Equation Feed reading
     // a whole equation aloud) without touching the speed everything else speaks at; `opts.variant`
     // names a clip made for that pace ('slow' for Listen & Pick's turtle, 'eq' for equations).
+    // A line with no clip of its own may be made of sentences that each have one ("Shelly says:", "Let's dive
+    // into Soccer Practice!"): those play one after another in the natural voice, and only a sentence with no
+    // clip at all is read by the device's voice.
+    function sentences(str){
+      return String(str).replace(/[\u{1F000}-\u{1FFFF}\u2600-\u27BF\uFE0F]/gu, '').replace(/([.!?:])\s+/g, '$1\n').split('\n')
+        .map(function(x){ return x.trim(); }).filter(function(x){ return /[\p{L}\p{N}]/u.test(x); });
+    }
+    function speakParts(str, rate, variant, token, onEnd){
+      var parts = sentences(str);
+      if(parts.length < 2){ if(onEnd) speakSynthCb(str, onEnd); else speakSynth(str, rate); return; }
+      Promise.all(parts.map(function(pt){ return resolveClip(pt, variant).catch(function(){ return null; }); })).then(function(clips){
+        if(token !== speakToken){ if(onEnd) onEnd(); return; }
+        if(!clips.some(Boolean)){ if(onEnd) speakSynthCb(str, onEnd); else speakSynth(str, rate); return; }   // nothing to stitch: one smooth device reading
+        var i = 0;
+        (function next(){
+          if(token !== speakToken || i >= parts.length){ if(onEnd) onEnd(); return; }
+          var pt = parts[i], c = clips[i]; i++;
+          if(c) playUrl(c.url, clipRate(c, rate, variant), next).catch(function(){ speakSynthCb(pt, next); });
+          else speakSynthCb(pt, next);
+        })();
+      });
+    }
     function speak(text, opts){
       if(!Sound.isEnabled() || !text || deckSpeechMuted()) return;
       var str = String(text);
@@ -858,7 +880,7 @@
           playUrl(clip.url, clipRate(clip, rate, variant)).catch(function(){ if(token === speakToken) speakSynth(str, rate); });
           return;
         }
-        speakSynth(str, rate);
+        speakParts(str, rate, variant, token);
       });
     }
     // Equation Feed needs to know exactly when a spoken line actually finishes (real clip or
@@ -925,7 +947,7 @@
           playUrl(clip.url, 1, onEnd).catch(function(){ speakSynthCb(str, onEnd); });
           return;
         }
-        speakSynthCb(str, onEnd);
+        speakParts(str, null, variant, token, onEnd);
       }).catch(function(){ speakSynthCb(str, onEnd); });
     }
     return { speak: speak, speakThen: speakThen, stop: stop, playUrl: playUrl, isSupported: function(){ return supported; },

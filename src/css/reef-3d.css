@@ -73,6 +73,24 @@
 @keyframes ccsPulse{ 0%,100%{ transform:translateX(-50%) scale(1); } 50%{ transform:translateX(-50%) scale(1.06); } }
 .cc-splash.ccs-out .ccs-tap, .cc-splash.ccs-out .ccs-title{ opacity:0; transition:opacity .25s ease; }
 @media (prefers-reduced-motion: reduce){ .cc-splash *{ animation:none !important; } }
+/* Coral Cove's drawn button icons (see ccIcon): the outline in the button's text colour with a soft fill of the same colour */
+.cc-ic{ width:1.35em; height:1.35em; flex:none; display:inline-block; vertical-align:-.28em; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; overflow:visible; }
+.cc-ic .f{ fill:var(--cc-ic-fill, #ff9b7d); stroke:none; opacity:.5; } .cc-ic .d{ fill:currentColor; stroke:none; }   /* teal lines, a soft coral fill */
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .cc-ic{ --cc-ic-fill:#ff8f73; } }
+:root[data-theme="dark"] .cc-ic{ --cc-ic-fill:#ff8f73; }
+.pill.streak .cc-ic, .pill.stars .cc-ic, .r3-themebtn .cc-ic, .r3-gamesbtn .cc-ic, [data-music-toggle] .cc-ic, .r3-mapbtn .cc-ic{ --cc-ic-fill:currentColor; }
+.icon-btn{ color:var(--deep, #0e5a78); } .icon-btn .cc-ic{ width:1.45rem; height:1.45rem; }
+.pill.streak .cc-ic{ color:#ff7a3d; } .pill.stars .cc-ic{ color:#e8a317; } .pill .icon .cc-ic{ width:1.15em; height:1.15em; }
+.pill.streak .cc-ic .f, .pill.stars .cc-ic .f{ opacity:.55; }
+.r3-mapbtn{ display:inline-flex; align-items:center; gap:7px; } .r3-mapbtn .cc-ic{ color:#b5532f; } .r3-mapbtn .cc-ic .f{ opacity:.3; }
+.r3-themebtn .cc-ic, .r3-gamesbtn .cc-ic, [data-music-toggle] .cc-ic{ width:1.6rem; height:1.6rem; }
+.r3-themebtn .cc-ic{ color:#e39b14; } .r3.night .r3-themebtn .cc-ic, .r3-themebtn .cc-ic.moon{ color:#f2d27a; }
+.r3-gamesbtn .cc-ic{ color:#7a4fc2; } [data-music-toggle] .cc-ic{ color:#2a8f8a; } [data-music-toggle].off .cc-ic{ color:#8a9a9a; }
+.r3-modebtn{ display:inline-flex; align-items:center; gap:6px; } .r3-modebtn .cc-ic{ width:1.15em; height:1.15em; }
+.ask-btn-q .cc-ic{ width:20px; height:20px; } .ask-btn-q .cc-ic .f{ opacity:.35; }
+.reef-say .cc-ic, .rw-say .cc-ic, .wb-say .cc-ic{ width:1.3rem; height:1.3rem; color:#0e6f8a; }
+.listen-play .cc-ic{ width:2.6rem; height:2.6rem; } .hz-hear .cc-ic{ width:1.3em; height:1.3em; }
+.pin-key .cc-ic{ width:1.5rem; height:1.5rem; }
 .r3-labels .r3-label, .r3-labels .r3-sign{ position:absolute !important; width:1px !important; height:1px !important; padding:0 !important; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
 .r3-label{ position:absolute; left:0; top:0; pointer-events:auto; display:flex; align-items:center; gap:7px; padding:5px 12px 5px 6px; border:none; border-radius:999px; cursor:pointer;
   background:#fbf6ea; color:#3f2c1b; font:inherit; box-shadow:0 3px 0 rgba(74,59,44,.22), 0 8px 16px rgba(30,60,60,.18); white-space:nowrap; will-change:transform; -webkit-tap-highlight-color:transparent; }
@@ -278,7 +296,7 @@ body.r3-full .cv3-hero .topbar > :last-child{ margin-left:auto; }
   body.r3-full .cv3-hero .topbar > :last-child{ gap:6px !important; }
   body.r3-full .rw-head{ top:calc(max(10px, env(safe-area-inset-top, 0px)) + 50px); max-width:calc(100% - 28px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)); }
   .r3-mapbtn, body.r3-full .r3-mapbtn{ width:52px; height:52px; padding:0; border-radius:50%; font-size:0; }
-  .r3-mapbtn::before{ content:"🗺️"; font-size:1.45rem; }
+  .r3-mapbtn > span{ display:none; } .r3-mapbtn .cc-ic{ width:1.7rem; height:1.7rem; margin:0; }
   .ask-btn{ padding:8px !important; }
   .ask-btn > span:not(.ask-btn-q){ display:none; }
   body .r3-themebtn, body .r3-musicbtn{ width:48px; height:48px; font-size:1.3rem; }

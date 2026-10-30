@@ -25,7 +25,7 @@
     if(mb){
       mb.hidden = !planOn();
       var tg = reef3dStoryTarget(view), day = S.planDay, total = day && day.blocks ? day.blocks.length : 0, done = total ? day.blocks.filter(function(x){ return x.done; }).length : 0;
-      mb.textContent = reef3dStoryOn() ? '📖 Story · ' + (total ? done + ' of ' + total : 'today') : '🎲 Free play';
+      mb.innerHTML = reef3dStoryOn() ? ccIcon('story') + '<span>Story · ' + (total ? done + ' of ' + total : 'today') + '</span>' : ccIcon('dice') + '<span>Free play</span>';
       mb.setAttribute('aria-label', reef3dStoryOn() ? 'Story mode: following today\'s plan. Tap for free play.' : 'Free play. Tap for story mode.');
       mb.dataset.alldone = tg < 0 && reef3dStoryOn() ? '1' : '';
     }
@@ -628,7 +628,7 @@
     var me = sp[view.at];
     var ov = document.createElement('div');
     ov.className = 'r3-map'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', 'Treasure map');
-    ov.innerHTML = '<div class="r3-map-card"><div class="r3-map-head"><b>Treasure map</b><button type="button" class="r3-map-close" data-r3-close aria-label="Close the map">✕</button></div>' +
+    ov.innerHTML = '<div class="r3-map-card"><div class="r3-map-head"><b>Treasure map</b><button type="button" class="r3-map-close" data-r3-close aria-label="Close the map">'+ccIcon('close')+'</button></div>' +
       '<p class="r3-map-hint">Tap a place to swim there.</p>' +
       '<div class="r3-map-board" style="height:'+H+'px"><svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true">' +
         '<path d="'+d+'" fill="none" stroke="#b5452f" stroke-width="3" stroke-dasharray="2 9" stroke-linecap="round"/>' + dots + '</svg>' + spots +

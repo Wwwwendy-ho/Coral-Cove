@@ -440,7 +440,7 @@
     var g = S.adultGate, q = g.q, t = pinPadTitles(kind);
     var what = t[1].replace(/^(Ask a grown-up to )?[Ee]nter the PIN (to )?/, '').replace(/\.$/, '');
     var keys = [1,2,3,4,5,6,7,8,9].map(function(k){ return '<button type="button" class="pin-key" data-gate-digit="'+k+'">'+k+'</button>'; }).join('') +
-      '<button type="button" class="pin-key" data-gate="back" aria-label="Delete">⌫</button><button type="button" class="pin-key" data-gate-digit="0">0</button>' +
+      '<button type="button" class="pin-key" data-gate="back" aria-label="Delete">'+ccIcon('backspace')+'</button><button type="button" class="pin-key" data-gate-digit="0">0</button>' +
       '<button type="button" class="pin-key reef-gate-check" data-gate="check">OK</button>';
     app.innerHTML = '' +
       '<div class="lock-screen reef-gate">' +
@@ -487,7 +487,7 @@
     if(!S.reefGate) S.reefGate = reefNewProblem();
     var g = S.reefGate;
     var keys = [1,2,3,4,5,6,7,8,9].map(function(k){ return '<button type="button" class="pin-key" data-gate-digit="'+k+'">'+k+'</button>'; }).join('') +
-      '<button type="button" class="pin-key" data-gate="back" aria-label="Delete">⌫</button><button type="button" class="pin-key" data-gate-digit="0">0</button>' +
+      '<button type="button" class="pin-key" data-gate="back" aria-label="Delete">'+ccIcon('backspace')+'</button><button type="button" class="pin-key" data-gate-digit="0">0</button>' +
       '<button type="button" class="pin-key reef-gate-check" data-gate="check">Check</button>';
     app.innerHTML = '' +
       '<div class="lock-screen reef-gate">' +

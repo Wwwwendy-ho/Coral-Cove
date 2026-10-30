@@ -29,6 +29,8 @@
   function plain(h){ var d = document.createElement('div'); d.innerHTML = String(h || ''); return (d.textContent || '').replace(/\s+/g, ' ').trim(); }
   function speak(t){ var c = CC(); if(c && LIB.settings().voice !== false) c.speak(t); }
   function sound(n){ var c = CC(); if(c) c.sound(n); }
+  // The app's drawn icons (window.ccIcon in index.html); an emoji stands in if they aren't there
+  function icon(n, fallback){ return window.ccIcon ? window.ccIcon(n) : (fallback || ''); }
   function today(){ var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 
   /* ---------- per-device settings, and per-profile Library records (kept on this device) ---------- */
@@ -100,7 +102,7 @@
     var body = root.querySelector('.clib-body'), head = root.querySelector('.clib-title');
     body.innerHTML = ''; body.scrollTop = 0;
     head.textContent = v.title || 'Library';
-    root.querySelector('.clib-back').textContent = stack.length > 1 ? '‹ Back' : '✕ Close';
+    root.querySelector('.clib-back').innerHTML = icon(stack.length > 1 ? 'back' : 'close') + '<span>' + (stack.length > 1 ? 'Back' : 'Close') + '</span>';
     root.querySelector('.clib-source').textContent = claudeReady() ? '✨ Claude on' : '📴 Offline mode';
     try { v.render(body, arg); } catch(e){ body.innerHTML = '<p class="clib-note">Something went wrong opening this page. ' + esc(e.message) + '</p>'; console.error('[Library]', e); }
     head.textContent = v.title || 'Library';   // some pages set their title while rendering
@@ -110,7 +112,7 @@
     if(root) return;
     var st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
     root = document.createElement('div'); root.className = 'clib'; root.hidden = true; root.setAttribute('role', 'dialog'); root.setAttribute('aria-label', 'Library');
-    root.innerHTML = '<header class="clib-head"><button type="button" class="clib-back">✕ Close</button><h1 class="clib-title">Library</h1><span class="clib-source"></span></header><main class="clib-body"></main>';
+    root.innerHTML = '<header class="clib-head"><button type="button" class="clib-back">' + icon('close') + '<span>Close</span></button><h1 class="clib-title">Library</h1><span class="clib-source"></span></header><main class="clib-body"></main>';
     root.querySelector('.clib-back').addEventListener('click', back);
     root.addEventListener('keydown', function(e){ if(e.key === 'Escape') back(); });
     document.body.appendChild(root);
@@ -119,11 +121,11 @@
   function tiles(list){
     return '<div class="clib-tiles">' + list.map(function(t){
       return '<button type="button" class="clib-tile" data-view="' + esc(t.view) + '"' + (t.arg != null ? ' data-arg="' + esc(t.arg) + '"' : '') + '>' +
-        '<span class="clib-tile-e" aria-hidden="true">' + t.e + '</span><b>' + esc(t.name) + '</b>' + (t.note ? '<small>' + esc(t.note) + '</small>' : '') + '</button>';
+        '<span class="clib-tile-e" aria-hidden="true">' + (t.icon && window.ccIcon ? window.ccIcon(t.icon) : t.e) + '</span><b>' + esc(t.name) + '</b>' + (t.note ? '<small>' + esc(t.note) + '</small>' : '') + '</button>';
     }).join('') + '</div>';
   }
   function wireTiles(el){ $$('[data-view]', el).forEach(function(b){ b.addEventListener('click', function(){ sound('tap'); go(b.dataset.view, b.dataset.arg); }); }); }
-  LIB.tiles = tiles; LIB.wireTiles = wireTiles;
+  LIB.tiles = tiles; LIB.wireTiles = wireTiles; LIB.icon = icon;
 
   /* ---------- HOME: built around the profile's learning goals (Wendy chose this layout) ----------
      One tab per goal. Each goal has a list of activities; its first four are today's plan. "Next up" is the first
@@ -197,9 +199,9 @@
     html += '<section class="clib-side"><h3>' + (next ? 'Or pick one' : 'Keep going') + '</h3>' + plan.filter(function(a){ return a !== next; }).map(function(a){
       return '<button type="button" class="clib-pick" data-act="' + a.id + '"><span class="clib-pick-e" aria-hidden="true">' + a.e + '</span><span class="clib-pick-t"><b>' + esc(a.name) +
         (isDone(a) ? ' <span class="clib-tick">✓ done</span>' : '') + '</b><small data-note="' + a.id + '">' + esc(a.note) + '</small></span></button>'; }).join('') + '</section></div>';
-    html += '<h3 class="clib-more-h">Everything else</h3><div class="clib-more">' + [['🐢', 'Tutor', 'tutorHome'], ['📝', 'Worksheets', 'wsHome'], ['🔢', 'Maths lab', 'mathHome'],
-      ['✍️', 'Check my work', 'checkHome'], ['📈', 'My progress', 'progressHome'], ['🗂️', 'All decks', 'decks'], ['⚙️', 'Settings', 'settings']].map(function(x){
-      return '<button type="button" class="clib-more-b" data-view="' + x[2] + '"><span aria-hidden="true">' + x[0] + '</span> ' + x[1] + '</button>'; }).join('') + '</div>';
+    html += '<h3 class="clib-more-h">Everything else</h3><div class="clib-more">' + [['🐢', 'Tutor', 'tutorHome', 'tutor'], ['📝', 'Worksheets', 'wsHome', 'worksheet'], ['🔢', 'Maths lab', 'mathHome', 'maths'],
+      ['✍️', 'Check my work', 'checkHome', 'checkwork'], ['📈', 'My progress', 'progressHome', 'progress'], ['🗂️', 'All decks', 'decks', 'cards'], ['⚙️', 'Settings', 'settings', 'settings']].map(function(x){
+      return '<button type="button" class="clib-more-b" data-view="' + x[2] + '"><span aria-hidden="true">' + icon(x[3], x[0]) + '</span> ' + x[1] + '</button>'; }).join('') + '</div>';
     el.innerHTML = html;
     wireTiles(el);
     $$('[data-tab]', el).forEach(function(b){ b.addEventListener('click', function(){ var r2 = dayRec(); r2.tab = b.dataset.tab; saveRec(r2); sound('tap'); go('home', null, true); }); });
@@ -570,7 +572,7 @@
   function chatScreen(el, opts){
     el.innerHTML = '<div class="clib-chat"><div class="clib-msgs" aria-live="polite"></div>' +
       '<form class="clib-send"><input class="clib-input" autocomplete="off" placeholder="' + esc(opts.placeholder || 'Type here…') + '" aria-label="Your message">' +
-      (hasMic() ? '<button type="button" class="clib-btn" data-mic aria-label="Talk instead of typing">🎤</button>' : '') +
+      (hasMic() ? '<button type="button" class="clib-btn" data-mic aria-label="Talk instead of typing">' + LIB.icon('mic', '🎤') + '</button>' : '') +
       '<button type="submit" class="clib-btn main">Send</button></form>' + (opts.extra || '') + '</div>';
     var msgs = $('.clib-msgs', el), form = $('.clib-send', el), inp = $('input', form), history = [];
     function add(who, text, cls){ var d = document.createElement('div'); d.className = 'clib-m ' + who + (cls ? ' ' + cls : ''); d.textContent = text; msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight; return d; }
@@ -593,8 +595,8 @@
   function listen(cb, btn){
     var R = window.SpeechRecognition || window.webkitSpeechRecognition; if(!R) return;
     var r = new R(); r.lang = navigator.language || 'en-US'; r.interimResults = false; r.maxAlternatives = 1;
-    btn.textContent = '👂'; r.onresult = function(e){ cb(e.results[0][0].transcript); }; r.onend = function(){ btn.textContent = '🎤'; }; r.onerror = function(){ btn.textContent = '🎤'; };
-    try { r.start(); } catch(e){ btn.textContent = '🎤'; }
+    btn.classList.add('listening'); r.onresult = function(e){ cb(e.results[0][0].transcript); }; r.onend = function(){ btn.classList.remove('listening'); }; r.onerror = function(){ btn.classList.remove('listening'); };
+    try { r.start(); } catch(e){ btn.classList.remove('listening'); }
   }
 
   // Offline "Ask": maths, her decks, facts, then a friendly not-sure.
@@ -1696,6 +1698,10 @@
     });
   } };
   CSS += '\n' + [
+    '.clib-back{ display:inline-flex; align-items:center; gap:6px; } .clib-back .cc-ic{ width:1.15em; height:1.15em; }',
+    '.clib-more-b .cc-ic{ width:1.2em; height:1.2em; vertical-align:-.25em; color:var(--clib-accent); }',
+    '.clib-tile-e .cc-ic{ width:2.1rem; height:2.1rem; color:var(--clib-accent); } .clib-tile-e .cc-ic .f{ opacity:.22; }',
+    '[data-mic] .cc-ic{ width:1.3em; height:1.3em; } [data-mic].listening{ background:var(--clib-accent); color:var(--clib-accent-ink); }',
     '.clib-chat{ display:flex; flex-direction:column; height:calc(100dvh - 140px); min-height:360px; }',
     '.clib-msgs{ flex:1; overflow:auto; display:flex; flex-direction:column; gap:8px; padding:4px 2px 10px; }',
     '.clib-m{ max-width:82%; padding:10px 14px; border-radius:18px; font-weight:700; line-height:1.4; white-space:pre-wrap; overflow-wrap:anywhere; }',

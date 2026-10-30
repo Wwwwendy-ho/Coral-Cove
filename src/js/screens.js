@@ -118,7 +118,7 @@
     wrap.className = 'cc-dialog-backdrop';
     wrap.innerHTML = '' +
       '<div class="cc-dialog cove-privacy" role="dialog" aria-modal="true" aria-labelledby="covePvTitle">' +
-        '<header><h3 id="covePvTitle">🔒 Privacy and data</h3><button type="button" class="icon-btn" data-pv-close aria-label="Close privacy and data">✕</button></header>' +
+        '<header><h3 id="covePvTitle">🔒 Privacy and data</h3><button type="button" class="icon-btn" data-pv-close aria-label="Close privacy and data">'+ccIcon('close')+'</button></header>' +
         '<div class="cove-pv-body" tabindex="0" aria-label="Privacy and data details">' +
           '<h4>What Coral Cove keeps</h4><ul>' +
             '<li>Profile names (a first name is all it needs) and a profile photo if you add one.</li>' +
@@ -180,7 +180,7 @@
   // failure would otherwise look like a button silently doing nothing (deck editor, deck grid, ...).
   function errorBannerHTML(){
     if(!S.storeError) return '';
-    return '<div class="banner-error"><span>⚠️ '+esc(S.storeError)+'</span><button type="button" data-act="dismiss-store-error" aria-label="Dismiss">✕</button></div>';
+    return '<div class="banner-error"><span>⚠️ '+esc(S.storeError)+'</span><button type="button" data-act="dismiss-store-error" aria-label="Dismiss">'+ccIcon('close')+'</button></div>';
   }
   function wireErrorBanner(){
     var b = app.querySelector('[data-act="dismiss-store-error"]');
@@ -262,12 +262,12 @@
   }
 
   function ctrlRowHTML(){
-    var soundIcon = Sound.isEnabled() ? '🔊' : '🔇';
+    var soundIcon = ccIcon(Sound.isEnabled() ? 'sound' : 'sound-off');
     return '' +
       '<div class="ctrl-row">' +
         '<button type="button" class="icon-btn" data-act="toggle-sound" aria-label="Turn sound '+(Sound.isEnabled()?'off':'on')+'" title="Sound">'+soundIcon+'</button>' +
-        '<button type="button" class="icon-btn" data-act="switch-profile" aria-label="Switch profile" title="Switch profile">👥</button>' +
-        '<button type="button" class="icon-btn" data-act="end-session" aria-label="End session" title="End session">🏁</button>' +
+        '<button type="button" class="icon-btn" data-act="switch-profile" aria-label="Switch profile" title="Switch profile">'+ccIcon('profiles')+'</button>' +
+        '<button type="button" class="icon-btn" data-act="end-session" aria-label="End session" title="End session">'+ccIcon('flag')+'</button>' +
       '</div>';
   }
   function wireCtrlRow(){
@@ -469,8 +469,8 @@
         '<h2>🌊 Who\'s diving in?</h2>' +
         '<p>Pick a profile to get started.</p>' +
         '<div class="profile-grid">'+tiles+'</div>' +
-        '<button type="button" class="btn btn-ghost" data-act="manage-profiles" style="margin-top:14px;">🗂️ Manage Profiles</button>' +
-        '<div class="cove-foot"><button type="button" class="cove-linkbtn" data-act="cove-privacy">🔒 Privacy and data</button></div>' +
+        '<button type="button" class="btn btn-ghost" data-act="manage-profiles" style="margin-top:14px;">'+ccIcon('profiles')+' Manage Profiles</button>' +
+        '<div class="cove-foot"><button type="button" class="cove-linkbtn" data-act="cove-privacy">'+ccIcon('lock')+' Privacy and data</button></div>' +
       '</div>';
     app.querySelectorAll('[data-profile]').forEach(function(b){
       b.addEventListener('click', function(){
@@ -503,8 +503,8 @@
           '<span class="profile-name">'+esc(p.name)+'</span>' +
           '<span class="profile-mode-badge">'+(p.mode==='adult'?'🔧 Adult':'🧒 Child')+'</span>' +
           '<div class="cove-tile-acts">' +
-            '<button type="button" class="icon-btn" data-cove-export="'+p.id+'" aria-label="Download '+esc(p.name)+'\'s data" title="Download data">⬇️</button>' +
-            '<button type="button" class="icon-btn" data-del="'+p.id+'" aria-label="Delete '+esc(p.name)+'\'s profile and data" title="Delete profile and data">🗑️</button>' +
+            '<button type="button" class="icon-btn" data-cove-export="'+p.id+'" aria-label="Download '+esc(p.name)+'\'s data" title="Download data">'+ccIcon('download')+'</button>' +
+            '<button type="button" class="icon-btn" data-del="'+p.id+'" aria-label="Delete '+esc(p.name)+'\'s profile and data" title="Delete profile and data">'+ccIcon('trash')+'</button>' +
           '</div>' +
         '</div>';
     }).join('');
@@ -519,7 +519,7 @@
           '<button type="button" class="profile-tile profile-tile-add" data-act="new-profile"><span class="profile-add-icon">➕</span><span class="profile-name">Add Profile</span></button>' +
         '</div>' +
         '<p class="algo-note" style="text-align:center;margin-top:14px;">⬇️ downloads a profile\'s decks and progress as a file. 🗑️ deletes the profile and all of its data for good.</p>' +
-        '<div class="cove-foot"><button type="button" class="cove-linkbtn" data-act="cove-privacy">🔒 Privacy and data</button></div>' +
+        '<div class="cove-foot"><button type="button" class="cove-linkbtn" data-act="cove-privacy">'+ccIcon('lock')+' Privacy and data</button></div>' +
       '</div>';
     wireErrorBanner();
     app.querySelector('[data-act="exit-manage-profiles"]').addEventListener('click', function(){ S.managingProfiles = false; render(); });
@@ -1050,14 +1050,14 @@
         '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
           (managing ? '' :
           '<div class="stats-row">' +
-            '<div class="pill streak"><span class="icon">🔥</span><span class="tabular">'+currentStreak()+'</span></div>' +
-            '<div class="pill stars"><span class="icon">⭐</span><span class="tabular">'+S.stats.stars+'</span></div>' +
+            '<div class="pill streak"><span class="icon">'+ccIcon('flame')+'</span><span class="tabular">'+currentStreak()+'</span></div>' +
+            '<div class="pill stars"><span class="icon">'+ccIcon('star')+'</span><span class="tabular">'+S.stats.stars+'</span></div>' +
           '</div>') +
-          ((managing || editMode) ? '<button type="button" class="icon-btn" data-act="open-settings" title="Settings" aria-label="Study settings">⚙️</button>' : '') +
-          '<button type="button" class="icon-btn" data-act="open-library" title="Library" aria-label="Open the Library">📚</button>' +
-          '<button type="button" class="icon-btn" data-act="open-stats" title="Progress" aria-label="View progress">📊</button>' +
-          '<button type="button" class="icon-btn" data-act="toggle-edit-mode" title="'+(editMode?'Exit Edit Mode':'Edit Mode')+'" aria-label="'+(editMode?'Exit Edit Mode':'Enter Edit Mode')+'">'+(editMode?'🔓':'✏️')+'</button>' +
-          (managing ? '<button type="button" class="btn btn-ghost done-btn" data-act="exit-manager">✅ Done</button>' : ctrlRowHTML()) +
+          ((managing || editMode) ? '<button type="button" class="icon-btn" data-act="open-settings" title="Settings" aria-label="Study settings">'+ccIcon('settings')+'</button>' : '') +
+          '<button type="button" class="icon-btn" data-act="open-library" title="Library" aria-label="Open the Library">'+ccIcon('library')+'</button>' +
+          '<button type="button" class="icon-btn" data-act="open-stats" title="Progress" aria-label="View progress">'+ccIcon('progress')+'</button>' +
+          '<button type="button" class="icon-btn" data-act="toggle-edit-mode" title="'+(editMode?'Exit Edit Mode':'Edit Mode')+'" aria-label="'+(editMode?'Exit Edit Mode':'Enter Edit Mode')+'">'+ccIcon(editMode?'unlock':'edit')+'</button>' +
+          (managing ? '<button type="button" class="btn btn-ghost done-btn" data-act="exit-manager">'+ccIcon('check')+' Done</button>' : ctrlRowHTML()) +
         '</div>' +
       '</div>' +
       coveWaterHTML('home') +

@@ -183,11 +183,11 @@
   addEventListener('pageshow', function(e){ if(e.persisted && !document.hidden) reefMusicBack(); });
   function reefMusicButtonHTML(cls){
     var on = reefMusicOn();
-    return '<button type="button" class="' + cls + (on ? '' : ' off') + '" data-music-toggle aria-pressed="' + on + '" aria-label="' + (on ? 'Turn the music off' : 'Turn the music on') + '">🎵</button>';
+    return '<button type="button" class="' + cls + (on ? '' : ' off') + '" data-music-toggle aria-pressed="' + on + '" aria-label="' + (on ? 'Turn the music off' : 'Turn the music on') + '">' + ccIcon(on ? 'music' : 'music-off') + '</button>';
   }
   function reefMusicButtons(){
     document.querySelectorAll('[data-music-toggle]').forEach(function(b){
-      var on = reefMusicOn(); b.classList.toggle('off', !on); b.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-label', on ? 'Turn the music off' : 'Turn the music on');
+      var on = reefMusicOn(); b.classList.toggle('off', !on); b.innerHTML = ccIcon(on ? 'music' : 'music-off'); b.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-label', on ? 'Turn the music off' : 'Turn the music on');
     });
   }
   document.addEventListener('click', function(e){

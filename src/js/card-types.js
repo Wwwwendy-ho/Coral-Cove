@@ -473,7 +473,7 @@
           '<div class="card-text" data-echo-text>'+esc(card.front)+'</div>' +
           (card.back ? '<div class="echo-meaning">'+esc(card.back)+'</div>' : '') +
           '<div class="listen-big echo-listen">' +
-            '<button type="button" class="listen-play" data-act="echo-listen" aria-label="Hear it">🔊</button>' +
+            '<button type="button" class="listen-play" data-act="echo-listen" aria-label="Hear it">'+ccIcon('sound')+'</button>' +
             '<button type="button" class="btn btn-ghost listen-slow" data-act="echo-slow">🐢 Slower</button>' +
           '</div>' +
           '<div class="echo-mic">'+mic+'</div>' +
@@ -777,7 +777,7 @@
     }).join('<span class="hz-plus" aria-hidden="true">+</span>');
     var reveal = done ? '' +
       '<div class="hz-reveal ns-reveal">' +
-        '<div class="hz-word" lang="ko">'+esc(card.front)+'<button type="button" class="btn btn-ghost hz-hear" data-act="ns-hear" aria-label="Hear it again">🔊</button></div>' +
+        '<div class="hz-word" lang="ko">'+esc(card.front)+'<button type="button" class="btn btn-ghost hz-hear" data-act="ns-hear" aria-label="Hear it again">'+ccIcon('sound')+'</button></div>' +
         '<div class="ns-sys ns-'+esc(card.nsSys || 'native')+'">'+sys.icon+' '+sys.label+(sys.eg ? '<small lang="ko">'+esc(sys.eg)+'</small>' : '')+'</div>' +
         (parts ? '<div class="ns-parts">'+parts+'</div>' : '') +
         (card.nsRule ? '<p class="hz-note ns-rule" lang="ko">'+esc(card.nsRule)+'</p>' : '') +
@@ -993,7 +993,7 @@
             '<div class="read-label">👂 Listen &amp; pick</div>' +
             (card.photoUrl && lsDone ?'<img class="card-photo" src="'+esc(card.photoUrl)+'" alt="">':'') +
             '<div class="listen-big">' +
-              '<button type="button" class="listen-play" data-act="listen-play" aria-label="Play the word again">🔊</button>' +
+              '<button type="button" class="listen-play" data-act="listen-play" aria-label="Play the word again">'+ccIcon('sound')+'</button>' +
               '<button type="button" class="btn btn-ghost listen-slow" data-act="listen-slow">🐢 Slower</button>' +
             '</div>' +
             (lsDone ? '<div class="listen-reveal">'+esc(card.front)+(ls.side === 'front' && card.back ? '<small>'+esc(card.back)+'</small>' : (ls.side === 'back' ? '<small>'+esc(card.back)+'</small>' : ''))+'</div>' : '') +

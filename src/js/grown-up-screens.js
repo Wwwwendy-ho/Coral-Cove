@@ -663,8 +663,8 @@
           '<div class="cr-back">'+backLine+'</div>' +
         '</div>' +
         '<div class="cr-actions">' +
-          '<button class="icon-btn" data-act="edit-card" data-card="'+c.id+'" aria-label="Edit card">✏️</button>' +
-          '<button class="icon-btn" data-act="del-card" data-card="'+c.id+'" aria-label="Delete card">🗑️</button>' +
+          '<button class="icon-btn" data-act="edit-card" data-card="'+c.id+'" aria-label="Edit card">'+ccIcon('edit')+'</button>' +
+          '<button class="icon-btn" data-act="del-card" data-card="'+c.id+'" aria-label="Delete card">'+ccIcon('trash')+'</button>' +
         '</div>' +
       '</div>';
     }).join('') : '<div class="empty-state">No cards yet — add the first one below! 🐚</div>';

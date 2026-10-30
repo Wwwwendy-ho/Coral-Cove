@@ -38,7 +38,7 @@
       document.body.appendChild(b);
     }
     var label = 'Ask ' + askName();
-    if(b.dataset.label !== label){ b.dataset.label = label; b.innerHTML = '<span class="ask-btn-q" aria-hidden="true">?</span><span>' + esc(label) + '</span>'; }
+    if(b.dataset.label !== label){ b.dataset.label = label; b.innerHTML = '<span class="ask-btn-q" aria-hidden="true">' + ccIcon('ask') + '</span><span>' + esc(label) + '</span>'; }
   }
   function askResHTML(){
     if(Ask.busy) return '<p class="ask-wait">' + esc(askName()) + ' is thinking…</p>';
@@ -62,7 +62,7 @@
     w.querySelector('.ask-sheet').innerHTML =
       '<div class="ask-head">' + (name === 'Lumi' ? lumiSVG('ask-face lumi') : mascotTurtleSVG('ask-face')) +
         '<div class="ask-title"><h2 id="askTitle">Ask ' + esc(name) + '</h2><p>Ask what a word or sentence means, or what its parts are.</p></div>' +
-        '<button type="button" class="icon-btn ask-x" data-ask="close" aria-label="Close">✕</button></div>' +
+        '<button type="button" class="icon-btn ask-x" data-ask="close" aria-label="Close">'+ccIcon('close')+'</button></div>' +
       (chips.length ? '<div class="ask-chips">' + chips.map(function(c, i){ return '<button type="button" class="ask-chip" data-ask-chip="' + i + '">' + esc(c) + '</button>'; }).join('') + '</div>' : '') +
       '<form class="ask-form" data-ask-form><input id="askIn" type="text" maxlength="200" autocomplete="off" placeholder="Type a word or a question" aria-label="Your question"><button class="btn btn-primary" type="submit"' + (Ask.busy ? ' disabled' : '') + '>Ask</button></form>' +
       '<div class="ask-res" aria-live="polite">' + askResHTML() + '</div>' +

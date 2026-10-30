@@ -2844,6 +2844,28 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     // `opts.rate` lets a caller ask for a slower-than-default reading speed (e.g. Equation Feed reading
     // a whole equation aloud) without touching the speed everything else speaks at; `opts.variant`
     // names a clip made for that pace ('slow' for Listen & Pick's turtle, 'eq' for equations).
+    // A line with no clip of its own may be made of sentences that each have one ("Shelly says:", "Let's dive
+    // into Soccer Practice!"): those play one after another in the natural voice, and only a sentence with no
+    // clip at all is read by the device's voice.
+    function sentences(str){
+      return String(str).replace(/[\u{1F000}-\u{1FFFF}\u2600-\u27BF\uFE0F]/gu, '').replace(/([.!?:])\s+/g, '$1\n').split('\n')
+        .map(function(x){ return x.trim(); }).filter(function(x){ return /[\p{L}\p{N}]/u.test(x); });
+    }
+    function speakParts(str, rate, variant, token, onEnd){
+      var parts = sentences(str);
+      if(parts.length < 2){ if(onEnd) speakSynthCb(str, onEnd); else speakSynth(str, rate); return; }
+      Promise.all(parts.map(function(pt){ return resolveClip(pt, variant).catch(function(){ return null; }); })).then(function(clips){
+        if(token !== speakToken){ if(onEnd) onEnd(); return; }
+        if(!clips.some(Boolean)){ if(onEnd) speakSynthCb(str, onEnd); else speakSynth(str, rate); return; }   // nothing to stitch: one smooth device reading
+        var i = 0;
+        (function next(){
+          if(token !== speakToken || i >= parts.length){ if(onEnd) onEnd(); return; }
+          var pt = parts[i], c = clips[i]; i++;
+          if(c) playUrl(c.url, clipRate(c, rate, variant), next).catch(function(){ speakSynthCb(pt, next); });
+          else speakSynthCb(pt, next);
+        })();
+      });
+    }
     function speak(text, opts){
       if(!Sound.isEnabled() || !text || deckSpeechMuted()) return;
       var str = String(text);
@@ -2855,7 +2877,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
           playUrl(clip.url, clipRate(clip, rate, variant)).catch(function(){ if(token === speakToken) speakSynth(str, rate); });
           return;
         }
-        speakSynth(str, rate);
+        speakParts(str, rate, variant, token);
       });
     }
     // Equation Feed needs to know exactly when a spoken line actually finishes (real clip or
@@ -2922,7 +2944,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
           playUrl(clip.url, 1, onEnd).catch(function(){ speakSynthCb(str, onEnd); });
           return;
         }
-        speakSynthCb(str, onEnd);
+        speakParts(str, null, variant, token, onEnd);
       }).catch(function(){ speakSynthCb(str, onEnd); });
     }
     return { speak: speak, speakThen: speakThen, stop: stop, playUrl: playUrl, isSupported: function(){ return supported; },
@@ -3716,6 +3738,12 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
   function gentleMiss(lead, answer){ return gentleMissBase(lead, answer) + (reefGame() ? reefTip(answer) : ''); }
   function gentleMissBase(lead, answer){ return lead + ' It\'s <b class="its-answer">' + esc(answer) + '</b>' + (/[.!?。]\s*$/.test(String(answer||'')) ? '' : '.'); } // no doubled full stop when the answer is already a sentence
   function todayISO(d){ d = d || new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+  // Coral Cove's button icons: rounded line drawings with a soft fill in the button's own colour, so each one reads
+  // the same in day and night. ccIcon('sound') -> an <svg> to put inside a button (the button keeps its aria-label).
+  var CC_ICONS = {"close": "<path d=\"M6.5 6.5l11 11M17.5 6.5l-11 11\"/>", "check": "<path class=\"f\" d=\"M12 2.5a9.5 9.5 0 1 0 0 19a9.5 9.5 0 0 0 0-19z\"/><path d=\"M12 2.5a9.5 9.5 0 1 0 0 19a9.5 9.5 0 0 0 0-19z\"/><path d=\"M7.5 12.3l3 3L16.8 9\"/>", "sound": "<path class=\"f\" d=\"M4 9.5h3.5L12 5v14l-4.5-4.5H4z\"/><path d=\"M4 9.5h3.5L12 5v14l-4.5-4.5H4z\"/><path d=\"M15.5 9a4 4 0 0 1 0 6M18.2 6.4a7.6 7.6 0 0 1 0 11.2\"/>", "sound-off": "<path class=\"f\" d=\"M4 9.5h3.5L12 5v14l-4.5-4.5H4z\"/><path d=\"M4 9.5h3.5L12 5v14l-4.5-4.5H4z\"/><path d=\"M16 9.5l5 5M21 9.5l-5 5\"/>", "profiles": "<circle class=\"f\" cx=\"9\" cy=\"8\" r=\"3.3\"/><circle cx=\"9\" cy=\"8\" r=\"3.3\"/><path d=\"M3 19.5c.7-3.3 3-5.2 6-5.2s5.3 1.9 6 5.2\"/><path d=\"M15.2 4.9a3.3 3.3 0 0 1 0 6.3M17.4 14.6c1.8.8 3.1 2.5 3.6 4.9\"/>", "flag": "<path d=\"M5 21.5V3.5\"/><path class=\"f\" d=\"M5 4h14l-2.8 4.5L19 13H5z\"/><path d=\"M5 4h14l-2.8 4.5L19 13H5z\"/><path class=\"d\" d=\"M8.5 4h3.5v4.5H8.5zM12 8.5h3.5V13H12z\"/>", "download": "<path d=\"M12 4v10.5M7.5 10l4.5 4.5 4.5-4.5\"/><path d=\"M4.5 15.5v3A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5v-3\"/>", "trash": "<path d=\"M4 7h16M9.5 7V4.5h5V7\"/><path class=\"f\" d=\"M6 7l1 12.5A1.5 1.5 0 0 0 8.5 21h7a1.5 1.5 0 0 0 1.5-1.5L18 7\"/><path d=\"M6 7l1 12.5A1.5 1.5 0 0 0 8.5 21h7a1.5 1.5 0 0 0 1.5-1.5L18 7\"/><path d=\"M10 11v6M14 11v6\"/>", "backspace": "<path class=\"f\" d=\"M9 5h10.5A1.5 1.5 0 0 1 21 6.5v11a1.5 1.5 0 0 1-1.5 1.5H9l-6-7z\"/><path d=\"M9 5h10.5A1.5 1.5 0 0 1 21 6.5v11a1.5 1.5 0 0 1-1.5 1.5H9l-6-7z\"/><path d=\"M11.5 9.5l5 5M16.5 9.5l-5 5\"/>", "edit": "<path class=\"f\" d=\"M15.5 4.5l4 4L9 19l-5 1 1-5z\"/><path d=\"M15.5 4.5l4 4L9 19l-5 1 1-5z\"/><path d=\"M13.5 6.5l4 4\"/>", "settings": "<path class=\"f\" d=\"M12 2.8l1.6 2.3 2.7-.6.9 2.6 2.6.9-.6 2.7L21.2 12l-2.3 1.6.6 2.7-2.6.9-.9 2.6-2.7-.6L12 21.2l-1.6-2.3-2.7.6-.9-2.6-2.6-.9.6-2.7L2.8 12l2.3-1.6-.6-2.7 2.6-.9.9-2.6 2.7.6z\"/><path d=\"M12 2.8l1.6 2.3 2.7-.6.9 2.6 2.6.9-.6 2.7L21.2 12l-2.3 1.6.6 2.7-2.6.9-.9 2.6-2.7-.6L12 21.2l-1.6-2.3-2.7.6-.9-2.6-2.6-.9.6-2.7L2.8 12l2.3-1.6-.6-2.7 2.6-.9.9-2.6 2.7.6z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "library": "<path class=\"f\" d=\"M4 4h4v16H4zM9 4h4v16H9z\"/><path d=\"M4 4h4v16H4zM9 4h4v16H9z\"/><path class=\"f\" d=\"M14.2 5.3l3.8-1 4 15.4-3.8 1z\"/><path d=\"M14.2 5.3l3.8-1 4 15.4-3.8 1z\"/><path d=\"M4 8h4M9 8h4M4 16h4M9 16h4\"/>", "progress": "<path d=\"M3.5 20.5h17\"/><path class=\"f\" d=\"M5.5 13h3.2v7H5.5zM10.4 9h3.2v11h-3.2zM15.3 5h3.2v15h-3.2z\"/><path d=\"M5.5 13h3.2v7H5.5zM10.4 9h3.2v11h-3.2zM15.3 5h3.2v15h-3.2z\"/>", "lock": "<rect class=\"f\" x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8.5 11V7.5a3.5 3.5 0 0 1 7 0V11M12 15v2\"/>", "unlock": "<rect class=\"f\" x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8.5 11V7.5a3.5 3.5 0 0 1 6.8-1.2M12 15v2\"/>", "games": "<path class=\"f\" d=\"M7 8h10a4.5 4.5 0 0 1 4.4 5.4l-.7 3.4a2.3 2.3 0 0 1-4 1L15 16H9l-1.7 1.8a2.3 2.3 0 0 1-4-1l-.7-3.4A4.5 4.5 0 0 1 7 8z\"/><path d=\"M7 8h10a4.5 4.5 0 0 1 4.4 5.4l-.7 3.4a2.3 2.3 0 0 1-4 1L15 16H9l-1.7 1.8a2.3 2.3 0 0 1-4-1l-.7-3.4A4.5 4.5 0 0 1 7 8z\"/><path d=\"M7.6 10.8v3.4M5.9 12.5h3.4\"/><circle class=\"d\" cx=\"15.8\" cy=\"11.3\" r=\"1.05\"/><circle class=\"d\" cx=\"17.8\" cy=\"13.5\" r=\"1.05\"/>", "music": "<path d=\"M9 17.5V5.5l10-2v12\"/><circle class=\"f\" cx=\"6.8\" cy=\"17.5\" r=\"2.4\"/><circle cx=\"6.8\" cy=\"17.5\" r=\"2.4\"/><circle class=\"f\" cx=\"16.8\" cy=\"15.5\" r=\"2.4\"/><circle cx=\"16.8\" cy=\"15.5\" r=\"2.4\"/>", "map": "<path class=\"f\" d=\"M3.5 6.5l5.5-2 6 2 5.5-2v13l-5.5 2-6-2-5.5 2z\"/><path d=\"M3.5 6.5l5.5-2 6 2 5.5-2v13l-5.5 2-6-2-5.5 2z\"/><path d=\"M9 4.5v13M15 6.5v13\"/><path d=\"M16.4 10l2.6 2.6M19 10l-2.6 2.6\" stroke-width=\"2.2\"/>", "sun": "<circle class=\"f\" cx=\"12\" cy=\"12\" r=\"4.3\"/><circle cx=\"12\" cy=\"12\" r=\"4.3\"/><path d=\"M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6\"/>", "moon": "<path class=\"f\" d=\"M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z\"/><path d=\"M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z\"/><path d=\"M17 4.5v3M15.5 6h3\"/>", "story": "<path class=\"f\" d=\"M3.5 5.5c3-1 6-1 8.5 1v13c-2.5-2-5.5-2-8.5-1zM20.5 5.5c-3-1-6-1-8.5 1v13c2.5-2 5.5-2 8.5-1z\"/><path d=\"M3.5 5.5c3-1 6-1 8.5 1v13c-2.5-2-5.5-2-8.5-1zM20.5 5.5c-3-1-6-1-8.5 1v13c2.5-2 5.5-2 8.5-1z\"/>", "dice": "<rect class=\"f\" x=\"4\" y=\"4\" width=\"16\" height=\"16\" rx=\"3.6\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"16\" rx=\"3.6\"/><circle class=\"d\" cx=\"8.6\" cy=\"8.6\" r=\"1.3\"/><circle class=\"d\" cx=\"12\" cy=\"12\" r=\"1.3\"/><circle class=\"d\" cx=\"15.4\" cy=\"15.4\" r=\"1.3\"/>", "flame": "<path class=\"f\" d=\"M12 2.8c1.1 3.6 5.2 5.6 5.2 10.4a5.2 5.2 0 0 1-10.4 0c0-2.3 1.2-3.8 2.5-4.8.2 1.7.9 2.7 1.9 3.2-.3-3.4.2-6.4.8-8.8z\"/><path d=\"M12 2.8c1.1 3.6 5.2 5.6 5.2 10.4a5.2 5.2 0 0 1-10.4 0c0-2.3 1.2-3.8 2.5-4.8.2 1.7.9 2.7 1.9 3.2-.3-3.4.2-6.4.8-8.8z\"/>", "star": "<path class=\"f\" d=\"M12 3.2l2.7 5.5 6 .9-4.4 4.3 1.1 6L12 17.1l-5.4 2.8 1.1-6-4.4-4.3 6-.9z\"/><path d=\"M12 3.2l2.7 5.5 6 .9-4.4 4.3 1.1 6L12 17.1l-5.4 2.8 1.1-6-4.4-4.3 6-.9z\"/>", "ask": "<path class=\"f\" d=\"M12 3a8.5 8.5 0 0 0-7.4 12.7L3.5 20.5l4.8-1.1A8.5 8.5 0 1 0 12 3z\"/><path d=\"M12 3a8.5 8.5 0 0 0-7.4 12.7L3.5 20.5l4.8-1.1A8.5 8.5 0 1 0 12 3z\"/><path d=\"M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4\"/><circle class=\"d\" cx=\"12\" cy=\"16.4\" r=\"1.05\"/>", "music-off": "<path d=\"M9 17.5V5.5l10-2v12\"/><circle class=\"f\" cx=\"6.8\" cy=\"17.5\" r=\"2.4\"/><circle cx=\"6.8\" cy=\"17.5\" r=\"2.4\"/><circle class=\"f\" cx=\"16.8\" cy=\"15.5\" r=\"2.4\"/><circle cx=\"16.8\" cy=\"15.5\" r=\"2.4\"/><path d=\"M3.5 3.5l17 17\"/>", "back": "<path d=\"M14.5 5.5L8 12l6.5 6.5\"/>", "tutor": "<path class=\"f\" d=\"M4 5.5h16a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5h-8l-4.5 3.5v-3.5H4A1.5 1.5 0 0 1 2.5 16V7A1.5 1.5 0 0 1 4 5.5z\"/><path d=\"M4 5.5h16a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5h-8l-4.5 3.5v-3.5H4A1.5 1.5 0 0 1 2.5 16V7A1.5 1.5 0 0 1 4 5.5z\"/><circle class=\"d\" cx=\"8\" cy=\"11.5\" r=\"1.2\"/><circle class=\"d\" cx=\"12\" cy=\"11.5\" r=\"1.2\"/><circle class=\"d\" cx=\"16\" cy=\"11.5\" r=\"1.2\"/>", "worksheet": "<path class=\"f\" d=\"M6 3h9l4 4v13.5A1.5 1.5 0 0 1 17.5 22h-11.5A1.5 1.5 0 0 1 4.5 20.5v-16A1.5 1.5 0 0 1 6 3z\"/><path d=\"M6 3h9l4 4v13.5A1.5 1.5 0 0 1 17.5 22h-11.5A1.5 1.5 0 0 1 4.5 20.5v-16A1.5 1.5 0 0 1 6 3z\"/><path d=\"M15 3v4h4M8 11h8M8 14.5h8M8 18h5\"/>", "maths": "<rect class=\"f\" x=\"3.5\" y=\"3.5\" width=\"17\" height=\"17\" rx=\"3.5\"/><rect x=\"3.5\" y=\"3.5\" width=\"17\" height=\"17\" rx=\"3.5\"/><path d=\"M12 3.5v17M3.5 12h17M7.8 6.3v3.4M6.1 8h3.4M14.5 8h3.4M6.3 14.6l3 3M9.3 14.6l-3 3M14.5 15h3.4M14.5 17h3.4\"/>", "checkwork": "<path class=\"f\" d=\"M6 3h12a1.5 1.5 0 0 1 1.5 1.5v16A1.5 1.5 0 0 1 18 22H6a1.5 1.5 0 0 1-1.5-1.5v-16A1.5 1.5 0 0 1 6 3z\"/><path d=\"M6 3h12a1.5 1.5 0 0 1 1.5 1.5v16A1.5 1.5 0 0 1 18 22H6a1.5 1.5 0 0 1-1.5-1.5v-16A1.5 1.5 0 0 1 6 3z\"/><path d=\"M8 12.3l2.8 2.8L16.5 9.4\"/>", "cards": "<path class=\"f\" d=\"M8.5 3.5h10A1.5 1.5 0 0 1 20 5v12a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 7 17V5a1.5 1.5 0 0 1 1.5-1.5z\"/><path d=\"M8.5 3.5h10A1.5 1.5 0 0 1 20 5v12a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 7 17V5a1.5 1.5 0 0 1 1.5-1.5z\"/><path d=\"M4.5 7v12A1.5 1.5 0 0 0 6 20.5h9.5\"/>", "mic": "<rect class=\"f\" x=\"9\" y=\"3\" width=\"6\" height=\"11.5\" rx=\"3\"/><rect x=\"9\" y=\"3\" width=\"6\" height=\"11.5\" rx=\"3\"/><path d=\"M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7\"/>"};
+  function ccIcon(n, cls){ return '<svg class="cc-ic' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + (CC_ICONS[n] || '') + '</svg>'; }
+  window.ccIcon = ccIcon;   // the Library uses them too
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
   function shuffle(arr){ var a = arr.slice(); for(var i=a.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
 
@@ -3884,7 +3912,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     wrap.className = 'cc-dialog-backdrop';
     wrap.innerHTML = '' +
       '<div class="cc-dialog cove-privacy" role="dialog" aria-modal="true" aria-labelledby="covePvTitle">' +
-        '<header><h3 id="covePvTitle">🔒 Privacy and data</h3><button type="button" class="icon-btn" data-pv-close aria-label="Close privacy and data">✕</button></header>' +
+        '<header><h3 id="covePvTitle">🔒 Privacy and data</h3><button type="button" class="icon-btn" data-pv-close aria-label="Close privacy and data">'+ccIcon('close')+'</button></header>' +
         '<div class="cove-pv-body" tabindex="0" aria-label="Privacy and data details">' +
           '<h4>What Coral Cove keeps</h4><ul>' +
             '<li>Profile names (a first name is all it needs) and a profile photo if you add one.</li>' +
@@ -3946,7 +3974,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
   // failure would otherwise look like a button silently doing nothing (deck editor, deck grid, ...).
   function errorBannerHTML(){
     if(!S.storeError) return '';
-    return '<div class="banner-error"><span>⚠️ '+esc(S.storeError)+'</span><button type="button" data-act="dismiss-store-error" aria-label="Dismiss">✕</button></div>';
+    return '<div class="banner-error"><span>⚠️ '+esc(S.storeError)+'</span><button type="button" data-act="dismiss-store-error" aria-label="Dismiss">'+ccIcon('close')+'</button></div>';
   }
   function wireErrorBanner(){
     var b = app.querySelector('[data-act="dismiss-store-error"]');
@@ -4028,12 +4056,12 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
   }
 
   function ctrlRowHTML(){
-    var soundIcon = Sound.isEnabled() ? '🔊' : '🔇';
+    var soundIcon = ccIcon(Sound.isEnabled() ? 'sound' : 'sound-off');
     return '' +
       '<div class="ctrl-row">' +
         '<button type="button" class="icon-btn" data-act="toggle-sound" aria-label="Turn sound '+(Sound.isEnabled()?'off':'on')+'" title="Sound">'+soundIcon+'</button>' +
-        '<button type="button" class="icon-btn" data-act="switch-profile" aria-label="Switch profile" title="Switch profile">👥</button>' +
-        '<button type="button" class="icon-btn" data-act="end-session" aria-label="End session" title="End session">🏁</button>' +
+        '<button type="button" class="icon-btn" data-act="switch-profile" aria-label="Switch profile" title="Switch profile">'+ccIcon('profiles')+'</button>' +
+        '<button type="button" class="icon-btn" data-act="end-session" aria-label="End session" title="End session">'+ccIcon('flag')+'</button>' +
       '</div>';
   }
   function wireCtrlRow(){
@@ -4235,8 +4263,8 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
         '<h2>🌊 Who\'s diving in?</h2>' +
         '<p>Pick a profile to get started.</p>' +
         '<div class="profile-grid">'+tiles+'</div>' +
-        '<button type="button" class="btn btn-ghost" data-act="manage-profiles" style="margin-top:14px;">🗂️ Manage Profiles</button>' +
-        '<div class="cove-foot"><button type="button" class="cove-linkbtn" data-act="cove-privacy">🔒 Privacy and data</button></div>' +
+        '<button type="button" class="btn btn-ghost" data-act="manage-profiles" style="margin-top:14px;">'+ccIcon('profiles')+' Manage Profiles</button>' +
+        '<div class="cove-foot"><button type="button" class="cove-linkbtn" data-act="cove-privacy">'+ccIcon('lock')+' Privacy and data</button></div>' +
       '</div>';
     app.querySelectorAll('[data-profile]').forEach(function(b){
       b.addEventListener('click', function(){
@@ -4269,8 +4297,8 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
           '<span class="profile-name">'+esc(p.name)+'</span>' +
           '<span class="profile-mode-badge">'+(p.mode==='adult'?'🔧 Adult':'🧒 Child')+'</span>' +
           '<div class="cove-tile-acts">' +
-            '<button type="button" class="icon-btn" data-cove-export="'+p.id+'" aria-label="Download '+esc(p.name)+'\'s data" title="Download data">⬇️</button>' +
-            '<button type="button" class="icon-btn" data-del="'+p.id+'" aria-label="Delete '+esc(p.name)+'\'s profile and data" title="Delete profile and data">🗑️</button>' +
+            '<button type="button" class="icon-btn" data-cove-export="'+p.id+'" aria-label="Download '+esc(p.name)+'\'s data" title="Download data">'+ccIcon('download')+'</button>' +
+            '<button type="button" class="icon-btn" data-del="'+p.id+'" aria-label="Delete '+esc(p.name)+'\'s profile and data" title="Delete profile and data">'+ccIcon('trash')+'</button>' +
           '</div>' +
         '</div>';
     }).join('');
@@ -4285,7 +4313,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
           '<button type="button" class="profile-tile profile-tile-add" data-act="new-profile"><span class="profile-add-icon">➕</span><span class="profile-name">Add Profile</span></button>' +
         '</div>' +
         '<p class="algo-note" style="text-align:center;margin-top:14px;">⬇️ downloads a profile\'s decks and progress as a file. 🗑️ deletes the profile and all of its data for good.</p>' +
-        '<div class="cove-foot"><button type="button" class="cove-linkbtn" data-act="cove-privacy">🔒 Privacy and data</button></div>' +
+        '<div class="cove-foot"><button type="button" class="cove-linkbtn" data-act="cove-privacy">'+ccIcon('lock')+' Privacy and data</button></div>' +
       '</div>';
     wireErrorBanner();
     app.querySelector('[data-act="exit-manage-profiles"]').addEventListener('click', function(){ S.managingProfiles = false; render(); });
@@ -4816,14 +4844,14 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
         '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
           (managing ? '' :
           '<div class="stats-row">' +
-            '<div class="pill streak"><span class="icon">🔥</span><span class="tabular">'+currentStreak()+'</span></div>' +
-            '<div class="pill stars"><span class="icon">⭐</span><span class="tabular">'+S.stats.stars+'</span></div>' +
+            '<div class="pill streak"><span class="icon">'+ccIcon('flame')+'</span><span class="tabular">'+currentStreak()+'</span></div>' +
+            '<div class="pill stars"><span class="icon">'+ccIcon('star')+'</span><span class="tabular">'+S.stats.stars+'</span></div>' +
           '</div>') +
-          ((managing || editMode) ? '<button type="button" class="icon-btn" data-act="open-settings" title="Settings" aria-label="Study settings">⚙️</button>' : '') +
-          '<button type="button" class="icon-btn" data-act="open-library" title="Library" aria-label="Open the Library">📚</button>' +
-          '<button type="button" class="icon-btn" data-act="open-stats" title="Progress" aria-label="View progress">📊</button>' +
-          '<button type="button" class="icon-btn" data-act="toggle-edit-mode" title="'+(editMode?'Exit Edit Mode':'Edit Mode')+'" aria-label="'+(editMode?'Exit Edit Mode':'Enter Edit Mode')+'">'+(editMode?'🔓':'✏️')+'</button>' +
-          (managing ? '<button type="button" class="btn btn-ghost done-btn" data-act="exit-manager">✅ Done</button>' : ctrlRowHTML()) +
+          ((managing || editMode) ? '<button type="button" class="icon-btn" data-act="open-settings" title="Settings" aria-label="Study settings">'+ccIcon('settings')+'</button>' : '') +
+          '<button type="button" class="icon-btn" data-act="open-library" title="Library" aria-label="Open the Library">'+ccIcon('library')+'</button>' +
+          '<button type="button" class="icon-btn" data-act="open-stats" title="Progress" aria-label="View progress">'+ccIcon('progress')+'</button>' +
+          '<button type="button" class="icon-btn" data-act="toggle-edit-mode" title="'+(editMode?'Exit Edit Mode':'Edit Mode')+'" aria-label="'+(editMode?'Exit Edit Mode':'Enter Edit Mode')+'">'+ccIcon(editMode?'unlock':'edit')+'</button>' +
+          (managing ? '<button type="button" class="btn btn-ghost done-btn" data-act="exit-manager">'+ccIcon('check')+' Done</button>' : ctrlRowHTML()) +
         '</div>' +
       '</div>' +
       coveWaterHTML('home') +
@@ -5116,7 +5144,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
 
     app.innerHTML = '' +
       '<div class="feed-topbar">' +
-        '<button type="button" class="icon-btn" data-act="exit-feed" aria-label="Close Word Feed" title="Close">✕</button>' +
+        '<button type="button" class="icon-btn" data-act="exit-feed" aria-label="Close Word Feed" title="Close">'+ccIcon('close')+'</button>' +
         '<div class="feed-deck-label">'+deck.emoji+' '+esc(deck.name)+'</div>' +
         '<button type="button" class="icon-btn" data-act="feed-sounds" aria-label="Feed sounds" title="Sounds">'+(S.feedSoundId?'🎧':'🔈')+'</button>' +
       '</div>' +
@@ -5612,7 +5640,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
 
     app.innerHTML = '' +
       '<div class="feed-topbar">' +
-        '<button type="button" class="icon-btn" data-act="exit-story" aria-label="Close Story Mode" title="Close">✕</button>' +
+        '<button type="button" class="icon-btn" data-act="exit-story" aria-label="Close Story Mode" title="Close">'+ccIcon('close')+'</button>' +
         '<div class="feed-deck-label">'+deck.emoji+' '+esc(deck.name)+'</div>' +
         '<span class="feed-topbar-spacer" aria-hidden="true"></span>' +
       '</div>' +
@@ -5724,7 +5752,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
 
     app.innerHTML = '' +
       '<div class="feed-topbar">' +
-        '<button type="button" class="icon-btn" data-act="exit-equation" aria-label="Close Equation Feed" title="Close">✕</button>' +
+        '<button type="button" class="icon-btn" data-act="exit-equation" aria-label="Close Equation Feed" title="Close">'+ccIcon('close')+'</button>' +
         '<div class="feed-deck-label">'+deck.emoji+' '+esc(deck.name)+'</div>' +
         '<span class="feed-topbar-spacer" aria-hidden="true"></span>' +
       '</div>' +
@@ -5854,7 +5882,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
 
     app.innerHTML = '' +
       '<div class="feed-topbar">' +
-        '<button type="button" class="icon-btn" data-act="exit-lang" aria-label="Close Language Feed" title="Close">✕</button>' +
+        '<button type="button" class="icon-btn" data-act="exit-lang" aria-label="Close Language Feed" title="Close">'+ccIcon('close')+'</button>' +
         '<div class="feed-deck-label">'+deck.emoji+' '+esc(deck.name)+'</div>' +
         '<span class="feed-topbar-spacer" aria-hidden="true"></span>' +
       '</div>' +
@@ -5951,7 +5979,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
 
     app.innerHTML = '' +
       '<div class="feed-topbar">' +
-        '<button type="button" class="icon-btn" data-act="exit-readalong" aria-label="Close Read-Along" title="Close">✕</button>' +
+        '<button type="button" class="icon-btn" data-act="exit-readalong" aria-label="Close Read-Along" title="Close">'+ccIcon('close')+'</button>' +
         '<div class="feed-deck-label">'+deck.emoji+' '+esc(deck.name)+'</div>' +
         '<span class="feed-topbar-spacer" aria-hidden="true"></span>' +
       '</div>' +
@@ -6052,7 +6080,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
 
     app.innerHTML = '' +
       '<div class="feed-topbar">' +
-        '<button type="button" class="icon-btn" data-act="exit-flash" aria-label="Close Flash Feed" title="Close">✕</button>' +
+        '<button type="button" class="icon-btn" data-act="exit-flash" aria-label="Close Flash Feed" title="Close">'+ccIcon('close')+'</button>' +
         '<div class="feed-deck-label">'+deck.emoji+' '+esc(deck.name)+'</div>' +
         '<button type="button" class="icon-btn" data-act="flash-order" aria-label="'+(S.flashOrdered?'Switch to shuffled order':'Switch to deck order')+'" title="'+(S.flashOrdered?'In order — tap to shuffle':'Shuffled — tap for deck order')+'">'+(S.flashOrdered?'🔢':'🔀')+'</button>' +
       '</div>' +
@@ -6160,7 +6188,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     }
     app.innerHTML = '' +
       '<div class="feed-topbar">' +
-        '<button type="button" class="icon-btn" data-act="exit-mini" aria-label="Close Mini Story" title="Close">✕</button>' +
+        '<button type="button" class="icon-btn" data-act="exit-mini" aria-label="Close Mini Story" title="Close">'+ccIcon('close')+'</button>' +
         '<div class="feed-deck-label">'+deck.emoji+' '+esc(deck.name)+'</div>' +
         '<span class="feed-topbar-spacer" aria-hidden="true"></span>' +
       '</div>' +
@@ -6829,7 +6857,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     var LABEL = { known: '✅ Known', learning: '🌱 Learning', 'new': '✨ New' };
     var rows = shown.slice(0, 500).map(function(e){
       return '<li class="wb-row wb-'+e.status+'">' +
-        '<button type="button" class="wb-say" data-wb-say="'+esc(e.word)+'" aria-label="Hear '+esc(e.word)+'">🔊</button>' +
+        '<button type="button" class="wb-say" data-wb-say="'+esc(e.word)+'" aria-label="Hear '+esc(e.word)+'">'+ccIcon('sound')+'</button>' +
         '<div class="wb-text"><b lang="'+(wb.lang === 'ko' ? 'ko' : 'en')+'">'+esc(e.word)+'</b>'+(e.meaning ? '<span>'+esc(e.meaning)+'</span>' : '')+'</div>' +
         '<span class="wb-chip">'+LABEL[e.status]+'</span>' +
         (adult ? (e.marked ? '<button type="button" class="wb-mark" data-wb-unmark="'+esc(e.key)+'">Undo</button>'
@@ -8432,7 +8460,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
           '<div class="card-text" data-echo-text>'+esc(card.front)+'</div>' +
           (card.back ? '<div class="echo-meaning">'+esc(card.back)+'</div>' : '') +
           '<div class="listen-big echo-listen">' +
-            '<button type="button" class="listen-play" data-act="echo-listen" aria-label="Hear it">🔊</button>' +
+            '<button type="button" class="listen-play" data-act="echo-listen" aria-label="Hear it">'+ccIcon('sound')+'</button>' +
             '<button type="button" class="btn btn-ghost listen-slow" data-act="echo-slow">🐢 Slower</button>' +
           '</div>' +
           '<div class="echo-mic">'+mic+'</div>' +
@@ -8736,7 +8764,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
     }).join('<span class="hz-plus" aria-hidden="true">+</span>');
     var reveal = done ? '' +
       '<div class="hz-reveal ns-reveal">' +
-        '<div class="hz-word" lang="ko">'+esc(card.front)+'<button type="button" class="btn btn-ghost hz-hear" data-act="ns-hear" aria-label="Hear it again">🔊</button></div>' +
+        '<div class="hz-word" lang="ko">'+esc(card.front)+'<button type="button" class="btn btn-ghost hz-hear" data-act="ns-hear" aria-label="Hear it again">'+ccIcon('sound')+'</button></div>' +
         '<div class="ns-sys ns-'+esc(card.nsSys || 'native')+'">'+sys.icon+' '+sys.label+(sys.eg ? '<small lang="ko">'+esc(sys.eg)+'</small>' : '')+'</div>' +
         (parts ? '<div class="ns-parts">'+parts+'</div>' : '') +
         (card.nsRule ? '<p class="hz-note ns-rule" lang="ko">'+esc(card.nsRule)+'</p>' : '') +
@@ -8952,7 +8980,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
             '<div class="read-label">👂 Listen &amp; pick</div>' +
             (card.photoUrl && lsDone ?'<img class="card-photo" src="'+esc(card.photoUrl)+'" alt="">':'') +
             '<div class="listen-big">' +
-              '<button type="button" class="listen-play" data-act="listen-play" aria-label="Play the word again">🔊</button>' +
+              '<button type="button" class="listen-play" data-act="listen-play" aria-label="Play the word again">'+ccIcon('sound')+'</button>' +
               '<button type="button" class="btn btn-ghost listen-slow" data-act="listen-slow">🐢 Slower</button>' +
             '</div>' +
             (lsDone ? '<div class="listen-reveal">'+esc(card.front)+(ls.side === 'front' && card.back ? '<small>'+esc(card.back)+'</small>' : (ls.side === 'back' ? '<small>'+esc(card.back)+'</small>' : ''))+'</div>' : '') +
@@ -10119,8 +10147,8 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
           '<div class="cr-back">'+backLine+'</div>' +
         '</div>' +
         '<div class="cr-actions">' +
-          '<button class="icon-btn" data-act="edit-card" data-card="'+c.id+'" aria-label="Edit card">✏️</button>' +
-          '<button class="icon-btn" data-act="del-card" data-card="'+c.id+'" aria-label="Delete card">🗑️</button>' +
+          '<button class="icon-btn" data-act="edit-card" data-card="'+c.id+'" aria-label="Edit card">'+ccIcon('edit')+'</button>' +
+          '<button class="icon-btn" data-act="del-card" data-card="'+c.id+'" aria-label="Delete card">'+ccIcon('trash')+'</button>' +
         '</div>' +
       '</div>';
     }).join('') : '<div class="empty-state">No cards yet — add the first one below! 🐚</div>';
@@ -11533,7 +11561,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     var g = S.adultGate, q = g.q, t = pinPadTitles(kind);
     var what = t[1].replace(/^(Ask a grown-up to )?[Ee]nter the PIN (to )?/, '').replace(/\.$/, '');
     var keys = [1,2,3,4,5,6,7,8,9].map(function(k){ return '<button type="button" class="pin-key" data-gate-digit="'+k+'">'+k+'</button>'; }).join('') +
-      '<button type="button" class="pin-key" data-gate="back" aria-label="Delete">⌫</button><button type="button" class="pin-key" data-gate-digit="0">0</button>' +
+      '<button type="button" class="pin-key" data-gate="back" aria-label="Delete">'+ccIcon('backspace')+'</button><button type="button" class="pin-key" data-gate-digit="0">0</button>' +
       '<button type="button" class="pin-key reef-gate-check" data-gate="check">OK</button>';
     app.innerHTML = '' +
       '<div class="lock-screen reef-gate">' +
@@ -11580,7 +11608,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     if(!S.reefGate) S.reefGate = reefNewProblem();
     var g = S.reefGate;
     var keys = [1,2,3,4,5,6,7,8,9].map(function(k){ return '<button type="button" class="pin-key" data-gate-digit="'+k+'">'+k+'</button>'; }).join('') +
-      '<button type="button" class="pin-key" data-gate="back" aria-label="Delete">⌫</button><button type="button" class="pin-key" data-gate-digit="0">0</button>' +
+      '<button type="button" class="pin-key" data-gate="back" aria-label="Delete">'+ccIcon('backspace')+'</button><button type="button" class="pin-key" data-gate-digit="0">0</button>' +
       '<button type="button" class="pin-key reef-gate-check" data-gate="check">Check</button>';
     app.innerHTML = '' +
       '<div class="lock-screen reef-gate">' +
@@ -12109,7 +12137,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     zones.forEach(function(z){ z.items.forEach(function(it){ if(!next && it.state === 'ready') next = it; }); });
     var guide = 'Shelly'; try { guide = coveSwimName() || 'Shelly'; } catch(e){}
     var nextZone = next ? zones.find(function(z){ return z.items.indexOf(next) !== -1; }) : null;
-    var line = next ? 'Let\'s dive into ' + next.d.name + (nextZone && names[nextZone.id] ? ' in the ' + names[nextZone.id] : '') + '!' : 'Everything is done! Pick any spot to play again.';
+    var line = next ? 'Let\'s dive into ' + next.d.name + '!' + (nextZone && names[nextZone.id] ? ' It\'s in the ' + names[nextZone.id].replace(/^The /, '') + '.' : '') : 'Everything is done! Pick any spot to play again.';   // two sentences, each with its own voice clip
     var L = reefLayout(zones), tally = reefTally();
     function pos(s, i){ return 'style="--x:'+reefN(s.x / L.W * 100)+'%;--y:'+reefN(s.y / L.H * 100)+'%;--i:'+i+'"'; }
     var html = L.stops.map(function(s, i){
@@ -12117,7 +12145,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
         var z = s.sign, name = names[z.id] || (z.label + (night ? ' Deck' : ' Cove'));
         return '<div class="rw-post '+(s.x > L.W / 2 ? 'r' : 'l')+'" '+pos(s, i)+' role="heading" aria-level="3">' +
           '<span class="rw-post-board"><b>'+esc(name)+'</b><small>'+esc(z.label)+'</small></span>' +
-          '<button type="button" class="rw-say" data-reef-say="'+esc(name + '. ' + z.items.map(function(it){ return it.d.name; }).join(', ') + '.')+'" aria-label="Read this area aloud">🔊</button>' +
+          '<button type="button" class="rw-say" data-reef-say="'+esc(name + '. ' + z.items.map(function(it){ return it.d.name; }).join(', ') + '.')+'" aria-label="Read this area aloud">'+ccIcon('sound')+'</button>' +
         '</div>';
       }
       if(s.special === 'treasure') return '' +
@@ -12146,7 +12174,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
         reefDefsSVG() +
         '<div class="rw-head">' +
           '<div class="rw-head-text"><h2>'+(night ? 'Where should we explore?' : 'Where should we swim?')+'</h2><p>'+esc(guide)+' says: '+esc(line)+'</p>'+reefTodayHTML(zones)+'</div>' +
-          '<button type="button" class="reef-say" data-reef-say="'+esc(guide+' says: '+line)+'" aria-label="Read this aloud">🔊</button>' +
+          '<button type="button" class="reef-say" data-reef-say="'+esc(guide+' says: '+line)+'" aria-label="Read this aloud">'+ccIcon('sound')+'</button>' +
         '</div>' +
         '<div class="rw-scene" style="aspect-ratio:'+L.W+' / '+reefN(L.H)+'">' +
           reefPaintSVG(L, night) +
@@ -18222,13 +18250,13 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     var wrap = document.createElement('div');
     wrap.className = 'r3 ' + (night ? 'night' : 'day');
     wrap.innerHTML = '<canvas class="r3-canvas" aria-hidden="true"></canvas><div class="r3-labels"></div>' +
-      '<button type="button" class="r3-mapbtn" data-r3-map>🗺️ Treasure map</button>' +
+      '<button type="button" class="r3-mapbtn" data-r3-map>'+ccIcon('map')+'<span>Treasure map</span></button>' +
       reefMusicButtonHTML('r3-musicbtn') +
-      '<button type="button" class="r3-themebtn" data-r3-theme aria-label="'+(night ? 'Switch to the sunlit reef (light mode)' : 'Switch to the midnight wreck (dark mode)')+'">'+(night ? '☀️' : '🌙')+'</button>' +
+      '<button type="button" class="r3-themebtn" data-r3-theme aria-label="'+(night ? 'Switch to the sunlit reef (light mode)' : 'Switch to the midnight wreck (dark mode)')+'">'+ccIcon(night ? 'sun' : 'moon')+'</button>' +
       '<div class="r3-bubble" aria-live="polite" hidden></div>' +
       '<div class="r3-hud" aria-live="polite"><span class="r3-hud-shells" title="Shells">🐚 <b>0</b></span><span class="r3-hud-pearls" title="Golden pearls">🫧 <b>0</b></span></div>' +
       '<button type="button" class="r3-modebtn" data-r3-mode hidden></button>' +
-      '<button type="button" class="r3-gamesbtn" data-r3-games aria-label="Minigame corner">🎮</button>';
+      '<button type="button" class="r3-gamesbtn" data-r3-games aria-label="Minigame corner">'+ccIcon('games')+'</button>';
     var canvas = wrap.querySelector('canvas');
     var big = innerWidth * innerHeight > 700000;   // tablets and larger: skip edge smoothing, the costliest per-pixel step
     var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: !big, alpha: true, powerPreference: 'low-power' });
@@ -19549,7 +19577,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     if(mb){
       mb.hidden = !planOn();
       var tg = reef3dStoryTarget(view), day = S.planDay, total = day && day.blocks ? day.blocks.length : 0, done = total ? day.blocks.filter(function(x){ return x.done; }).length : 0;
-      mb.textContent = reef3dStoryOn() ? '📖 Story · ' + (total ? done + ' of ' + total : 'today') : '🎲 Free play';
+      mb.innerHTML = reef3dStoryOn() ? ccIcon('story') + '<span>Story · ' + (total ? done + ' of ' + total : 'today') + '</span>' : ccIcon('dice') + '<span>Free play</span>';
       mb.setAttribute('aria-label', reef3dStoryOn() ? 'Story mode: following today\'s plan. Tap for free play.' : 'Free play. Tap for story mode.');
       mb.dataset.alldone = tg < 0 && reef3dStoryOn() ? '1' : '';
     }
@@ -20152,7 +20180,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     var me = sp[view.at];
     var ov = document.createElement('div');
     ov.className = 'r3-map'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', 'Treasure map');
-    ov.innerHTML = '<div class="r3-map-card"><div class="r3-map-head"><b>Treasure map</b><button type="button" class="r3-map-close" data-r3-close aria-label="Close the map">✕</button></div>' +
+    ov.innerHTML = '<div class="r3-map-card"><div class="r3-map-head"><b>Treasure map</b><button type="button" class="r3-map-close" data-r3-close aria-label="Close the map">'+ccIcon('close')+'</button></div>' +
       '<p class="r3-map-hint">Tap a place to swim there.</p>' +
       '<div class="r3-map-board" style="height:'+H+'px"><svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true">' +
         '<path d="'+d+'" fill="none" stroke="#b5452f" stroke-width="3" stroke-dasharray="2 9" stroke-linecap="round"/>' + dots + '</svg>' + spots +
@@ -20908,11 +20936,11 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   addEventListener('pageshow', function(e){ if(e.persisted && !document.hidden) reefMusicBack(); });
   function reefMusicButtonHTML(cls){
     var on = reefMusicOn();
-    return '<button type="button" class="' + cls + (on ? '' : ' off') + '" data-music-toggle aria-pressed="' + on + '" aria-label="' + (on ? 'Turn the music off' : 'Turn the music on') + '">🎵</button>';
+    return '<button type="button" class="' + cls + (on ? '' : ' off') + '" data-music-toggle aria-pressed="' + on + '" aria-label="' + (on ? 'Turn the music off' : 'Turn the music on') + '">' + ccIcon(on ? 'music' : 'music-off') + '</button>';
   }
   function reefMusicButtons(){
     document.querySelectorAll('[data-music-toggle]').forEach(function(b){
-      var on = reefMusicOn(); b.classList.toggle('off', !on); b.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-label', on ? 'Turn the music off' : 'Turn the music on');
+      var on = reefMusicOn(); b.classList.toggle('off', !on); b.innerHTML = ccIcon(on ? 'music' : 'music-off'); b.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-label', on ? 'Turn the music off' : 'Turn the music on');
     });
   }
   document.addEventListener('click', function(e){
@@ -21038,7 +21066,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       document.body.appendChild(b);
     }
     var label = 'Ask ' + askName();
-    if(b.dataset.label !== label){ b.dataset.label = label; b.innerHTML = '<span class="ask-btn-q" aria-hidden="true">?</span><span>' + esc(label) + '</span>'; }
+    if(b.dataset.label !== label){ b.dataset.label = label; b.innerHTML = '<span class="ask-btn-q" aria-hidden="true">' + ccIcon('ask') + '</span><span>' + esc(label) + '</span>'; }
   }
   function askResHTML(){
     if(Ask.busy) return '<p class="ask-wait">' + esc(askName()) + ' is thinking…</p>';
@@ -21062,7 +21090,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     w.querySelector('.ask-sheet').innerHTML =
       '<div class="ask-head">' + (name === 'Lumi' ? lumiSVG('ask-face lumi') : mascotTurtleSVG('ask-face')) +
         '<div class="ask-title"><h2 id="askTitle">Ask ' + esc(name) + '</h2><p>Ask what a word or sentence means, or what its parts are.</p></div>' +
-        '<button type="button" class="icon-btn ask-x" data-ask="close" aria-label="Close">✕</button></div>' +
+        '<button type="button" class="icon-btn ask-x" data-ask="close" aria-label="Close">'+ccIcon('close')+'</button></div>' +
       (chips.length ? '<div class="ask-chips">' + chips.map(function(c, i){ return '<button type="button" class="ask-chip" data-ask-chip="' + i + '">' + esc(c) + '</button>'; }).join('') + '</div>' : '') +
       '<form class="ask-form" data-ask-form><input id="askIn" type="text" maxlength="200" autocomplete="off" placeholder="Type a word or a question" aria-label="Your question"><button class="btn btn-primary" type="submit"' + (Ask.busy ? ' disabled' : '') + '>Ask</button></form>' +
       '<div class="ask-res" aria-live="polite">' + askResHTML() + '</div>' +
@@ -21559,6 +21587,24 @@ body.reef-calm .rw-light, body.reef-calm .rw-obj, body.reef-calm .rw-post, body.
 @keyframes ccsPulse{ 0%,100%{ transform:translateX(-50%) scale(1); } 50%{ transform:translateX(-50%) scale(1.06); } }
 .cc-splash.ccs-out .ccs-tap, .cc-splash.ccs-out .ccs-title{ opacity:0; transition:opacity .25s ease; }
 @media (prefers-reduced-motion: reduce){ .cc-splash *{ animation:none !important; } }
+/* Coral Cove's drawn button icons (see ccIcon): the outline in the button's text colour with a soft fill of the same colour */
+.cc-ic{ width:1.35em; height:1.35em; flex:none; display:inline-block; vertical-align:-.28em; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; overflow:visible; }
+.cc-ic .f{ fill:var(--cc-ic-fill, #ff9b7d); stroke:none; opacity:.5; } .cc-ic .d{ fill:currentColor; stroke:none; }   /* teal lines, a soft coral fill */
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .cc-ic{ --cc-ic-fill:#ff8f73; } }
+:root[data-theme="dark"] .cc-ic{ --cc-ic-fill:#ff8f73; }
+.pill.streak .cc-ic, .pill.stars .cc-ic, .r3-themebtn .cc-ic, .r3-gamesbtn .cc-ic, [data-music-toggle] .cc-ic, .r3-mapbtn .cc-ic{ --cc-ic-fill:currentColor; }
+.icon-btn{ color:var(--deep, #0e5a78); } .icon-btn .cc-ic{ width:1.45rem; height:1.45rem; }
+.pill.streak .cc-ic{ color:#ff7a3d; } .pill.stars .cc-ic{ color:#e8a317; } .pill .icon .cc-ic{ width:1.15em; height:1.15em; }
+.pill.streak .cc-ic .f, .pill.stars .cc-ic .f{ opacity:.55; }
+.r3-mapbtn{ display:inline-flex; align-items:center; gap:7px; } .r3-mapbtn .cc-ic{ color:#b5532f; } .r3-mapbtn .cc-ic .f{ opacity:.3; }
+.r3-themebtn .cc-ic, .r3-gamesbtn .cc-ic, [data-music-toggle] .cc-ic{ width:1.6rem; height:1.6rem; }
+.r3-themebtn .cc-ic{ color:#e39b14; } .r3.night .r3-themebtn .cc-ic, .r3-themebtn .cc-ic.moon{ color:#f2d27a; }
+.r3-gamesbtn .cc-ic{ color:#7a4fc2; } [data-music-toggle] .cc-ic{ color:#2a8f8a; } [data-music-toggle].off .cc-ic{ color:#8a9a9a; }
+.r3-modebtn{ display:inline-flex; align-items:center; gap:6px; } .r3-modebtn .cc-ic{ width:1.15em; height:1.15em; }
+.ask-btn-q .cc-ic{ width:20px; height:20px; } .ask-btn-q .cc-ic .f{ opacity:.35; }
+.reef-say .cc-ic, .rw-say .cc-ic, .wb-say .cc-ic{ width:1.3rem; height:1.3rem; color:#0e6f8a; }
+.listen-play .cc-ic{ width:2.6rem; height:2.6rem; } .hz-hear .cc-ic{ width:1.3em; height:1.3em; }
+.pin-key .cc-ic{ width:1.5rem; height:1.5rem; }
 .r3-labels .r3-label, .r3-labels .r3-sign{ position:absolute !important; width:1px !important; height:1px !important; padding:0 !important; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
 .r3-label{ position:absolute; left:0; top:0; pointer-events:auto; display:flex; align-items:center; gap:7px; padding:5px 12px 5px 6px; border:none; border-radius:999px; cursor:pointer;
   background:#fbf6ea; color:#3f2c1b; font:inherit; box-shadow:0 3px 0 rgba(74,59,44,.22), 0 8px 16px rgba(30,60,60,.18); white-space:nowrap; will-change:transform; -webkit-tap-highlight-color:transparent; }
@@ -21764,7 +21810,7 @@ body.r3-full .cv3-hero .topbar > :last-child{ margin-left:auto; }
   body.r3-full .cv3-hero .topbar > :last-child{ gap:6px !important; }
   body.r3-full .rw-head{ top:calc(max(10px, env(safe-area-inset-top, 0px)) + 50px); max-width:calc(100% - 28px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)); }
   .r3-mapbtn, body.r3-full .r3-mapbtn{ width:52px; height:52px; padding:0; border-radius:50%; font-size:0; }
-  .r3-mapbtn::before{ content:"🗺️"; font-size:1.45rem; }
+  .r3-mapbtn > span{ display:none; } .r3-mapbtn .cc-ic{ width:1.7rem; height:1.7rem; margin:0; }
   .ask-btn{ padding:8px !important; }
   .ask-btn > span:not(.ask-btn-q){ display:none; }
   body .r3-themebtn, body .r3-musicbtn{ width:48px; height:48px; font-size:1.3rem; }
