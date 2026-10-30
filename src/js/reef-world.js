@@ -291,7 +291,6 @@
     var next = null;
     zones.forEach(function(z){ z.items.forEach(function(it){ if(!next && it.state === 'ready') next = it; }); });
     var guide = 'Shelly'; try { guide = coveSwimName() || 'Shelly'; } catch(e){}
-    var nextZone = next ? zones.find(function(z){ return z.items.indexOf(next) !== -1; }) : null;
     var line = next ? 'Let\'s dive into ' + next.d.name + '!' : 'All done!';   // short, and said by Shelly herself (reefHeadOnce)
     var L = reefLayout(zones), tally = reefTally();
     function pos(s, i){ return 'style="--x:'+reefN(s.x / L.W * 100)+'%;--y:'+reefN(s.y / L.H * 100)+'%;--i:'+i+'"'; }

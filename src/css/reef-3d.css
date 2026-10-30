@@ -288,9 +288,6 @@ body.r3-full .cv3-hero .brand-tag{ display:none; }
 /* in the game the title is hidden (the board is the title); the buttons keep to the right */
 body.r3-full .cv3-hero .brand{ display:none; }
 body.r3-full .cv3-hero .topbar > :last-child{ margin-left:auto; }
-.rw-head{ transition:opacity .4s ease, transform .4s ease; }
-.rw-head.rw-fading{ opacity:0; transform:translateY(-12px); pointer-events:none; }
-.rw-head.rw-gone{ display:none !important; }
 /* phones and other handhelds: nothing in the corners may touch, in either orientation */
 @media (max-width:480px), (max-height:500px){
   body.r3-full .cv3-hero .icon-btn{ width:40px; height:40px; min-width:40px; font-size:1.05rem; }
