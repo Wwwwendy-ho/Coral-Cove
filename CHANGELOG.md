@@ -6,6 +6,8 @@
   For a moment the bubbles cover the whole screen, and the next activity opens behind them, so the change
   happens out of sight. It has a soft bubbling sound and matches light and dark mode. With reduced motion, or
   the ocean theme off, the activity just opens.
+- The dive into a deck (and back up to the surface) also swaps its three emoji fish for more bubbles: 40
+  bubbles of mixed sizes now rise through the water behind Shelly.
 
 ## Korean minigames for Wendy, and grown-up minigames (October 30, 2026)
 

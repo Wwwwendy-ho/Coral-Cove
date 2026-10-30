@@ -131,14 +131,13 @@
   var reefBusy = false;
   function reefTxHTML(kind){
     var bubbles = '';
-    for(var i = 0; i < 18; i++){
-      var x = Math.round(Math.random() * 100), s = 10 + Math.round(Math.random() * 34), d = (Math.random() * 0.45).toFixed(2);
+    for(var i = 0; i < 40; i++){   // a flurry of bubbles (these used to share the screen with three fish)
+      var x = Math.round(Math.random() * 100), s = 10 + Math.round(Math.pow(Math.random(), 1.5) * 50), d = (0.05 + Math.random() * 0.5).toFixed(2);
       bubbles += '<span class="tx-bub" style="--x:'+x+'%;--s:'+s+'px;--d:'+d+'s"></span>';
     }
     return '' +
       '<div class="tx-water"><svg class="tx-crest" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0 70 C150 10 300 10 450 60 S750 120 900 50 S1100 0 1200 50 V120 H0 Z"/></svg></div>' +
       '<div class="tx-bubbles">'+bubbles+'</div>' +
-      '<div class="tx-fish f1">🐠</div><div class="tx-fish f2">🐡</div><div class="tx-fish f3">🐟</div>' +
       '<div class="tx-shelly">'+mascotTurtleSVG('tx-shelly-svg')+'</div>' +
       '<canvas class="tx-splash"></canvas>';
   }
