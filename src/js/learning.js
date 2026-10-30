@@ -803,6 +803,11 @@
         player = new Audio();
         player.preload = 'auto';
         try { player.preservesPitch = true; player.webkitPreservesPitch = true; } catch(e){}
+        // iPhones and iPads can pause the background music while a voice clip plays (one audio player at a
+        // time), and decks that read every card aloud, like Phonics Words, then went quiet. The music
+        // picks up again as soon as each clip ends.
+        var resume = function(){ try { if(typeof reefMusicUpdate === 'function') setTimeout(reefMusicUpdate, 60); } catch(e){} };
+        player.addEventListener('ended', resume); player.addEventListener('pause', resume);
       }
       return player;
     }

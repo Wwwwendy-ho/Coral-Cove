@@ -475,16 +475,69 @@
   }
   window.CoralCoveGrownUpQuestion = reefGrownUpProblem;   // the Library's settings use the same kind of question
   /* ---------- Leaving a deck early in Child Mode: a subtraction question instead of the PIN ---------- */
-  // Same level every time: a two-digit number minus a smaller one, with an answer from 3 to 19 (like 20 − 15).
+  /* Leaving a deck early asks a problem. In the endless decks (the swipe feeds) it gets easier the more cards
+     she has read there: a two-digit take-away (20 − 15), then take-away within 10, then adding within 10, then
+     a tiny sum, and after REEF_FREE_EXIT cards she can just leave. */
+  var REEF_ENDLESS = ['feed', 'equationFeed', 'flashFeed', 'langFeed', 'story'], REEF_FREE_EXIT = 30;
+  function reefEndlessSeen(){ return REEF_ENDLESS.indexOf(S.view) >= 0 && S.endless && S.endless.deck === S.currentDeckId ? S.endless.n : 0; }
   function reefNewProblem(){
-    var a = 12 + Math.floor(Math.random() * 19), ans = 3 + Math.floor(Math.random() * Math.min(17, a - 7));
-    return { a: a, b: a - ans, ans: ans, tries: 0 };
+    var n = reefEndlessSeen(), r = function(k){ return Math.floor(Math.random() * k); }, a, b;
+    if(n >= 22){ a = 1 + r(3); return { a: a, b: 1, op: '+', ans: a + 1, tries: 0 }; }   // 2 + 1
+    if(n >= 15){ a = 1 + r(5); b = 1 + r(5); return { a: a, b: b, op: '+', ans: a + b, tries: 0 }; }   // 3 + 4
+    if(n >= 8){ a = 4 + r(6); b = 1 + r(a - 1); return { a: a, b: b, op: '−', ans: a - b, tries: 0 }; }   // 9 − 4
+    a = 12 + r(19); var ans = 3 + r(Math.min(17, a - 7));
+    return { a: a, b: a - ans, op: '−', ans: ans, tries: 0 };
   }
+  // Counts the cards she has seen in an endless deck (a new card on screen), for the exit problem above.
+  afterRender('endless count', function(){
+    if(REEF_ENDLESS.indexOf(S.view) < 0) return;
+    var cur = document.querySelector('.feed-card-current'); if(!cur) return;
+    if(!S.endless || S.endless.deck !== S.currentDeckId) S.endless = { deck: S.currentDeckId, n: 0, last: null };
+    var sig = S.view + '|' + cur.textContent.replace(/\s+/g, ' ').trim();
+    if(sig !== S.endless.last){ S.endless.last = sig; S.endless.n++; }
+  });
+  /* ---------- "Say it with me!": in the reading decks (Phonics Words and the other word feeds, and word cards
+     she flips) a little Shelly swims in every few cards, says "Say it with me!" and reads the word again, then
+     swims away. Child profile only; with Calm motion she fades in and out instead. ---------- */
+  function reefSayWord(){
+    if(!reefKid()) return null;
+    var el = S.view === 'feed' ? document.querySelector('.feed-card-current .feed-word')
+      : S.view === 'study' ? document.querySelector('.stage .flip-card:not(.flipped) .face-front .card-text') : null;
+    var t = el && el.textContent.replace(/\s+/g, ' ').trim();
+    return t && t.length <= 30 && /[a-z]/i.test(t) ? t : null;
+  }
+  afterRender('say it with me', function(){
+    var word = reefSayWord();
+    var old = document.querySelector('.cc-sayit');
+    if(!word){ if(old && !reefSayWord.keep) old.remove(); return; }
+    var sig = S.view + '|' + word, st = S.sayIt || (S.sayIt = { last: null, n: 0, next: 2, at: 0 });
+    if(sig === st.last) return;
+    st.last = sig; st.n++;
+    if(st.n < st.next || Date.now() - st.at < 40000) return;
+    st.n = 0; st.next = 4 + Math.floor(Math.random() * 3); st.at = Date.now();
+    setTimeout(function(){
+      if(reefSayWord() !== word || document.querySelector('.cc-sayit')) return;
+      var d = document.createElement('div');
+      d.className = 'cc-sayit' + (reefCalm() ? ' calm' : ''); d.setAttribute('aria-hidden', 'true');
+      d.innerHTML = '<div class="cc-sayit-shelly">' + mascotTurtleSVG('cc-sayit-svg') + '</div><div class="cc-sayit-say">Say it with me!</div>';
+      document.body.appendChild(d);
+      var gone = function(){ if(!d.parentNode) return; d.classList.add('out'); setTimeout(function(){ d.remove(); }, 900); };
+      setTimeout(function(){
+        try { Speech.speakThen('Say it with me!', function(){ setTimeout(function(){ if(reefSayWord() === word) Speech.speak(word); }, 250); setTimeout(gone, 2600); }); } catch(e){ gone(); }
+      }, 700);
+      setTimeout(gone, 9000);   // never stays on screen
+    }, 1800);   // after the card has been read once
+  });
+
   var REEF_PRAISE = ['You got it right!', 'Great thinking!', 'You worked it out!', 'Nice careful work!', 'That\'s right! Good checking.', 'Awesome effort!', 'You did it! Great focus.', 'Yes! Good work.'];
   function reefPraiseLine(){ return REEF_PRAISE[Math.floor(Math.random() * REEF_PRAISE.length)]; }
   function reefMathGate(){
+    // after enough cards in an endless deck she can just leave
+    if(!S.reefGate && reefEndlessSeen() >= REEF_FREE_EXIT){ S.pinPromptFor = null; S.endless = null; setTimeout(goHome, 0); return; }
     if(!S.reefGate) S.reefGate = reefNewProblem();
     var g = S.reefGate;
+    g.op = g.op || '−';
+    var opWord = g.op === '+' ? 'plus' : 'minus';
     var keys = [1,2,3,4,5,6,7,8,9].map(function(k){ return '<button type="button" class="pin-key" data-gate-digit="'+k+'">'+k+'</button>'; }).join('') +
       '<button type="button" class="pin-key" data-gate="back" aria-label="Delete">'+ccIcon('backspace')+'</button><button type="button" class="pin-key" data-gate-digit="0">0</button>' +
       '<button type="button" class="pin-key reef-gate-check" data-gate="check">Check</button>';
@@ -493,8 +546,8 @@
         '<h2>🧮 Leave This Deck?</h2>' +
         '<p>Solve this problem to go back.</p>' +
         '<div class="pin-wrap">' +
-          '<div class="reef-gate-q"><span>'+g.a+' − '+g.b+' =</span>' +
-            '<input id="reefGateInput" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Your answer to '+g.a+' minus '+g.b+'" value=""></div>' +
+          '<div class="reef-gate-q"><span>'+g.a+' '+g.op+' '+g.b+' =</span>' +
+            '<input id="reefGateInput" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Your answer to '+g.a+' '+opWord+' '+g.b+'" value=""></div>' +
           '<div class="reef-gate-msg" role="status" aria-live="polite">'+(g.msg || '&nbsp;')+'</div>' +
           '<div class="pin-grid">'+keys+'</div>' +
           '<div class="reef-gate-row"><button type="button" class="reef-gate-hint" data-gate="hint">💡 Hint</button>' +
@@ -503,19 +556,20 @@
       '</div>';
     var inp = app.querySelector('#reefGateInput'), msg = app.querySelector('.reef-gate-msg');
     function say(html, cls){ msg.innerHTML = html; msg.className = 'reef-gate-msg' + (cls ? ' ' + cls : ''); }
-    function hint(){ return 'Hint: start at ' + g.b + '. Count up to ' + g.a + '. How many numbers did you count?'; }
+    function hint(){ return g.op === '+' ? 'Hint: start at ' + g.a + '. Count up ' + g.b + ' more.' : 'Hint: start at ' + g.b + '. Count up to ' + g.a + '. How many numbers did you count?'; }
     function check(){
       var v = inp.value.replace(/\D/g, '');
       if(!v){ say('Type your answer first, then tap Check.'); inp.focus(); return; }
       if(+v === g.ans){
         var p = reefPraiseLine();
-        say('🎉 ' + esc(p) + ' ' + g.a + ' − ' + g.b + ' = ' + g.ans + '.', 'ok');
+        say('🎉 ' + esc(p) + ' ' + g.a + ' ' + g.op + ' ' + g.b + ' = ' + g.ans + '.', 'ok');
         try { Sound.correct(); } catch(e){}
         try { Speech.speak(p); } catch(e){}
         reefPopBubbles();
         reefWinSound(false);
         app.querySelectorAll('.reef-gate button, .reef-gate input').forEach(function(b){ b.disabled = true; });
-        setTimeout(function(){ S.reefGate = null; S.pinPromptFor = null; goHome(); }, 1600);
+        clearTimeout(S.reefGateIdle); S.reefGateIdle = null;
+        setTimeout(function(){ S.reefGate = null; S.pinPromptFor = null; S.endless = null; goHome(); }, 1600);
         return;
       }
       g.tries++;
@@ -530,8 +584,14 @@
     app.querySelector('[data-gate="back"]').addEventListener('click', function(){ inp.value = inp.value.slice(0, -1); });
     app.querySelector('[data-gate="check"]').addEventListener('click', check);
     app.querySelector('[data-gate="hint"]').addEventListener('click', function(){ say(esc(hint())); try { Speech.speak(hint()); } catch(e){} });
-    app.querySelector('[data-gate="stay"]').addEventListener('click', function(){ S.reefGate = null; cancelPinPrompt('exit'); });
+    app.querySelector('[data-gate="stay"]').addEventListener('click', function(){ clearTimeout(S.reefGateIdle); S.reefGateIdle = null; S.reefGate = null; cancelPinPrompt('exit'); });
     inp.addEventListener('input', function(){ var d = inp.value.replace(/\D/g, '').slice(0, 2); if(d !== inp.value) inp.value = d; });
+    // Ten seconds without a tap: the problem goes away and she's back in the deck where she was.
+    // (A re-draw of this screen keeps the countdown going; only her taps restart it.)
+    function idle(){ clearTimeout(S.reefGateIdle); S.reefGateIdle = setTimeout(function(){ S.reefGateIdle = null; if(S.pinPromptFor === 'exit' && document.querySelector('.reef-gate')){ S.reefGate = null; cancelPinPrompt('exit'); } }, 10000); }
+    app.querySelector('.reef-gate').addEventListener('pointerdown', idle);
+    inp.addEventListener('keydown', idle);
+    if(!S.reefGateIdle) idle();
     inp.addEventListener('keydown', function(e){
       if(e.key === 'Enter'){ e.preventDefault(); check(); }
       else if(e.key === 'Escape'){ e.preventDefault(); S.reefGate = null; cancelPinPrompt('exit'); }
@@ -719,3 +779,53 @@
     if(unknown && !whole) answer += ' I know the parts that are listed. For the meaning of the main word, ask again when you are online.';
     return { answer: answer.trim(), parts: parts.map(function(p){ return { part: p.part, meaning: p.meaning }; }).slice(0, 8), example: '', offline: true };
   }
+
+  /* ---------- Never stuck (child profile) ----------
+     After ten seconds without a tap, the next thing to do glows and Shelly says it ("Tap the card to flip it!"),
+     again every twelve seconds while nothing happens. A pop-up on the board that is still waiting fifteen seconds
+     after the first nudge closes itself, so she's back on the board. (The exit problem has its own ten-second
+     timer, in reefMathGate.) */
+  var REEF_NUDGES = [
+    // [what to find, what Shelly says]; the first one on screen wins
+    ['.r3-mini-play .r3-tile:not(.up):not(.got)', 'Tap a card to turn it over!'],
+    ['.r3-mini-play .r3-bub.want:not(.pop)', 'Pop the bubbles with the number!'],
+    ['.r3-mini-play [data-odd="1"]', 'Tap the one that is different!'],
+    ['.r3-panel .r3-btn.main', 'Tap the glowing button!'],
+    ['.r3-panel [data-ok], .r3-panel [data-done], .r3-panel [data-close]', 'Tap the glowing button!'],
+    ['.r3-dice-tip', 'Tap to roll the dice!'],
+    ['.grade-row:not([hidden]) button', 'Did you get it right? Tap a button!'],
+    ['.choice-row .choice-btn:not(:disabled)', 'Tap an answer!'],
+    ['.blend-slider-handle', 'Slide the shell to sound it out!'],
+    ['#flipCard:not(.flipped)', 'Tap the card to flip it!'],
+    ['.feed-stage', 'Swipe up for the next one!'],
+    ['.btn-primary', 'Tap the glowing button!']
+  ];
+  var reefNudge = { touch: Date.now(), last: 0, first: 0 };
+  ['pointerdown', 'keydown', 'touchstart'].forEach(function(t){
+    document.addEventListener(t, function(){ reefNudge.touch = Date.now(); reefNudge.first = 0; }, true);
+  });
+  // a new screen or card starts the ten seconds again
+  afterRender('never stuck', function(){ var c = document.querySelector('.feed-card-current, .stage .face-front'), v = S.view + '|' + (S.pinPromptFor || '') + '|' + (c ? c.textContent : ''); if(v !== reefNudge.view){ reefNudge.view = v; reefNudge.touch = Date.now(); reefNudge.first = 0; } });
+  function reefVisible(el){ var r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < innerHeight && getComputedStyle(el).visibility !== 'hidden'; }
+  setInterval(function(){
+    if(!reefKid() || document.hidden || window.__reefTx || reefBusy || document.querySelector('.reef-gate')) return;
+    var now = Date.now(), idle = now - reefNudge.touch;
+    if(idle < 10000 || now - reefNudge.last < 12000) return;
+    // a board pop-up that's still waiting after a nudge: close it
+    var panel = document.querySelector('.r3-panel');
+    if(panel && reefNudge.first && now - reefNudge.first > 15000 && !panel.querySelector('.r3-mini-play')){
+      var leave = panel.querySelector('[data-skip], [data-back], [data-close], [data-done], [data-no], [data-ok]');
+      if(leave){ leave.click(); reefNudge.touch = now; reefNudge.first = 0; return; }
+    }
+    var ask = document.querySelector('.r3-mini-play .r3-mini-ask b');
+    if(ask) document.querySelectorAll('.r3-bub').forEach(function(b){ b.classList.toggle('want', b.dataset.n === ask.textContent.trim()); });
+    for(var i = 0; i < REEF_NUDGES.length; i++){
+      var el = Array.prototype.find.call(document.querySelectorAll(REEF_NUDGES[i][0]), reefVisible);
+      if(!el) continue;
+      reefNudge.last = now; if(!reefNudge.first) reefNudge.first = now;
+      el.classList.remove('cc-nudge'); void el.offsetWidth; el.classList.add('cc-nudge');
+      setTimeout(function(){ el.classList.remove('cc-nudge'); }, 4200);
+      try { Speech.speak(REEF_NUDGES[i][1]); } catch(e){}
+      return;
+    }
+  }, 1000);

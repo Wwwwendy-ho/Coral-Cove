@@ -638,20 +638,19 @@
   // A deck-level mode (deck.equationMode === true, toggled in the deck editor -- mutually exclusive
   // with Word Feed's feedMode and Story Mode's storyMode above), sharing their exact swipe UI and
   // .feed-* markup/CSS. The content and timing are different though: each card is an addition
-  // equation ("3 + 4") with NO answer shown at first. The card settles, the full equation is spoken
-  // aloud right away WITH the answer ("3 plus 4 equals 7", read slower than the app's normal speaking
-  // rate) and the answer itself bounces onto the screen in place of the "?" a flat delay later.
+  // equation ("3 + 4") with NO answer shown at first. The card settles, the question is read aloud
+  // slowly ("3 plus 4 equals"), and the answer bounces onto the screen in place of the "?" and is said.
   // Deliberately fun-only, same as Word Feed/Story Mode: no grading, no SRS fields touched, no
   // stats/history writes.
   var EQUATION_SPEECH_RATE = 0.22;    // much slower than the app-wide default (0.88) -- roughly a
                                        // third of the already-slowed 0.7 rate this used to be, so the
                                        // numbers are easy to catch even for a slow reader following along
-  var EQUATION_REVEAL_DELAY_MS = 5000; // flat delay from settle to the answer bouncing in
-  function equationSpeech(front, back){
+  var EQUATION_REVEAL_DELAY_MS = 2500; // the answer bounces in this long after the card settles (or once the question has been read, if that takes longer)
+  function equationQuestion(front){
     var m = String(front||'').match(/^\s*(-?\d+)\s*\+\s*(-?\d+)\s*$/);
-    if(m) return m[1]+' plus '+m[2]+' equals '+back;
-    return front+' equals '+back; // fallback for any oddly-formatted card
+    return m ? m[1]+' plus '+m[2]+' equals' : front+' equals'; // fallback for any oddly-formatted card
   }
+  function equationSpeech(front, back){ return equationQuestion(front)+' '+back; }
 
   function startEquationFeed(deckId){
     S.currentDeckId = deckId;
@@ -679,34 +678,35 @@
     var prevCard = queue[(idx - 1 + n) % n];
 
     // Settle-once-per-card guard, same spirit as Word Feed/Story Mode's: the equation shows with no
-    // answer the instant it settles, the full equation-plus-answer is spoken right away (slower than
-    // the app's normal speaking rate -- easier to follow along with while doing the math), and the
-    // answer bounces onto the screen on a flat timer -- deliberately NOT synced to when the speech
-    // finishes (that used to be the case; a flat delay is more predictable regardless of how long a
-    // given equation takes to say out loud), same flat-timer approach as Language Feed's translation
-    // reveal below.
+    // answer the instant it settles and its question is read slowly ("3 plus 4 equals"). The answer bounces
+    // in about 2.5 seconds later (or once the question has been read, if that takes longer) and is only
+    // said then, so the voice never gives it away before it's on the screen.
     if(S.equationSettledId !== curCard.id){
       S.equationSettledId = curCard.id;
       S.equationRevealed = false;
       var settledId = curCard.id;
       if(S.equationTickHandle){ clearInterval(S.equationTickHandle); S.equationTickHandle = null; }
-      Speech.speak(equationSpeech(curCard.front, curCard.back), { rate: EQUATION_SPEECH_RATE, variant: 'eq' });
-      // A soft clock-tick underlines the now-longer wait before the answer shows -- without it, 5
-      // seconds of silence after a very slow reading felt like the app had stalled.
+      // Only the question is read now ("3 plus 4 equals"); the answer is said when it appears on the screen.
+      var spoke = false, waited = false;
+      function reveal(){
+        if(!spoke || !waited) return;
+        // The child may have already swiped away -- only reveal if this is still the card on screen.
+        if(S.view !== 'equationFeed' || S.equationSettledId !== settledId || S.equationRevealed) return;
+        if(S.equationTickHandle){ clearInterval(S.equationTickHandle); S.equationTickHandle = null; }
+        S.equationRevealed = true;
+        feedRender(); // waits if a swipe is mid-drag, rather than yanking the card back to center
+        Speech.speak(String(curCard.back));
+      }
+      Speech.speakThen(equationQuestion(curCard.front), function(){ if(!spoke){ spoke = true; setTimeout(reveal, 300); } }, { rate: EQUATION_SPEECH_RATE, variant: 'eq' });
+      setTimeout(function(){ if(!spoke){ spoke = true; } }, 6000);   // in case the voice never reports that it finished
       S.equationTickHandle = setInterval(function(){
         if(S.view !== 'equationFeed' || S.equationSettledId !== settledId){
           clearInterval(S.equationTickHandle); S.equationTickHandle = null; return;
         }
         Sound.tick();
       }, 700);
-      setTimeout(function(){
-        // The child may have already swiped away before this timer fired -- only reveal if this is
-        // still the card actually on screen.
-        if(S.view !== 'equationFeed' || S.equationSettledId !== settledId) return;
-        if(S.equationTickHandle){ clearInterval(S.equationTickHandle); S.equationTickHandle = null; }
-        S.equationRevealed = true;
-        feedRender(); // waits if a swipe is mid-drag, rather than yanking the card back to center
-      }, EQUATION_REVEAL_DELAY_MS);
+      setTimeout(function(){ waited = true; reveal(); }, EQUATION_REVEAL_DELAY_MS);
+      setTimeout(reveal, 6100);
     }
 
     function eqCardHTML(c, pos){
@@ -1090,7 +1090,12 @@
     var st = app.querySelector('.stage'), fs = app.querySelector('.feed-stage');
     var top = function(el){ return el.getBoundingClientRect().top + (window.scrollY || 0); };
     var vh = window.innerHeight;
-    if(st){
+    if(st && window.matchMedia && matchMedia('(orientation: landscape) and (max-height: 500px)').matches){
+      // a phone on its side: the card on the left, its buttons beside it, all on one screen (CSS in reef.css)
+      var h = Math.max(220, vh - top(st) - 8);
+      root.style.setProperty('--stage-h', h + 'px');
+      root.style.setProperty('--card-fill', Math.max(0, h - 20 - 64) + 'px');
+    } else if(st){
       // what sits under the card now (answer buttons, a timer, the flip hint), and never less than the grade
       // buttons that appear after a flip; the buddy's seabed or the Ask Shelly button sits below that
       var under = 0;

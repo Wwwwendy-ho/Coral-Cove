@@ -1,5 +1,31 @@
 # Changelog
 
+## Easier for Alissa: picture match, sideways decks, gentler exits, never stuck (October 30, 2026)
+
+- **Card Match uses pictures**: three pairs of sea friends instead of words. Each card says its friend's name when
+  it turns over.
+- **Decks turn with the phone**: on a phone held sideways, a deck switches to a sideways layout. The header is
+  slim, with the card on the left and its answers, grade buttons or slider on the right. Everything fits on one
+  screen, and it switches back when the phone turns upright.
+- **A big, clear close button** on the endless decks (Phonics Words, the Say It! equations and the other swipe
+  decks): a round coral X.
+- **Leaving an endless deck gets easier the more she reads**: the take-away problem (20 − 15) becomes take-away
+  within 10 after 8 cards, adding within 10 after 15, a tiny sum like 2 + 1 after 22, and after 30 cards she can
+  just leave.
+- **The exit problem goes away by itself**: ten seconds without a tap and she's back in the deck where she was.
+- **Say It! equations**: the answer shows after about 2½ seconds (it was 5), and the voice reads only the question
+  ("3 plus 4 equals") until the answer is on the screen, then says it.
+- **Never stuck**: on Alissa's profile, after ten seconds without a tap the next thing to do glows and Shelly says
+  it ("Tap the card to flip it!", "Tap an answer!", "Slide the shell to sound it out!", "Swipe up for the next
+  one!", "Tap to roll the dice!"), again every twelve seconds. A pop-up on the board that is still waiting after
+  that closes itself.
+- **"Say it with me!"**: in Phonics Words and the word cards she flips, a little Shelly swims in every few cards,
+  says "Say it with me!" and reads the word again.
+- **Music in Phonics Words**: iPhones and iPads can pause the background music while a word is read aloud, and
+  Phonics Words reads every card, so it went quiet. The music now picks up again after each word.
+- 130 new natural-voice clips: the equation questions, Shelly's nudges, "Say it with me!", hints and the sea
+  friends' names.
+
 ## Cards fill the screen (October 30, 2026)
 
 - On a tall screen (an iPad held upright, a phone) the study card now grows into the space that's left instead

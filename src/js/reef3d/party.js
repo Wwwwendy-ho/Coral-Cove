@@ -335,31 +335,24 @@
   }
   function reefShuffle(a){ for(var i = a.length - 1; i > 0; i--){ var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   function reefPlainText(h){ var d = document.createElement('div'); d.innerHTML = String(h || ''); return (d.textContent || '').replace(/\s+/g, ' ').trim(); }
-  // Card Match: three pairs from the deck she just played (front ⇄ back), or sea friends (picture ⇄ name).
+  // Card Match: three pairs of sea friends as pictures (she can't read the words yet). Each card says its
+  // friend's name when it turns over, and again when a pair is found.
   function reefGameMatch(play, finish){
-    function go(pairs){
-      var tiles = reefShuffle([].concat.apply([], pairs.map(function(p, i){ return [{ k: i, t: p[0] }, { k: i, t: p[1] }]; })));
-      play.innerHTML = '<div class="r3-match">' + tiles.map(function(x, i){ return '<button type="button" class="r3-tile" data-i="' + i + '" aria-label="Hidden card"><span>' + esc(x.t) + '</span></button>'; }).join('') + '</div>';
-      var open = [], got = 0, busy = false;
-      play.addEventListener('click', function(e){
-        var b = e.target.closest('.r3-tile'); if(!b || busy || b.classList.contains('up')) return;
-        b.classList.add('up'); b.setAttribute('aria-label', tiles[+b.dataset.i].t); open.push(b); try { Sound.flip(); } catch(err){}
-        if(open.length < 2) return;
-        var a = tiles[+open[0].dataset.i], c = tiles[+open[1].dataset.i];
-        if(a.k === c.k){ open.forEach(function(x){ x.classList.add('got'); }); open = []; got++; try { Sound.correct(); } catch(err){} if(got === pairs.length) setTimeout(function(){ finish(true); }, 600); }
-        else { busy = true; setTimeout(function(){ open.forEach(function(x){ x.classList.remove('up'); x.setAttribute('aria-label', 'Hidden card'); }); open = []; busy = false; }, 1000); }
-      });
-    }
-    var friends = function(){ return reefShuffle(REEF_FRIENDS.slice()).slice(0, 3).map(function(f){ return [f.e, f.name]; }); };
-    var id = R3.lastDeckId;
-    if(!id || !S.store || !S.store.getCardsOnce) return go(friends());
-    play.innerHTML = '<p>Shuffling…</p>';
-    S.store.getCardsOnce(id).then(function(cards){
-      var ok = reefShuffle((cards || []).map(function(c){ return [reefPlainText(c.front), reefPlainText(c.back)]; })
-        .filter(function(p){ return p[0] && p[1] && p[0] !== p[1] && p[0].length <= 18 && p[1].length <= 18; }));
-      var seen = {}, pairs = ok.filter(function(p){ if(seen[p[0]] || seen[p[1]]) return false; seen[p[0]] = seen[p[1]] = 1; return true; }).slice(0, 3);
-      go(pairs.length === 3 ? pairs : friends());
-    }, function(){ go(friends()); });
+    var pairs = reefShuffle(REEF_FRIENDS.slice()).slice(0, 3);
+    var tiles = reefShuffle([].concat.apply([], pairs.map(function(f, i){ return [{ k: i, f: f }, { k: i, f: f }]; })));
+    play.innerHTML = '<p class="r3-mini-ask">Find the two that match!</p><div class="r3-match">' + tiles.map(function(x, i){
+      return '<button type="button" class="r3-tile pic" data-i="' + i + '" aria-label="Hidden card"><span>' + x.f.e + '</span></button>'; }).join('') + '</div>';
+    var open = [], got = 0, busy = false;
+    play.addEventListener('click', function(e){
+      var b = e.target.closest('.r3-tile'); if(!b || busy || b.classList.contains('up')) return;
+      var t = tiles[+b.dataset.i];
+      b.classList.add('up'); b.setAttribute('aria-label', t.f.name); open.push(b); try { Sound.flip(); } catch(err){}
+      try { Speech.speak(t.f.name); } catch(err){}
+      if(open.length < 2) return;
+      var a = tiles[+open[0].dataset.i], c = tiles[+open[1].dataset.i];
+      if(a.k === c.k){ open.forEach(function(x){ x.classList.add('got'); }); open = []; got++; try { Sound.correct(); } catch(err){} if(got === pairs.length) setTimeout(function(){ finish(true); }, 900); }
+      else { busy = true; setTimeout(function(){ open.forEach(function(x){ x.classList.remove('up'); x.setAttribute('aria-label', 'Hidden card'); }); open = []; busy = false; }, 1200); }
+    });
   }
   // Bubble Numbers: pop every bubble that shows the number.
   function reefGameCount(play, finish){
