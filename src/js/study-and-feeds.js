@@ -1079,3 +1079,28 @@
       function(){ S.flashFlipped = !S.flashFlipped; Sound.flip(); if(S.view === 'flashFeed') render(); });
   }
 
+
+  /* ---------- The card fills the screen ----------
+     The card (or the swipe feed) grows into the height that's left on the screen, so a tall iPad doesn't show a
+     small card with empty water below it. The room kept under the card is whatever sits there (answer buttons, a
+     timer), and at least enough for the grade buttons a flip brings, so the card keeps its size when it flips. */
+  function studyFill(){
+    var root = document.documentElement, app = document.getElementById('app');
+    if(!app) return;
+    var st = app.querySelector('.stage'), fs = app.querySelector('.feed-stage');
+    var top = function(el){ return el.getBoundingClientRect().top + (window.scrollY || 0); };
+    var vh = window.innerHeight;
+    if(st){
+      // what sits under the card now (answer buttons, a timer, the flip hint), and never less than the grade
+      // buttons that appear after a flip; the buddy's seabed or the Ask Shelly button sits below that
+      var under = 0;
+      Array.prototype.forEach.call(st.children, function(c){
+        if(!/\b(bubbles|flip-scene|reef-buddy)\b/.test(c.className)) under += c.offsetHeight + 12;
+      });
+      var bottom = st.classList.contains('has-buddy') ? 110 : 76;
+      root.style.setProperty('--card-fill', Math.max(0, Math.min(760, vh - top(st) - 28 - Math.max(150, under) - bottom - 40 - 64)) + 'px');   // 64: the card's own padding
+    }
+    if(fs) root.style.setProperty('--feed-fill', Math.max(0, vh - top(fs) - 140) + 'px');
+  }
+  afterRender('card fills the screen', studyFill);
+  window.addEventListener('resize', function(){ clearTimeout(studyFill.t); studyFill.t = setTimeout(studyFill, 120); });

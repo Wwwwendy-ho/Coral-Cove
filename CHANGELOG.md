@@ -1,5 +1,13 @@
 # Changelog
 
+## Cards fill the screen (October 30, 2026)
+
+- On a tall screen (an iPad held upright, a phone) the study card now grows into the space that's left instead
+  of sitting in the top half with empty water below. It still leaves room for the buttons under it (answer
+  choices, the timer, "Not quite / Got it right!"), and keeps the same size when it flips. The swipe decks (Say
+  It!, Phonics Words and the other feeds) grow the same way.
+- On a tall iPad the words, the equations and Sound Blend's letters and slider are bigger to match.
+
 ## A flurry of bubbles instead of fish (October 30, 2026)
 
 - When a Daily Plan activity starts, a thick flurry of bubbles rises up the screen instead of the shoal of fish.

@@ -63,8 +63,10 @@
       { max: 5, trackPx: 270, fontRem: 1.45 },
       { max: 6, trackPx: 310, fontRem: 1.25 }
     ];
-    for(var i = 0; i < steps.length; i++){ if(n <= steps[i].max) return steps[i]; }
-    return { trackPx: 340, fontRem: 1.1 };
+    var st = steps.find(function(x){ return n <= x.max; }) || { trackPx: 340, fontRem: 1.1 };
+    // a tall iPad has a much bigger card (see studyFill), so the letters and the slider grow with it
+    var k = window.innerWidth >= 700 && window.innerHeight >= 900 ? 1.6 : 1;
+    return { trackPx: Math.round(st.trackPx * k), fontRem: +(st.fontRem * k).toFixed(2) };
   }
 
   function blendSliderHTML(bd, bsz){

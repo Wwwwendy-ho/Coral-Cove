@@ -279,3 +279,13 @@ body.reef-calm .reef-buddy-turtle, body.reef-calm .reef-buddy-say{ animation:non
   .rw-say{ width:34px; height:34px; }
 }
 body.reef-calm .rw-light, body.reef-calm .rw-obj, body.reef-calm .rw-post, body.reef-calm .rw-obj .rw-art, body.reef-calm .rw-pearl, body.reef-calm .rw-guide, body.reef-calm .rw-glow{ animation:none !important; }
+
+/* ---------- The card fills the screen (studyFill sets --card-fill and --feed-fill from the space left) ---------- */
+.stage .flip-card, .stage .flip-card > .face{ min-height:max(280px, var(--card-fill, 0px)); }
+.stage .flip-scene > .read-face{ min-height:max(180px, calc(var(--card-fill, 0px) - 50px)); }
+.feed-stage{ height:max(min(64vh, 540px), var(--feed-fill, 0px)); }
+@media (min-width:700px) and (min-height:900px){
+  .flip-scene{ width:min(100%, 640px); }
+  .face-front .card-text{ font-size:2.4rem; } .face-back .card-text{ font-size:2rem; }
+  .feed-stage .feed-word{ font-size:clamp(3rem, 9vw, 5rem); }
+}
