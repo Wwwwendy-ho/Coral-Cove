@@ -1,5 +1,11 @@
 # Changelog
 
+## Shelly just says it (October 30, 2026)
+
+- Shelly's line on the board is short now ("Let's dive into Soccer Practice!", or "All done!"), and the text box
+  with it is gone. On the 3D board Shelly waves and says it. Without the 3D board, a little Shelly swims in, says
+  it and swims away. The words are still in the page for screen readers.
+
 ## Easier for Alissa: picture match, sideways decks, gentler exits, never stuck (October 30, 2026)
 
 - **Card Match uses pictures**: three pairs of sea friends instead of words. Each card says its friend's name when

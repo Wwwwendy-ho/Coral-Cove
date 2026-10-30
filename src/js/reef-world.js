@@ -292,7 +292,7 @@
     zones.forEach(function(z){ z.items.forEach(function(it){ if(!next && it.state === 'ready') next = it; }); });
     var guide = 'Shelly'; try { guide = coveSwimName() || 'Shelly'; } catch(e){}
     var nextZone = next ? zones.find(function(z){ return z.items.indexOf(next) !== -1; }) : null;
-    var line = next ? 'Let\'s dive into ' + next.d.name + '!' + (nextZone && names[nextZone.id] ? ' It\'s in the ' + names[nextZone.id].replace(/^The /, '') + '.' : '') : 'Everything is done! Pick any spot to play again.';   // two sentences, each with its own voice clip
+    var line = next ? 'Let\'s dive into ' + next.d.name + '!' : 'All done!';   // short, and said by Shelly herself (reefHeadOnce)
     var L = reefLayout(zones), tally = reefTally();
     function pos(s, i){ return 'style="--x:'+reefN(s.x / L.W * 100)+'%;--y:'+reefN(s.y / L.H * 100)+'%;--i:'+i+'"'; }
     var html = L.stops.map(function(s, i){
@@ -329,7 +329,7 @@
         reefDefsSVG() +
         '<div class="rw-head">' +
           '<div class="rw-head-text"><h2>'+(night ? 'Where should we explore?' : 'Where should we swim?')+'</h2><p>'+esc(guide)+' says: '+esc(line)+'</p>'+reefTodayHTML(zones)+'</div>' +
-          '<button type="button" class="reef-say" data-reef-say="'+esc(guide+' says: '+line)+'" aria-label="Read this aloud">'+ccIcon('sound')+'</button>' +
+          '<button type="button" class="reef-say" data-reef-say="'+esc(line)+'" aria-label="Read this aloud">'+ccIcon('sound')+'</button>' +
         '</div>' +
         '<div class="rw-scene" style="aspect-ratio:'+L.W+' / '+reefN(L.H)+'">' +
           reefPaintSVG(L, night) +
@@ -378,14 +378,30 @@
     }, { passive: true });
   }
 
-  // Shelly's line ("Let's dive into…") is shown and read aloud once when it's new, then fades away; when the board
-  // is drawn again with the same line it stays hidden, so it never sits over the board.
+  // Shelly's line ("Let's dive into Soccer Practice!") has no text box: Shelly says it once when it's new. On the
+  // 3D board she waves as she says it; without the board a little Shelly swims in, says it and swims away.
+  // (The words stay in the page, hidden, for screen readers.)
   var reefHeadSaid = {};
   function reefHeadOnce(el){
     var head = el.querySelector('.rw-head'), say = head && head.querySelector('[data-reef-say]'); if(!head || !say) return;
     var key = (S.profile && S.profile.id) + '|' + say.dataset.reefSay;
-    if(reefHeadSaid[key]){ head.classList.add('rw-gone'); return; }
+    if(reefHeadSaid[key]) return;
     reefHeadSaid[key] = true;
-    setTimeout(function(){ if(document.body.contains(head)) try { Speech.speak(say.dataset.reefSay); } catch(e){} }, 900);
-    setTimeout(function(){ if(!document.body.contains(head)) return; head.classList.add('rw-fading'); setTimeout(function(){ head.classList.add('rw-gone'); }, 450); }, 7000);
+    setTimeout(function(){
+      if(!document.body.contains(head) || document.querySelector('.cc-shelly-dive')) return;
+      // on the 3D board Shelly is already there: she waves and says it
+      var v = typeof R3 !== 'undefined' && R3.view;
+      if(v && v.wrap && document.body.contains(v.wrap)){
+        try { if(!v.moving) reef3dEmote(v, 'hello'); } catch(e){}
+        try { Speech.speak(say.dataset.reefSay); } catch(e){}
+        return;
+      }
+      var d = document.createElement('div');
+      d.className = 'cc-shelly-dive' + (reefCalm() ? ' calm' : ''); d.setAttribute('aria-hidden', 'true');
+      d.innerHTML = '<div class="cc-sayit-shelly">' + mascotTurtleSVG('cc-sayit-svg') + '</div>';
+      document.body.appendChild(d);
+      var gone = function(){ if(!d.parentNode || d.classList.contains('out')) return; d.classList.add('out'); setTimeout(function(){ d.remove(); }, 900); };
+      setTimeout(function(){ try { Speech.speakThen(say.dataset.reefSay, function(){ setTimeout(gone, 500); }); } catch(e){ gone(); } }, 700);
+      setTimeout(gone, 8000);   // never stays on screen
+    }, 900);
   }
