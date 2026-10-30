@@ -445,7 +445,7 @@
     return '<div class="stats-section"><h3>🌊 Ocean look</h3>' +
       '<button type="button" class="algo-opt'+(on?' active':'')+'" data-act="toggle-ocean">' +
         '<span class="algo-name">'+(on ? '✅ On' : '⬜ Off')+'</span>' +
-        '<span class="algo-blurb">Coral Calendar\'s colours and animations for this profile: a moving sea behind the page, marine life swimming by, water rings when you tap, bubbles on right answers, and a fish flurry as each Daily Plan activity starts. Light mode is the sunlit zone, dark mode the midnight zone.</span>' +
+        '<span class="algo-blurb">Coral Calendar\'s colours and animations for this profile: a moving sea behind the page, marine life swimming by, water rings when you tap, bubbles on right answers, and a flurry of bubbles as each Daily Plan activity starts. Light mode is the sunlit zone, dark mode the midnight zone.</span>' +
       '</button></div>';
   }
   function wirePlanToggle(){

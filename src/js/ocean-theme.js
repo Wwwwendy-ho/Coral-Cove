@@ -1,50 +1,37 @@
   /* ---------- OCEAN THEME module (from Coral Calendar) ----------
      Ocean.apply(on) switches the look. It's on for every profile and screen (a profile can opt out in Settings). Adds the moving
      sea behind the page (caustics, light rays, bubbles), marine life crossing every 9–23 s, a water ring where
-     you press, rising bubbles on right answers, and a fish flurry when a Daily Plan activity starts. */
+     you press, rising bubbles on right answers, and a flurry of bubbles when a Daily Plan activity starts. */
   var Ocean = (function(){
     function reduced(){ try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){ return false; } }
     let flurryOn=false;
-    function flurry(){if(flurryOn||matchMedia("(prefers-reduced-motion: reduce)").matches)return;flurryOn=true;
+    /* A flurry of bubbles rising from the bottom, thick enough in the middle to hide the screen for a moment while
+       the activity changes underneath. Each bubble is one pre-drawn sprite, scaled, so it stays smooth on the iPhone XS. */
+    function flurry(){if(flurryOn||matchMedia("(prefers-reduced-motion: reduce)").matches)return false;flurryOn=true;
       const cv=document.createElement("canvas");cv.className="flurry";document.body.appendChild(cv);const ctx=cv.getContext("2d"),dpr=Math.min(2,devicePixelRatio||1);
       const W=innerWidth,H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;ctx.scale(dpr,dpr);
-      const cs=getComputedStyle(document.documentElement),tok=(n,f)=>cs.getPropertyValue(n).trim()||f,dark=themeNow()==="dark";
-      const deep=tok("--deep","#0A6C8A"),kelp=tok("--kelp","#3D7A3A"),calm=tok("--calm-ink","#245B97"),coral=tok("--coral","#D9735A"),bub=tok("--bubble","rgba(255,255,255,.7)"),foam=tok("--foam","#DCF1F3");
-      const area=W*H,fish=[],flecks=[];
-      if(!dark){const cols=[deep,kelp,calm,deep,kelp,coral],N=Math.round(Math.min(220,area/2600));
-        for(let i=0;i<N;i++){const sz=8+Math.random()*16;fish.push({k:"reef",y:Math.random()*H,x0:-60-Math.random()*W*1.1,sp:(W+260)/(1.6+Math.random()*.9),sz,c:cols[i%cols.length],ph:Math.random()*6.28,amp:6+Math.random()*16,a:.55+Math.random()*.45});}
-        for(let i=0;i<Math.round(Math.min(180,area/3200));i++)flecks.push({x:Math.random()*W,y0:H+20+Math.random()*H*.9,sp:(H+200)/(1.4+Math.random()*1.2),r:2+Math.random()*7,ph:Math.random()*6.28});}
-      else{const N=Math.round(Math.min(200,area/2500)),body="#0F2433",rim="#2A4A5C";
-        for(let i=0;i<N;i++){const r=Math.random(),k=r<.62?"lantern":r<.84?"hatchet":r<.95?"viper":"angler",sz=k==="angler"?26+Math.random()*16:k==="viper"?17+Math.random()*9:10+Math.random()*11;
-          fish.push({k,y:Math.random()*H,x0:-90-Math.random()*W*1.1,sp:(W+300)/((k==="angler"?2.6:1.8)+Math.random()*.9),sz,ph:Math.random()*6.28,amp:4+Math.random()*12,glow:Math.random()<.5?deep:kelp,body,rim,a:.8+Math.random()*.2});}
-        for(let i=0;i<Math.round(Math.min(220,area/2400));i++)flecks.push({x:Math.random()*W,y0:-20-Math.random()*H*.6,sp:(H*.5)/(2+Math.random()*2),r:.8+Math.random()*1.8,ph:Math.random()*6.28,snow:true});}
-      const glowDot=(x,y,r,c,a)=>{const g=ctx.createRadialGradient(x,y,0,x,y,r*4);g.addColorStop(0,c);g.addColorStop(.25,c);g.addColorStop(1,"transparent");ctx.globalAlpha=a;ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r*4,0,6.283);ctx.fill();};
-      const T=3800,t0=performance.now();
-      function frame(now){const t=(now-t0)/1000,k=(now-t0)/T;ctx.clearRect(0,0,W,H);
-        ctx.globalAlpha=(dark?.7:.55)*Math.sin(Math.min(1,k)*Math.PI);ctx.fillStyle=dark?"#020A10":foam;ctx.fillRect(0,0,W,H);
-        for(const p of flecks){if(p.snow){const y=p.y0+p.sp*t,x=p.x+Math.sin(t*1.5+p.ph)*6;if(y>H+10)continue;ctx.globalAlpha=.55;ctx.fillStyle="#CFE7EE";ctx.beginPath();ctx.arc(x,y,p.r,0,6.283);ctx.fill();}
-          else{const y=p.y0-p.sp*t,x=p.x+Math.sin(t*2.5+p.ph)*8;if(y<-20||y>H+20)continue;ctx.strokeStyle=bub;ctx.lineWidth=1.5;ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(x,y,p.r,0,6.283);ctx.stroke();}}
-        for(const f of fish){const x=f.x0+f.sp*t,y=f.y+Math.sin(t*(f.k==="angler"?1.6:3)+f.ph)*f.amp;if(x<-90||x>W+90)continue;const s=f.sz,w=Math.sin(t*(f.k==="angler"?6:14)+f.ph)*.25;
-          if(f.k==="reef"){ctx.globalAlpha=f.a;ctx.fillStyle=f.c;ctx.beginPath();ctx.ellipse(x,y,s,s*.45,Math.cos(t*3+f.ph)*.15,0,6.283);ctx.fill();
-            ctx.beginPath();ctx.moveTo(x-s*.8,y);ctx.lineTo(x-s*1.6,y-s*(.5+w));ctx.lineTo(x-s*1.6,y+s*(.5-w));ctx.closePath();ctx.fill();
-            ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(x+s*.5,y-s*.1,Math.max(1.2,s*.11),0,6.283);ctx.fill();continue;}
-          ctx.globalAlpha=f.a;ctx.fillStyle=f.body;ctx.strokeStyle=f.rim;ctx.lineWidth=1;
-          if(f.k==="lantern"){ctx.beginPath();ctx.ellipse(x,y,s,s*.36,0,0,6.283);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(x-s*.85,y);ctx.lineTo(x-s*1.5,y-s*(.4+w));ctx.lineTo(x-s*1.5,y+s*(.4-w));ctx.closePath();ctx.fill();
-            for(let d=0;d<4;d++)glowDot(x+s*(.55-d*.4),y+s*.2,Math.max(.9,s*.07),f.glow,.95);glowDot(x+s*.62,y-s*.08,Math.max(1,s*.1),"#EAFBFF",.9);}
-          else if(f.k==="hatchet"){ctx.beginPath();ctx.moveTo(x+s,y-s*.15);ctx.lineTo(x-s*.4,y-s*.75);ctx.lineTo(x-s*.7,y);ctx.lineTo(x-s*.4,y+s*.7);ctx.closePath();ctx.fill();ctx.stroke();
-            ctx.beginPath();ctx.moveTo(x-s*.65,y);ctx.lineTo(x-s*1.2,y-s*(.3+w));ctx.lineTo(x-s*1.2,y+s*(.3-w));ctx.closePath();ctx.fill();
-            for(let d=0;d<5;d++)glowDot(x+s*(.5-d*.25),y+s*(.15+d*.1),Math.max(.8,s*.06),f.glow,.9);glowDot(x+s*.62,y-s*.22,Math.max(1.1,s*.12),"#EAFBFF",.9);}
-          else if(f.k==="viper"){ctx.beginPath();ctx.ellipse(x,y,s*1.4,s*.22,0,0,6.283);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(x-s*1.3,y);ctx.lineTo(x-s*1.9,y-s*(.3+w));ctx.lineTo(x-s*1.9,y+s*(.3-w));ctx.closePath();ctx.fill();
-            ctx.strokeStyle="#DDEFF5";ctx.globalAlpha=.8;ctx.beginPath();ctx.moveTo(x+s*1.15,y+s*.05);ctx.lineTo(x+s*1.25,y+s*.35);ctx.moveTo(x+s*.95,y+s*.05);ctx.lineTo(x+s*1.02,y+s*.3);ctx.stroke();
-            for(let d=0;d<7;d++)glowDot(x+s*(1-d*.32),y+s*.14,Math.max(.7,s*.05),f.glow,.85);}
-          else{/* anglerfish: round, big jaw, a glowing lure on a stalk */
-            ctx.beginPath();ctx.arc(x,y,s*.62,0,6.283);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(x-s*.55,y);ctx.lineTo(x-s*1.05,y-s*(.35+w));ctx.lineTo(x-s*1.05,y+s*(.35-w));ctx.closePath();ctx.fill();
-            ctx.strokeStyle="#DDEFF5";ctx.globalAlpha=.85;ctx.beginPath();for(let d=0;d<5;d++){const tx=x+s*(.15+d*.1);ctx.moveTo(tx,y+s*.18);ctx.lineTo(tx+s*.03,y+s*.36);}ctx.stroke();
-            ctx.strokeStyle=f.rim;ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(x+s*.15,y-s*.55);ctx.quadraticCurveTo(x+s*.75,y-s*1.25,x+s*1.05,y-s*.75);ctx.stroke();
-            const pulse=.6+.4*Math.sin(t*6+f.ph);glowDot(x+s*1.05,y-s*.72,s*.12,f.glow,pulse);glowDot(x+s*.3,y-s*.18,Math.max(1,s*.06),"#EAFBFF",.8);}}
+      const cs=getComputedStyle(document.documentElement),dark=themeNow()==="dark",foam=cs.getPropertyValue("--foam").trim()||"#DCF1F3";
+      const sp=document.createElement("canvas"),R=64;sp.width=sp.height=R*2;const g=sp.getContext("2d");
+      const body=g.createRadialGradient(R*.8,R*.75,R*.1,R,R,R);
+      body.addColorStop(0,dark?"rgba(120,200,220,.10)":"rgba(255,255,255,.35)");body.addColorStop(.75,dark?"rgba(90,170,200,.22)":"rgba(225,246,250,.55)");body.addColorStop(1,dark?"rgba(150,220,240,.55)":"rgba(255,255,255,.95)");
+      g.fillStyle=body;g.beginPath();g.arc(R,R,R-2,0,6.283);g.fill();
+      g.strokeStyle=dark?"rgba(170,230,245,.7)":"rgba(255,255,255,.95)";g.lineWidth=3;g.stroke();
+      g.fillStyle=dark?"rgba(220,250,255,.6)":"rgba(255,255,255,.95)";g.beginPath();g.ellipse(R*.62,R*.55,R*.2,R*.11,-.7,0,6.283);g.fill();
+      const N=Math.round(Math.min(650,W*H/900)),T=2800,mid=T*.48,bubs=[];
+      for(let i=0;i<N;i++){const r=8+Math.pow(Math.random(),1.6)*54,dur=1500+Math.random()*700,g2=(Math.random()+Math.random()+Math.random()-1.5)/1.5;
+        // each bubble is timed to be somewhere on screen at the midpoint, so the screen is fullest then
+        bubs.push({x:Math.random()*W,r,d:Math.max(0,Math.min(T-dur,mid-dur*Math.random()+g2*260)),dur,ph:Math.random()*6.28,wob:3+Math.random()*10});}
+      bubs.sort((p,q)=>p.r-q.r);   // small ones behind
+      const t0=performance.now();
+      function frame(now){const e=now-t0,k=e/T;ctx.clearRect(0,0,W,H);
+        ctx.globalAlpha=(dark?.7:.6)*Math.pow(Math.sin(Math.min(1,k)*Math.PI),2);ctx.fillStyle=dark?"#04141C":foam;ctx.fillRect(0,0,W,H);
         ctx.globalAlpha=1;
-        if(now-t0<T)requestAnimationFrame(frame);else{cv.remove();flurryOn=false;}}
-      requestAnimationFrame(frame);}
+        for(const p of bubs){const u=(e-p.d)/p.dur;if(u<0||u>1)continue;
+          const y=H+p.r-(H+2*p.r)*(u*u*.35+u*.65),x=p.x+Math.sin(u*7+p.ph)*p.wob,s=p.r*(1+.06*Math.sin(u*18+p.ph));
+          ctx.drawImage(sp,x-s,y-s,s*2,s*2);}
+        if(e<T)requestAnimationFrame(frame);else{cv.remove();flurryOn=false;}}
+      try{Sound.bubbles(6);}catch(e){}
+      requestAnimationFrame(frame);return true;}
     
     function dropRing(x,y,big){const r=document.createElement("span");r.className="dropring"+(big?" big":"");r.style.left=x+"px";r.style.top=y+"px";document.body.appendChild(r);setTimeout(()=>r.remove(),700);}
     function riseBubbles(x,y,n){for(let i=0;i<n;i++){const b=document.createElement("span");b.className="risebub";const sz=5+Math.random()*7;b.style.cssText=`left:${x+(Math.random()*30-15)}px;top:${y}px;width:${sz}px;height:${sz}px;--dx:${(Math.random()*30-15).toFixed(0)}px;animation-delay:${(i*45)}ms`;document.body.appendChild(b);setTimeout(()=>b.remove(),1300+i*45);}}
@@ -110,7 +97,7 @@
     return {
       apply: apply,
       isOn: isOn,
-      flurry: function(){ if(isOn()) flurry(); },
+      flurry: function(){ return isOn() && flurry(); },   // true when it plays
       bubbles: function(n){ if(isOn() && !reduced()) riseBubbles(lastX, lastY, n || 6); }
     };
   })();

@@ -150,13 +150,18 @@
     var b = day.blocks[i];
     if(!day.startedAt){ day.startedAt = Date.now(); planSave(); }
     S.planRun = { date: day.date, index: i, startedAt: Date.now(), missed: [], recorded: false };
-    // The fish flurry marks the start of an activity, except when the dive into a deck is already on screen:
+    // The bubble flurry marks the start of an activity, except when the dive into a deck is already on screen:
     // two full-screen animations at once made the dive stutter on the iPad.
-    if(!window.__reefTx){ try { Ocean.flurry(); } catch(e){} }
-    if(b.maker){ startStoryMaker(); return; }
-    var d = S.decks.find(function(x){ return x.id === b.deckId; });
-    if(!d){ b.done = true; b.skipped = true; planSave(); planStartNext(); return; } // deck was deleted since
-    if(d.miniStoryMode) startMiniStory(d.id); else startStudy(d.id);
+    // The activity opens when the bubbles are thickest (about 1.2 s in), so the change happens out of sight.
+    var flurried = false;
+    if(!window.__reefTx){ try { flurried = Ocean.flurry(); } catch(e){} }
+    function open(){
+      if(b.maker){ startStoryMaker(); return; }
+      var d = S.decks.find(function(x){ return x.id === b.deckId; });
+      if(!d){ b.done = true; b.skipped = true; planSave(); planStartNext(); return; } // deck was deleted since
+      if(d.miniStoryMode) startMiniStory(d.id); else startStudy(d.id);
+    }
+    if(flurried) setTimeout(open, 1200); else open();
   }
   // Saves the finished activity into today's record (called by finishStudy and the Mini Story end page).
   function planRecord(result){

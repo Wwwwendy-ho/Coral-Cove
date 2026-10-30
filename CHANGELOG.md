@@ -1,5 +1,12 @@
 # Changelog
 
+## A flurry of bubbles instead of fish (October 30, 2026)
+
+- When a Daily Plan activity starts, a thick flurry of bubbles rises up the screen instead of the shoal of fish.
+  For a moment the bubbles cover the whole screen, and the next activity opens behind them, so the change
+  happens out of sight. It has a soft bubbling sound and matches light and dark mode. With reduced motion, or
+  the ocean theme off, the activity just opens.
+
 ## Korean minigames for Wendy, and grown-up minigames (October 30, 2026)
 
 - **Grown-up profiles get their own minigames**, after a turn and in the minigame corner, built from the
