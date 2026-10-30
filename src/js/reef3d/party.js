@@ -298,18 +298,23 @@
     { id: 'odd', e: '🐠', name: 'Odd Fish Out', how: 'Tap the fish that is different.' }
   ];
   function reef3dMinigame(view, id, practice, done){
-    var g = REEF_GAMES.find(function(x){ return x.id === id; }) || REEF_GAMES[Math.floor(Math.random() * REEF_GAMES.length)];
+    reefGamesFor(function(games){ reef3dMinigameOpen(view, games, id, practice, done); });
+  }
+  function reef3dMinigameOpen(view, games, id, practice, done){
+    if(!document.body.contains(view.wrap)) return;
+    var g = games.find(function(x){ return x.id === id; }) || games[Math.floor(Math.random() * games.length)];
     var el = reef3dPanel(view, 'r3-mini', '<div class="r3-mini-intro"><p class="r3-mini-tag">' + (practice ? 'Minigame corner' : 'Minigame time!') + '</p>' +
-      '<div class="r3-panel-e" aria-hidden="true">' + g.e + '</div><h3>' + esc(g.name) + '</h3><p>' + esc(g.how) + '</p>' +
+      '<div class="r3-panel-e" aria-hidden="true">' + reefGameIcon(g, 'r3-gameic') + '</div><h3>' + esc(g.name) + '</h3><p>' + esc(g.how) + '</p>' +
       '<div class="r3-panel-row"><button type="button" class="r3-btn main" data-go>Play!</button>' + (practice ? '' : '<button type="button" class="r3-btn" data-skip>Skip</button>') + '</div></div>');
     try { Sound.sessionStart(); } catch(e){}
     reefMusicUpdate();   // the game song comes in
     var shut = function(){ el.remove(); reefMusicUpdate(); };
-    function finish(won){
+    function finish(won, note){
       var reward = practice ? 0 : (won ? 3 : 1);
       var card = el.querySelector('.r3-panel-card');
-      card.innerHTML = '<div class="r3-panel-e" aria-hidden="true">' + (won ? '🎉' : '🐚') + '</div><h3>' + (won ? 'You did it!' : 'Nice try!') + '</h3>' +
-        (reward ? '<p>You get ' + reward + ' shells.</p>' : '<p>Want to play again?</p>') +
+      if(!card) return;
+      card.innerHTML = '<div class="r3-panel-e" aria-hidden="true">' + (won ? '🎉' : '🐚') + '</div><h3>' + (won ? (note ? 'Well done!' : 'You did it!') : 'Nice try!') + '</h3>' +
+        (note ? '<p class="r3-mini-score">' + note + '</p>' : '') + (reward ? '<p>You get ' + reward + ' shells.</p>' : '<p>Want to play again?</p>') +
         '<div class="r3-panel-row">' + (practice ? '<button type="button" class="r3-btn main" data-again>Play again</button>' : '') + '<button type="button" class="r3-btn' + (practice ? '' : ' main') + '" data-back>Back to the ' + (view.night ? 'wreck' : 'reef') + '</button></div>';
       if(won){ try { reefWinSound(false); } catch(e){} reef3dCrabAct(view, 'Dance', true); }
       if(reward) reef3dShells(view, reward);
@@ -319,9 +324,10 @@
     }
     el.querySelector('[data-go]').addEventListener('click', function(){
       var card = el.querySelector('.r3-panel-card');
-      card.innerHTML = '<h3>' + g.e + ' ' + esc(g.name) + '</h3><div class="r3-mini-play"></div>';
+      card.innerHTML = '<h3>' + reefGameIcon(g, 'r3-gameic sm') + ' ' + esc(g.name) + '</h3><div class="r3-mini-play"></div>';
       var play = card.querySelector('.r3-mini-play');
-      if(g.id === 'match') reefGameMatch(play, finish);
+      if(g.play) g.play(play, finish, g);
+      else if(g.id === 'match') reefGameMatch(play, finish);
       else if(g.id === 'count') reefGameCount(play, finish);
       else reefGameOdd(play, finish);
     });
@@ -385,9 +391,10 @@
     });
     next();
   }
-  function reef3dGames(view){
-    var el = reef3dPanel(view, 'r3-corner', '<div class="r3-panel-e" aria-hidden="true">🎮</div><h3>Minigame corner</h3><p>Play any minigame, as many times as you like.</p>' +
-      '<ul class="r3-games">' + REEF_GAMES.map(function(g){ return '<li><button type="button" class="r3-btn" data-game="' + g.id + '"><span aria-hidden="true">' + g.e + '</span> ' + esc(g.name) + '</button></li>'; }).join('') + '</ul>' +
+  function reef3dGames(view){ reefGamesFor(function(games){ if(document.body.contains(view.wrap)) reef3dGamesOpen(view, games); }); }
+  function reef3dGamesOpen(view, games){
+    var el = reef3dPanel(view, 'r3-corner', '<div class="r3-panel-e" aria-hidden="true">' + ccIcon('games', 'r3-gameic') + '</div><h3>Minigame corner</h3><p>Play any minigame, as many times as you like.</p>' +
+      '<ul class="r3-games' + (games !== REEF_GAMES ? ' two' : '') + '">' + games.map(function(g){ return '<li><button type="button" class="r3-btn" data-game="' + g.id + '"><span aria-hidden="true">' + reefGameIcon(g) + '</span> ' + esc(g.name) + '</button></li>'; }).join('') + '</ul>' +
       '<div class="r3-panel-row"><button type="button" class="r3-btn" data-shop>🦀 Visit the shop</button><button type="button" class="r3-btn" data-close>Close</button></div>');
     el.addEventListener('click', function(e){
       var g = e.target.closest('[data-game]');
@@ -677,7 +684,7 @@
       var b = e.target.closest('[data-space]'); if(b) reef3dGoTo(view, +b.dataset.space);
     });
     view.wrap.querySelector('[data-r3-map]').addEventListener('click', function(){ reef3dMap(view); });
-    view.wrap.querySelector('[data-r3-games]').addEventListener('click', function(e){ e.stopPropagation(); if(!view.moving && !view.dice) reef3dGames(view); });
+    view.wrap.querySelector('[data-r3-games]').addEventListener('click', function(e){ e.stopPropagation(); if(!view.moving && !(view.dice && !view.dice.rolling)) reef3dGames(view); });   // the dice can still be waiting for a tap
     view.wrap.querySelector('[data-r3-mode]').addEventListener('click', function(e){
       e.stopPropagation(); var b = reefBoard(); b.mode = reef3dStoryOn() ? 'free' : 'story'; reefBoardSave(); reef3dHud(view);
       if(!reef3dStoryMark(view)){ var nx = view.spaces.find(function(x){ return x.kind === 'deck' && x.item.state === 'ready'; }); view.ring.visible = !!nx; if(nx) view.ring.position.set(nx.x, .34 + (nx.y || 0), nx.z); }

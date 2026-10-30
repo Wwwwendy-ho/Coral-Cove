@@ -1988,6 +1988,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
      js/reef3d/scenes.js        the ? block · Shelly's acted moments · the night ship · the day reef
      js/reef3d/dice.js          the dice block
      js/reef3d/party.js         party board: shells, pearl, shop, Chance Time, minigames, story mode
+     js/reef3d/games-adult.js   grown-up minigames (Korean ones for Wendy) from the profile's decks
      js/reef3d/day-night.js     day and night switching on the board
      js/reef3d/lobby.js         REEF LOBBY (the 3D profile picker)
      js/music.js                background music
@@ -3741,7 +3742,7 @@ html.theming .ciw .swtw,html.theming .ciw .swlw,html.theming .ciw .swnear,html.t
 
   // Coral Cove's button icons: rounded line drawings with a soft fill in the button's own colour, so each one reads
   // the same in day and night. ccIcon('sound') -> an <svg> to put inside a button (the button keeps its aria-label).
-  var CC_ICONS = {"close": "<path d=\"M6.5 6.5l11 11M17.5 6.5l-11 11\"/>", "check": "<path class=\"f\" d=\"M12 2.5a9.5 9.5 0 1 0 0 19a9.5 9.5 0 0 0 0-19z\"/><path d=\"M12 2.5a9.5 9.5 0 1 0 0 19a9.5 9.5 0 0 0 0-19z\"/><path d=\"M7.5 12.3l3 3L16.8 9\"/>", "sound": "<path class=\"f\" d=\"M4 9.5h3.5L12 5v14l-4.5-4.5H4z\"/><path d=\"M4 9.5h3.5L12 5v14l-4.5-4.5H4z\"/><path d=\"M15.5 9a4 4 0 0 1 0 6M18.2 6.4a7.6 7.6 0 0 1 0 11.2\"/>", "sound-off": "<path class=\"f\" d=\"M4 9.5h3.5L12 5v14l-4.5-4.5H4z\"/><path d=\"M4 9.5h3.5L12 5v14l-4.5-4.5H4z\"/><path d=\"M16 9.5l5 5M21 9.5l-5 5\"/>", "profiles": "<circle class=\"f\" cx=\"9\" cy=\"8\" r=\"3.3\"/><circle cx=\"9\" cy=\"8\" r=\"3.3\"/><path d=\"M3 19.5c.7-3.3 3-5.2 6-5.2s5.3 1.9 6 5.2\"/><path d=\"M15.2 4.9a3.3 3.3 0 0 1 0 6.3M17.4 14.6c1.8.8 3.1 2.5 3.6 4.9\"/>", "flag": "<path d=\"M5 21.5V3.5\"/><path class=\"f\" d=\"M5 4h14l-2.8 4.5L19 13H5z\"/><path d=\"M5 4h14l-2.8 4.5L19 13H5z\"/><path class=\"d\" d=\"M8.5 4h3.5v4.5H8.5zM12 8.5h3.5V13H12z\"/>", "download": "<path d=\"M12 4v10.5M7.5 10l4.5 4.5 4.5-4.5\"/><path d=\"M4.5 15.5v3A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5v-3\"/>", "trash": "<path d=\"M4 7h16M9.5 7V4.5h5V7\"/><path class=\"f\" d=\"M6 7l1 12.5A1.5 1.5 0 0 0 8.5 21h7a1.5 1.5 0 0 0 1.5-1.5L18 7\"/><path d=\"M6 7l1 12.5A1.5 1.5 0 0 0 8.5 21h7a1.5 1.5 0 0 0 1.5-1.5L18 7\"/><path d=\"M10 11v6M14 11v6\"/>", "backspace": "<path class=\"f\" d=\"M9 5h10.5A1.5 1.5 0 0 1 21 6.5v11a1.5 1.5 0 0 1-1.5 1.5H9l-6-7z\"/><path d=\"M9 5h10.5A1.5 1.5 0 0 1 21 6.5v11a1.5 1.5 0 0 1-1.5 1.5H9l-6-7z\"/><path d=\"M11.5 9.5l5 5M16.5 9.5l-5 5\"/>", "edit": "<path class=\"f\" d=\"M15.5 4.5l4 4L9 19l-5 1 1-5z\"/><path d=\"M15.5 4.5l4 4L9 19l-5 1 1-5z\"/><path d=\"M13.5 6.5l4 4\"/>", "settings": "<path class=\"f\" d=\"M12 2.8l1.6 2.3 2.7-.6.9 2.6 2.6.9-.6 2.7L21.2 12l-2.3 1.6.6 2.7-2.6.9-.9 2.6-2.7-.6L12 21.2l-1.6-2.3-2.7.6-.9-2.6-2.6-.9.6-2.7L2.8 12l2.3-1.6-.6-2.7 2.6-.9.9-2.6 2.7.6z\"/><path d=\"M12 2.8l1.6 2.3 2.7-.6.9 2.6 2.6.9-.6 2.7L21.2 12l-2.3 1.6.6 2.7-2.6.9-.9 2.6-2.7-.6L12 21.2l-1.6-2.3-2.7.6-.9-2.6-2.6-.9.6-2.7L2.8 12l2.3-1.6-.6-2.7 2.6-.9.9-2.6 2.7.6z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "library": "<path class=\"f\" d=\"M4 4h4v16H4zM9 4h4v16H9z\"/><path d=\"M4 4h4v16H4zM9 4h4v16H9z\"/><path class=\"f\" d=\"M14.2 5.3l3.8-1 4 15.4-3.8 1z\"/><path d=\"M14.2 5.3l3.8-1 4 15.4-3.8 1z\"/><path d=\"M4 8h4M9 8h4M4 16h4M9 16h4\"/>", "progress": "<path d=\"M3.5 20.5h17\"/><path class=\"f\" d=\"M5.5 13h3.2v7H5.5zM10.4 9h3.2v11h-3.2zM15.3 5h3.2v15h-3.2z\"/><path d=\"M5.5 13h3.2v7H5.5zM10.4 9h3.2v11h-3.2zM15.3 5h3.2v15h-3.2z\"/>", "lock": "<rect class=\"f\" x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8.5 11V7.5a3.5 3.5 0 0 1 7 0V11M12 15v2\"/>", "unlock": "<rect class=\"f\" x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8.5 11V7.5a3.5 3.5 0 0 1 6.8-1.2M12 15v2\"/>", "games": "<path class=\"f\" d=\"M7 8h10a4.5 4.5 0 0 1 4.4 5.4l-.7 3.4a2.3 2.3 0 0 1-4 1L15 16H9l-1.7 1.8a2.3 2.3 0 0 1-4-1l-.7-3.4A4.5 4.5 0 0 1 7 8z\"/><path d=\"M7 8h10a4.5 4.5 0 0 1 4.4 5.4l-.7 3.4a2.3 2.3 0 0 1-4 1L15 16H9l-1.7 1.8a2.3 2.3 0 0 1-4-1l-.7-3.4A4.5 4.5 0 0 1 7 8z\"/><path d=\"M7.6 10.8v3.4M5.9 12.5h3.4\"/><circle class=\"d\" cx=\"15.8\" cy=\"11.3\" r=\"1.05\"/><circle class=\"d\" cx=\"17.8\" cy=\"13.5\" r=\"1.05\"/>", "music": "<path d=\"M9 17.5V5.5l10-2v12\"/><circle class=\"f\" cx=\"6.8\" cy=\"17.5\" r=\"2.4\"/><circle cx=\"6.8\" cy=\"17.5\" r=\"2.4\"/><circle class=\"f\" cx=\"16.8\" cy=\"15.5\" r=\"2.4\"/><circle cx=\"16.8\" cy=\"15.5\" r=\"2.4\"/>", "map": "<path class=\"f\" d=\"M3.5 6.5l5.5-2 6 2 5.5-2v13l-5.5 2-6-2-5.5 2z\"/><path d=\"M3.5 6.5l5.5-2 6 2 5.5-2v13l-5.5 2-6-2-5.5 2z\"/><path d=\"M9 4.5v13M15 6.5v13\"/><path d=\"M16.4 10l2.6 2.6M19 10l-2.6 2.6\" stroke-width=\"2.2\"/>", "sun": "<circle class=\"f\" cx=\"12\" cy=\"12\" r=\"4.3\"/><circle cx=\"12\" cy=\"12\" r=\"4.3\"/><path d=\"M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6\"/>", "moon": "<path class=\"f\" d=\"M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z\"/><path d=\"M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z\"/><path d=\"M17 4.5v3M15.5 6h3\"/>", "story": "<path class=\"f\" d=\"M3.5 5.5c3-1 6-1 8.5 1v13c-2.5-2-5.5-2-8.5-1zM20.5 5.5c-3-1-6-1-8.5 1v13c2.5-2 5.5-2 8.5-1z\"/><path d=\"M3.5 5.5c3-1 6-1 8.5 1v13c-2.5-2-5.5-2-8.5-1zM20.5 5.5c-3-1-6-1-8.5 1v13c2.5-2 5.5-2 8.5-1z\"/>", "dice": "<rect class=\"f\" x=\"4\" y=\"4\" width=\"16\" height=\"16\" rx=\"3.6\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"16\" rx=\"3.6\"/><circle class=\"d\" cx=\"8.6\" cy=\"8.6\" r=\"1.3\"/><circle class=\"d\" cx=\"12\" cy=\"12\" r=\"1.3\"/><circle class=\"d\" cx=\"15.4\" cy=\"15.4\" r=\"1.3\"/>", "flame": "<path class=\"f\" d=\"M12 2.8c1.1 3.6 5.2 5.6 5.2 10.4a5.2 5.2 0 0 1-10.4 0c0-2.3 1.2-3.8 2.5-4.8.2 1.7.9 2.7 1.9 3.2-.3-3.4.2-6.4.8-8.8z\"/><path d=\"M12 2.8c1.1 3.6 5.2 5.6 5.2 10.4a5.2 5.2 0 0 1-10.4 0c0-2.3 1.2-3.8 2.5-4.8.2 1.7.9 2.7 1.9 3.2-.3-3.4.2-6.4.8-8.8z\"/>", "star": "<path class=\"f\" d=\"M12 3.2l2.7 5.5 6 .9-4.4 4.3 1.1 6L12 17.1l-5.4 2.8 1.1-6-4.4-4.3 6-.9z\"/><path d=\"M12 3.2l2.7 5.5 6 .9-4.4 4.3 1.1 6L12 17.1l-5.4 2.8 1.1-6-4.4-4.3 6-.9z\"/>", "ask": "<path class=\"f\" d=\"M12 3a8.5 8.5 0 0 0-7.4 12.7L3.5 20.5l4.8-1.1A8.5 8.5 0 1 0 12 3z\"/><path d=\"M12 3a8.5 8.5 0 0 0-7.4 12.7L3.5 20.5l4.8-1.1A8.5 8.5 0 1 0 12 3z\"/><path d=\"M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4\"/><circle class=\"d\" cx=\"12\" cy=\"16.4\" r=\"1.05\"/>", "music-off": "<path d=\"M9 17.5V5.5l10-2v12\"/><circle class=\"f\" cx=\"6.8\" cy=\"17.5\" r=\"2.4\"/><circle cx=\"6.8\" cy=\"17.5\" r=\"2.4\"/><circle class=\"f\" cx=\"16.8\" cy=\"15.5\" r=\"2.4\"/><circle cx=\"16.8\" cy=\"15.5\" r=\"2.4\"/><path d=\"M3.5 3.5l17 17\"/>", "back": "<path d=\"M14.5 5.5L8 12l6.5 6.5\"/>", "tutor": "<path class=\"f\" d=\"M4 5.5h16a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5h-8l-4.5 3.5v-3.5H4A1.5 1.5 0 0 1 2.5 16V7A1.5 1.5 0 0 1 4 5.5z\"/><path d=\"M4 5.5h16a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5h-8l-4.5 3.5v-3.5H4A1.5 1.5 0 0 1 2.5 16V7A1.5 1.5 0 0 1 4 5.5z\"/><circle class=\"d\" cx=\"8\" cy=\"11.5\" r=\"1.2\"/><circle class=\"d\" cx=\"12\" cy=\"11.5\" r=\"1.2\"/><circle class=\"d\" cx=\"16\" cy=\"11.5\" r=\"1.2\"/>", "worksheet": "<path class=\"f\" d=\"M6 3h9l4 4v13.5A1.5 1.5 0 0 1 17.5 22h-11.5A1.5 1.5 0 0 1 4.5 20.5v-16A1.5 1.5 0 0 1 6 3z\"/><path d=\"M6 3h9l4 4v13.5A1.5 1.5 0 0 1 17.5 22h-11.5A1.5 1.5 0 0 1 4.5 20.5v-16A1.5 1.5 0 0 1 6 3z\"/><path d=\"M15 3v4h4M8 11h8M8 14.5h8M8 18h5\"/>", "maths": "<rect class=\"f\" x=\"3.5\" y=\"3.5\" width=\"17\" height=\"17\" rx=\"3.5\"/><rect x=\"3.5\" y=\"3.5\" width=\"17\" height=\"17\" rx=\"3.5\"/><path d=\"M12 3.5v17M3.5 12h17M7.8 6.3v3.4M6.1 8h3.4M14.5 8h3.4M6.3 14.6l3 3M9.3 14.6l-3 3M14.5 15h3.4M14.5 17h3.4\"/>", "checkwork": "<path class=\"f\" d=\"M6 3h12a1.5 1.5 0 0 1 1.5 1.5v16A1.5 1.5 0 0 1 18 22H6a1.5 1.5 0 0 1-1.5-1.5v-16A1.5 1.5 0 0 1 6 3z\"/><path d=\"M6 3h12a1.5 1.5 0 0 1 1.5 1.5v16A1.5 1.5 0 0 1 18 22H6a1.5 1.5 0 0 1-1.5-1.5v-16A1.5 1.5 0 0 1 6 3z\"/><path d=\"M8 12.3l2.8 2.8L16.5 9.4\"/>", "cards": "<path class=\"f\" d=\"M8.5 3.5h10A1.5 1.5 0 0 1 20 5v12a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 7 17V5a1.5 1.5 0 0 1 1.5-1.5z\"/><path d=\"M8.5 3.5h10A1.5 1.5 0 0 1 20 5v12a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 7 17V5a1.5 1.5 0 0 1 1.5-1.5z\"/><path d=\"M4.5 7v12A1.5 1.5 0 0 0 6 20.5h9.5\"/>", "mic": "<rect class=\"f\" x=\"9\" y=\"3\" width=\"6\" height=\"11.5\" rx=\"3\"/><rect x=\"9\" y=\"3\" width=\"6\" height=\"11.5\" rx=\"3\"/><path d=\"M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7\"/>"};
+  var CC_ICONS = {"close": "<path d=\"M6.5 6.5l11 11M17.5 6.5l-11 11\"/>", "check": "<path class=\"f\" d=\"M12 2.5a9.5 9.5 0 1 0 0 19a9.5 9.5 0 0 0 0-19z\"/><path d=\"M12 2.5a9.5 9.5 0 1 0 0 19a9.5 9.5 0 0 0 0-19z\"/><path d=\"M7.5 12.3l3 3L16.8 9\"/>", "sound": "<path class=\"f\" d=\"M4 9.5h3.5L12 5v14l-4.5-4.5H4z\"/><path d=\"M4 9.5h3.5L12 5v14l-4.5-4.5H4z\"/><path d=\"M15.5 9a4 4 0 0 1 0 6M18.2 6.4a7.6 7.6 0 0 1 0 11.2\"/>", "sound-off": "<path class=\"f\" d=\"M4 9.5h3.5L12 5v14l-4.5-4.5H4z\"/><path d=\"M4 9.5h3.5L12 5v14l-4.5-4.5H4z\"/><path d=\"M16 9.5l5 5M21 9.5l-5 5\"/>", "profiles": "<circle class=\"f\" cx=\"9\" cy=\"8\" r=\"3.3\"/><circle cx=\"9\" cy=\"8\" r=\"3.3\"/><path d=\"M3 19.5c.7-3.3 3-5.2 6-5.2s5.3 1.9 6 5.2\"/><path d=\"M15.2 4.9a3.3 3.3 0 0 1 0 6.3M17.4 14.6c1.8.8 3.1 2.5 3.6 4.9\"/>", "flag": "<path d=\"M5 21.5V3.5\"/><path class=\"f\" d=\"M5 4h14l-2.8 4.5L19 13H5z\"/><path d=\"M5 4h14l-2.8 4.5L19 13H5z\"/><path class=\"d\" d=\"M8.5 4h3.5v4.5H8.5zM12 8.5h3.5V13H12z\"/>", "download": "<path d=\"M12 4v10.5M7.5 10l4.5 4.5 4.5-4.5\"/><path d=\"M4.5 15.5v3A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5v-3\"/>", "trash": "<path d=\"M4 7h16M9.5 7V4.5h5V7\"/><path class=\"f\" d=\"M6 7l1 12.5A1.5 1.5 0 0 0 8.5 21h7a1.5 1.5 0 0 0 1.5-1.5L18 7\"/><path d=\"M6 7l1 12.5A1.5 1.5 0 0 0 8.5 21h7a1.5 1.5 0 0 0 1.5-1.5L18 7\"/><path d=\"M10 11v6M14 11v6\"/>", "backspace": "<path class=\"f\" d=\"M9 5h10.5A1.5 1.5 0 0 1 21 6.5v11a1.5 1.5 0 0 1-1.5 1.5H9l-6-7z\"/><path d=\"M9 5h10.5A1.5 1.5 0 0 1 21 6.5v11a1.5 1.5 0 0 1-1.5 1.5H9l-6-7z\"/><path d=\"M11.5 9.5l5 5M16.5 9.5l-5 5\"/>", "edit": "<path class=\"f\" d=\"M15.5 4.5l4 4L9 19l-5 1 1-5z\"/><path d=\"M15.5 4.5l4 4L9 19l-5 1 1-5z\"/><path d=\"M13.5 6.5l4 4\"/>", "settings": "<path class=\"f\" d=\"M12 2.8l1.6 2.3 2.7-.6.9 2.6 2.6.9-.6 2.7L21.2 12l-2.3 1.6.6 2.7-2.6.9-.9 2.6-2.7-.6L12 21.2l-1.6-2.3-2.7.6-.9-2.6-2.6-.9.6-2.7L2.8 12l2.3-1.6-.6-2.7 2.6-.9.9-2.6 2.7.6z\"/><path d=\"M12 2.8l1.6 2.3 2.7-.6.9 2.6 2.6.9-.6 2.7L21.2 12l-2.3 1.6.6 2.7-2.6.9-.9 2.6-2.7-.6L12 21.2l-1.6-2.3-2.7.6-.9-2.6-2.6-.9.6-2.7L2.8 12l2.3-1.6-.6-2.7 2.6-.9.9-2.6 2.7.6z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>", "library": "<path class=\"f\" d=\"M4 4h4v16H4zM9 4h4v16H9z\"/><path d=\"M4 4h4v16H4zM9 4h4v16H9z\"/><path class=\"f\" d=\"M14.2 5.3l3.8-1 4 15.4-3.8 1z\"/><path d=\"M14.2 5.3l3.8-1 4 15.4-3.8 1z\"/><path d=\"M4 8h4M9 8h4M4 16h4M9 16h4\"/>", "progress": "<path d=\"M3.5 20.5h17\"/><path class=\"f\" d=\"M5.5 13h3.2v7H5.5zM10.4 9h3.2v11h-3.2zM15.3 5h3.2v15h-3.2z\"/><path d=\"M5.5 13h3.2v7H5.5zM10.4 9h3.2v11h-3.2zM15.3 5h3.2v15h-3.2z\"/>", "hangul": "<rect class=\"f\" x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"4\"/><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"4\"/><path d=\"M7 7.5h5v5M15.5 6.5v8M15.5 10.5h2.5M7.5 16.5h9\"/>", "ear": "<path class=\"f\" d=\"M7 9a5 5 0 0 1 10 0c0 3-3 4-3 7a3 3 0 0 1-5.5 1.5Z\"/><path d=\"M7 9a5 5 0 0 1 10 0c0 3-3 4-3 7a3 3 0 0 1-5.5 1.5M10 9.5a2 2 0 0 1 4 0c0 1.2-1 1.6-1.6 2.4\"/>", "sentence": "<rect class=\"f\" x=\"2.5\" y=\"6\" width=\"6\" height=\"8\" rx=\"2\"/><rect x=\"2.5\" y=\"6\" width=\"6\" height=\"8\" rx=\"2\"/><rect x=\"10\" y=\"6\" width=\"5\" height=\"8\" rx=\"2\"/><rect x=\"16.5\" y=\"6\" width=\"5\" height=\"8\" rx=\"2\"/><path d=\"M4 19h16m-3-2.5 3 2.5-3 2.5\"/>", "counting": "<rect class=\"f\" x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"3\"/><rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"3\"/><path d=\"M3 9.5h18M3 14.5h18\"/><circle class=\"d\" cx=\"8\" cy=\"9.5\" r=\"1.8\"/><circle class=\"d\" cx=\"12\" cy=\"9.5\" r=\"1.8\"/><circle class=\"d\" cx=\"10\" cy=\"14.5\" r=\"1.8\"/>", "pairs": "<rect class=\"f\" x=\"2.5\" y=\"5\" width=\"7.5\" height=\"14\" rx=\"2\"/><rect x=\"2.5\" y=\"5\" width=\"7.5\" height=\"14\" rx=\"2\"/><rect x=\"14\" y=\"5\" width=\"7.5\" height=\"14\" rx=\"2\"/><circle class=\"d\" cx=\"6.25\" cy=\"12\" r=\"1.6\"/><circle class=\"d\" cx=\"17.75\" cy=\"12\" r=\"1.6\"/><path d=\"M8 12h8\"/>", "bubbles": "<circle class=\"f\" cx=\"10\" cy=\"14\" r=\"6\"/><circle cx=\"10\" cy=\"14\" r=\"6\"/><circle cx=\"17.5\" cy=\"6.5\" r=\"3\"/><circle cx=\"19.5\" cy=\"14.5\" r=\"1.5\"/><path d=\"M7.5 12a3 3 0 0 1 2.5-2\"/>", "lock": "<rect class=\"f\" x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8.5 11V7.5a3.5 3.5 0 0 1 7 0V11M12 15v2\"/>", "unlock": "<rect class=\"f\" x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8.5 11V7.5a3.5 3.5 0 0 1 6.8-1.2M12 15v2\"/>", "games": "<path class=\"f\" d=\"M7 8h10a4.5 4.5 0 0 1 4.4 5.4l-.7 3.4a2.3 2.3 0 0 1-4 1L15 16H9l-1.7 1.8a2.3 2.3 0 0 1-4-1l-.7-3.4A4.5 4.5 0 0 1 7 8z\"/><path d=\"M7 8h10a4.5 4.5 0 0 1 4.4 5.4l-.7 3.4a2.3 2.3 0 0 1-4 1L15 16H9l-1.7 1.8a2.3 2.3 0 0 1-4-1l-.7-3.4A4.5 4.5 0 0 1 7 8z\"/><path d=\"M7.6 10.8v3.4M5.9 12.5h3.4\"/><circle class=\"d\" cx=\"15.8\" cy=\"11.3\" r=\"1.05\"/><circle class=\"d\" cx=\"17.8\" cy=\"13.5\" r=\"1.05\"/>", "music": "<path d=\"M9 17.5V5.5l10-2v12\"/><circle class=\"f\" cx=\"6.8\" cy=\"17.5\" r=\"2.4\"/><circle cx=\"6.8\" cy=\"17.5\" r=\"2.4\"/><circle class=\"f\" cx=\"16.8\" cy=\"15.5\" r=\"2.4\"/><circle cx=\"16.8\" cy=\"15.5\" r=\"2.4\"/>", "map": "<path class=\"f\" d=\"M3.5 6.5l5.5-2 6 2 5.5-2v13l-5.5 2-6-2-5.5 2z\"/><path d=\"M3.5 6.5l5.5-2 6 2 5.5-2v13l-5.5 2-6-2-5.5 2z\"/><path d=\"M9 4.5v13M15 6.5v13\"/><path d=\"M16.4 10l2.6 2.6M19 10l-2.6 2.6\" stroke-width=\"2.2\"/>", "sun": "<circle class=\"f\" cx=\"12\" cy=\"12\" r=\"4.3\"/><circle cx=\"12\" cy=\"12\" r=\"4.3\"/><path d=\"M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6\"/>", "moon": "<path class=\"f\" d=\"M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z\"/><path d=\"M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z\"/><path d=\"M17 4.5v3M15.5 6h3\"/>", "story": "<path class=\"f\" d=\"M3.5 5.5c3-1 6-1 8.5 1v13c-2.5-2-5.5-2-8.5-1zM20.5 5.5c-3-1-6-1-8.5 1v13c2.5-2 5.5-2 8.5-1z\"/><path d=\"M3.5 5.5c3-1 6-1 8.5 1v13c-2.5-2-5.5-2-8.5-1zM20.5 5.5c-3-1-6-1-8.5 1v13c2.5-2 5.5-2 8.5-1z\"/>", "dice": "<rect class=\"f\" x=\"4\" y=\"4\" width=\"16\" height=\"16\" rx=\"3.6\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"16\" rx=\"3.6\"/><circle class=\"d\" cx=\"8.6\" cy=\"8.6\" r=\"1.3\"/><circle class=\"d\" cx=\"12\" cy=\"12\" r=\"1.3\"/><circle class=\"d\" cx=\"15.4\" cy=\"15.4\" r=\"1.3\"/>", "flame": "<path class=\"f\" d=\"M12 2.8c1.1 3.6 5.2 5.6 5.2 10.4a5.2 5.2 0 0 1-10.4 0c0-2.3 1.2-3.8 2.5-4.8.2 1.7.9 2.7 1.9 3.2-.3-3.4.2-6.4.8-8.8z\"/><path d=\"M12 2.8c1.1 3.6 5.2 5.6 5.2 10.4a5.2 5.2 0 0 1-10.4 0c0-2.3 1.2-3.8 2.5-4.8.2 1.7.9 2.7 1.9 3.2-.3-3.4.2-6.4.8-8.8z\"/>", "star": "<path class=\"f\" d=\"M12 3.2l2.7 5.5 6 .9-4.4 4.3 1.1 6L12 17.1l-5.4 2.8 1.1-6-4.4-4.3 6-.9z\"/><path d=\"M12 3.2l2.7 5.5 6 .9-4.4 4.3 1.1 6L12 17.1l-5.4 2.8 1.1-6-4.4-4.3 6-.9z\"/>", "ask": "<path class=\"f\" d=\"M12 3a8.5 8.5 0 0 0-7.4 12.7L3.5 20.5l4.8-1.1A8.5 8.5 0 1 0 12 3z\"/><path d=\"M12 3a8.5 8.5 0 0 0-7.4 12.7L3.5 20.5l4.8-1.1A8.5 8.5 0 1 0 12 3z\"/><path d=\"M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4\"/><circle class=\"d\" cx=\"12\" cy=\"16.4\" r=\"1.05\"/>", "music-off": "<path d=\"M9 17.5V5.5l10-2v12\"/><circle class=\"f\" cx=\"6.8\" cy=\"17.5\" r=\"2.4\"/><circle cx=\"6.8\" cy=\"17.5\" r=\"2.4\"/><circle class=\"f\" cx=\"16.8\" cy=\"15.5\" r=\"2.4\"/><circle cx=\"16.8\" cy=\"15.5\" r=\"2.4\"/><path d=\"M3.5 3.5l17 17\"/>", "back": "<path d=\"M14.5 5.5L8 12l6.5 6.5\"/>", "tutor": "<path class=\"f\" d=\"M4 5.5h16a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5h-8l-4.5 3.5v-3.5H4A1.5 1.5 0 0 1 2.5 16V7A1.5 1.5 0 0 1 4 5.5z\"/><path d=\"M4 5.5h16a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5h-8l-4.5 3.5v-3.5H4A1.5 1.5 0 0 1 2.5 16V7A1.5 1.5 0 0 1 4 5.5z\"/><circle class=\"d\" cx=\"8\" cy=\"11.5\" r=\"1.2\"/><circle class=\"d\" cx=\"12\" cy=\"11.5\" r=\"1.2\"/><circle class=\"d\" cx=\"16\" cy=\"11.5\" r=\"1.2\"/>", "worksheet": "<path class=\"f\" d=\"M6 3h9l4 4v13.5A1.5 1.5 0 0 1 17.5 22h-11.5A1.5 1.5 0 0 1 4.5 20.5v-16A1.5 1.5 0 0 1 6 3z\"/><path d=\"M6 3h9l4 4v13.5A1.5 1.5 0 0 1 17.5 22h-11.5A1.5 1.5 0 0 1 4.5 20.5v-16A1.5 1.5 0 0 1 6 3z\"/><path d=\"M15 3v4h4M8 11h8M8 14.5h8M8 18h5\"/>", "maths": "<rect class=\"f\" x=\"3.5\" y=\"3.5\" width=\"17\" height=\"17\" rx=\"3.5\"/><rect x=\"3.5\" y=\"3.5\" width=\"17\" height=\"17\" rx=\"3.5\"/><path d=\"M12 3.5v17M3.5 12h17M7.8 6.3v3.4M6.1 8h3.4M14.5 8h3.4M6.3 14.6l3 3M9.3 14.6l-3 3M14.5 15h3.4M14.5 17h3.4\"/>", "checkwork": "<path class=\"f\" d=\"M6 3h12a1.5 1.5 0 0 1 1.5 1.5v16A1.5 1.5 0 0 1 18 22H6a1.5 1.5 0 0 1-1.5-1.5v-16A1.5 1.5 0 0 1 6 3z\"/><path d=\"M6 3h12a1.5 1.5 0 0 1 1.5 1.5v16A1.5 1.5 0 0 1 18 22H6a1.5 1.5 0 0 1-1.5-1.5v-16A1.5 1.5 0 0 1 6 3z\"/><path d=\"M8 12.3l2.8 2.8L16.5 9.4\"/>", "cards": "<path class=\"f\" d=\"M8.5 3.5h10A1.5 1.5 0 0 1 20 5v12a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 7 17V5a1.5 1.5 0 0 1 1.5-1.5z\"/><path d=\"M8.5 3.5h10A1.5 1.5 0 0 1 20 5v12a1.5 1.5 0 0 1-1.5 1.5h-10A1.5 1.5 0 0 1 7 17V5a1.5 1.5 0 0 1 1.5-1.5z\"/><path d=\"M4.5 7v12A1.5 1.5 0 0 0 6 20.5h9.5\"/>", "mic": "<rect class=\"f\" x=\"9\" y=\"3\" width=\"6\" height=\"11.5\" rx=\"3\"/><rect x=\"9\" y=\"3\" width=\"6\" height=\"11.5\" rx=\"3\"/><path d=\"M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7\"/>"};
   function ccIcon(n, cls){ return '<svg class="cc-ic' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + (CC_ICONS[n] || '') + '</svg>'; }
   window.ccIcon = ccIcon;   // the Library uses them too
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
@@ -19850,18 +19851,23 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     { id: 'odd', e: '🐠', name: 'Odd Fish Out', how: 'Tap the fish that is different.' }
   ];
   function reef3dMinigame(view, id, practice, done){
-    var g = REEF_GAMES.find(function(x){ return x.id === id; }) || REEF_GAMES[Math.floor(Math.random() * REEF_GAMES.length)];
+    reefGamesFor(function(games){ reef3dMinigameOpen(view, games, id, practice, done); });
+  }
+  function reef3dMinigameOpen(view, games, id, practice, done){
+    if(!document.body.contains(view.wrap)) return;
+    var g = games.find(function(x){ return x.id === id; }) || games[Math.floor(Math.random() * games.length)];
     var el = reef3dPanel(view, 'r3-mini', '<div class="r3-mini-intro"><p class="r3-mini-tag">' + (practice ? 'Minigame corner' : 'Minigame time!') + '</p>' +
-      '<div class="r3-panel-e" aria-hidden="true">' + g.e + '</div><h3>' + esc(g.name) + '</h3><p>' + esc(g.how) + '</p>' +
+      '<div class="r3-panel-e" aria-hidden="true">' + reefGameIcon(g, 'r3-gameic') + '</div><h3>' + esc(g.name) + '</h3><p>' + esc(g.how) + '</p>' +
       '<div class="r3-panel-row"><button type="button" class="r3-btn main" data-go>Play!</button>' + (practice ? '' : '<button type="button" class="r3-btn" data-skip>Skip</button>') + '</div></div>');
     try { Sound.sessionStart(); } catch(e){}
     reefMusicUpdate();   // the game song comes in
     var shut = function(){ el.remove(); reefMusicUpdate(); };
-    function finish(won){
+    function finish(won, note){
       var reward = practice ? 0 : (won ? 3 : 1);
       var card = el.querySelector('.r3-panel-card');
-      card.innerHTML = '<div class="r3-panel-e" aria-hidden="true">' + (won ? '🎉' : '🐚') + '</div><h3>' + (won ? 'You did it!' : 'Nice try!') + '</h3>' +
-        (reward ? '<p>You get ' + reward + ' shells.</p>' : '<p>Want to play again?</p>') +
+      if(!card) return;
+      card.innerHTML = '<div class="r3-panel-e" aria-hidden="true">' + (won ? '🎉' : '🐚') + '</div><h3>' + (won ? (note ? 'Well done!' : 'You did it!') : 'Nice try!') + '</h3>' +
+        (note ? '<p class="r3-mini-score">' + note + '</p>' : '') + (reward ? '<p>You get ' + reward + ' shells.</p>' : '<p>Want to play again?</p>') +
         '<div class="r3-panel-row">' + (practice ? '<button type="button" class="r3-btn main" data-again>Play again</button>' : '') + '<button type="button" class="r3-btn' + (practice ? '' : ' main') + '" data-back>Back to the ' + (view.night ? 'wreck' : 'reef') + '</button></div>';
       if(won){ try { reefWinSound(false); } catch(e){} reef3dCrabAct(view, 'Dance', true); }
       if(reward) reef3dShells(view, reward);
@@ -19871,9 +19877,10 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     }
     el.querySelector('[data-go]').addEventListener('click', function(){
       var card = el.querySelector('.r3-panel-card');
-      card.innerHTML = '<h3>' + g.e + ' ' + esc(g.name) + '</h3><div class="r3-mini-play"></div>';
+      card.innerHTML = '<h3>' + reefGameIcon(g, 'r3-gameic sm') + ' ' + esc(g.name) + '</h3><div class="r3-mini-play"></div>';
       var play = card.querySelector('.r3-mini-play');
-      if(g.id === 'match') reefGameMatch(play, finish);
+      if(g.play) g.play(play, finish, g);
+      else if(g.id === 'match') reefGameMatch(play, finish);
       else if(g.id === 'count') reefGameCount(play, finish);
       else reefGameOdd(play, finish);
     });
@@ -19937,9 +19944,10 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     });
     next();
   }
-  function reef3dGames(view){
-    var el = reef3dPanel(view, 'r3-corner', '<div class="r3-panel-e" aria-hidden="true">🎮</div><h3>Minigame corner</h3><p>Play any minigame, as many times as you like.</p>' +
-      '<ul class="r3-games">' + REEF_GAMES.map(function(g){ return '<li><button type="button" class="r3-btn" data-game="' + g.id + '"><span aria-hidden="true">' + g.e + '</span> ' + esc(g.name) + '</button></li>'; }).join('') + '</ul>' +
+  function reef3dGames(view){ reefGamesFor(function(games){ if(document.body.contains(view.wrap)) reef3dGamesOpen(view, games); }); }
+  function reef3dGamesOpen(view, games){
+    var el = reef3dPanel(view, 'r3-corner', '<div class="r3-panel-e" aria-hidden="true">' + ccIcon('games', 'r3-gameic') + '</div><h3>Minigame corner</h3><p>Play any minigame, as many times as you like.</p>' +
+      '<ul class="r3-games' + (games !== REEF_GAMES ? ' two' : '') + '">' + games.map(function(g){ return '<li><button type="button" class="r3-btn" data-game="' + g.id + '"><span aria-hidden="true">' + reefGameIcon(g) + '</span> ' + esc(g.name) + '</button></li>'; }).join('') + '</ul>' +
       '<div class="r3-panel-row"><button type="button" class="r3-btn" data-shop>🦀 Visit the shop</button><button type="button" class="r3-btn" data-close>Close</button></div>');
     el.addEventListener('click', function(e){
       var g = e.target.closest('[data-game]');
@@ -20229,7 +20237,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       var b = e.target.closest('[data-space]'); if(b) reef3dGoTo(view, +b.dataset.space);
     });
     view.wrap.querySelector('[data-r3-map]').addEventListener('click', function(){ reef3dMap(view); });
-    view.wrap.querySelector('[data-r3-games]').addEventListener('click', function(e){ e.stopPropagation(); if(!view.moving && !view.dice) reef3dGames(view); });
+    view.wrap.querySelector('[data-r3-games]').addEventListener('click', function(e){ e.stopPropagation(); if(!view.moving && !(view.dice && !view.dice.rolling)) reef3dGames(view); });   // the dice can still be waiting for a tap
     view.wrap.querySelector('[data-r3-mode]').addEventListener('click', function(e){
       e.stopPropagation(); var b = reefBoard(); b.mode = reef3dStoryOn() ? 'free' : 'story'; reefBoardSave(); reef3dHud(view);
       if(!reef3dStoryMark(view)){ var nx = view.spaces.find(function(x){ return x.kind === 'deck' && x.item.state === 'ready'; }); view.ring.visible = !!nx; if(nx) view.ring.position.set(nx.x, .34 + (nx.y || 0), nx.z); }
@@ -20240,6 +20248,272 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   }
 
 /* end of src/js/reef3d/party.js */
+/* from src/js/reef3d/games-adult.js */
+  /* ---------- Grown-up minigames: built from the profile's own decks, with scores and a personal best ----------
+     A grown-up profile with Korean decks (Wendy) gets six Korean games; any other grown-up profile gets Tide Pairs
+     and Bubble Catch from its decks. A profile with too few usable cards falls back to the children's games. */
+  var MG_KL = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ', MG_KT = ' ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ';
+  function koV(i){ return String.fromCharCode(0x314F + i); }
+  function koHas(t){ return /[가-힣]/.test(t); }
+  // 감 -> [ㄱ, ㅏ, ㅁ] (compatibility jamo, the way they're typed and taught)
+  function koParts(ch){
+    var c = ch.charCodeAt(0) - 0xAC00; if(c < 0 || c > 11171) return null;
+    var t = c % 28, v = Math.floor(c / 28) % 21, l = Math.floor(c / 588);
+    return [MG_KL[l], koV(v)].concat(t ? [MG_KT[t]] : []);
+  }
+  // the block as far as it's built: ㄱ, 가, 감
+  function koJoin(parts){
+    if(parts.length < 2) return parts[0] || '';
+    var l = MG_KL.indexOf(parts[0]), v = parts[1].charCodeAt(0) - 0x314F, t = parts[2] ? MG_KT.indexOf(parts[2]) : 0;
+    return String.fromCharCode(0xAC00 + (l * 21 + v) * 28 + t);
+  }
+  var KO_SINO = ['', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구'];
+  var KO_NAT1 = ['', '하나', '둘', '셋', '넷', '다섯', '여섯', '일곱', '여덟', '아홉'], KO_NAT10 = ['', '열', '스물', '서른', '마흔', '쉰', '예순', '일흔', '여든', '아흔'];
+  function koSino(n){ var t = Math.floor(n / 10), u = n % 10; return (t > 1 ? KO_SINO[t] : '') + (t ? '십' : '') + KO_SINO[u]; }
+  function koNative(n){ return KO_NAT10[Math.floor(n / 10)] + KO_NAT1[n % 10]; }
+
+  function reefIsAdult(){ return !!(S.profile && S.profile.mode === 'adult'); }
+  // Everything the games draw on, read once per profile from its decks.
+  function reefAdultPool(){
+    var pid = S.profile && S.profile.id;
+    if(R3.adultPool && R3.adultPool.pid === pid) return R3.adultPool.p;
+    var decks = (S.decks || []).filter(function(d){ return !d.archived; });
+    var get = function(d){ return (S.store && S.store.getCardsOnce ? Promise.resolve(S.store.getCardsOnce(d.id)) : Promise.resolve([])).then(function(cs){ return cs || []; }, function(){ return []; }); };
+    var p = Promise.all(decks.map(get)).then(function(all){
+      var pool = { pairs: [], ko: [], blocks: [], sentences: [], twins: [], counts: [] }, seenP = {}, seenK = {}, seenS = {};
+      all.forEach(function(cards){ cards.forEach(function(c){
+        var unq = function(t){ return reefPlainText(t).replace(/^["'“”‘’]+|["'“”‘’]+$/g, '').trim(); }, f = unq(c.front), b = unq(c.back);
+        if(!f || !b || f === b) return;
+        var choices = (Array.isArray(c.choices) ? c.choices : []).map(function(x){ return reefPlainText(x); }).filter(Boolean);
+        if(c.mode === 'numsys' && choices.length) return pool.counts.push({ k: f, e: b, opts: [f].concat(choices.slice(0, 3)) });
+        if(c.mode === 'listen' && choices.length && koHas(f)) return pool.twins.push({ k: f, e: b, opts: [f].concat(choices.slice(0, 3)) });
+        if(f.length <= 24 && b.length <= 24 && !seenP[f + '|' + b]){ seenP[f + '|' + b] = 1; pool.pairs.push({ a: f, b: b }); }
+        var k = koHas(f) && !koHas(b) ? f : koHas(b) && !koHas(f) ? b : null, e = k === f ? b : f;
+        if(!k) return;
+        if(/\s/.test(k.trim()) && k.length <= 30 && e.length <= 40){
+          if(!seenS[k]){ seenS[k] = 1; pool.sentences.push({ k: k, e: e }); }
+          return;
+        }
+        if(k.length <= 12 && e.length <= 24 && !seenK[k]){
+          seenK[k] = 1; pool.ko.push({ k: k, e: e });
+          var w = k.replace(/[.!?,"']/g, '');
+          if(/^[가-힣]{1,3}$/.test(w) && e.length <= 18) pool.blocks.push({ k: w, e: e });
+        }
+      }); });
+      return pool;
+    });
+    R3.adultPool = { pid: pid, p: p };
+    return p;
+  }
+  var REEF_ADULT_GAMES = [
+    { id: 'kblock', ic: 'hangul', name: 'Hangul Blocks', how: 'Hear a word, then build it piece by piece: first consonant, vowel, then the bottom consonant.', need: function(p){ return p.blocks.length >= 4; }, play: reefGameBlocks },
+    { id: 'ktwins', ic: 'ear', name: 'Echo Shell', how: 'Listen closely and pick the word you hear. Tap the shell to hear it again.', need: function(p){ return p.twins.length + p.ko.length >= 8; }, play: reefGameEcho },
+    { id: 'ksent', ic: 'sentence', name: 'Sentence Current', how: 'Tap the words in order to build the Korean sentence.', need: function(p){ return p.sentences.length >= 4; }, play: reefGameSentence },
+    { id: 'knum', ic: 'counting', name: 'Counting Cove', how: 'Sino-Korean or native Korean? Pick the right way to say each number.', need: function(p){ return p.ko.length > 0; }, play: reefGameCount2 },
+    { id: 'pairs', ic: 'pairs', name: 'Tide Pairs', how: 'Match each word with its meaning as fast as you can.', need: function(p){ return p.pairs.length >= 6; }, play: reefGamePairs, any: true },
+    { id: 'catch', ic: 'bubbles', name: 'Bubble Catch', how: 'Catch the bubble with the right answer before it floats away.', need: function(p){ return p.pairs.length >= 6; }, play: reefGameCatch, any: true }
+  ];
+  // The games this profile plays: calls back with a list (the children's games for children).
+  function reefGamesFor(cb){
+    if(!reefIsAdult()) return cb(REEF_GAMES);
+    reefAdultPool().then(function(pool){
+      var ko = pool.ko.length >= 8;
+      var list = REEF_ADULT_GAMES.filter(function(g){ return (ko || g.any) && g.need(pool); });
+      cb(list.length >= 2 ? list.map(function(g){ return Object.assign({ pool: pool }, g); }) : REEF_GAMES);
+    }, function(){ cb(REEF_GAMES); });
+  }
+  function reefGameIcon(g, cls){ return g.ic ? ccIcon(g.ic, cls) : esc(g.e); }
+  // Personal best per profile and game. higher: more is better (points); otherwise less is better (seconds).
+  function reefBest(id, score, higher){
+    var key = 'cc-mg-best-' + (S.profile && S.profile.id) + '-' + id, old = null;
+    try { old = localStorage.getItem(key); } catch(e){}
+    old = old == null ? null : +old;
+    var isNew = old == null || (higher ? score > old : score < old);
+    if(isNew){ try { localStorage.setItem(key, String(score)); } catch(e){} }
+    return { best: isNew ? score : old, isNew: isNew && old != null, first: old == null };
+  }
+  function reefScoreNote(id, score, higher, fmt){
+    var b = reefBest(id, score, higher);
+    return fmt(score) + (b.first ? '' : b.isNew ? ' · <b>New best!</b>' : ' · Best: ' + fmt(b.best));
+  }
+  function reefSay(t){ try { Speech.speak(t); } catch(e){} }
+  function reefPick(a, n){ return reefShuffle(a.slice()).slice(0, n); }
+  function reefShake(b){ b.classList.remove('no'); void b.offsetWidth; b.classList.add('no'); try { Sound.bloop(300); } catch(e){} }
+  function reefHearBtn(label){ return '<button type="button" class="r3-hear" data-hear aria-label="' + esc(label || 'Hear it again') + '">' + ccIcon('sound') + '</button>'; }
+
+  // Hangul Blocks: four short words from her decks, built syllable by syllable from the jamo.
+  function reefGameBlocks(play, finish, g){
+    var words = reefPick(g.pool.blocks, 4), wi = 0, slips = 0, peeks = 0;
+    function word(){
+      if(wi === words.length) return finish(true, reefScoreNote('kblock', slips + peeks, false, function(n){ return n === 0 ? 'No slips' : n + (n === 1 ? ' slip' : ' slips'); }));
+      var w = words[wi], syl = w.k.split(''), si = 0, built = [];
+      function pad(){
+        var need = koParts(syl[si]), pieces = need.filter(function(x, i){ return need.indexOf(x) === i; });
+        var pool = MG_KL.split('').concat([0, 1, 2, 4, 6, 8, 12, 13, 17, 18, 20].map(koV), ['ㄴ', 'ㅁ', 'ㅇ', 'ㄹ']);
+        while(pieces.length < 8){ var x = pool[Math.floor(Math.random() * pool.length)]; if(pieces.indexOf(x) < 0) pieces.push(x); }
+        return reefShuffle(pieces);
+      }
+      function draw(){
+        var need = koParts(syl[si]);
+        play.innerHTML = '<p class="r3-mini-ask">Word ' + (wi + 1) + ' of ' + words.length + ': <b>' + esc(w.e) + '</b> ' + reefHearBtn('Hear the word') + '</p>' +
+          '<div class="r3-kslots">' + syl.map(function(s, i){ return '<span class="r3-kslot' + (i < si ? ' done' : i === si ? ' now' : '') + '">' + (i < si ? s : i === si ? esc(koJoin(built)) : '') + '</span>'; }).join('') + '</div>' +
+          '<p class="r3-khint">' + (built.length === 0 ? 'First consonant' : built.length === 1 ? 'Vowel' : 'Bottom consonant') + '</p>' +
+          '<div class="r3-kpad">' + pad().map(function(j){ return '<button type="button" class="r3-kjamo" data-j="' + j + '">' + j + '</button>'; }).join('') + '</div>' +
+          '<div class="r3-panel-row"><button type="button" class="r3-btn" data-peek>Peek</button></div>';
+        play.dataset.need = need.join('');
+      }
+      play.onclick = function(e){
+        if(e.target.closest('[data-hear]')) return reefSay(w.k);
+        if(e.target.closest('[data-peek]')){ peeks++; var sl = play.querySelectorAll('.r3-kslot'); sl.forEach(function(s, i){ s.dataset.was = s.textContent; s.textContent = syl[i]; s.classList.add('peek'); }); setTimeout(function(){ sl.forEach(function(s){ s.textContent = s.dataset.was; s.classList.remove('peek'); }); }, 1400); return; }
+        var b = e.target.closest('.r3-kjamo'); if(!b) return;
+        var need = koParts(syl[si]);
+        if(b.dataset.j !== need[built.length]){ slips++; return reefShake(b); }
+        built.push(b.dataset.j); try { Sound.bloop(700 + built.length * 140, 0, .05); } catch(err){}
+        if(built.length === need.length){
+          si++; built = [];
+          if(si === syl.length){ try { Sound.correct(); } catch(err){} reefSay(w.k); play.querySelectorAll('.r3-kslot').forEach(function(s, i){ s.textContent = syl[i]; s.className = 'r3-kslot done'; }); wi++; return setTimeout(word, 1300); }
+          return draw();
+        }
+        var now = play.querySelector('.r3-kslot.now'); if(now) now.textContent = koJoin(built);
+        var h = play.querySelector('.r3-khint'); if(h) h.textContent = built.length === 1 ? 'Vowel' : 'Bottom consonant';
+      };
+      draw(); setTimeout(function(){ reefSay(w.k); }, 300);
+    }
+    word();
+  }
+
+  // Echo Shell: eight words read aloud; pick the one heard (sound twins like 달 / 탈 / 딸) or its meaning.
+  function reefGameEcho(play, finish, g){
+    var p = g.pool, rounds = reefPick(p.twins, 4).map(function(t){ return { say: t.k, ok: t.k, opts: reefShuffle(t.opts.slice()), ko: true }; });
+    reefPick(p.ko, 8 - rounds.length).forEach(function(w){
+      var wrong = reefPick(p.ko.filter(function(x){ return x.e !== w.e; }), 3).map(function(x){ return x.e; });
+      rounds.push({ say: w.k, ok: w.e, opts: reefShuffle([w.e].concat(wrong)), ko: false });
+    });
+    reefShuffle(rounds);
+    var ri = 0, right = 0, missed = false;
+    function next(){
+      if(ri === rounds.length) return finish(right >= 6, reefScoreNote('ktwins', right, true, function(n){ return n + ' of ' + rounds.length + ' right'; }));
+      var r = rounds[ri]; missed = false;
+      play.innerHTML = '<p class="r3-mini-ask">' + (ri + 1) + ' of ' + rounds.length + ': ' + (r.ko ? 'which word do you hear?' : 'what does it mean?') + '</p>' +
+        '<button type="button" class="r3-echo" data-hear aria-label="Hear it again">' + ccIcon('sound') + '</button>' +
+        '<div class="r3-kopts' + (r.ko ? ' ko' : '') + '">' + r.opts.map(function(o){ return '<button type="button" class="r3-kopt" data-o="' + esc(o) + '">' + esc(o) + '</button>'; }).join('') + '</div>';
+      setTimeout(function(){ reefSay(r.say); }, 250);
+    }
+    play.onclick = function(e){
+      var r = rounds[ri]; if(!r) return;
+      if(e.target.closest('[data-hear]')) return reefSay(r.say);
+      var b = e.target.closest('.r3-kopt'); if(!b || b.disabled) return;
+      if(b.dataset.o === r.ok){ b.classList.add('got'); if(!missed) right++; try { Sound.correct(); } catch(err){} play.querySelectorAll('.r3-kopt').forEach(function(x){ x.disabled = true; }); ri++; setTimeout(next, 800); }
+      else { missed = true; b.disabled = true; reefShake(b); }
+    };
+    next();
+  }
+
+  // Sentence Current: four sentences; tap the Korean words in order.
+  function reefGameSentence(play, finish, g){
+    var list = reefPick(g.pool.sentences, 4), si = 0, slips = 0;
+    function next(){
+      if(si === list.length) return finish(true, reefScoreNote('ksent', slips, false, function(n){ return n === 0 ? 'No slips' : n + (n === 1 ? ' slip' : ' slips'); }));
+      var s = list[si], words = s.k.split(/\s+/), order = reefShuffle(words.map(function(w, i){ return i; })), at = 0;
+      if(order.join() === words.map(function(w, i){ return i; }).join() && words.length > 1) order.reverse();
+      play.innerHTML = '<p class="r3-mini-ask">' + (si + 1) + ' of ' + list.length + ': <b>' + esc(s.e) + '</b></p>' +
+        '<div class="r3-kline" aria-live="polite"></div>' +
+        '<div class="r3-kwords">' + order.map(function(i){ return '<button type="button" class="r3-kword" data-i="' + i + '">' + esc(words[i]) + '</button>'; }).join('') + '</div>';
+      var line = play.querySelector('.r3-kline');
+      play.onclick = function(e){
+        var b = e.target.closest('.r3-kword'); if(!b || b.disabled) return;
+        // a repeated word can go in either of its places
+        if(words[+b.dataset.i] !== words[at]){ slips++; return reefShake(b); }
+        b.disabled = true; b.classList.add('used'); line.insertAdjacentHTML('beforeend', '<span>' + esc(words[at]) + '</span> '); at++;
+        try { Sound.bloop(650 + at * 90, 0, .05); } catch(err){}
+        if(at === words.length){ try { Sound.correct(); } catch(err){} line.classList.add('done'); reefSay(s.k); si++; setTimeout(next, 1700); }
+      };
+    }
+    next();
+  }
+
+  // Counting Cove: the deck's counter questions (두 개 or 이 개?) and numbers to say the Sino or native way.
+  function reefGameCount2(play, finish, g){
+    var rounds = reefPick(g.pool.counts, 3).map(function(c){ return { ask: c.e, ok: c.k, opts: reefShuffle(c.opts.slice()) }; });
+    while(rounds.length < 6){
+      var sino = rounds.length % 2 === 0, n = sino ? 11 + Math.floor(Math.random() * 89) : 2 + Math.floor(Math.random() * 38);
+      var say = sino ? koSino : koNative, ok = say(n), wrong = {};
+      [sino ? koNative(n) : koSino(n), say(n + 1), say(n > 2 ? n - 1 : n + 2), n >= 12 && n % 10 && n % 11 ? say((n % 10) * 10 + Math.floor(n / 10)) : say(n + 10)]
+        .forEach(function(x){ if(x && x !== ok) wrong[x] = 1; });
+      rounds.push({ ask: '<span class="r3-knum">' + n + '</span> ' + (sino ? 'the Sino-Korean way (dates, money, phone numbers)' : 'the native Korean way (counting things, age)'), html: true, ok: ok, opts: reefShuffle([ok].concat(Object.keys(wrong).slice(0, 3))) });
+    }
+    reefShuffle(rounds);
+    var ri = 0, right = 0, missed = false;
+    function next(){
+      if(ri === rounds.length) return finish(right >= 4, reefScoreNote('knum', right, true, function(n){ return n + ' of ' + rounds.length + ' right'; }));
+      var r = rounds[ri]; missed = false;
+      play.innerHTML = '<p class="r3-mini-ask">' + (ri + 1) + ' of ' + rounds.length + ': ' + (r.html ? r.ask : '<b>' + esc(r.ask) + '</b>') + '</p>' +
+        '<div class="r3-kopts ko">' + r.opts.map(function(o){ return '<button type="button" class="r3-kopt" data-o="' + esc(o) + '">' + esc(o) + '</button>'; }).join('') + '</div>';
+    }
+    play.onclick = function(e){
+      var r = rounds[ri]; if(!r) return;
+      var b = e.target.closest('.r3-kopt'); if(!b || b.disabled) return;
+      if(b.dataset.o === r.ok){ b.classList.add('got'); if(!missed) right++; try { Sound.correct(); } catch(err){} reefSay(r.ok); play.querySelectorAll('.r3-kopt').forEach(function(x){ x.disabled = true; }); ri++; setTimeout(next, 1200); }
+      else { missed = true; b.disabled = true; reefShake(b); }
+    };
+    next();
+  }
+
+  // Tide Pairs: five words and five meanings; tap one of each to match. Timed, with a personal best.
+  function reefGamePairs(play, finish, g){
+    var src = g.pool.ko.length >= 8 ? g.pool.ko.map(function(w){ return { a: w.k, b: w.e }; }) : g.pool.pairs, seen = {};
+    var set = reefShuffle(src.slice()).filter(function(p){ if(seen[p.a] || seen[p.b]) return false; seen[p.a] = seen[p.b] = 1; return true; }).slice(0, 5);
+    var left = reefShuffle(set.map(function(p, i){ return i; })), right = reefShuffle(set.map(function(p, i){ return i; }));
+    var t0 = Date.now(), pick = null, got = 0, slips = 0;
+    play.innerHTML = '<p class="r3-mini-ask">Match all five pairs.</p><div class="r3-pairs"><div>' +
+      left.map(function(i){ return '<button type="button" class="r3-kpair a" data-k="' + i + '">' + esc(set[i].a) + '</button>'; }).join('') + '</div><div>' +
+      right.map(function(i){ return '<button type="button" class="r3-kpair b" data-k="' + i + '">' + esc(set[i].b) + '</button>'; }).join('') + '</div></div>';
+    play.onclick = function(e){
+      var b = e.target.closest('.r3-kpair'); if(!b || b.disabled) return;
+      if(!pick || pick.classList.contains(b.classList.contains('a') ? 'a' : 'b')){ if(pick) pick.classList.remove('sel'); pick = b; b.classList.add('sel'); if(b.classList.contains('a') && koHas(b.textContent)) reefSay(b.textContent); return; }
+      if(pick.dataset.k === b.dataset.k){
+        [pick, b].forEach(function(x){ x.classList.remove('sel'); x.classList.add('got'); x.disabled = true; }); pick = null; got++;
+        try { Sound.correct(); } catch(err){}
+        if(got === set.length){ var secs = Math.round((Date.now() - t0) / 1000) + slips * 2; setTimeout(function(){ finish(true, reefScoreNote('pairs', secs, false, function(n){ return n + ' seconds'; }) + (slips ? '<br><small>(includes 2 seconds for each of ' + slips + ' slips)</small>' : '')); }, 600); }
+      } else { slips++; reefShake(b); pick.classList.remove('sel'); pick = null; }
+    };
+  }
+
+  // Bubble Catch: ten prompts; four answer bubbles rise and float away after six seconds.
+  function reefGameCatch(play, finish, g){
+    var ko = g.pool.ko.length >= 8, src = (ko ? g.pool.ko.map(function(w){ return { q: w.e, a: w.k }; }) : g.pool.pairs.map(function(p){ return { q: p.a, a: p.b }; })).filter(function(x){ return x.a.length <= (ko ? 7 : 14); });
+    var rounds = reefPick(src, 10), ri = 0, right = 0, timer = null, calm = reefCalm();
+    function next(){
+      clearTimeout(timer);
+      if(!document.body.contains(play)) return;
+      if(ri === rounds.length) return finish(right >= 7, reefScoreNote('catch', right, true, function(n){ return n + ' of ' + rounds.length + ' caught'; }));
+      var r = rounds[ri], seen = {}; seen[r.a] = 1;
+      var wrong = reefShuffle(src.slice()).filter(function(x){ if(seen[x.a]) return false; seen[x.a] = 1; return true; }).slice(0, 3).map(function(x){ return x.a; });
+      var opts = reefShuffle([r.a].concat(wrong));
+      play.innerHTML = '<p class="r3-mini-ask">' + (ri + 1) + ' of ' + rounds.length + ': <b>' + esc(r.q) + '</b></p>' +
+        '<div class="r3-catch' + (calm ? ' calm' : '') + '">' + opts.map(function(o, i){ return '<button type="button" class="r3-cbub' + (o.length > (ko ? 4 : 8) ? ' long' : '') + '" style="--x:' + (6 + i * 23) + '%;--i:' + i + ';--d:' + (i * .35).toFixed(2) + 's" data-o="' + esc(o) + '">' + esc(o) + '</button>'; }).join('') +
+        '<div class="r3-ctime"><i></i></div></div>';
+      timer = setTimeout(function(){
+        var ok = play.querySelector('.r3-cbub[data-o="' + CSS.escape(r.a) + '"]');
+        play.querySelectorAll('.r3-cbub').forEach(function(x){ x.disabled = true; });
+        if(ok){ ok.classList.add('reveal'); }
+        try { Sound.bloop(260); } catch(err){}
+        ri++; timer = setTimeout(next, 1300);
+      }, 6400);
+    }
+    play.onclick = function(e){
+      var r = rounds[ri]; if(!r) return;
+      var b = e.target.closest('.r3-cbub'); if(!b || b.disabled) return;
+      if(b.dataset.o === r.a){
+        clearTimeout(timer); b.classList.add('got'); right++; try { Sound.bloop(900 + Math.random() * 300, 0, .05); } catch(err){}
+        play.querySelectorAll('.r3-cbub').forEach(function(x){ x.disabled = true; });
+        if(koHas(r.a)) reefSay(r.a);
+        ri++; timer = setTimeout(next, 900);
+      } else { b.disabled = true; reefShake(b); }
+    };
+    next();
+  }
+/* end of src/js/reef3d/games-adult.js */
 /* from src/js/reef3d/day-night.js */
   /* ---------- Day ⇄ night: a moonrise or sunrise inside the 3D sea (after Coral Calendar's sun/moon moment) ----------
      1. the camera tilts up from the reef toward the surface while the haze takes on the new colour;
@@ -21971,6 +22245,50 @@ body.r3-lobby{ background:linear-gradient(180deg, #d9f0ec 0%, #b2e0de 35%, #9fd6
 .r3.r3-sky .r3-labels{ opacity:0; }
 .r3-wash.night{ background:radial-gradient(ellipse 60% 45% at 50% 30%, #dff7f7 0%, #7fcfd6 30%, #1d5a6b 70%, #0d2b35 100%); }
 .r3-wash.day{ background:radial-gradient(ellipse 60% 45% at 50% 30%, #fffdf2 0%, #ffe9a8 30%, #9fd6d6 72%, #8fcfd2 100%); }
+
+/* ---- grown-up minigames (games-adult.js) ---- */
+.r3-gameic{ width:3.4rem; height:3.4rem; color:#1c8c93; vertical-align:middle; } .r3-gameic.sm{ width:1.5rem; height:1.5rem; vertical-align:-.3em; }
+.r3-games .r3-btn .cc-ic{ color:#1c8c93; }
+.r3-games.two{ grid-template-columns:1fr 1fr; } .r3-games.two .r3-btn{ height:100%; }
+.r3.night .r3-gameic, .r3.night .r3-games .r3-btn .cc-ic{ color:#7fd6dc; }
+.r3-mini-score{ font-size:1.1rem; } .r3-mini-score small{ font-weight:700; opacity:.75; }
+.r3-hear{ border:none; cursor:pointer; width:40px; height:40px; border-radius:50%; background:#e3f1f1; color:#1c8c93; vertical-align:middle; padding:0; }
+.r3-kslots{ display:flex; justify-content:center; gap:8px; margin:6px 0 2px; }
+.r3-kslot{ display:grid; place-items:center; width:68px; height:68px; border-radius:16px; border:3px dashed #9cc9c9; font:700 2.4rem/1 'Noto Sans KR','Apple SD Gothic Neo',sans-serif; color:#3f2c1b; background:rgba(255,255,255,.5); }
+.r3-kslot.now{ border-style:solid; border-color:#1c8c93; } .r3-kslot.done{ border-style:solid; border-color:#3f7a57; background:#e3f1e7; } .r3-kslot.peek{ color:#8a7a6a; }
+.r3.night .r3-kslot{ color:#f6e9c8; background:rgba(255,255,255,.06); } .r3.night .r3-kslot.done{ background:rgba(63,122,87,.35); }
+.r3-khint{ font-size:.9rem; color:#1c8c93; text-transform:uppercase; letter-spacing:.06em; }
+.r3-kpad{ display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; }
+.r3-kjamo{ border:none; cursor:pointer; border-radius:50%; aspect-ratio:1; font:700 1.7rem/1 'Noto Sans KR','Apple SD Gothic Neo',sans-serif; color:#0d5262;
+  background:radial-gradient(circle at 32% 28%, #fff 0 14%, #bfe9ef 40%, #7ccad6 100%); box-shadow:0 3px 0 #4c9aa6; }
+.r3-echo{ border:none; cursor:pointer; width:84px; height:84px; border-radius:50%; margin:4px auto 12px; display:grid; place-items:center; color:#fff;
+  background:radial-gradient(circle at 35% 30%, #ffb59e, #ff8a65 60%, #e2674a); box-shadow:0 5px 0 #b84f37; } .r3-echo .cc-ic{ width:2.4rem; height:2.4rem; --cc-ic-fill:#fff; }
+.r3-kopts{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.r3-kopt, .r3-kword, .r3-kpair{ border:none; cursor:pointer; border-radius:14px; padding:12px 8px; font:800 1.05rem/1.2 'Nunito',sans-serif; color:#3f2c1b; background:#fffdf7; box-shadow:0 3px 0 #c4a87a; overflow-wrap:anywhere; }
+.r3-kopts.ko .r3-kopt, .r3-kword{ font:700 1.35rem/1.2 'Noto Sans KR','Apple SD Gothic Neo',sans-serif; }
+.r3-kopt.got, .r3-kpair.got{ background:#e3f1e7; box-shadow:0 3px 0 #3f7a57; } .r3-kopt:disabled:not(.got){ opacity:.45; }
+.r3-kopt.no, .r3-kword.no, .r3-kpair.no, .r3-kjamo.no, .r3-cbub.no{ animation:r3No .35s; }
+.r3-knum{ display:block; font:900 2.6rem/1.1 'Baloo 2',sans-serif; color:#1c8c93; }
+.r3-kline{ min-height:52px; margin:4px 0 12px; padding:10px; border-radius:14px; background:rgba(28,140,147,.08); font:700 1.4rem/1.3 'Noto Sans KR','Apple SD Gothic Neo',sans-serif; }
+.r3-kline.done{ background:#e3f1e7; color:#2d5e40; }
+.r3-kwords{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px; } .r3-kword.used{ visibility:hidden; }
+.r3-pairs{ display:grid; grid-template-columns:1fr 1fr; gap:10px; } .r3-pairs > div{ display:grid; gap:8px; }
+.r3-kpair.a{ font:700 1.2rem/1.2 'Noto Sans KR','Apple SD Gothic Neo',sans-serif; } .r3-kpair.sel{ background:#fff3c9; box-shadow:0 3px 0 #d39b2a, 0 0 0 3px #f2b544; }
+.r3-kpair.got{ opacity:.55; }
+.r3-catch{ position:relative; height:290px; border-radius:18px; overflow:hidden; background:linear-gradient(#bfe7ee, #5cb6c6); }
+.r3.night .r3-catch{ background:linear-gradient(#24515c, #10303a); }
+.r3-cbub{ position:absolute; left:var(--x); bottom:-24px; width:22%; min-width:72px; aspect-ratio:1; border:none; cursor:pointer; border-radius:50%; padding:4px; font:800 .95rem/1.1 'Noto Sans KR','Nunito',sans-serif; color:#0d4552;
+  background:radial-gradient(circle at 32% 28%, #fff 0 12%, rgba(255,255,255,.85) 30%, rgba(190,235,242,.9) 100%); box-shadow:inset 0 -4px 0 rgba(76,154,166,.35); overflow-wrap:anywhere;
+  animation:r3Rise 6.4s linear var(--d) forwards; }
+.r3-cbub.long{ font-size:.78rem; }
+.r3-cbub.got{ animation:reefPopBurst .3s ease-out forwards; } .r3-cbub:disabled:not(.got):not(.reveal){ opacity:.4; }
+.r3-cbub.reveal{ background:#fff3c9; box-shadow:0 0 0 4px #f2b544; animation-play-state:paused; }
+@keyframes r3Rise{ from{ transform:translateY(0); } to{ transform:translateY(-360px); } }
+.r3-catch.calm .r3-cbub{ animation:none; bottom:auto; top:calc(24px + var(--i) * 44px); }
+.r3-catch.calm .r3-cbub.got{ animation:none; background:#e3f1e7; }
+.r3-ctime{ position:absolute; left:10px; right:10px; bottom:8px; height:6px; border-radius:3px; background:rgba(255,255,255,.4); overflow:hidden; }
+.r3-ctime i{ display:block; height:100%; background:#fff; transform-origin:left; animation:r3Time 6.4s linear forwards; }
+@keyframes r3Time{ from{ transform:scaleX(1); } to{ transform:scaleX(0); } }
 /* end of src/css/reef-3d.css */
 </style>
 

@@ -1,5 +1,25 @@
 # Changelog
 
+## Korean minigames for Wendy, and grown-up minigames (October 30, 2026)
+
+- **Grown-up profiles get their own minigames**, after a turn and in the minigame corner, built from the
+  profile's own decks. They keep a score and a personal best on each device. Wendy's six Korean games:
+  - **Hangul Blocks**: hear a word and see its meaning, then build it from jamo: first consonant, vowel, bottom
+    consonant. "Peek" shows the word for a moment.
+  - **Echo Shell**: hear a word and pick it from its sound twins (달 / 탈 / 딸), or pick its meaning.
+  - **Sentence Current**: tap the words in order to build a sentence from Korean Sentence Builder and the Mini
+    Stories.
+  - **Counting Cove**: the counter questions from Native or Sino?, plus numbers to say the Sino-Korean way
+    (사십일) or the native way (서른).
+  - **Tide Pairs**: match five Korean words with their meanings, timed.
+  - **Bubble Catch**: catch the bubble with the Korean word before it floats away (it stays still with Calm motion
+    on).
+- Other grown-up profiles get Tide Pairs and Bubble Catch from their own decks. Child profiles keep their games
+  unchanged.
+- The minigame corner button now opens while the dice is waiting to be tapped (before, it did nothing).
+- Inside a grown-up profile nothing asks the grown-up maths question; only opening the profile (and Manage
+  Profiles on the profile picker) does.
+
 ## Natural voice everywhere, and drawn icons on the buttons (October 30, 2026)
 
 - **No more robot voice for the app's own words**: 1,734 new natural-voice clips (the same voice as before) cover
