@@ -1100,6 +1100,15 @@
     var k = calm || up ? 1 : 1 - Math.pow(view.camGlide > now ? .955 : .84, dt * 30);
     view.camPos.lerp(tp, k); view.camLook.lerp(tl, k);
     view.cam.position.copy(view.camPos); view.cam.lookAt(view.camLook);
+    if(reef3dZoomFrame(view, now)){ var zc = view.zoomCenter, z = view.zoomNow, ze = z * z * (3 - 2 * Math.min(1, z));   // pinching out to the map
+      var zl = view.camLook.clone().lerp(zc, Math.min(1, ze)), zp = view.camPos.clone().lerp(zc.clone().add(new THREE.Vector3(0, view.zoomH, view.zoomH * .32)), Math.min(1, ze));
+      if(z > 1) zp.y += (z - 1) * 30;
+      view.cam.position.copy(zp); view.cam.lookAt(zl);
+      // the fog (and the far edge of what's drawn) moves back with the camera, so the whole board stays clear
+      var fog = view.scene.fog; if(!view.fog0) view.fog0 = { near: fog.near, far: fog.far, cam: view.cam.far };
+      var extra = zp.distanceTo(view.camPos);
+      fog.near = view.fog0.near + extra; fog.far = view.fog0.far + extra * 1.3; view.cam.far = fog.far + 8; view.cam.updateProjectionMatrix(); }
+    else if(view.fog0){ view.scene.fog.near = view.fog0.near; view.scene.fog.far = view.fog0.far; view.cam.far = view.fog0.cam; view.cam.updateProjectionMatrix(); view.fog0 = null; }
     var g = view.guide.position;
     view.sun.position.set(g.x + 6, 18, g.z + 8); view.sun.target.position.set(g.x, 0, g.z - 2);
     if(!calm){

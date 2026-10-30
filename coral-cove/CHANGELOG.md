@@ -1,5 +1,16 @@
 # Changelog
 
+## Pinch to the map, Shelly instead of a turtle emoji, glowing Library icons at night (October 30, 2026)
+
+- **Pinch to the map**: on the board, closing two fingers pulls the camera up and back over the whole board. Pinch
+  far enough (or let go past three quarters of the way) and it keeps rising while the treasure map fades in. Let
+  go sooner and it settles back. Closing a map opened this way swoops the camera back down. A trackpad pinch on a
+  computer works the same way.
+- **Shelly, not a turtle emoji**: the loading screen when a profile opens shows Shelly (Lumi at night). So do the
+  "you are here" marker on the treasure map, the plastic-bag note on the profile screen and the guide's dice.
+- **The Library's icons glow at night**: in night mode the icon tiles have a soft coloured glow and the line icons
+  are a bright glowing cyan, instead of sinking into the dark cards.
+
 ## Shelly just says it (October 30, 2026)
 
 - Shelly's line on the board is short now ("Let's dive into Soccer Practice!", or "All done!"), and the text box

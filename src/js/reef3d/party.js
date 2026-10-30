@@ -606,7 +606,7 @@
   }
 
   // Treasure map: the whole board from above on parchment. Tap a deck to send the guide there.
-  function reef3dMap(view){
+  function reef3dMap(view, fromZoom){
     var sp = view.spaces, minX = -8, maxX = 8, minZ = 0, maxZ = 2;
     sp.forEach(function(s){ minX = Math.min(minX, s.x - 2); maxX = Math.max(maxX, s.x + 2); minZ = Math.min(minZ, s.z - 2); });
     var W = 300, H = Math.max(420, (maxZ - minZ) * 13);
@@ -627,17 +627,24 @@
     }).join('');
     var me = sp[view.at];
     var ov = document.createElement('div');
-    ov.className = 'r3-map'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', 'Treasure map');
+    ov.className = 'r3-map' + (fromZoom ? ' from-zoom' : ''); ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', 'Treasure map');
     ov.innerHTML = '<div class="r3-map-card"><div class="r3-map-head"><b>Treasure map</b><button type="button" class="r3-map-close" data-r3-close aria-label="Close the map">'+ccIcon('close')+'</button></div>' +
       '<p class="r3-map-hint">Tap a place to swim there.</p>' +
       '<div class="r3-map-board" style="height:'+H+'px"><svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true">' +
         '<path d="'+d+'" fill="none" stroke="#b5452f" stroke-width="3" stroke-dasharray="2 9" stroke-linecap="round"/>' + dots + '</svg>' + spots +
-        '<span class="r3-map-me" style="left:'+(px(me) / W * 100).toFixed(1)+'%;top:'+py(me).toFixed(0)+'px" aria-hidden="true">'+(view.night ? '🐟' : '🐢')+'</span>' +
+        '<span class="r3-map-me" style="left:'+(px(me) / W * 100).toFixed(1)+'%;top:'+py(me).toFixed(0)+'px" aria-hidden="true">'+reefGuideMini(view.night)+'</span>' +
       '</div></div>';
-    function close(){ ov.remove(); var mb = view.wrap.querySelector('[data-r3-map]'); if(mb) mb.focus(); }
+    function close(){
+      var mb = view.wrap.querySelector('[data-r3-map]');
+      if(!view.zoomNow){ ov.remove(); if(mb) mb.focus(); return; }
+      // opened by a pinch: the map fades away as the camera swoops back down to her
+      ov.classList.add('closing'); setTimeout(function(){ ov.remove(); }, 380);
+      reef3dZoomTo(view, 0, 700, function(){ view.zoomCenter = null; });
+      if(mb) mb.focus();
+    }
     ov.addEventListener('click', function(e){
       var go = e.target.closest('[data-r3-go]');
-      if(go){ close(); return reef3dGoTo(view, +go.dataset.r3Go); }
+      if(go){ ov.remove(); view.zoomAnim = null; view.zoomGoal = null; view.zoomNow = 0; view.zoomCenter = null; return reef3dGoTo(view, +go.dataset.r3Go); }
       if(e.target.closest('[data-r3-close]') || e.target === ov) close();
     });
     ov.addEventListener('keydown', function(e){ if(e.key === 'Escape') close(); });
@@ -646,11 +653,73 @@
     ov.querySelector('[data-r3-close]').focus();
   }
 
+  /* ---- Pinch to the map: two fingers closing pull the camera up and back over the board; close them far enough
+     (or let go past three quarters of the way) and it keeps rising while the treasure map fades in. Let go
+     sooner and it settles back. A trackpad pinch (ctrl + wheel, or Safari's gesture events) works the same way.
+     Closing a map opened like this swoops the camera back down. ---- */
+  function reef3dZoomFrame(view, now){
+    var a = view.zoomAnim;
+    if(a){ var p = Math.min(1, (now - a.t0) / a.dur), e = p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+      view.zoomNow = a.from + (a.to - a.from) * e; if(p >= 1){ view.zoomAnim = null; if(a.done) a.done(); } }
+    else if(view.zoomGoal != null) view.zoomNow = (view.zoomNow || 0) + (view.zoomGoal - (view.zoomNow || 0)) * .35;
+    if(!view.zoomNow || view.zoomNow < .002){ view.zoomNow = 0; return false; }
+    view.touchAt = now;   // keeps the board drawing every frame while the camera moves
+    if(!view.zoomCenter){
+      var THREE = window.THREE, sp = view.spaces, minX = 1e9, maxX = -1e9, minZ = 1e9, maxZ = -1e9;
+      sp.forEach(function(s){ minX = Math.min(minX, s.x); maxX = Math.max(maxX, s.x); minZ = Math.min(minZ, s.z); maxZ = Math.max(maxZ, s.z); });
+      view.zoomCenter = new THREE.Vector3((minX + maxX) / 2, 0, (minZ + maxZ) / 2);
+      view.zoomH = Math.max(28, (maxZ - minZ) * .95, (maxX - minX) * 1.1);
+    }
+    return true;
+  }
+  function reef3dZoomTo(view, to, dur, done){ view.zoomGoal = null; view.zoomAnim = { from: view.zoomNow || 0, to: to, t0: performance.now(), dur: reefCalm() ? 1 : dur, done: done }; }
+  function reef3dZoomRelease(view){
+    if(view.mapOpening) return;
+    if((view.zoomNow || 0) >= .75) reef3dZoomToMap(view);
+    else reef3dZoomTo(view, 0, 380);
+  }
+  function reef3dZoomToMap(view){
+    if(view.mapOpening || document.querySelector('.r3-map')) return;
+    view.mapOpening = true; view.zoomCenter = null;
+    reef3dZoomTo(view, 1.35, 750, function(){ view.mapOpening = false; });
+    try { Sound.bubbles(3); } catch(e){}
+    setTimeout(function(){ if(document.body.contains(view.wrap)) reef3dMap(view, true); }, reefCalm() ? 0 : 330);
+  }
+  function reef3dPinchWire(view){
+    var el = view.wrap, pinch = null;
+    var dist = function(t){ return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY); };
+    var set = function(scale){   // scale < 1: fingers closing
+      if(view.mapOpening || document.querySelector('.r3-map') || view.moving) return;
+      view.pinching = performance.now(); view.zoomAnim = null; view.zoomCenter = view.zoomCenter || null;
+      view.zoomGoal = Math.max(0, Math.min(1.05, (1 - scale) / .5));
+      if(view.zoomGoal >= 1) reef3dZoomToMap(view);
+    };
+    el.addEventListener('touchstart', function(e){ if(e.touches.length === 2){ pinch = { d0: dist(e.touches) || 1 }; } }, { passive: true });
+    el.addEventListener('touchmove', function(e){ if(!pinch || e.touches.length !== 2) return; e.preventDefault(); set(dist(e.touches) / pinch.d0); }, { passive: false });
+    el.addEventListener('touchend', function(e){ if(pinch && e.touches.length < 2){ pinch = null; reef3dZoomRelease(view); } });
+    el.addEventListener('touchcancel', function(){ if(pinch){ pinch = null; reef3dZoomRelease(view); } });
+    // Safari on a Mac (and iPad Safari as a backup): gesture events carry the pinch scale
+    var g0 = null;
+    el.addEventListener('gesturestart', function(e){ e.preventDefault(); g0 = 1; });
+    el.addEventListener('gesturechange', function(e){ e.preventDefault(); if(!pinch) set(e.scale); });
+    el.addEventListener('gestureend', function(e){ e.preventDefault(); if(g0 && !pinch){ g0 = null; reef3dZoomRelease(view); } });
+    // a trackpad pinch in other browsers arrives as ctrl + wheel
+    var wz = 0, wt = null;
+    el.addEventListener('wheel', function(e){
+      if(!e.ctrlKey) return; e.preventDefault();
+      if(!wt) wz = view.zoomNow || 0;   // a pinch that starts again picks up where the camera is
+      wz = Math.max(0, Math.min(1.05, wz + e.deltaY * .012)); set(1 - wz * .5);
+      clearTimeout(wt); wt = setTimeout(function(){ wt = null; reef3dZoomRelease(view); }, 350);
+    }, { passive: false });
+  }
+
   function reef3dWire(view){
+    reef3dPinchWire(view);
     var THREE = window.THREE, ray = new THREE.Raycaster(), ptr = new THREE.Vector2(), down = null;
     view.wrap.addEventListener('pointerdown', function(e){ down = { x: e.clientX, y: e.clientY }; view.touchAt = performance.now(); view.idle = false; reef3dAmbience(view, true); });
     view.renderer.domElement.addEventListener('click', function(e){
       if(down && Math.abs(e.clientX - down.x) + Math.abs(e.clientY - down.y) > 12) return;
+      if(view.pinching && performance.now() - view.pinching < 400) return;   // the end of a pinch isn't a tap
       if(view.dice) return reef3dDiceHit(view);   // while the dice is out, a tap anywhere rolls it
       var rc = view.renderer.domElement.getBoundingClientRect();
       ptr.set((e.clientX - rc.left) / rc.width * 2 - 1, -((e.clientY - rc.top) / rc.height) * 2 + 1);

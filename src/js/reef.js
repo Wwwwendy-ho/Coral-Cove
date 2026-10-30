@@ -829,3 +829,17 @@
       return;
     }
   }, 1000);
+
+  // Shelly (or Lumi at night) as a small picture, where an emoji turtle or fish used to stand in for her.
+  function reefGuideMini(night, cls){ return '<span class="cc-guide-mini' + (cls ? ' ' + cls : '') + '" aria-hidden="true">' + (night ? lumiSVG('cc-guide-svg') : mascotTurtleSVG('cc-guide-svg')) + '</span>'; }
+  // The loading cover's guide: Shelly by day, Lumi at night, bobbing in the middle while body.r3-loading is on.
+  function reefLoadGuide(){
+    var on = document.body.classList.contains('r3-loading'), el = document.querySelector('.r3-load-guide');
+    if(on && !el){
+      var night = false; try { night = reefNight(); } catch(e){}
+      el = document.createElement('div'); el.className = 'r3-load-guide' + (night ? ' lumi' : ''); el.setAttribute('aria-hidden', 'true');
+      el.innerHTML = night ? lumiSVG('r3-load-svg') : mascotTurtleSVG('r3-load-svg');
+      document.body.appendChild(el);
+    } else if(!on && el) el.remove();
+  }
+  new MutationObserver(reefLoadGuide).observe(document.body, { attributes: true, attributeFilter: ['class'] });

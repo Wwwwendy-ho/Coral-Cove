@@ -167,7 +167,7 @@
         end: function(){ view.scene.remove(bag); } }); }
     var note = view.wrap.querySelector('.rl-note'); if(!note) return;
     var who = view.night ? 'Lumi' : 'Shelly';
-    note.innerHTML = '<span class="rl-note-e" aria-hidden="true">' + (view.night ? '🐟' : '🐢') + '</span>' +
+    note.innerHTML = reefGuideMini(view.night, 'rl-note-e') +
       '<span><b>No, thank you!</b> ' + who + ' does not eat plastic bags. Plastic in the sea can make sea animals sick. ' +
       'Help keep the ocean clean: put trash in a trash can.</span><button type="button" class="rl-note-ok">OK</button>';
     note.hidden = false; note.classList.remove('show'); void note.offsetWidth; note.classList.add('show');

@@ -299,6 +299,13 @@
     '  --clib-math:#4fc7cf; --clib-math-bg:#0f3a40; --clib-read:#f2b553; --clib-read-bg:#3a2a0e; --clib-ko:#f28aa0; --clib-ko-bg:#3e1822; --clib-sci:#b3a8ff; --clib-sci-bg:#262046; --clib-life:#8fd99d; --clib-life-bg:#163821; --clib-other:#9cc4cf; --clib-other-bg:#1a3640; }',
     '.clib-g-math{ --g:var(--clib-math); --gb:var(--clib-math-bg); } .clib-g-read{ --g:var(--clib-read); --gb:var(--clib-read-bg); } .clib-g-ko{ --g:var(--clib-ko); --gb:var(--clib-ko-bg); }',
     '.clib-g-sci{ --g:var(--clib-sci); --gb:var(--clib-sci-bg); } .clib-g-life{ --g:var(--clib-life); --gb:var(--clib-life-bg); } .clib-g-other{ --g:var(--clib-other); --gb:var(--clib-other-bg); }',
+    // At night the icons glow, so they don't sink into the dark cards
+    ':root[data-theme="dark"] .clib-pick-e{ background:radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--g) 60%, #ffffff 0%), color-mix(in srgb, var(--g) 22%, transparent) 75%); box-shadow:0 0 16px 2px color-mix(in srgb, var(--g) 55%, transparent); }',
+    '@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .clib-pick-e{ background:radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--g) 60%, #ffffff 0%), color-mix(in srgb, var(--g) 22%, transparent) 75%); box-shadow:0 0 16px 2px color-mix(in srgb, var(--g) 55%, transparent); } }',
+    ':root[data-theme="dark"] .clib-pick-e, :root[data-theme="dark"] .clib-next-e, :root[data-theme="dark"] .clib-tile-e, :root[data-theme="dark"] .clib-li-e{ filter:drop-shadow(0 0 6px rgba(255,255,255,.35)); }',
+    '@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .clib-pick-e, :root:not([data-theme="light"]) .clib-next-e, :root:not([data-theme="light"]) .clib-tile-e, :root:not([data-theme="light"]) .clib-li-e{ filter:drop-shadow(0 0 6px rgba(255,255,255,.35)); } }',
+    ':root[data-theme="dark"] .clib .cc-ic{ color:#8ff0f4; filter:drop-shadow(0 0 4px rgba(110,230,235,.85)); --cc-ic-fill:#ff9f86; }',
+    '@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .clib .cc-ic{ color:#8ff0f4; filter:drop-shadow(0 0 4px rgba(110,230,235,.85)); --cc-ic-fill:#ff9f86; } }',
     '.clib[hidden]{ display:none; }',
     '.clib-head{ display:flex; align-items:center; gap:12px; padding:max(12px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) 12px max(18px, env(safe-area-inset-left)); border-bottom:1px solid var(--clib-line); background:var(--clib-card); }',
     '.clib-title{ flex:1; margin:0; font:600 1.5rem var(--clib-display); }',

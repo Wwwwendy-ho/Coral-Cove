@@ -247,7 +247,7 @@ body.reef-calm .r3-prize-card, body.reef-calm .r3-prize-e, body.reef-calm .r3-pr
 .r3-map-spot.ready .r3-map-em{ box-shadow:0 0 0 3px #b5452f, 0 3px 0 #8a3322; }
 .r3-map-spot.done .r3-map-em{ box-shadow:0 0 0 3px #3f7a57, 0 3px 0 #2c5a40; }
 .r3-map-name{ font:800 .9rem 'Baloo 2',sans-serif; background:rgba(255,248,230,.85); padding:1px 8px; border-radius:8px; white-space:nowrap; }
-.r3-map-me{ position:absolute; transform:translate(-50%, -110%); font-size:1.7rem; pointer-events:none; filter:drop-shadow(0 2px 2px rgba(0,0,0,.3)); }
+.r3-map-me{ position:absolute; transform:translate(-50%, -110%); width:40px; pointer-events:none; filter:drop-shadow(0 2px 2px rgba(0,0,0,.3)); }
 @media (max-width:640px){ .r3{ border-radius:24px; } .r3-label b{ font-size:.88rem; } .r3-mapbtn{ padding:8px 12px; font-size:.92rem; } }
 body.reef-calm .r3-bubble, body.reef-calm .r3-map-card{ animation:none !important; }
 /* leaving a deck: subtraction question */
@@ -375,23 +375,26 @@ body.r3-full .sea, body.r3-lobby .sea{ display:none !important; }
 .rl-note.show{ animation:rlNotePop .45s var(--reef-pop) both; }
 @keyframes rlNotePop{ from{ opacity:0; transform:translate(-50%, -46%) scale(.94); } to{ opacity:1; transform:translate(-50%, -50%) scale(1); } }
 .rl-note b{ font-weight:800; }
-.rl-note-e{ font-size:1.8rem; flex:none; }
+.rl-note-e{ width:44px; flex:none; }
 .rl-note-ok{ flex:none; align-self:center; min-width:56px; min-height:44px; border:none; border-radius:999px; cursor:pointer; font:inherit; font-weight:800;
   background:#1c8c93; color:#fff; }
 .rl-themebtn:active{ transform:translateY(3px); box-shadow:0 1px 0 #b08d5a; }
 .r3-musicbtn.off, .rl-musicbtn.off{ opacity:.55; filter:grayscale(1); }
 .r3-musicbtn.off::after, .rl-musicbtn.off::after{ content:""; position:absolute; left:12px; right:12px; top:50%; height:3px; margin-top:-1.5px; background:#8a3322; border-radius:2px; transform:rotate(-40deg); }
 .r3-musicbtn:active, .rl-musicbtn:active{ transform:translateY(3px); box-shadow:0 1px 0 #b08d5a; }
-/* While the 3D board loads: one calm sheet of sea over the whole screen, with Shelly bobbing in the middle.
+/* While the 3D board loads: one calm sheet of sea over the whole screen, with Shelly (Lumi at night) bobbing in the
+   middle (.r3-load-guide, added by reefLoadGuide).
    It covers everything (the top buttons, Ask Shelly, the old deck screen underneath), so nothing half-built
    shows through, and it takes taps so nothing underneath can be pressed by accident. Removed by reef3dMount. */
 body.r3-loading::before{ content:""; position:fixed; inset:0; z-index:85; pointer-events:auto; background:linear-gradient(180deg, #d9f0ec 0%, #b2e0de 35%, #9fd6d6 70%); }
 :root[data-theme="dark"] body.r3-loading::before{ background:linear-gradient(180deg, #24505b 0%, #143844 40%, #0d2b35 70%); }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) body.r3-loading::before{ background:linear-gradient(180deg, #24505b 0%, #143844 40%, #0d2b35 70%); } }
-body.r3-loading::after{ content:"🐢"; position:fixed; left:50%; top:50%; z-index:86; font-size:3.5rem; pointer-events:none; transform:translate(-50%, -50%); animation:r3Load 1.6s ease-in-out infinite; }
+.r3-load-guide{ position:fixed; left:50%; top:50%; z-index:86; width:min(34vw, 150px); pointer-events:none; transform:translate(-50%, -50%); animation:r3Load 1.6s ease-in-out infinite; }
+.r3-load-guide svg{ width:100%; height:auto; display:block; filter:drop-shadow(0 10px 14px rgba(10,61,74,.25)); }
+.r3-load-guide.lumi svg{ filter:drop-shadow(0 0 18px rgba(67,211,212,.55)); }
 @keyframes r3Load{ 0%,100%{ transform:translate(-50%, -50%) rotate(-8deg); } 50%{ transform:translate(-50%, -62%) rotate(8deg); } }
-@media (prefers-reduced-motion: reduce){ body.r3-loading::after{ animation:none; } }
-body.reef-calm.r3-loading::after{ animation:none; }
+@media (prefers-reduced-motion: reduce){ .r3-load-guide{ animation:none; } }
+body.reef-calm .r3-load-guide{ animation:none; }
 body.r3-lobby{ background:linear-gradient(180deg, #d9f0ec 0%, #b2e0de 35%, #9fd6d6 70%) fixed; }
 :root[data-theme="dark"] body.r3-lobby{ background:linear-gradient(180deg, #24505b 0%, #143844 40%, #0d2b35 70%) fixed; }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) body.r3-lobby{ background:linear-gradient(180deg, #24505b 0%, #143844 40%, #0d2b35 70%) fixed; } }
@@ -512,3 +515,18 @@ body .rw-head, body.r3-full .rw-head{ position:absolute !important; width:1px !i
 @keyframes ccDiveOut{ to{ transform:translate(70vw, -20vh) rotate(14deg); opacity:.3; } }
 .cc-shelly-dive.calm, .cc-shelly-dive.calm .cc-sayit-shelly{ animation:none; }
 .cc-shelly-dive.calm.out{ animation:none; opacity:0; transition:opacity .6s; }
+
+/* the map after a pinch: it fades and settles in over the rising camera, and fades away as the camera swoops back */
+.r3-map.from-zoom{ animation:r3MapIn .55s ease-out both; }
+.r3-map.from-zoom .r3-map-card{ animation:r3MapCardIn .6s cubic-bezier(.2,.9,.3,1) both; }
+.r3-map.closing{ animation:r3MapOut .38s ease-in forwards; }
+@keyframes r3MapIn{ from{ opacity:0; backdrop-filter:blur(0); } to{ opacity:1; } }
+@keyframes r3MapCardIn{ from{ transform:scale(1.25); opacity:0; filter:blur(6px); } to{ transform:none; opacity:1; filter:none; } }
+@keyframes r3MapOut{ to{ opacity:0; } }
+body.reef-calm .r3-map.from-zoom, body.reef-calm .r3-map.from-zoom .r3-map-card{ animation:none; }
+.r3 canvas{ touch-action:pan-x pan-y; }   /* page scrolling still works; the browser's own pinch-zoom doesn't take the pinch */
+
+/* Shelly or Lumi as a small picture (reefGuideMini) */
+.cc-guide-mini{ display:inline-block; width:1.6em; vertical-align:middle; line-height:0; }
+.cc-guide-mini .cc-guide-svg{ width:100%; height:auto; display:block; }
+.r3-map-me .cc-guide-mini, .rl-note-e.cc-guide-mini{ width:100%; }

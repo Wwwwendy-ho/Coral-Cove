@@ -24,7 +24,7 @@
   function reef3dDiceKinds(view){
     var b = reefBoard(), list = [
       { id: 'regular', label: '🎲 1 to 6', faces: [1, 2, 3, 4, 5, 6] },
-      view.night ? { id: 'guide', label: '🐟 Lumi: 1 or 7', faces: [1, 1, 1, 7, 7, 7] } : { id: 'guide', label: '🐢 Shelly: 3 or 4', faces: [3, 3, 3, 4, 4, 4] },
+      view.night ? { id: 'guide', label: 'Lumi: 1 or 7', pic: true, faces: [1, 1, 1, 7, 7, 7] } : { id: 'guide', label: 'Shelly: 3 or 4', pic: true, faces: [3, 3, 3, 4, 4, 4] },
       { id: 'kiko', label: '🦀 Kiko: 0 gives 🐚3', faces: [0, 0, 2, 2, 6, 6] }
     ];
     if(b.dbl > 0) list.push({ id: 'double', label: '🎲🎲 Double (' + b.dbl + ')', faces: [1, 2, 3, 4, 5, 6], double: true });
@@ -48,7 +48,7 @@
     var here = view.spaces[view.at]; if(here && here.qb) here.qb.visible = false;
     var d = view.dice = { g: dg, box: box, mat: mat, tex: tex, halo: halo, n: n, kind: kind, rolling: true, t0: performance.now(), flick: 0, here: here };
     var ui = document.createElement('div'); ui.className = 'r3-dice-ui';
-    function pickHTML(){ return reef3dDiceKinds(view).map(function(k){ return '<button type="button" class="r3-die-pick" data-die="' + k.id + '" aria-pressed="' + (k.id === d.kind.id) + '">' + esc(k.label) + '</button>'; }).join(''); }
+    function pickHTML(){ return reef3dDiceKinds(view).map(function(k){ return '<button type="button" class="r3-die-pick" data-die="' + k.id + '" aria-pressed="' + (k.id === d.kind.id) + '">' + (k.pic ? reefGuideMini(view.night) + ' ' : '') + esc(k.label) + '</button>'; }).join(''); }
     ui.innerHTML = (storyN ? '' : '<div class="r3-die-picks" role="group" aria-label="Pick a die">' + pickHTML() + '</div>') + '<button type="button" class="r3-dice-tip">🎲 Tap to roll!</button>';
     ui.addEventListener('click', function(e){
       e.stopPropagation();

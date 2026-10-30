@@ -11980,6 +11980,20 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       return;
     }
   }, 1000);
+
+  // Shelly (or Lumi at night) as a small picture, where an emoji turtle or fish used to stand in for her.
+  function reefGuideMini(night, cls){ return '<span class="cc-guide-mini' + (cls ? ' ' + cls : '') + '" aria-hidden="true">' + (night ? lumiSVG('cc-guide-svg') : mascotTurtleSVG('cc-guide-svg')) + '</span>'; }
+  // The loading cover's guide: Shelly by day, Lumi at night, bobbing in the middle while body.r3-loading is on.
+  function reefLoadGuide(){
+    var on = document.body.classList.contains('r3-loading'), el = document.querySelector('.r3-load-guide');
+    if(on && !el){
+      var night = false; try { night = reefNight(); } catch(e){}
+      el = document.createElement('div'); el.className = 'r3-load-guide' + (night ? ' lumi' : ''); el.setAttribute('aria-hidden', 'true');
+      el.innerHTML = night ? lumiSVG('r3-load-svg') : mascotTurtleSVG('r3-load-svg');
+      document.body.appendChild(el);
+    } else if(!on && el) el.remove();
+  }
+  new MutationObserver(reefLoadGuide).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 /* end of src/js/reef.js */
 /* from src/js/reef-world.js */
   /* ---------- REEF WORLD: every deck is its own spot in one scrolling reef (a shipwreck at night) ---------- */
@@ -18789,6 +18803,15 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     var k = calm || up ? 1 : 1 - Math.pow(view.camGlide > now ? .955 : .84, dt * 30);
     view.camPos.lerp(tp, k); view.camLook.lerp(tl, k);
     view.cam.position.copy(view.camPos); view.cam.lookAt(view.camLook);
+    if(reef3dZoomFrame(view, now)){ var zc = view.zoomCenter, z = view.zoomNow, ze = z * z * (3 - 2 * Math.min(1, z));   // pinching out to the map
+      var zl = view.camLook.clone().lerp(zc, Math.min(1, ze)), zp = view.camPos.clone().lerp(zc.clone().add(new THREE.Vector3(0, view.zoomH, view.zoomH * .32)), Math.min(1, ze));
+      if(z > 1) zp.y += (z - 1) * 30;
+      view.cam.position.copy(zp); view.cam.lookAt(zl);
+      // the fog (and the far edge of what's drawn) moves back with the camera, so the whole board stays clear
+      var fog = view.scene.fog; if(!view.fog0) view.fog0 = { near: fog.near, far: fog.far, cam: view.cam.far };
+      var extra = zp.distanceTo(view.camPos);
+      fog.near = view.fog0.near + extra; fog.far = view.fog0.far + extra * 1.3; view.cam.far = fog.far + 8; view.cam.updateProjectionMatrix(); }
+    else if(view.fog0){ view.scene.fog.near = view.fog0.near; view.scene.fog.far = view.fog0.far; view.cam.far = view.fog0.cam; view.cam.updateProjectionMatrix(); view.fog0 = null; }
     var g = view.guide.position;
     view.sun.position.set(g.x + 6, 18, g.z + 8); view.sun.target.position.set(g.x, 0, g.z - 2);
     if(!calm){
@@ -19544,7 +19567,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   function reef3dDiceKinds(view){
     var b = reefBoard(), list = [
       { id: 'regular', label: '🎲 1 to 6', faces: [1, 2, 3, 4, 5, 6] },
-      view.night ? { id: 'guide', label: '🐟 Lumi: 1 or 7', faces: [1, 1, 1, 7, 7, 7] } : { id: 'guide', label: '🐢 Shelly: 3 or 4', faces: [3, 3, 3, 4, 4, 4] },
+      view.night ? { id: 'guide', label: 'Lumi: 1 or 7', pic: true, faces: [1, 1, 1, 7, 7, 7] } : { id: 'guide', label: 'Shelly: 3 or 4', pic: true, faces: [3, 3, 3, 4, 4, 4] },
       { id: 'kiko', label: '🦀 Kiko: 0 gives 🐚3', faces: [0, 0, 2, 2, 6, 6] }
     ];
     if(b.dbl > 0) list.push({ id: 'double', label: '🎲🎲 Double (' + b.dbl + ')', faces: [1, 2, 3, 4, 5, 6], double: true });
@@ -19568,7 +19591,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     var here = view.spaces[view.at]; if(here && here.qb) here.qb.visible = false;
     var d = view.dice = { g: dg, box: box, mat: mat, tex: tex, halo: halo, n: n, kind: kind, rolling: true, t0: performance.now(), flick: 0, here: here };
     var ui = document.createElement('div'); ui.className = 'r3-dice-ui';
-    function pickHTML(){ return reef3dDiceKinds(view).map(function(k){ return '<button type="button" class="r3-die-pick" data-die="' + k.id + '" aria-pressed="' + (k.id === d.kind.id) + '">' + esc(k.label) + '</button>'; }).join(''); }
+    function pickHTML(){ return reef3dDiceKinds(view).map(function(k){ return '<button type="button" class="r3-die-pick" data-die="' + k.id + '" aria-pressed="' + (k.id === d.kind.id) + '">' + (k.pic ? reefGuideMini(view.night) + ' ' : '') + esc(k.label) + '</button>'; }).join(''); }
     ui.innerHTML = (storyN ? '' : '<div class="r3-die-picks" role="group" aria-label="Pick a die">' + pickHTML() + '</div>') + '<button type="button" class="r3-dice-tip">🎲 Tap to roll!</button>';
     ui.addEventListener('click', function(e){
       e.stopPropagation();
@@ -20312,7 +20335,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
   }
 
   // Treasure map: the whole board from above on parchment. Tap a deck to send the guide there.
-  function reef3dMap(view){
+  function reef3dMap(view, fromZoom){
     var sp = view.spaces, minX = -8, maxX = 8, minZ = 0, maxZ = 2;
     sp.forEach(function(s){ minX = Math.min(minX, s.x - 2); maxX = Math.max(maxX, s.x + 2); minZ = Math.min(minZ, s.z - 2); });
     var W = 300, H = Math.max(420, (maxZ - minZ) * 13);
@@ -20333,17 +20356,24 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     }).join('');
     var me = sp[view.at];
     var ov = document.createElement('div');
-    ov.className = 'r3-map'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', 'Treasure map');
+    ov.className = 'r3-map' + (fromZoom ? ' from-zoom' : ''); ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', 'Treasure map');
     ov.innerHTML = '<div class="r3-map-card"><div class="r3-map-head"><b>Treasure map</b><button type="button" class="r3-map-close" data-r3-close aria-label="Close the map">'+ccIcon('close')+'</button></div>' +
       '<p class="r3-map-hint">Tap a place to swim there.</p>' +
       '<div class="r3-map-board" style="height:'+H+'px"><svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true">' +
         '<path d="'+d+'" fill="none" stroke="#b5452f" stroke-width="3" stroke-dasharray="2 9" stroke-linecap="round"/>' + dots + '</svg>' + spots +
-        '<span class="r3-map-me" style="left:'+(px(me) / W * 100).toFixed(1)+'%;top:'+py(me).toFixed(0)+'px" aria-hidden="true">'+(view.night ? '🐟' : '🐢')+'</span>' +
+        '<span class="r3-map-me" style="left:'+(px(me) / W * 100).toFixed(1)+'%;top:'+py(me).toFixed(0)+'px" aria-hidden="true">'+reefGuideMini(view.night)+'</span>' +
       '</div></div>';
-    function close(){ ov.remove(); var mb = view.wrap.querySelector('[data-r3-map]'); if(mb) mb.focus(); }
+    function close(){
+      var mb = view.wrap.querySelector('[data-r3-map]');
+      if(!view.zoomNow){ ov.remove(); if(mb) mb.focus(); return; }
+      // opened by a pinch: the map fades away as the camera swoops back down to her
+      ov.classList.add('closing'); setTimeout(function(){ ov.remove(); }, 380);
+      reef3dZoomTo(view, 0, 700, function(){ view.zoomCenter = null; });
+      if(mb) mb.focus();
+    }
     ov.addEventListener('click', function(e){
       var go = e.target.closest('[data-r3-go]');
-      if(go){ close(); return reef3dGoTo(view, +go.dataset.r3Go); }
+      if(go){ ov.remove(); view.zoomAnim = null; view.zoomGoal = null; view.zoomNow = 0; view.zoomCenter = null; return reef3dGoTo(view, +go.dataset.r3Go); }
       if(e.target.closest('[data-r3-close]') || e.target === ov) close();
     });
     ov.addEventListener('keydown', function(e){ if(e.key === 'Escape') close(); });
@@ -20352,11 +20382,73 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     ov.querySelector('[data-r3-close]').focus();
   }
 
+  /* ---- Pinch to the map: two fingers closing pull the camera up and back over the board; close them far enough
+     (or let go past three quarters of the way) and it keeps rising while the treasure map fades in. Let go
+     sooner and it settles back. A trackpad pinch (ctrl + wheel, or Safari's gesture events) works the same way.
+     Closing a map opened like this swoops the camera back down. ---- */
+  function reef3dZoomFrame(view, now){
+    var a = view.zoomAnim;
+    if(a){ var p = Math.min(1, (now - a.t0) / a.dur), e = p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+      view.zoomNow = a.from + (a.to - a.from) * e; if(p >= 1){ view.zoomAnim = null; if(a.done) a.done(); } }
+    else if(view.zoomGoal != null) view.zoomNow = (view.zoomNow || 0) + (view.zoomGoal - (view.zoomNow || 0)) * .35;
+    if(!view.zoomNow || view.zoomNow < .002){ view.zoomNow = 0; return false; }
+    view.touchAt = now;   // keeps the board drawing every frame while the camera moves
+    if(!view.zoomCenter){
+      var THREE = window.THREE, sp = view.spaces, minX = 1e9, maxX = -1e9, minZ = 1e9, maxZ = -1e9;
+      sp.forEach(function(s){ minX = Math.min(minX, s.x); maxX = Math.max(maxX, s.x); minZ = Math.min(minZ, s.z); maxZ = Math.max(maxZ, s.z); });
+      view.zoomCenter = new THREE.Vector3((minX + maxX) / 2, 0, (minZ + maxZ) / 2);
+      view.zoomH = Math.max(28, (maxZ - minZ) * .95, (maxX - minX) * 1.1);
+    }
+    return true;
+  }
+  function reef3dZoomTo(view, to, dur, done){ view.zoomGoal = null; view.zoomAnim = { from: view.zoomNow || 0, to: to, t0: performance.now(), dur: reefCalm() ? 1 : dur, done: done }; }
+  function reef3dZoomRelease(view){
+    if(view.mapOpening) return;
+    if((view.zoomNow || 0) >= .75) reef3dZoomToMap(view);
+    else reef3dZoomTo(view, 0, 380);
+  }
+  function reef3dZoomToMap(view){
+    if(view.mapOpening || document.querySelector('.r3-map')) return;
+    view.mapOpening = true; view.zoomCenter = null;
+    reef3dZoomTo(view, 1.35, 750, function(){ view.mapOpening = false; });
+    try { Sound.bubbles(3); } catch(e){}
+    setTimeout(function(){ if(document.body.contains(view.wrap)) reef3dMap(view, true); }, reefCalm() ? 0 : 330);
+  }
+  function reef3dPinchWire(view){
+    var el = view.wrap, pinch = null;
+    var dist = function(t){ return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY); };
+    var set = function(scale){   // scale < 1: fingers closing
+      if(view.mapOpening || document.querySelector('.r3-map') || view.moving) return;
+      view.pinching = performance.now(); view.zoomAnim = null; view.zoomCenter = view.zoomCenter || null;
+      view.zoomGoal = Math.max(0, Math.min(1.05, (1 - scale) / .5));
+      if(view.zoomGoal >= 1) reef3dZoomToMap(view);
+    };
+    el.addEventListener('touchstart', function(e){ if(e.touches.length === 2){ pinch = { d0: dist(e.touches) || 1 }; } }, { passive: true });
+    el.addEventListener('touchmove', function(e){ if(!pinch || e.touches.length !== 2) return; e.preventDefault(); set(dist(e.touches) / pinch.d0); }, { passive: false });
+    el.addEventListener('touchend', function(e){ if(pinch && e.touches.length < 2){ pinch = null; reef3dZoomRelease(view); } });
+    el.addEventListener('touchcancel', function(){ if(pinch){ pinch = null; reef3dZoomRelease(view); } });
+    // Safari on a Mac (and iPad Safari as a backup): gesture events carry the pinch scale
+    var g0 = null;
+    el.addEventListener('gesturestart', function(e){ e.preventDefault(); g0 = 1; });
+    el.addEventListener('gesturechange', function(e){ e.preventDefault(); if(!pinch) set(e.scale); });
+    el.addEventListener('gestureend', function(e){ e.preventDefault(); if(g0 && !pinch){ g0 = null; reef3dZoomRelease(view); } });
+    // a trackpad pinch in other browsers arrives as ctrl + wheel
+    var wz = 0, wt = null;
+    el.addEventListener('wheel', function(e){
+      if(!e.ctrlKey) return; e.preventDefault();
+      if(!wt) wz = view.zoomNow || 0;   // a pinch that starts again picks up where the camera is
+      wz = Math.max(0, Math.min(1.05, wz + e.deltaY * .012)); set(1 - wz * .5);
+      clearTimeout(wt); wt = setTimeout(function(){ wt = null; reef3dZoomRelease(view); }, 350);
+    }, { passive: false });
+  }
+
   function reef3dWire(view){
+    reef3dPinchWire(view);
     var THREE = window.THREE, ray = new THREE.Raycaster(), ptr = new THREE.Vector2(), down = null;
     view.wrap.addEventListener('pointerdown', function(e){ down = { x: e.clientX, y: e.clientY }; view.touchAt = performance.now(); view.idle = false; reef3dAmbience(view, true); });
     view.renderer.domElement.addEventListener('click', function(e){
       if(down && Math.abs(e.clientX - down.x) + Math.abs(e.clientY - down.y) > 12) return;
+      if(view.pinching && performance.now() - view.pinching < 400) return;   // the end of a pinch isn't a tap
       if(view.dice) return reef3dDiceHit(view);   // while the dice is out, a tap anywhere rolls it
       var rc = view.renderer.domElement.getBoundingClientRect();
       ptr.set((e.clientX - rc.left) / rc.width * 2 - 1, -((e.clientY - rc.top) / rc.height) * 2 + 1);
@@ -21085,7 +21177,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
         end: function(){ view.scene.remove(bag); } }); }
     var note = view.wrap.querySelector('.rl-note'); if(!note) return;
     var who = view.night ? 'Lumi' : 'Shelly';
-    note.innerHTML = '<span class="rl-note-e" aria-hidden="true">' + (view.night ? '🐟' : '🐢') + '</span>' +
+    note.innerHTML = reefGuideMini(view.night, 'rl-note-e') +
       '<span><b>No, thank you!</b> ' + who + ' does not eat plastic bags. Plastic in the sea can make sea animals sick. ' +
       'Help keep the ocean clean: put trash in a trash can.</span><button type="button" class="rl-note-ok">OK</button>';
     note.hidden = false; note.classList.remove('show'); void note.offsetWidth; note.classList.add('show');
@@ -22243,7 +22335,7 @@ body.reef-calm .r3-prize-card, body.reef-calm .r3-prize-e, body.reef-calm .r3-pr
 .r3-map-spot.ready .r3-map-em{ box-shadow:0 0 0 3px #b5452f, 0 3px 0 #8a3322; }
 .r3-map-spot.done .r3-map-em{ box-shadow:0 0 0 3px #3f7a57, 0 3px 0 #2c5a40; }
 .r3-map-name{ font:800 .9rem 'Baloo 2',sans-serif; background:rgba(255,248,230,.85); padding:1px 8px; border-radius:8px; white-space:nowrap; }
-.r3-map-me{ position:absolute; transform:translate(-50%, -110%); font-size:1.7rem; pointer-events:none; filter:drop-shadow(0 2px 2px rgba(0,0,0,.3)); }
+.r3-map-me{ position:absolute; transform:translate(-50%, -110%); width:40px; pointer-events:none; filter:drop-shadow(0 2px 2px rgba(0,0,0,.3)); }
 @media (max-width:640px){ .r3{ border-radius:24px; } .r3-label b{ font-size:.88rem; } .r3-mapbtn{ padding:8px 12px; font-size:.92rem; } }
 body.reef-calm .r3-bubble, body.reef-calm .r3-map-card{ animation:none !important; }
 /* leaving a deck: subtraction question */
@@ -22371,23 +22463,26 @@ body.r3-full .sea, body.r3-lobby .sea{ display:none !important; }
 .rl-note.show{ animation:rlNotePop .45s var(--reef-pop) both; }
 @keyframes rlNotePop{ from{ opacity:0; transform:translate(-50%, -46%) scale(.94); } to{ opacity:1; transform:translate(-50%, -50%) scale(1); } }
 .rl-note b{ font-weight:800; }
-.rl-note-e{ font-size:1.8rem; flex:none; }
+.rl-note-e{ width:44px; flex:none; }
 .rl-note-ok{ flex:none; align-self:center; min-width:56px; min-height:44px; border:none; border-radius:999px; cursor:pointer; font:inherit; font-weight:800;
   background:#1c8c93; color:#fff; }
 .rl-themebtn:active{ transform:translateY(3px); box-shadow:0 1px 0 #b08d5a; }
 .r3-musicbtn.off, .rl-musicbtn.off{ opacity:.55; filter:grayscale(1); }
 .r3-musicbtn.off::after, .rl-musicbtn.off::after{ content:""; position:absolute; left:12px; right:12px; top:50%; height:3px; margin-top:-1.5px; background:#8a3322; border-radius:2px; transform:rotate(-40deg); }
 .r3-musicbtn:active, .rl-musicbtn:active{ transform:translateY(3px); box-shadow:0 1px 0 #b08d5a; }
-/* While the 3D board loads: one calm sheet of sea over the whole screen, with Shelly bobbing in the middle.
+/* While the 3D board loads: one calm sheet of sea over the whole screen, with Shelly (Lumi at night) bobbing in the
+   middle (.r3-load-guide, added by reefLoadGuide).
    It covers everything (the top buttons, Ask Shelly, the old deck screen underneath), so nothing half-built
    shows through, and it takes taps so nothing underneath can be pressed by accident. Removed by reef3dMount. */
 body.r3-loading::before{ content:""; position:fixed; inset:0; z-index:85; pointer-events:auto; background:linear-gradient(180deg, #d9f0ec 0%, #b2e0de 35%, #9fd6d6 70%); }
 :root[data-theme="dark"] body.r3-loading::before{ background:linear-gradient(180deg, #24505b 0%, #143844 40%, #0d2b35 70%); }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) body.r3-loading::before{ background:linear-gradient(180deg, #24505b 0%, #143844 40%, #0d2b35 70%); } }
-body.r3-loading::after{ content:"🐢"; position:fixed; left:50%; top:50%; z-index:86; font-size:3.5rem; pointer-events:none; transform:translate(-50%, -50%); animation:r3Load 1.6s ease-in-out infinite; }
+.r3-load-guide{ position:fixed; left:50%; top:50%; z-index:86; width:min(34vw, 150px); pointer-events:none; transform:translate(-50%, -50%); animation:r3Load 1.6s ease-in-out infinite; }
+.r3-load-guide svg{ width:100%; height:auto; display:block; filter:drop-shadow(0 10px 14px rgba(10,61,74,.25)); }
+.r3-load-guide.lumi svg{ filter:drop-shadow(0 0 18px rgba(67,211,212,.55)); }
 @keyframes r3Load{ 0%,100%{ transform:translate(-50%, -50%) rotate(-8deg); } 50%{ transform:translate(-50%, -62%) rotate(8deg); } }
-@media (prefers-reduced-motion: reduce){ body.r3-loading::after{ animation:none; } }
-body.reef-calm.r3-loading::after{ animation:none; }
+@media (prefers-reduced-motion: reduce){ .r3-load-guide{ animation:none; } }
+body.reef-calm .r3-load-guide{ animation:none; }
 body.r3-lobby{ background:linear-gradient(180deg, #d9f0ec 0%, #b2e0de 35%, #9fd6d6 70%) fixed; }
 :root[data-theme="dark"] body.r3-lobby{ background:linear-gradient(180deg, #24505b 0%, #143844 40%, #0d2b35 70%) fixed; }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) body.r3-lobby{ background:linear-gradient(180deg, #24505b 0%, #143844 40%, #0d2b35 70%) fixed; } }
@@ -22508,6 +22603,21 @@ body .rw-head, body.r3-full .rw-head{ position:absolute !important; width:1px !i
 @keyframes ccDiveOut{ to{ transform:translate(70vw, -20vh) rotate(14deg); opacity:.3; } }
 .cc-shelly-dive.calm, .cc-shelly-dive.calm .cc-sayit-shelly{ animation:none; }
 .cc-shelly-dive.calm.out{ animation:none; opacity:0; transition:opacity .6s; }
+
+/* the map after a pinch: it fades and settles in over the rising camera, and fades away as the camera swoops back */
+.r3-map.from-zoom{ animation:r3MapIn .55s ease-out both; }
+.r3-map.from-zoom .r3-map-card{ animation:r3MapCardIn .6s cubic-bezier(.2,.9,.3,1) both; }
+.r3-map.closing{ animation:r3MapOut .38s ease-in forwards; }
+@keyframes r3MapIn{ from{ opacity:0; backdrop-filter:blur(0); } to{ opacity:1; } }
+@keyframes r3MapCardIn{ from{ transform:scale(1.25); opacity:0; filter:blur(6px); } to{ transform:none; opacity:1; filter:none; } }
+@keyframes r3MapOut{ to{ opacity:0; } }
+body.reef-calm .r3-map.from-zoom, body.reef-calm .r3-map.from-zoom .r3-map-card{ animation:none; }
+.r3 canvas{ touch-action:pan-x pan-y; }   /* page scrolling still works; the browser's own pinch-zoom doesn't take the pinch */
+
+/* Shelly or Lumi as a small picture (reefGuideMini) */
+.cc-guide-mini{ display:inline-block; width:1.6em; vertical-align:middle; line-height:0; }
+.cc-guide-mini .cc-guide-svg{ width:100%; height:auto; display:block; }
+.r3-map-me .cc-guide-mini, .rl-note-e.cc-guide-mini{ width:100%; }
 /* end of src/css/reef-3d.css */
 </style>
 
