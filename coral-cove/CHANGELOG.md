@@ -1,5 +1,14 @@
 # Changelog
 
+## One Korean voice everywhere (October 31, 2026)
+
+- Every Korean clip in Coral Cove (716 of them: deck words and sentences, Korean Echo, Listening and Sound Twins,
+  the mini stories, minigames, the role-plays and their hints, and the slow "turtle" readings) is now in the same
+  natural voice, so Korean always sounds like the same person. Questions keep their rising tone, and the slow
+  versions are read slowly rather than stretched.
+- The Korean voice packs were rebuilt (ko-1 to ko-3), and the voice index's version changed, so devices fetch the
+  new clips instead of using cached old ones.
+
 ## A natural Korean voice for the role-plays (October 31, 2026)
 
 - 63 new Korean clips in a natural voice, for every line Shelly says in the Korean role-plays (café, restaurant,

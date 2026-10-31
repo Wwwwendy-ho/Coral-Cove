@@ -1,6 +1,6 @@
 /* Coral Cove offline support: keeps a copy of the app's files so it still opens without Wi-Fi.
    Network first, so a new upload to GitHub shows up the next time the iPad is online. */
-var CACHE = 'coral-cove-20261031e';
+var CACHE = 'coral-cove-20261031f';
 var FILES = ['./', 'index.html', 'seed-data.js?v=20261026', 'audio-clips.js?v=20261026', 'storage.js?v=20261026',
              'library.js', 'words.js', 'words-data.js', 'three.min.js', 'reef-models.js', 'win.mp3', 'lobby-song.mp3', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
