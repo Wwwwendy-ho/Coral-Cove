@@ -376,6 +376,14 @@
       reefGo('swim', null, function(){ S.view = 'home'; S.reefPlace = null; S.subjectFilter = 'all'; render(); });
     });
     var box = app.querySelector('#reefFactBox');
+    function tell(id){
+      var f = reefFriend(id); if(!f) return;
+      box.hidden = false;
+      box.innerHTML = '<span class="reef-fact-e">'+f.e+'</span><span><b>'+esc(f.name)+'</b><br>'+esc(f.fact)+'</span>';
+      try { Sound.bubbles(2); } catch(e){}
+      try { Speech.speak(f.name + '. ' + f.fact); } catch(e){}
+    }
+    reefAquarium3D(app.querySelector('.aq-water'), found, tell);   // the friends come alive in 3D when the device can draw it
     app.querySelectorAll('[data-reef-friend]').forEach(function(b){
       b.addEventListener('click', function(){
         var f = reefFriend(b.dataset.reefFriend);

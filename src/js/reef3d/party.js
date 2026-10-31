@@ -667,8 +667,13 @@
     if(!view.zoomCenter){
       var THREE = window.THREE, sp = view.spaces, minX = 1e9, maxX = -1e9, minZ = 1e9, maxZ = -1e9;
       sp.forEach(function(s){ minX = Math.min(minX, s.x); maxX = Math.max(maxX, s.x); minZ = Math.min(minZ, s.z); maxZ = Math.max(maxZ, s.z); });
+      // at night the ship reaches past the path: the stern behind the start and the long bow beyond the end
+      var ship = view.night && sp.ship ? sp.ship.half : 0;
+      if(ship){ maxZ += ship * .55 + 6; minZ -= ship * 2.6 + 6; minX = Math.min(minX, -ship); maxX = Math.max(maxX, ship); }
       view.zoomCenter = new THREE.Vector3((minX + maxX) / 2, 0, (minZ + maxZ) / 2);
-      view.zoomH = Math.max(28, (maxZ - minZ) * .95, (maxX - minX) * 1.1);
+      // high enough that the whole board (the whole ship at night) fits on the screen, either way up
+      var span = 2 * Math.tan(view.cam.fov * Math.PI / 360);
+      view.zoomH = Math.max(28, (maxZ - minZ + 10) / span, (maxX - minX + 10) / (span * view.cam.aspect));
     }
     return true;
   }

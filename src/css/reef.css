@@ -383,3 +383,7 @@ body.reef-calm .cc-nudge, body.reef-calm .feed-stage.cc-nudge::after{ animation-
 .reef-aquarium.calm *, body.reef-calm .reef-aquarium *{ animation:none !important; }
 @media (prefers-reduced-motion: reduce){ .reef-aquarium *{ animation:none !important; } .aq-friend.swim{ left:var(--x0); } }
 .reef-aquarium.calm .aq-friend.swim, body.reef-calm .aq-friend.swim{ left:var(--x0); }
+
+/* the 3D tank (aquarium.js): the canvas fills the water; the flat friends and props step aside */
+.aq-canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; cursor:pointer; touch-action:manipulation; }
+.aq-water.is-3d > :not(.aq-canvas):not(.aq-empty){ display:none; }

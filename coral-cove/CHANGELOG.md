@@ -1,5 +1,21 @@
 # Changelog
 
+## A live 3D aquarium, and the wreck looks like a ship from above (October 31, 2026)
+
+- **The aquarium is alive**: every sea friend she has found is a 3D creature in the tank, like Shelly on the
+  profile screen.
+  - Fish, the dolphin, the shark, the whales, the turtle, the seal and the penguin swim around and turn toward
+    where they're going.
+  - Crabs and the lobster walk the sand, the shrimp and the octopus stay near the bottom, the jellyfish pulse and
+    drift, and the otter floats on its back.
+  - The shell, the coral and the oyster sit on the gravel, and the oyster opens and closes.
+  - Tails, fins, flippers and tentacles move.
+  - Tap a friend: it does a happy spin and hop (the pufferfish puffs up) and its fact is read. Tap the water: food
+    drops and the nearest swimmer races over to eat it.
+  - If a device can't draw 3D, the flat aquarium stays.
+- **The wreck from above**: pinching out to the map now pulls back far enough to show the whole board, and at
+  night the wreck has a ship's outline. The bow is long, curved and pointed, and the stern has rounded corners.
+
 ## An aquarium for the sea friends, and glowing buttons at night (October 30, 2026)
 
 - **Treasure Reef is now an aquarium**: a glass tank with a wooden frame, water, light rays, sand, seaweed, coral

@@ -258,7 +258,7 @@
   }
   function reef3dWreckDeck(o){
     var THREE = o.THREE, d = o.deck, sp = o.spaces, M = o.M, mesh = o.mesh, B = o.B, r = o.r;
-    var W = d.half * 2, zc0 = d.z0, st = d.stair, holeZ = st ? d.holeZ : d.z1, bowZ = d.z1, bowLen = d.half * 1.4;
+    var W = d.half * 2, zc0 = d.z0, st = d.stair, holeZ = st ? d.holeZ : d.z1, bowZ = d.z1, bowLen = d.half * 2.6, sternLen = d.half * .55;
     var UP = d.y, LOW = st ? st.low + d.y : d.y, BOT = LOW - 1.6, TOP = .35;
     // Everything on the ship goes into two groups that list together: still parts (merged and baked with the
     // scenery) and parts that glow or move. Inside them, heights are the ship's own (before the list).
@@ -286,19 +286,36 @@
       shade.rotation.x = -Math.PI / 2; shade.position.set(0, LOW + .02, holeZ - .5); shade.scale.x = 1.4; shade.raycast = function(){}; D.add(shade);   // shadow under the overhang
       for(var f = 0; f < 4; f++){ var fp = mesh(new THREE.BoxGeometry(.45, .14, 2 + r() * 1.5), M('#4a3828'), (r() - .5) * (W - 4), LOW + .2, holeZ - 2 - r() * 4); fp.rotation.set(r() * .3, r() * 3, r() * .2); if(clear(fp.position.x, fp.position.z)) S.add(fp); }   // fallen planks
     }
-    var bowShape = new THREE.Shape(); bowShape.moveTo(-d.half, 0); bowShape.lineTo(d.half, 0); bowShape.lineTo(0, bowLen); bowShape.lineTo(-d.half, 0);
-    var bd = new THREE.Mesh(new THREE.ShapeGeometry(bowShape), deckMat(W, bowLen)); bd.rotation.x = -Math.PI / 2; bd.position.set(0, (st ? LOW : UP), bowZ); bd.raycast = function(){}; D.add(bd);
+    // Seen from above it has to read as a ship: a long curved bow that comes to a point, and a stern with rounded
+    // corners (a squared-off oval). Each is a deck shape plus hull walls and a rail that follow its curve.
+    function hullCurve(n, f){ var pts = []; for(var i = 0; i <= n; i++) pts.push(f(i / n)); return pts; }
+    var bowPts = hullCurve(14, function(u){ return [d.half * Math.pow(Math.cos(u * Math.PI / 2), .75), u * bowLen]; });   // [x, distance ahead of bowZ]
+    var sternPts = hullCurve(10, function(u){ var a = u * Math.PI / 2; return [d.half * Math.pow(Math.cos(a), .35), -sternLen * Math.pow(Math.sin(a), .35)]; });   // [x, distance behind zc0]
+    function capDeck(pts, z, y){
+      var sh = new THREE.Shape(); sh.moveTo(-pts[0][0], 0);
+      pts.forEach(function(p){ sh.lineTo(-p[0], p[1]); }); pts.slice().reverse().forEach(function(p){ sh.lineTo(p[0], p[1]); });
+      var m = new THREE.Mesh(new THREE.ShapeGeometry(sh), deckMat(1, 1)); m.rotation.x = -Math.PI / 2; m.position.set(0, y, z); m.raycast = function(){}; D.add(m);
+    }
+    function capWalls(pts, z){   // hull walls and the rail along a curve, both sides
+      [-1, 1].forEach(function(side){
+        for(var i = 0; i < pts.length - 1; i++){
+          var a = pts[i], b = pts[i + 1], x0 = side * (a[0] + .25), x1 = side * (b[0] + .25), z0 = z - a[1], z1 = z - b[1];
+          var len = Math.hypot(x1 - x0, z1 - z0) + .3, ang = Math.atan2(x1 - x0, z1 - z0);
+          var w = mesh(new THREE.BoxGeometry(.5, H, len), hullM, (x0 + x1) / 2, (TOP + BOT) / 2, (z0 + z1) / 2); w.rotation.y = ang; S.add(w);
+          var rl = mesh(new THREE.BoxGeometry(.3, .16, len), railM, (x0 + x1) / 2 - side * .15, TOP + .75, (z0 + z1) / 2); rl.rotation.y = ang; S.add(rl);
+        }
+      });
+    }
+    var H = TOP - BOT, L = zc0 - bowZ;
+    capDeck(bowPts, bowZ, st ? LOW : UP); capDeck(sternPts, zc0, UP);
+    capWalls(bowPts, bowZ); capWalls(sternPts, zc0);
 
     // the hull: tall walls from below the sand to the gunwale, a stern wall, angled bow walls, trim and rails
-    var H = TOP - BOT, L = zc0 - bowZ;
     [-1, 1].forEach(function(side){
       S.add(mesh(new THREE.BoxGeometry(.5, H, L), hullM, side * (d.half + .25), (TOP + BOT) / 2, (zc0 + bowZ) / 2));
       S.add(mesh(new THREE.BoxGeometry(.6, .22, L), trimM, side * (d.half + .28), -1.2, (zc0 + bowZ) / 2));
       S.add(mesh(new THREE.BoxGeometry(.3, .16, L), railM, side * (d.half + .1), TOP + .75, (zc0 + bowZ) / 2));
-      var wall = mesh(new THREE.BoxGeometry(.5, H, Math.hypot(d.half, bowLen)), hullM, side * d.half / 2, (TOP + BOT) / 2, bowZ - bowLen / 2);
-      wall.rotation.y = side * Math.atan2(d.half, bowLen); S.add(wall);
     });
-    S.add(mesh(new THREE.BoxGeometry(W + 1, H, .5), hullM, 0, (TOP + BOT) / 2, zc0 + .25));
     var sprit = mesh(new THREE.CylinderGeometry(.14, .2, 7, 8), railM, 0, (st ? LOW : UP) + 1.8, bowZ - bowLen - 2); sprit.rotation.x = -Math.PI / 2 + .35; S.add(sprit);
     var exits = sp.filter(function(s){ return s.branch && Math.abs(s.x) > d.half - .6; });
     function exitNear(z, side, w){ return exits.some(function(s){ return Math.abs(s.z - z) < (w || 2.4) && Math.sign(s.x) === side; }); }
