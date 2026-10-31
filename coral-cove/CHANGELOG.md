@@ -1,5 +1,16 @@
 # Changelog
 
+## A picture for every vocabulary word (October 31, 2026)
+
+- On Alissa's profile, each of the 107 vocabulary words in the story decks (Soccer Practice, Camping Trip, the
+  Aquarium, Beach, Zoo and other trips, Word Feed: All Vocab) and the sight words has its own picture above the
+  word: a bright 3D illustration chosen to show what the word means. Where one picture isn't enough, a small second
+  one sits in a white circle at the corner: "under" is a crab with a down arrow, "roaring" a lion with a sound
+  icon, "decided" a thinking face with a tick, "moat" a castle with water. Abstract words get a picture of the idea:
+  a first-place medal for "first", an hourglass for "until", a pinch of fingers for "hardly".
+- The pictures are on the card's front and in the word feed, sized for iPad and phone in either direction, and
+  are kept for offline use once seen. Grown-up profiles' cards don't change.
+
 ## One Korean voice everywhere (October 31, 2026)
 
 - Every Korean clip in Coral Cove (716 of them: deck words and sentences, Korean Echo, Listening and Sound Twins,

@@ -108,6 +108,8 @@ To turn it off, open Library Settings and tap "Turn off". The Library goes back 
 
 - 3D models: Quaternius (Ultimate Platformer Pack, Fish Pack) and the Kenney Pirate Kit (kenney.nl), all CC0.
 - 3D engine: [three.js](https://threejs.org) r128, MIT licence.
+- Vocabulary pictures (`vocab-pics/`): [Fluent Emoji 3D](https://github.com/microsoft/fluentui-emoji) by Microsoft, MIT licence, via the `@lobehub/fluent-emoji-3d` package; combined into one picture per word for Coral Cove.
+- Korean voice: [SNAP Piper Korean](https://huggingface.co/softguy777/snap_piper_korean_22k), Apache License 2.0, with [g2pkk](https://pypi.org/project/g2pkk/) for pronunciation.
 - English backup definitions: [WordNet 3.0](https://wordnet.princeton.edu), Princeton University (WordNet licence). The child-friendly definitions were written for Coral Cove.
 - Chinese words and meanings: [CC-CEDICT](https://cc-cedict.org), CC BY-SA 4.0. The Chinese part of `words-data.js` is shared under the same licence.
 - Chinese character parts: [cjk-decomp](https://github.com/amake/cjk-decomp) by Aaron Madlon-Kay, Apache License 2.0.

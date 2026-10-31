@@ -871,3 +871,19 @@
     } else if(!on && el) el.remove();
   }
   new MutationObserver(reefLoadGuide).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+  /* ---------- A picture for each vocabulary word (child profile) ----------
+     The story decks' words (and Word Feed: All Vocab, and the sight words) each have a picture in vocab-pics/:
+     a Fluent 3D illustration (MIT) chosen to show what the word means, with a small second picture where one helps
+     ("under": a crab and a down arrow). It sits above the word on the card's front and in the word feed. */
+  var REEF_VOCAB_PICS = ["after", "afternoon", "already", "always", "aquarium", "around", "arrive", "because", "before", "bought", "bounce-house", "bright", "bring", "bucket", "bumpy", "campfire", "carefully", "catch", "check-out", "chocolate", "clown", "coach", "cones", "counts", "cover", "covered", "crackling", "crunch", "decided", "deep", "dig", "digging", "distance", "earthworm", "evening", "everyone", "extra", "feels", "field-trip", "finds", "finish", "first", "flour", "fluffy", "fresh", "friend", "fuzzy", "gently", "glowing", "golden-brown", "guide", "hard", "hardly", "hold", "including", "jerseys", "laugh", "librarian", "lining-up", "lobby", "moat", "net", "once", "outside", "penalty", "picks", "pile", "porch", "puffs", "puppet", "rainy", "roaring", "roasting", "roll", "row", "sandcastle", "scoop", "scores", "scratch", "season", "shady", "shelf", "shore", "sledding", "smells", "soft", "soil", "splashing", "stack", "sticks", "still", "stir", "straight", "stuffed", "through", "toast", "together", "tour", "turns", "twists", "under", "until", "visit", "water", "week", "wiggling", "zookeeper"];
+  function reefVocabSlug(t){ return String(t || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
+  afterRender('vocab pictures', function(){
+    if(!reefKid()) return;
+    document.querySelectorAll('.stage .face-front .card-text, .feed-card .feed-word').forEach(function(el){
+      var host = el.parentNode; if(!host || host.querySelector(':scope > .vocab-pic')) return;
+      var slug = reefVocabSlug(el.textContent); if(REEF_VOCAB_PICS.indexOf(slug) < 0) return;
+      var img = document.createElement('img'); img.className = 'vocab-pic'; img.alt = ''; img.decoding = 'async'; img.src = 'vocab-pics/' + slug + '.webp';
+      host.insertBefore(img, el);
+    });
+  });
