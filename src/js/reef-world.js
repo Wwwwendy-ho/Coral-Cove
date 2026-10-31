@@ -303,9 +303,9 @@
         '</div>';
       }
       if(s.special === 'treasure') return '' +
-        '<button type="button" class="rw-obj special" data-reef-special="treasure" '+pos(s, i)+' aria-label="Treasure Reef. My sea friends.">' +
+        '<button type="button" class="rw-obj special" data-reef-special="treasure" '+pos(s, i)+' aria-label="Aquarium. My sea friends.">' +
           '<span class="rw-shadow" aria-hidden="true"></span>'+reefArtSVG('treasure').replace('reef-art-svg', 'rw-art')+(tally.found ? '<span class="rw-count" aria-hidden="true">'+tally.found+'</span>' : '') +
-          '<span class="rw-plaque"><b>Treasure Reef</b><small>My sea friends</small></span></button>';
+          '<span class="rw-plaque"><b>Aquarium</b><small>My sea friends</small></span></button>';
       if(s.special === 'story') return '' +
         '<button type="button" class="rw-obj special" data-reef-special="story" '+pos(s, i)+' aria-label="Story Bottle. Make a story.">' +
           '<span class="rw-shadow" aria-hidden="true"></span>'+reefArtSVG('story').replace('reef-art-svg', 'rw-art') +

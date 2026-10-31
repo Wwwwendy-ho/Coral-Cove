@@ -620,8 +620,8 @@
     }).join('');
     var spots = sp.filter(function(s){ return s.label; }).map(function(s){
       var x = px(s), y = py(s), left = x > W / 2;
-      var name = s.kind === 'deck' ? s.item.d.name : s.kind === 'treasure' ? 'Treasure Reef' : 'Story Bottle';
-      var em = s.kind === 'deck' ? s.item.d.emoji : s.kind === 'treasure' ? '❌' : '🍾';
+      var name = s.kind === 'deck' ? s.item.d.name : s.kind === 'treasure' ? 'Aquarium' : 'Story Bottle';
+      var em = s.kind === 'deck' ? s.item.d.emoji : s.kind === 'treasure' ? '🐠' : '🍾';
       return '<button type="button" class="r3-map-spot'+(s.kind === 'deck' ? ' ' + s.item.state : '')+(left ? ' left' : '')+'" data-r3-go="'+s.i+'" style="left:'+(x / W * 100).toFixed(1)+'%;top:'+y.toFixed(0)+'px" aria-label="Go to '+esc(name)+'">' +
         '<span class="r3-map-em" aria-hidden="true">'+em+'</span><span class="r3-map-name">'+esc(name)+'</span></button>';
     }).join('');

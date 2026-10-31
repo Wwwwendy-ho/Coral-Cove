@@ -11460,13 +11460,13 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
               '<span class="reef-chest-box" aria-hidden="true"><span class="lid"></span><span class="body"></span></span>' +
             '</button>' : '') +
           '<h2>'+esc(head)+'</h2>' +
-          (find ? '<p class="reef-fact">'+esc(find.fact)+'</p><p class="reef-sum-note">It\'s in your Treasure Reef now.</p>' : '') +
+          (find ? '<p class="reef-fact">'+esc(find.fact)+'</p><p class="reef-sum-note">It\'s in your aquarium now.</p>' : '') +
           earnedHTML +
           planNextHTML() +
           (S.planRun ? '' : '<div class="reef-sum-actions">' +
             '<button class="btn btn-primary" data-act="play-again">🔁 Play Again</button>' +
             '<button class="btn btn-ghost" data-act="back-home">'+(reefNight() ? '⚓ Back to the wreck' : '🪸 Back to the reef')+'</button>' +
-            '<button class="btn btn-ghost" data-act="reef-treasure">💎 Treasure Reef</button>' +
+            '<button class="btn btn-ghost" data-act="reef-treasure">🐠 My Aquarium</button>' +
           '</div>') +
         '</div>' +
       '</div>';
@@ -11483,26 +11483,45 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     app.querySelector('[data-act="play-again"]').addEventListener('click', function(){ reefGo('dive', null, function(){ startStudy(S.currentDeckId); }); });
     app.querySelector('[data-act="reef-treasure"]').addEventListener('click', function(){ goHomeNow(); S.view = 'collection'; render(); });
   }
+  /* ---------- My Aquarium: the sea friends she has found live in a glass tank ----------
+     Swimmers cross the tank and turn at the glass, bottom-dwellers creep along the sand, jellyfish drift up and
+     down. Tap one to hear its fact. Friends not found yet wait as shadows on the shelf below. */
+  var REEF_AQ_BOTTOM = { crab: 1, lobster: 1, shrimp: 1, shell: 1, coral: 1, oyster: 1, octopus: 1 }, REEF_AQ_DRIFT = { jelly: 1 };
+  var REEF_AQ_BIG = { humpback: 1, bluewhale: 1, shark: 1, dolphin: 1, turtle: 1, seal: 1 };
   function reefCollection(){
     var c = (S.stats && S.stats.collection) || {};
-    var t = reefTally();
-    var tiles = REEF_FRIENDS.map(function(f){
-      var n = c[f.id] || 0;
-      return n
-        ? '<button type="button" class="reef-friend found" data-reef-friend="'+f.id+'" aria-label="'+esc(f.name+'. '+f.fact)+'"><span class="reef-friend-e">'+f.e+'</span><b>'+esc(f.name)+'</b>'+(n > 1 ? '<small>× '+n+'</small>' : '')+'</button>'
-        : '<div class="reef-friend" aria-label="Not found yet"><span class="reef-friend-e">'+f.e+'</span><b>Not found yet</b></div>';
+    var t = reefTally(), night = reefNight();
+    var found = REEF_FRIENDS.filter(function(f){ return c[f.id]; }), missing = REEF_FRIENDS.filter(function(f){ return !c[f.id]; });
+    var rnd = function(i, k){ var x = Math.sin((i + 1) * 9301 + k * 49297) * 233280; return x - Math.floor(x); };   // steady per friend, so the tank looks the same each visit
+    var bottomN = 0;
+    var swimmers = found.map(function(f, i){
+      var kind = REEF_AQ_BOTTOM[f.id] ? 'bottom' : REEF_AQ_DRIFT[f.id] ? 'drift' : 'swim';
+      var dur = kind === 'bottom' ? 26 + rnd(i, 1) * 14 : kind === 'drift' ? 9 + rnd(i, 1) * 5 : 14 + rnd(i, 1) * 12;
+      var top = kind === 'bottom' ? null : kind === 'drift' ? 12 + rnd(i, 2) * 30 : 8 + rnd(i, 2) * 52;
+      var left = kind === 'bottom' ? 6 + (bottomN++ * 19) % 80 : 8 + rnd(i, 3) * 70;
+      var style = '--dur:' + dur.toFixed(1) + 's;--del:-' + (rnd(i, 4) * dur).toFixed(1) + 's;' + (top != null ? 'top:' + top.toFixed(0) + '%;' : '') + '--x0:' + left.toFixed(0) + '%';
+      return '<button type="button" class="aq-friend ' + kind + (REEF_AQ_BIG[f.id] ? ' big' : '') + '" style="' + style + '" data-reef-friend="' + f.id + '" aria-label="' + esc(f.name + '. ' + f.fact) + '">' +
+        '<span class="aq-swim"><span class="aq-e">' + f.e + '</span></span>' + (c[f.id] > 1 ? '<small class="aq-n">×' + c[f.id] + '</small>' : '') + '</button>';
     }).join('');
+    var bubbles = ''; for(var i = 0; i < 14; i++) bubbles += '<i style="left:' + (4 + rnd(i, 5) * 92).toFixed(0) + '%;--s:' + (5 + rnd(i, 6) * 10).toFixed(0) + 'px;--d:-' + (rnd(i, 7) * 7).toFixed(1) + 's;--t:' + (5 + rnd(i, 8) * 4).toFixed(1) + 's"></i>';
+    var plants = '<span class="aq-weed" style="left:4%"></span><span class="aq-weed b" style="left:11%"></span><span class="aq-weed" style="left:88%"></span><span class="aq-weed b" style="left:93%"></span>' +
+      '<span class="aq-rock" style="left:20%"></span><span class="aq-rock s" style="left:70%"></span><span class="aq-coral" style="left:78%">🪸</span>';
+    var who = (S.profile && S.profile.name) ? S.profile.name + '\'s' : 'My';
     app.innerHTML = '' +
       '<div class="nav-row">' +
-        '<button class="back-btn" data-act="reef-back">'+(reefNight() ? '⚓ Back to the wreck' : '🪸 Back to the reef')+'</button>' +
+        '<button class="back-btn" data-act="reef-back">'+(night ? '⚓ Back to the wreck' : '🪸 Back to the reef')+'</button>' +
       '</div>' +
-      '<section class="reef-collection">' +
-        '<div class="reef-collection-head">' +
-          '<span class="reef-collection-art" aria-hidden="true">'+reefArtSVG('treasure')+'</span>' +
-          '<div><h2>My Treasure Reef</h2><p>You have found '+t.found+' of '+t.total+' sea friends. Finish a deck to find another one.</p></div>' +
-        '</div>' +
+      '<section class="reef-aquarium' + (night ? ' night' : '') + (reefCalm() ? ' calm' : '') + '">' +
+        '<div class="aq-head"><h2>' + esc(who) + ' Aquarium</h2><p>' + t.found + ' of ' + t.total + ' sea friends live here. Finish a deck to find another one.</p></div>' +
         '<div class="reef-fact-box" id="reefFactBox" hidden></div>' +
-        '<div class="reef-friends">'+tiles+'</div>' +
+        '<div class="aq-tank">' +
+          '<div class="aq-water"><div class="aq-rays" aria-hidden="true"></div><div class="aq-bubbles" aria-hidden="true">' + bubbles + '</div>' +
+            '<div class="aq-sand" aria-hidden="true"></div>' + plants + swimmers +
+            (found.length ? '' : '<p class="aq-empty">Your aquarium is waiting for its first friend. Finish a deck to find one!</p>') +
+          '</div><div class="aq-glass" aria-hidden="true"></div>' +
+        '</div>' +
+        '<div class="aq-plaque">' + esc(who) + ' Aquarium · ' + t.found + ' / ' + t.total + '</div>' +
+        (missing.length ? '<h3 class="aq-still">Still to find</h3><div class="aq-shelf">' + missing.map(function(f){ return '<span class="aq-ghost" aria-label="A sea friend not found yet">' + f.e + '</span>'; }).join('') + '</div>' : '') +
       '</section>';
     app.querySelector('[data-act="reef-back"]').addEventListener('click', function(){
       reefGo('swim', null, function(){ S.view = 'home'; S.reefPlace = null; S.subjectFilter = 'all'; render(); });
@@ -11513,8 +11532,9 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
         var f = reefFriend(b.dataset.reefFriend);
         box.hidden = false;
         box.innerHTML = '<span class="reef-fact-e">'+f.e+'</span><span><b>'+esc(f.name)+'</b><br>'+esc(f.fact)+'</span>';
-        app.querySelectorAll('.reef-friend.on').forEach(function(x){ x.classList.remove('on'); });
-        b.classList.add('on');
+        app.querySelectorAll('.aq-friend.on').forEach(function(x){ x.classList.remove('on'); });
+        b.classList.remove('on'); void b.offsetWidth; b.classList.add('on');
+        try { Sound.bubbles(2); } catch(e){}
         try { Speech.speak(f.name + '. ' + f.fact); } catch(e){}
       });
     });
@@ -12301,9 +12321,9 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
         '</div>';
       }
       if(s.special === 'treasure') return '' +
-        '<button type="button" class="rw-obj special" data-reef-special="treasure" '+pos(s, i)+' aria-label="Treasure Reef. My sea friends.">' +
+        '<button type="button" class="rw-obj special" data-reef-special="treasure" '+pos(s, i)+' aria-label="Aquarium. My sea friends.">' +
           '<span class="rw-shadow" aria-hidden="true"></span>'+reefArtSVG('treasure').replace('reef-art-svg', 'rw-art')+(tally.found ? '<span class="rw-count" aria-hidden="true">'+tally.found+'</span>' : '') +
-          '<span class="rw-plaque"><b>Treasure Reef</b><small>My sea friends</small></span></button>';
+          '<span class="rw-plaque"><b>Aquarium</b><small>My sea friends</small></span></button>';
       if(s.special === 'story') return '' +
         '<button type="button" class="rw-obj special" data-reef-special="story" '+pos(s, i)+' aria-label="Story Bottle. Make a story.">' +
           '<span class="rw-shadow" aria-hidden="true"></span>'+reefArtSVG('story').replace('reef-art-svg', 'rw-art') +
@@ -18708,7 +18728,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
         b.innerHTML = '<span class="r3-emoji" aria-hidden="true">'+it.d.emoji+'</span><span><b>'+esc(it.d.name)+'</b><small>'+esc(label)+'</small></span>' + (it.state === 'done' ? '<i class="r3-star" aria-hidden="true">★</i>' : '');
         b.setAttribute('aria-label', it.d.name + '. ' + (it.state === 'ready' ? 'Ready to practice.' : it.state === 'done' ? 'All done. Tap to play again.' : 'Tap to ' + it.kind.toLowerCase() + '.'));
       } else {
-        var t = s.kind === 'treasure' ? ['🧰', 'Treasure Reef', 'My sea friends'] : ['🍾', 'Story Bottle', 'Make a story'];
+        var t = s.kind === 'treasure' ? ['🐠', 'Aquarium', 'My sea friends'] : ['🍾', 'Story Bottle', 'Make a story'];
         b.innerHTML = '<span class="r3-emoji" aria-hidden="true">'+t[0]+'</span><span><b>'+t[1]+'</b><small>'+t[2]+'</small></span>';
         b.setAttribute('aria-label', t[1] + '. ' + t[2] + '.');
       }
@@ -19687,7 +19707,7 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
       var box = document.createElement('div'); box.className = 'r3-fork'; box.setAttribute('role', 'group'); box.setAttribute('aria-label', 'Which way?');
       box.innerHTML = '<b>Which way?</b>' + opts.map(function(n){
         var br = sp[n].branch;
-        var lab = br === 'treasure' ? '🧰 Treasure Reef' : br === 'story' ? '🍾 Story Bottle' : '⬆️ Keep going';
+        var lab = br === 'treasure' ? '🐠 Aquarium' : br === 'story' ? '🍾 Story Bottle' : '⬆️ Keep going';
         return '<button type="button" data-fork="' + n + '">' + lab + '</button>';
       }).join('');
       view.wrap.appendChild(box); d.fork = box;
@@ -20349,8 +20369,8 @@ function coveSwimCalm(){if(SW.el&&SW.T&&SW.ex){try{swExSet(null);}catch(e){}}}
     }).join('');
     var spots = sp.filter(function(s){ return s.label; }).map(function(s){
       var x = px(s), y = py(s), left = x > W / 2;
-      var name = s.kind === 'deck' ? s.item.d.name : s.kind === 'treasure' ? 'Treasure Reef' : 'Story Bottle';
-      var em = s.kind === 'deck' ? s.item.d.emoji : s.kind === 'treasure' ? '❌' : '🍾';
+      var name = s.kind === 'deck' ? s.item.d.name : s.kind === 'treasure' ? 'Aquarium' : 'Story Bottle';
+      var em = s.kind === 'deck' ? s.item.d.emoji : s.kind === 'treasure' ? '🐠' : '🍾';
       return '<button type="button" class="r3-map-spot'+(s.kind === 'deck' ? ' ' + s.item.state : '')+(left ? ' left' : '')+'" data-r3-go="'+s.i+'" style="left:'+(x / W * 100).toFixed(1)+'%;top:'+y.toFixed(0)+'px" aria-label="Go to '+esc(name)+'">' +
         '<span class="r3-map-em" aria-hidden="true">'+em+'</span><span class="r3-map-name">'+esc(name)+'</span></button>';
     }).join('');
@@ -21838,25 +21858,6 @@ body.reef-kid .tc-timer-row{ display:none; } /* no countdowns in her mode */
   filter:drop-shadow(0 8px 10px rgba(0,0,0,.25)); animation:reefFriendUp .7s var(--reef-pop) .6s forwards, reefBob 3.4s ease-in-out 1.4s infinite; z-index:1; }
 @keyframes reefFriendUp{ to{ transform:translate(-50%, 0) scale(1); opacity:1; } }
 
-/* ---------- Treasure Reef shelf ---------- */
-.reef-collection{ border-radius:34px; padding:20px 16px 24px; color:#fff; overflow:hidden;
-  background:radial-gradient(100% 50% at 50% -10%, rgba(255,255,255,.35), transparent 60%), linear-gradient(180deg, var(--reef-mid), var(--reef-deep) 60%, var(--reef-abyss));
-  box-shadow:0 18px 40px rgba(7,56,71,.28); }
-.reef-collection-head{ display:flex; align-items:center; gap:14px; margin-bottom:16px; }
-.reef-collection-art{ font-size:3.4rem; line-height:1; }
-.reef-collection h2{ margin:0; color:#fff; font-size:1.8rem; }
-.reef-collection p{ margin:2px 0 0; font-weight:700; opacity:.92; }
-.reef-friends{ display:grid; grid-template-columns:repeat(auto-fill, minmax(124px, 1fr)); gap:14px; }
-.reef-friend{ display:flex; flex-direction:column; align-items:center; gap:4px; padding:14px 8px 12px; border-radius:24px; border:none; font:inherit; color:#fff;
-  background:rgba(255,255,255,.08); box-shadow:inset 0 0 0 2px rgba(255,255,255,.12); text-align:center; }
-.reef-friend b{ font:800 .95rem 'Baloo 2',sans-serif; }
-.reef-friend small{ font-weight:800; color:var(--reef-sun); }
-.reef-friend-e{ font-size:3rem; line-height:1.1; filter:brightness(0) opacity(.28); }
-.reef-friend:not(.found) b{ opacity:.55; font-size:.8rem; }
-.reef-friend.found{ cursor:pointer; background:radial-gradient(circle at 50% 30%, rgba(255,255,255,.28), rgba(255,255,255,.08) 70%); box-shadow:inset 0 0 0 2px rgba(255,209,102,.55), 0 6px 0 rgba(0,0,0,.18); }
-.reef-friend.found .reef-friend-e{ filter:drop-shadow(0 4px 4px rgba(0,0,0,.3)); }
-.reef-friend.found:active{ transform:translateY(3px); }
-.reef-friend.on{ box-shadow:inset 0 0 0 3px var(--reef-sun), 0 6px 0 rgba(0,0,0,.18); }
 .reef-fact-box{ display:flex; align-items:center; gap:12px; margin:0 0 14px; padding:12px 16px; border-radius:20px; background:#fff; color:#0b2b33; font-weight:700; font-size:1.05rem; }
 .reef-fact-e{ font-size:2.6rem; line-height:1; }
 
@@ -21905,7 +21906,6 @@ body.reef-calm .reef-chest-friend{ transform:translate(-50%, 0); opacity:1; }
 
 .reef-art-svg{ display:block; width:100%; height:auto; overflow:visible; filter:drop-shadow(0 6px 6px rgba(7,40,52,.25)); }
 
-.reef-collection-art{ width:84px; flex:none; }
 
 .reef-today{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:6px; font-weight:800; font-size:.92rem; color:var(--reef-soft); }
 .reef-today-shells{ display:flex; gap:5px; }
@@ -22084,6 +22084,62 @@ body.reef-calm .cc-nudge, body.reef-calm .feed-stage.cc-nudge::after{ animation-
   .face{ padding:16px 18px; }
   .feed-topbar{ padding-top:2px; } .feed-stage{ margin:6px 0 4px; }
 }
+
+/* ---------- My Aquarium (reefCollection) ---------- */
+.reef-aquarium{ --aq-top:#7fd9e6; --aq-mid:#2fa6bd; --aq-deep:#13697f; --aq-sand:#f2d79c; --aq-sand2:#d9b36d; color:#0b3a44; }
+.reef-aquarium.night{ --aq-top:#1f5d70; --aq-mid:#103e4e; --aq-deep:#072530; --aq-sand:#6f6250; --aq-sand2:#4c4235; color:#e4f4f2; }
+.aq-head h2{ margin:0; font:800 1.8rem/1.1 'Baloo 2',sans-serif; }
+.aq-head p{ margin:2px 0 12px; font-weight:700; opacity:.85; }
+.aq-tank{ position:relative; border-radius:22px; padding:12px; background:linear-gradient(180deg, #8a5a33, #6b4325); box-shadow:0 0 0 3px #4d2f19, 0 18px 34px rgba(7,56,71,.3), inset 0 2px 0 rgba(255,255,255,.25); }
+.aq-water{ position:relative; height:clamp(320px, 62vh, 760px); border-radius:12px; overflow:hidden; container-type:inline-size;
+  background:linear-gradient(180deg, var(--aq-top) 0%, var(--aq-mid) 45%, var(--aq-deep) 100%); box-shadow:inset 0 0 40px rgba(0,30,40,.35); }
+.aq-glass{ position:absolute; inset:12px; border-radius:12px; pointer-events:none;
+  background:linear-gradient(115deg, rgba(255,255,255,.28) 0%, rgba(255,255,255,0) 18%, rgba(255,255,255,0) 70%, rgba(255,255,255,.12) 78%, rgba(255,255,255,0) 86%);
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.35), inset 0 8px 0 rgba(255,255,255,.18); }
+.aq-rays{ position:absolute; inset:-20% -10% 30%; background:repeating-linear-gradient(100deg, rgba(255,255,255,.14) 0 30px, rgba(255,255,255,0) 30px 90px); filter:blur(6px); animation:aqRays 9s ease-in-out infinite alternate; }
+.night .aq-rays{ opacity:.25; }
+@keyframes aqRays{ from{ transform:translateX(-4%) skewX(-4deg); } to{ transform:translateX(4%) skewX(4deg); } }
+.aq-sand{ position:absolute; left:0; right:0; bottom:0; height:16%; background:radial-gradient(60% 120% at 30% 0%, var(--aq-sand), var(--aq-sand2)); border-radius:50% 50% 0 0 / 22% 22% 0 0; }
+.aq-weed{ position:absolute; bottom:6%; width:16px; height:42%; border-radius:16px 16px 4px 4px; background:linear-gradient(90deg, #2f8a4d, #4fbf6b); transform-origin:50% 100%; animation:aqSway 4.5s ease-in-out infinite alternate; }
+.aq-weed.b{ height:30%; width:12px; animation-duration:3.6s; animation-delay:-1s; }
+@keyframes aqSway{ from{ transform:rotate(-7deg); } to{ transform:rotate(7deg); } }
+.aq-rock{ position:absolute; bottom:5%; width:64px; height:34px; border-radius:50% 50% 40% 40%; background:radial-gradient(circle at 35% 30%, #a9b4b8, #6d7a80); }
+.aq-rock.s{ width:42px; height:24px; }
+.aq-coral{ position:absolute; bottom:7%; font-size:2.6rem; }
+.aq-bubbles i{ position:absolute; bottom:-20px; width:var(--s); height:var(--s); border-radius:50%; border:1.5px solid rgba(255,255,255,.65); background:rgba(255,255,255,.12); animation:aqBub var(--t) linear var(--d) infinite; }
+@keyframes aqBub{ to{ transform:translate(10px, -620px); opacity:.2; } }
+.aq-friend{ position:absolute; z-index:2; border:none; background:none; padding:4px; cursor:pointer; font:inherit; line-height:1; -webkit-tap-highlight-color:transparent; }
+.aq-e{ display:block; font-size:2.6rem; filter:drop-shadow(0 4px 4px rgba(0,0,0,.25)); }
+.aq-friend.big .aq-e{ font-size:3.6rem; }
+.aq-n{ position:absolute; right:-4px; top:-4px; font-weight:800; font-size:.75rem; color:#fff; background:#e8694e; border-radius:999px; padding:1px 6px; }
+/* swimmers cross the tank and turn at the glass (emoji fish face left, so going right they're flipped) */
+.aq-friend.swim{ left:0; animation:aqCross var(--dur) linear var(--del) infinite; }
+.aq-friend.swim .aq-swim{ display:block; animation:aqTurn var(--dur) linear var(--del) infinite; }
+.aq-friend.swim .aq-e{ animation:aqBob 2.6s ease-in-out infinite; }
+@keyframes aqCross{ 0%{ transform:translateX(0); } 48%{ transform:translateX(calc(100cqw - 100% - 6px)); } 52%{ transform:translateX(calc(100cqw - 100% - 6px)); } 100%{ transform:translateX(0); } }
+@keyframes aqTurn{ 0%,49.9%{ transform:scaleX(-1); } 50%,100%{ transform:scaleX(1); } }
+@keyframes aqBob{ 0%,100%{ transform:translateY(0) rotate(-2deg); } 50%{ transform:translateY(-10px) rotate(2deg); } }
+/* bottom-dwellers creep a little way along the sand */
+.aq-friend.bottom{ bottom:7%; left:var(--x0); animation:aqCreep var(--dur) ease-in-out var(--del) infinite; }
+.aq-friend.bottom .aq-e{ font-size:2.2rem; }
+@keyframes aqCreep{ 0%,100%{ transform:translateX(0); } 25%{ transform:translateX(26px); } 60%{ transform:translateX(-22px); } }
+/* jellyfish drift up and down */
+.aq-friend.drift{ left:var(--x0); animation:aqDrift var(--dur) ease-in-out var(--del) infinite; }
+.night .aq-friend.drift .aq-e{ filter:drop-shadow(0 0 8px rgba(255,150,230,.9)) drop-shadow(0 0 18px rgba(67,211,212,.6)); }
+@keyframes aqDrift{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(60px); } }
+.aq-friend.on .aq-e{ animation:aqTwirl .8s ease-in-out; }
+@keyframes aqTwirl{ 0%{ transform:scale(1) rotate(0); } 50%{ transform:scale(1.35) rotate(-12deg); } 100%{ transform:scale(1) rotate(0); } }
+.aq-empty{ position:absolute; left:10%; right:10%; top:38%; text-align:center; font:800 1.2rem/1.3 'Baloo 2',sans-serif; color:#fff; text-shadow:0 2px 6px rgba(0,0,0,.3); }
+.aq-plaque{ width:max-content; max-width:90%; margin:-8px auto 0; position:relative; padding:6px 18px; border-radius:10px; font:800 1rem 'Baloo 2',sans-serif; color:#5a3a12;
+  background:linear-gradient(180deg, #f6d98a, #d9a94a); box-shadow:0 3px 0 #9c7128, 0 6px 12px rgba(0,0,0,.18); }
+.aq-still{ margin:18px 0 8px; font:800 1.1rem 'Baloo 2',sans-serif; }
+.aq-shelf{ display:flex; flex-wrap:wrap; gap:8px; padding:10px; border-radius:16px; background:rgba(28,140,147,.1); }
+.night .aq-shelf{ background:rgba(255,255,255,.06); }
+.aq-ghost{ font-size:2rem; filter:brightness(0) opacity(.25); }
+.night .aq-ghost{ filter:brightness(0) invert(1) opacity(.18); }
+.reef-aquarium.calm *, body.reef-calm .reef-aquarium *{ animation:none !important; }
+@media (prefers-reduced-motion: reduce){ .reef-aquarium *{ animation:none !important; } .aq-friend.swim{ left:var(--x0); } }
+.reef-aquarium.calm .aq-friend.swim, body.reef-calm .aq-friend.swim{ left:var(--x0); }
 /* end of src/css/reef.css */
 /* from src/css/reef-3d.css */
 /* ---------- REEF 3D board ---------- */
@@ -22618,6 +22674,29 @@ body.reef-calm .r3-map.from-zoom, body.reef-calm .r3-map.from-zoom .r3-map-card{
 .cc-guide-mini{ display:inline-block; width:1.6em; vertical-align:middle; line-height:0; }
 .cc-guide-mini .cc-guide-svg{ width:100%; height:auto; display:block; }
 .r3-map-me .cc-guide-mini, .rl-note-e.cc-guide-mini{ width:100%; }
+
+/* ---------- the board's top buttons at night: bioluminescent, like Lumi's lure ----------
+   A dark glassy bubble lit from inside with a cyan glow, the icon itself glowing, and a slow breath of light
+   that drifts from button to button. Still with Calm motion or reduced motion. */
+:root[data-theme="dark"] body.r3-full .cv3-hero .topbar .icon-btn,
+:root[data-theme="dark"] body.r3-full .cv3-hero .topbar .btn{
+  background:radial-gradient(circle at 50% 38%, rgba(67,211,212,.32), rgba(10,52,68,.72) 62%, rgba(6,30,42,.82));
+  border:1.5px solid rgba(140,245,245,.55); color:#c8fdff;
+  box-shadow:inset 0 0 10px rgba(67,211,212,.55), 0 0 10px 1px rgba(67,211,212,.55), 0 0 26px 4px rgba(67,211,212,.22);
+  animation:ccLume 4.2s ease-in-out infinite; }
+:root[data-theme="dark"] body.r3-full .cv3-hero .topbar .icon-btn .cc-ic,
+:root[data-theme="dark"] body.r3-full .cv3-hero .topbar .btn .cc-ic{
+  color:#d8feff; --cc-ic-fill:#43d3d4; filter:drop-shadow(0 0 2px #7ff3f3) drop-shadow(0 0 7px rgba(67,211,212,.85)); }
+:root[data-theme="dark"] body.r3-full .cv3-hero .topbar :is(.icon-btn, .btn):nth-child(2){ animation-delay:-.7s; }
+:root[data-theme="dark"] body.r3-full .cv3-hero .topbar :is(.icon-btn, .btn):nth-child(3){ animation-delay:-1.4s; }
+:root[data-theme="dark"] body.r3-full .cv3-hero .topbar :is(.icon-btn, .btn):nth-child(4){ animation-delay:-2.1s; }
+:root[data-theme="dark"] body.r3-full .cv3-hero .topbar :is(.icon-btn, .btn):nth-child(5){ animation-delay:-2.8s; }
+:root[data-theme="dark"] body.r3-full .cv3-hero .topbar :is(.icon-btn, .btn):nth-child(6){ animation-delay:-3.5s; }
+@keyframes ccLume{
+  0%,100%{ box-shadow:inset 0 0 8px rgba(67,211,212,.45), 0 0 8px 1px rgba(67,211,212,.45), 0 0 20px 3px rgba(67,211,212,.16); }
+  50%{ box-shadow:inset 0 0 14px rgba(110,240,240,.7), 0 0 14px 2px rgba(90,230,232,.7), 0 0 34px 8px rgba(67,211,212,.3); } }
+body.reef-calm .cv3-hero .topbar :is(.icon-btn, .btn){ animation:none !important; }
+@media (prefers-reduced-motion: reduce){ .cv3-hero .topbar :is(.icon-btn, .btn){ animation:none !important; } }
 /* end of src/css/reef-3d.css */
 </style>
 

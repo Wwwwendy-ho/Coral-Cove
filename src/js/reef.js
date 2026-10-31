@@ -309,13 +309,13 @@
               '<span class="reef-chest-box" aria-hidden="true"><span class="lid"></span><span class="body"></span></span>' +
             '</button>' : '') +
           '<h2>'+esc(head)+'</h2>' +
-          (find ? '<p class="reef-fact">'+esc(find.fact)+'</p><p class="reef-sum-note">It\'s in your Treasure Reef now.</p>' : '') +
+          (find ? '<p class="reef-fact">'+esc(find.fact)+'</p><p class="reef-sum-note">It\'s in your aquarium now.</p>' : '') +
           earnedHTML +
           planNextHTML() +
           (S.planRun ? '' : '<div class="reef-sum-actions">' +
             '<button class="btn btn-primary" data-act="play-again">🔁 Play Again</button>' +
             '<button class="btn btn-ghost" data-act="back-home">'+(reefNight() ? '⚓ Back to the wreck' : '🪸 Back to the reef')+'</button>' +
-            '<button class="btn btn-ghost" data-act="reef-treasure">💎 Treasure Reef</button>' +
+            '<button class="btn btn-ghost" data-act="reef-treasure">🐠 My Aquarium</button>' +
           '</div>') +
         '</div>' +
       '</div>';
@@ -332,26 +332,45 @@
     app.querySelector('[data-act="play-again"]').addEventListener('click', function(){ reefGo('dive', null, function(){ startStudy(S.currentDeckId); }); });
     app.querySelector('[data-act="reef-treasure"]').addEventListener('click', function(){ goHomeNow(); S.view = 'collection'; render(); });
   }
+  /* ---------- My Aquarium: the sea friends she has found live in a glass tank ----------
+     Swimmers cross the tank and turn at the glass, bottom-dwellers creep along the sand, jellyfish drift up and
+     down. Tap one to hear its fact. Friends not found yet wait as shadows on the shelf below. */
+  var REEF_AQ_BOTTOM = { crab: 1, lobster: 1, shrimp: 1, shell: 1, coral: 1, oyster: 1, octopus: 1 }, REEF_AQ_DRIFT = { jelly: 1 };
+  var REEF_AQ_BIG = { humpback: 1, bluewhale: 1, shark: 1, dolphin: 1, turtle: 1, seal: 1 };
   function reefCollection(){
     var c = (S.stats && S.stats.collection) || {};
-    var t = reefTally();
-    var tiles = REEF_FRIENDS.map(function(f){
-      var n = c[f.id] || 0;
-      return n
-        ? '<button type="button" class="reef-friend found" data-reef-friend="'+f.id+'" aria-label="'+esc(f.name+'. '+f.fact)+'"><span class="reef-friend-e">'+f.e+'</span><b>'+esc(f.name)+'</b>'+(n > 1 ? '<small>× '+n+'</small>' : '')+'</button>'
-        : '<div class="reef-friend" aria-label="Not found yet"><span class="reef-friend-e">'+f.e+'</span><b>Not found yet</b></div>';
+    var t = reefTally(), night = reefNight();
+    var found = REEF_FRIENDS.filter(function(f){ return c[f.id]; }), missing = REEF_FRIENDS.filter(function(f){ return !c[f.id]; });
+    var rnd = function(i, k){ var x = Math.sin((i + 1) * 9301 + k * 49297) * 233280; return x - Math.floor(x); };   // steady per friend, so the tank looks the same each visit
+    var bottomN = 0;
+    var swimmers = found.map(function(f, i){
+      var kind = REEF_AQ_BOTTOM[f.id] ? 'bottom' : REEF_AQ_DRIFT[f.id] ? 'drift' : 'swim';
+      var dur = kind === 'bottom' ? 26 + rnd(i, 1) * 14 : kind === 'drift' ? 9 + rnd(i, 1) * 5 : 14 + rnd(i, 1) * 12;
+      var top = kind === 'bottom' ? null : kind === 'drift' ? 12 + rnd(i, 2) * 30 : 8 + rnd(i, 2) * 52;
+      var left = kind === 'bottom' ? 6 + (bottomN++ * 19) % 80 : 8 + rnd(i, 3) * 70;
+      var style = '--dur:' + dur.toFixed(1) + 's;--del:-' + (rnd(i, 4) * dur).toFixed(1) + 's;' + (top != null ? 'top:' + top.toFixed(0) + '%;' : '') + '--x0:' + left.toFixed(0) + '%';
+      return '<button type="button" class="aq-friend ' + kind + (REEF_AQ_BIG[f.id] ? ' big' : '') + '" style="' + style + '" data-reef-friend="' + f.id + '" aria-label="' + esc(f.name + '. ' + f.fact) + '">' +
+        '<span class="aq-swim"><span class="aq-e">' + f.e + '</span></span>' + (c[f.id] > 1 ? '<small class="aq-n">×' + c[f.id] + '</small>' : '') + '</button>';
     }).join('');
+    var bubbles = ''; for(var i = 0; i < 14; i++) bubbles += '<i style="left:' + (4 + rnd(i, 5) * 92).toFixed(0) + '%;--s:' + (5 + rnd(i, 6) * 10).toFixed(0) + 'px;--d:-' + (rnd(i, 7) * 7).toFixed(1) + 's;--t:' + (5 + rnd(i, 8) * 4).toFixed(1) + 's"></i>';
+    var plants = '<span class="aq-weed" style="left:4%"></span><span class="aq-weed b" style="left:11%"></span><span class="aq-weed" style="left:88%"></span><span class="aq-weed b" style="left:93%"></span>' +
+      '<span class="aq-rock" style="left:20%"></span><span class="aq-rock s" style="left:70%"></span><span class="aq-coral" style="left:78%">🪸</span>';
+    var who = (S.profile && S.profile.name) ? S.profile.name + '\'s' : 'My';
     app.innerHTML = '' +
       '<div class="nav-row">' +
-        '<button class="back-btn" data-act="reef-back">'+(reefNight() ? '⚓ Back to the wreck' : '🪸 Back to the reef')+'</button>' +
+        '<button class="back-btn" data-act="reef-back">'+(night ? '⚓ Back to the wreck' : '🪸 Back to the reef')+'</button>' +
       '</div>' +
-      '<section class="reef-collection">' +
-        '<div class="reef-collection-head">' +
-          '<span class="reef-collection-art" aria-hidden="true">'+reefArtSVG('treasure')+'</span>' +
-          '<div><h2>My Treasure Reef</h2><p>You have found '+t.found+' of '+t.total+' sea friends. Finish a deck to find another one.</p></div>' +
-        '</div>' +
+      '<section class="reef-aquarium' + (night ? ' night' : '') + (reefCalm() ? ' calm' : '') + '">' +
+        '<div class="aq-head"><h2>' + esc(who) + ' Aquarium</h2><p>' + t.found + ' of ' + t.total + ' sea friends live here. Finish a deck to find another one.</p></div>' +
         '<div class="reef-fact-box" id="reefFactBox" hidden></div>' +
-        '<div class="reef-friends">'+tiles+'</div>' +
+        '<div class="aq-tank">' +
+          '<div class="aq-water"><div class="aq-rays" aria-hidden="true"></div><div class="aq-bubbles" aria-hidden="true">' + bubbles + '</div>' +
+            '<div class="aq-sand" aria-hidden="true"></div>' + plants + swimmers +
+            (found.length ? '' : '<p class="aq-empty">Your aquarium is waiting for its first friend. Finish a deck to find one!</p>') +
+          '</div><div class="aq-glass" aria-hidden="true"></div>' +
+        '</div>' +
+        '<div class="aq-plaque">' + esc(who) + ' Aquarium · ' + t.found + ' / ' + t.total + '</div>' +
+        (missing.length ? '<h3 class="aq-still">Still to find</h3><div class="aq-shelf">' + missing.map(function(f){ return '<span class="aq-ghost" aria-label="A sea friend not found yet">' + f.e + '</span>'; }).join('') + '</div>' : '') +
       '</section>';
     app.querySelector('[data-act="reef-back"]').addEventListener('click', function(){
       reefGo('swim', null, function(){ S.view = 'home'; S.reefPlace = null; S.subjectFilter = 'all'; render(); });
@@ -362,8 +381,9 @@
         var f = reefFriend(b.dataset.reefFriend);
         box.hidden = false;
         box.innerHTML = '<span class="reef-fact-e">'+f.e+'</span><span><b>'+esc(f.name)+'</b><br>'+esc(f.fact)+'</span>';
-        app.querySelectorAll('.reef-friend.on').forEach(function(x){ x.classList.remove('on'); });
-        b.classList.add('on');
+        app.querySelectorAll('.aq-friend.on').forEach(function(x){ x.classList.remove('on'); });
+        b.classList.remove('on'); void b.offsetWidth; b.classList.add('on');
+        try { Sound.bubbles(2); } catch(e){}
         try { Speech.speak(f.name + '. ' + f.fact); } catch(e){}
       });
     });

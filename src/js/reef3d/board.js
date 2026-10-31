@@ -1005,7 +1005,7 @@
         b.innerHTML = '<span class="r3-emoji" aria-hidden="true">'+it.d.emoji+'</span><span><b>'+esc(it.d.name)+'</b><small>'+esc(label)+'</small></span>' + (it.state === 'done' ? '<i class="r3-star" aria-hidden="true">★</i>' : '');
         b.setAttribute('aria-label', it.d.name + '. ' + (it.state === 'ready' ? 'Ready to practice.' : it.state === 'done' ? 'All done. Tap to play again.' : 'Tap to ' + it.kind.toLowerCase() + '.'));
       } else {
-        var t = s.kind === 'treasure' ? ['🧰', 'Treasure Reef', 'My sea friends'] : ['🍾', 'Story Bottle', 'Make a story'];
+        var t = s.kind === 'treasure' ? ['🐠', 'Aquarium', 'My sea friends'] : ['🍾', 'Story Bottle', 'Make a story'];
         b.innerHTML = '<span class="r3-emoji" aria-hidden="true">'+t[0]+'</span><span><b>'+t[1]+'</b><small>'+t[2]+'</small></span>';
         b.setAttribute('aria-label', t[1] + '. ' + t[2] + '.');
       }

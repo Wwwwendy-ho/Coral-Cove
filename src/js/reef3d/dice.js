@@ -144,7 +144,7 @@
       var box = document.createElement('div'); box.className = 'r3-fork'; box.setAttribute('role', 'group'); box.setAttribute('aria-label', 'Which way?');
       box.innerHTML = '<b>Which way?</b>' + opts.map(function(n){
         var br = sp[n].branch;
-        var lab = br === 'treasure' ? '🧰 Treasure Reef' : br === 'story' ? '🍾 Story Bottle' : '⬆️ Keep going';
+        var lab = br === 'treasure' ? '🐠 Aquarium' : br === 'story' ? '🍾 Story Bottle' : '⬆️ Keep going';
         return '<button type="button" data-fork="' + n + '">' + lab + '</button>';
       }).join('');
       view.wrap.appendChild(box); d.fork = box;

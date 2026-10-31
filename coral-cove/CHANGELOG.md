@@ -1,5 +1,16 @@
 # Changelog
 
+## An aquarium for the sea friends, and glowing buttons at night (October 30, 2026)
+
+- **Treasure Reef is now an aquarium**: a glass tank with a wooden frame, water, light rays, sand, seaweed, coral
+  and rising bubbles. The sea friends she has found live in it. Fish, whales and turtles swim across and turn at
+  the glass, crabs, lobsters and shells creep along the sand, and jellyfish drift up and down (glowing at night).
+  Tap one to hear its fact; it does a little twirl. Friends not found yet wait as shadows on a "Still to find"
+  shelf. It's called the Aquarium on the board, the map and the end-of-deck screen.
+- **The board's top buttons glow at night** like Lumi's lure: a dark glassy bubble lit from inside, a glowing
+  cyan icon, and a slow breath of light that drifts from button to button. (The Library's icons are back as they
+  were.)
+
 ## Pinch to the map, Shelly instead of a turtle emoji, glowing Library icons at night (October 30, 2026)
 
 - **Pinch to the map**: on the board, closing two fingers pulls the camera up and back over the whole board. Pinch

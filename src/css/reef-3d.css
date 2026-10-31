@@ -530,3 +530,26 @@ body.reef-calm .r3-map.from-zoom, body.reef-calm .r3-map.from-zoom .r3-map-card{
 .cc-guide-mini{ display:inline-block; width:1.6em; vertical-align:middle; line-height:0; }
 .cc-guide-mini .cc-guide-svg{ width:100%; height:auto; display:block; }
 .r3-map-me .cc-guide-mini, .rl-note-e.cc-guide-mini{ width:100%; }
+
+/* ---------- the board's top buttons at night: bioluminescent, like Lumi's lure ----------
+   A dark glassy bubble lit from inside with a cyan glow, the icon itself glowing, and a slow breath of light
+   that drifts from button to button. Still with Calm motion or reduced motion. */
+:root[data-theme="dark"] body.r3-full .cv3-hero .topbar .icon-btn,
+:root[data-theme="dark"] body.r3-full .cv3-hero .topbar .btn{
+  background:radial-gradient(circle at 50% 38%, rgba(67,211,212,.32), rgba(10,52,68,.72) 62%, rgba(6,30,42,.82));
+  border:1.5px solid rgba(140,245,245,.55); color:#c8fdff;
+  box-shadow:inset 0 0 10px rgba(67,211,212,.55), 0 0 10px 1px rgba(67,211,212,.55), 0 0 26px 4px rgba(67,211,212,.22);
+  animation:ccLume 4.2s ease-in-out infinite; }
+:root[data-theme="dark"] body.r3-full .cv3-hero .topbar .icon-btn .cc-ic,
+:root[data-theme="dark"] body.r3-full .cv3-hero .topbar .btn .cc-ic{
+  color:#d8feff; --cc-ic-fill:#43d3d4; filter:drop-shadow(0 0 2px #7ff3f3) drop-shadow(0 0 7px rgba(67,211,212,.85)); }
+:root[data-theme="dark"] body.r3-full .cv3-hero .topbar :is(.icon-btn, .btn):nth-child(2){ animation-delay:-.7s; }
+:root[data-theme="dark"] body.r3-full .cv3-hero .topbar :is(.icon-btn, .btn):nth-child(3){ animation-delay:-1.4s; }
+:root[data-theme="dark"] body.r3-full .cv3-hero .topbar :is(.icon-btn, .btn):nth-child(4){ animation-delay:-2.1s; }
+:root[data-theme="dark"] body.r3-full .cv3-hero .topbar :is(.icon-btn, .btn):nth-child(5){ animation-delay:-2.8s; }
+:root[data-theme="dark"] body.r3-full .cv3-hero .topbar :is(.icon-btn, .btn):nth-child(6){ animation-delay:-3.5s; }
+@keyframes ccLume{
+  0%,100%{ box-shadow:inset 0 0 8px rgba(67,211,212,.45), 0 0 8px 1px rgba(67,211,212,.45), 0 0 20px 3px rgba(67,211,212,.16); }
+  50%{ box-shadow:inset 0 0 14px rgba(110,240,240,.7), 0 0 14px 2px rgba(90,230,232,.7), 0 0 34px 8px rgba(67,211,212,.3); } }
+body.reef-calm .cv3-hero .topbar :is(.icon-btn, .btn){ animation:none !important; }
+@media (prefers-reduced-motion: reduce){ .cv3-hero .topbar :is(.icon-btn, .btn){ animation:none !important; } }
