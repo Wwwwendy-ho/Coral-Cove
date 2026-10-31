@@ -662,7 +662,9 @@
     if(a){ var p = Math.min(1, (now - a.t0) / a.dur), e = p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
       view.zoomNow = a.from + (a.to - a.from) * e; if(p >= 1){ view.zoomAnim = null; if(a.done) a.done(); } }
     else if(view.zoomGoal != null) view.zoomNow = (view.zoomNow || 0) + (view.zoomGoal - (view.zoomNow || 0)) * .35;
-    if(!view.zoomNow || view.zoomNow < .002){ view.zoomNow = 0; return false; }
+    var out = view.outskirts;
+    if(!view.zoomNow || view.zoomNow < .002){ view.zoomNow = 0; if(out) out.visible = false; return false; }
+    out = reef3dOutskirts(view); if(out) out.visible = view.zoomNow > .2;   // once the camera has risen a little, so nothing pops in beside her
     view.touchAt = now;   // keeps the board drawing every frame while the camera moves
     if(!view.zoomCenter){
       var THREE = window.THREE, sp = view.spaces, minX = 1e9, maxX = -1e9, minZ = 1e9, maxZ = -1e9;
@@ -676,6 +678,60 @@
       view.zoomH = Math.max(28, (maxZ - minZ + 10) / span, (maxX - minX + 10) / (span * view.cam.aspect));
     }
     return true;
+  }
+  /* The reef carries on past the board: built the first time she pinches out, and only shown while zoomed out.
+     A wide sea floor that follows on from the board's own (its sides slope up, then level off), and a broad ring
+     of coral, kelp and rocks (by night: rocks, kelp, dark coral, planks, barrels, anchors and far-off wrecks),
+     merged into a few draws so it costs little. */
+  function reef3dOutskirts(view){
+    if(view.outskirts !== undefined) return view.outskirts;
+    view.outskirts = null;
+    try {
+      var THREE = window.THREE, kit = view.kit, B = kit.B, night = view.night, sp = view.spaces, r = reefRand(91);
+      var minZ = 1e9, maxZ = -1e9; sp.forEach(function(s){ minZ = Math.min(minZ, s.z); maxZ = Math.max(maxZ, s.z); });
+      var off = night && view.shipDeck ? view.shipDeck.sand : 0, len = maxZ - minZ, cz = (minZ + maxZ) / 2;
+      var W = 260, L = len + 260;
+      var hgt = function(x, z){ return Math.min(6.5, Math.max(0, (Math.abs(x) - 12) * .25)) + Math.sin(x * .21) * .35 + Math.cos(z * .17 + x * .05) * .35 - .45 + off; };
+      var g = new THREE.PlaneGeometry(W, L, 52, Math.round(L / 5)), pos = g.attributes.position;
+      for(var v = 0; v < pos.count; v++){ var x = pos.getX(v), z = cz - pos.getY(v); pos.setZ(v, hgt(x, z)); }
+      g.computeVertexNormals();
+      var root = new THREE.Group();
+      var bed = new THREE.Mesh(g, kit.M(night ? '#2a3838' : '#d4c49d')); bed.rotation.x = -Math.PI / 2; bed.position.set(0, -.15, cz); root.add(bed);
+      var deco = new THREE.Group();
+      var set = night ? ['rock', 'rock', 'kelp', 'coralBall', 'plank', 'barrel', 'crate', 'kelp', 'anchor', 'cannon']
+                      : ['staghorn', 'brain', 'fan', 'coralBall', 'kelp', 'sponge', 'anemone', 'rock', 'staghorn', 'coralBall', 'star', 'kelp'];
+      // keep clear of the path (and, at night, of the ship) so nothing new crowds the board
+      var ship = night && view.shipDeck ? view.shipDeck.half + 4 : 0;
+      function clearOf(x, z){
+        if(ship && Math.abs(x) < ship && z < maxZ + 12 && z > minZ - ship * 2.8) return false;
+        for(var i = 0; i < sp.length; i += 2){ var dx = sp[i].x - x, dz = sp[i].z - z; if(dx * dx + dz * dz < 64) return false; }
+        return true;
+      }
+      // beds of colour on the sand, so no stretch of it is bare from above
+      var bedCols = night ? ['#23463f', '#2c3f52', '#3a2f4a', '#24413a'] : ['#f2b8c6', '#c9b6f0', '#a8dcb0', '#f6d08a', '#9fd6e8'];
+      for(var bI = 0; bI < 90; bI++){
+        var bx = (r() - .5) * (W - 20), bz = cz + (r() - .5) * (L - 20); if(!clearOf(bx, bz)) continue;
+        var bg = new THREE.CircleGeometry(4 + r() * 7, 18); bg.rotateX(-Math.PI / 2);
+        var bm = new THREE.Mesh(bg, kit.M(bedCols[bI % bedCols.length])); bm.scale.set(1, 1, .6 + r() * .8); bm.rotation.y = r() * 6; bm.position.set(bx, hgt(bx, bz) - .1, bz); deco.add(bm);
+      }
+      for(var n = 0; n < 720; n++){
+        var px = (r() - .5) * (W - 20), pz = cz + (r() - .5) * (L - 20);
+        if(!clearOf(px, pz)) continue;
+        var nm = set[Math.floor(r() * set.length)]; if(!B[nm]) continue;
+        // coral grows in clumps: a few of each together
+        var clump = night ? 1 + Math.floor(r() * 2) : 2 + Math.floor(r() * 3);
+        for(var c = 0; c < clump; c++){
+          var d = B[nm](r); var cx = px + (r() - .5) * 4, czz = pz + (r() - .5) * 4;
+          d.position.set(cx, hgt(cx, czz) - .15, czz); d.rotation.y = r() * 6; d.scale.multiplyScalar(1.6 + r() * 2.2); deco.add(d);
+        }
+      }
+      if(night && view.models){ for(var w = 0; w < 4; w++){ var wr = reef3dModel(view.models, 'wreck', 9 + r() * 5, kit.grad, '#3c5560'); if(!wr) break;
+        var wx = (w % 2 ? 1 : -1) * (55 + r() * 40), wz = cz + (r() - .5) * len; wr.traverse(function(m){ if(/^grass/.test(m.name || '')) m.visible = false; });
+        wr.position.set(wx, hgt(wx, wz) - .3, wz); wr.rotation.y = r() * 6; deco.add(wr); } }
+      root.add(view.rig ? reef3dMerge(deco, view.rig, view.bake || {}) : deco);
+      root.visible = false; view.scene.add(root); view.outskirts = root;
+    } catch(err){ try { console.warn('reef outskirts skipped:', err); } catch(e){} }
+    return view.outskirts;
   }
   function reef3dZoomTo(view, to, dur, done){ view.zoomGoal = null; view.zoomAnim = { from: view.zoomNow || 0, to: to, t0: performance.now(), dur: reefCalm() ? 1 : dur, done: done }; }
   function reef3dZoomRelease(view){
@@ -692,6 +748,8 @@
   }
   function reef3dPinchWire(view){
     var el = view.wrap, pinch = null;
+    // the reef beyond the board is made ahead of time, when the device is quiet, so the first pinch is smooth
+    setTimeout(function(){ var idle = window.requestIdleCallback || function(f){ setTimeout(f, 0); }; idle(function(){ if(document.body.contains(view.wrap)) reef3dOutskirts(view); }); }, 5000);
     var dist = function(t){ return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY); };
     var set = function(scale){   // scale < 1: fingers closing
       if(view.mapOpening || document.querySelector('.r3-map') || view.moving) return;

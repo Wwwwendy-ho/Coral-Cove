@@ -1,5 +1,13 @@
 # Changelog
 
+## The reef carries on past the board (October 31, 2026)
+
+- Pinch out to the map and the sea no longer ends at the board. A wide sea floor carries on in every direction,
+  covered in coral clumps, sea fans, sponges, anemones, kelp, rocks, starfish and beds of colour. At night it has
+  rocks, kelp, dark coral, scattered planks, barrels, crates, anchors and cannons, and more wrecks in the
+  distance. It's made quietly a few seconds after the board opens, and only shown while zoomed out, so playing
+  on the board isn't slowed.
+
 ## A live 3D aquarium, and the wreck looks like a ship from above (October 31, 2026)
 
 - **The aquarium is alive**: every sea friend she has found is a 3D creature in the tank, like Shelly on the
