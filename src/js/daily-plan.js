@@ -50,6 +50,8 @@
     var st = planSettings();
     if(!S.decks.length) return Promise.reject(new Error('decks not loaded yet'));
     var decks = S.decks.filter(function(d){ return !d.archived; });
+    // With Coral Classroom on, the day's decks come from this unit and the two before it (spaced review)
+    var cd = reefCourseDecks(); if(cd){ var inCourse = decks.filter(function(d){ return cd.indexOf(d.id) >= 0; }); if(inCourse.length) decks = inCourse; }
     return Promise.all([
       Promise.all(decks.map(function(d){ return S.store.getCardsOnce(d.id).catch(function(){ return []; }); })),
       S.store.listPlanDays().catch(function(){ return []; })

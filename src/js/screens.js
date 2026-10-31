@@ -606,6 +606,8 @@
               : '<p class="algo-note">Photo uploads are only available in the live app.</p>') +
           '</div>' +
           '<div class="field"><label for="profileNameInput">Name</label><input type="text" id="profileNameInput" placeholder="Profile name" value="'+esc(d.name)+'" maxlength="24"></div>' +
+          '<div class="field"><label for="profileGoalInput">What do you want to learn? <small>(optional)</small></label><textarea id="profileGoalInput" rows="2" placeholder="For example: be conversational when I visit Korea" maxlength="200">'+esc(d.learnGoal || '')+'</textarea>' +
+            '<p class="algo-note">Coral Classroom turns this into a course with goals, dates and checks. Leave it empty to skip; it can be added later in the Library.</p></div>' +
           '<label class="field-label" style="margin-top:14px;">Mode</label>' +
           '<div class="algo-toggle">' +
             modeBtn('child', '🧒 Child Mode', 'PIN-protected study sessions; deck editing needs the PIN too.') +
@@ -626,6 +628,8 @@
     var nameInp = app.querySelector('#profileNameInput');
     var saveBtn = app.querySelector('[data-act="save-new-profile"]');
     nameInp.addEventListener('input', function(){ d.name = nameInp.value; saveBtn.disabled = !d.name.trim() || (d.mode==='child' && !d.consent); });
+    var goalInp = app.querySelector('#profileGoalInput');
+    goalInp.addEventListener('input', function(){ d.learnGoal = goalInp.value; });
     var coveConsent = app.querySelector('[data-cove-consent]');
     if(coveConsent) coveConsent.addEventListener('change', function(){ d.consent = coveConsent.checked; saveBtn.disabled = !d.name.trim() || (d.mode==='child' && !d.consent); });
     app.querySelectorAll('[data-new-mode]').forEach(function(b){
@@ -639,7 +643,8 @@
     saveBtn.addEventListener('click', function(){
       var name = d.name.trim();
       if(!name || (d.mode==='child' && !d.consent)) return;
-      S.store.addProfile({ name: name, mode: d.mode, initialMode: d.mode, photoId: d.photoId||'', photoUrl: d.photoUrl||'', order: S.profiles.length }).then(function(){
+      var goal = (d.learnGoal || '').trim();   // a learning goal switches Coral Classroom on for this profile
+      S.store.addProfile({ name: name, mode: d.mode, initialMode: d.mode, photoId: d.photoId||'', photoUrl: d.photoUrl||'', order: S.profiles.length, learnGoal: goal, courseOn: !!goal }).then(function(){
         S.newProfileDraft = null;
         S.creatingProfile = false;
         render();

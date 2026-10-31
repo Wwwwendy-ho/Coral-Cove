@@ -27,6 +27,14 @@
     night: function(){ try { return reefNight(); } catch(e){ return false; } },
     calm: function(){ try { return reefCalm(); } catch(e){ return false; } },
     // false in the Claude version and inside a grown-up profile, where the app asks no grown-up questions
+    // Coral Classroom (library.js): any profile can have a course; it's saved on the profile. Until a profile says
+    // otherwise (courseOn), it's on for Wendy only.
+    courseOn: function(){ return reefCourseOn(); },
+    course: function(){ return reefCourseOn() && S.profile.course ? S.profile.course : null; },
+    setCourse: function(c){ if(!S.profile) return Promise.resolve(false); S.profile.course = c; S.profile.courseOn = true;
+      return Promise.resolve(S.store.updateProfile(S.profile.id, { course: c, courseOn: true })).then(function(){ return true; }, function(){ return false; }); },
+    setCourseOn: function(on){ if(!S.profile) return Promise.resolve(false); S.profile.courseOn = !!on;
+      return Promise.resolve(S.store.updateProfile(S.profile.id, { courseOn: !!on })).then(function(){ return true; }, function(){ return false; }); },
     needsGrownUpCheck: function(){ return !reefNoPin() && !reefInsideAdult('library'); }
   };
   // Runs at the end of renderHome(): outside Edit Mode the deck menu becomes the reef (every profile).
@@ -70,4 +78,19 @@
     reefWinLoad(); // get the celebration music ready before the first right answer
     if(S.reefReturnY != null){ var y = S.reefReturnY; S.reefReturnY = null; requestAnimationFrame(function(){ window.scrollTo(0, y); reefParallax(); }); }
     else reefParallax();
+  }
+
+  // Coral Classroom, for the app: is it on for this profile, and which unit is she on (the earliest not finished)?
+  function reefCourseOn(){ var p = S.profile; if(!p) return false; return p.courseOn != null ? !!p.courseOn : /^wendy$/i.test(p.id || '') || /^wendy$/i.test(p.name || ''); }
+  function reefCourseNow(){
+    var co = reefCourseOn() && S.profile.course; if(!co || !co.units) return null;
+    for(var i = 0; i < co.units.length; i++) if(!co.units[i].done) return { co: co, unit: co.units[i], i: i };
+    return { co: co, unit: null, i: co.units.length };
+  }
+  // The decks the Daily Plan should draw on: this unit's, plus the two units before it (spaced review)
+  function reefCourseDecks(){
+    var n = reefCourseNow(); if(!n || !n.unit) return null;
+    var ids = {}, add = function(u){ (u.decks || []).forEach(function(dk){ ids[dk.id] = 1; if(dk.fluency) ids[dk.fluency] = 1; }); };
+    n.co.units.slice(Math.max(0, n.i - 2), n.i + 1).forEach(add);
+    var list = Object.keys(ids); return list.length ? list : null;
   }

@@ -553,3 +553,15 @@ body.reef-calm .r3-map.from-zoom, body.reef-calm .r3-map.from-zoom .r3-map-card{
   50%{ box-shadow:inset 0 0 14px rgba(110,240,240,.7), 0 0 14px 2px rgba(90,230,232,.7), 0 0 34px 8px rgba(67,211,212,.3); } }
 body.reef-calm .cv3-hero .topbar :is(.icon-btn, .btn){ animation:none !important; }
 @media (prefers-reduced-motion: reduce){ .cv3-hero .topbar :is(.icon-btn, .btn){ animation:none !important; } }
+
+/* the course as a voyage on the treasure map (reef3dVoyageHTML) */
+.r3-voyage{ margin:4px 0 12px; padding:10px 10px 6px; border-radius:16px; background:rgba(120,80,30,.08); }
+.r3-voy-h{ display:block; font:800 1rem 'Baloo 2',sans-serif; margin-bottom:6px; }
+.r3-voyage ol{ list-style:none; margin:0; padding:4px 2px 8px; display:flex; gap:6px; overflow-x:auto; scroll-snap-type:x proximity; }
+.r3-isle{ flex:none; width:96px; scroll-snap-align:center; display:flex; flex-direction:column; align-items:center; text-align:center; gap:2px; padding:8px 4px; border-radius:14px; background:#fff8e6; box-shadow:0 2px 0 #c9a46a; position:relative; }
+.r3-isle:not(:last-child)::after{ content:""; position:absolute; right:-7px; top:24px; width:8px; border-top:3px dashed #b5452f; }
+.r3-isle-i{ font-size:1.7rem; line-height:1; height:32px; display:grid; place-items:center; } .r3-isle-i .cc-guide-mini{ width:34px; }
+.r3-isle-t{ font-weight:800; font-size:.75rem; line-height:1.15; }
+.r3-isle small{ font-weight:700; font-size:.7rem; opacity:.7; }
+.r3-isle.now{ background:#fff1c2; box-shadow:0 0 0 3px #f2b544, 0 2px 0 #c9a46a; }
+.r3-isle.later{ opacity:.65; } .r3-isle.done{ background:#e3f1e7; }

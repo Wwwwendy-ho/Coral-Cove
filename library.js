@@ -181,6 +181,439 @@
     if(a.deck) return bestDeck(goalDecks(goal)).then(function(best){ if(!best) return; markDone(goal, a.id); close(); CC().startDeck(best.d.id); });
     pendingAct = { goal: goal, id: a.id }; go(a.view, a.arg);
   }
+  /* ---------- Coral Classroom: a course for a profile, planned the way a good teacher plans one ----------
+     Backward design: the course starts from what the learner wants to be able to DO ("be conversational when I
+     visit Korea"), turns that into "I can…" goals for each unit, and only then picks the decks and activities
+     that get there. Every unit:
+       - has a real-life focus and 2–4 "I can…" statements she can tick off,
+       - balances listening, speaking, reading and writing,
+       - follows a weekly rhythm: learn → listen and repeat → use it → mix old and new → quick check,
+       - brings back earlier units' words (spaced, mixed review), and
+       - ends with an optional check. The result adjusts the course: a strong result speeds the next unit up, a
+         middling one adds the missed items as fix-up practice, a weak one adds a week at a gentler pace.
+     Review weeks pull units together, and an optional placement check at the start lets her skip ahead. New words
+     per study day come from her minutes a day and starting level; with a trip or target date, the pace is fitted to
+     it. Pure rules on her own decks: works offline. The course is saved on the profile (CoralCove.setCourse), and
+     the app reads it for the Daily Plan and the treasure map. Any profile can have one; for now it's on for Wendy
+     (see courseOn in library-api.js). */
+  function course(){ var c = CC(); return c && c.course ? c.course() : null; }
+  function courseOn(){ var c = CC(); return !!(c && c.courseOn && c.courseOn()); }
+  function saveCourse(co){ var c = CC(); return c && c.setCourse ? Promise.resolve(c.setCourse(co)) : Promise.resolve(false); }
+  function isoOf(d){ return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function dateOf(iso){ var p = String(iso || '').split('-'); return p.length === 3 ? new Date(+p[0], +p[1] - 1, +p[2]) : new Date(); }
+  function addDays(iso, n){ var d = dateOf(iso); d.setDate(d.getDate() + n); return isoOf(d); }
+  function nextMonday(){ var d = new Date(); var add = (8 - d.getDay()) % 7; if(add === 0 && d.getHours() >= 12) add = 7; d.setDate(d.getDate() + add); return isoOf(d); }
+  function niceDate(iso){ try { return dateOf(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); } catch(e){ return iso; } }
+  function cardKey(c){ return (c.order != null ? String(c.order).padStart(6, '0') : '') + '|' + String(c.createdAt || 0).padStart(15, '0') + '|' + (c.id || ''); }
+  function sortedCards(cs){ return cs.slice().sort(function(a, b){ return cardKey(a) < cardKey(b) ? -1 : 1; }); }
+  function knownCard(c){ return (c.interval || 0) >= 3 || cardStateOf(c) === 'mastered'; }
+  function hasHangul(t){ return /[가-힣]/.test(t || ''); }
+
+  // What each deck is for, from its cards: script and sounds, listening, speaking, words, numbers, sentences,
+  // little stories, or word roots. Near-copies of another deck (the same words) become its fluency partner.
+  function courseDecks(){
+    var ds = decks();
+    return Promise.all(ds.map(function(d){ return cards(d.id); })).then(function(lists){
+      var out = [];
+      ds.forEach(function(d, i){
+        var cs = sortedCards(lists[i] || []); if(!cs.length) return;
+        var modes = {}; cs.forEach(function(c){ modes[c.mode || 'flip'] = (modes[c.mode || 'flip'] || 0) + 1; });
+        var mode = Object.keys(modes).sort(function(a, b){ return modes[b] - modes[a]; })[0];
+        var eq = cs.filter(function(c){ return /^\s*\d+\s*\+\s*(\d+|_+)\s*$/.test(plain(c.front)); }).length > cs.length / 2;
+        var choices = cs.some(function(c){ return c.choices && c.choices.length; });
+        var stage = mode === 'blend' ? 'script' : mode === 'listen' && choices ? 'script' : mode === 'listen' ? 'listening' : mode === 'echo' ? 'speaking'
+          : mode === 'numsys' || eq ? 'numbers' : mode === 'build' ? 'sentences' : mode === 'hanja' ? 'roots'
+          : /mini story|story/i.test(d.name) || (cs.length <= 12 && cs.filter(function(c){ return /\s/.test(plain(c.front).trim()); }).length > cs.length / 2) ? 'stories' : 'words';
+        var pairs = {}; cs.forEach(function(c){ var a = plain(c.front).toLowerCase(), b = plain(c.back).toLowerCase(); pairs[a < b ? a + '|' + b : b + '|' + a] = 1; });
+        var dupOf = null;
+        out.forEach(function(o){ if(dupOf || o.stage !== 'words' || stage !== 'words') return; var hit = 0, n = 0; for(var k in pairs){ n++; if(o.pairs[k]) hit++; } if(n && hit / n > .7) dupOf = o; });
+        var item = { d: d, cards: cs, n: cs.length, mode: mode, stage: stage, pairs: pairs, dupOf: dupOf ? dupOf.d.id : null };
+        if(dupOf && mode === 'timedchoice') dupOf.fluency = d.id;   // the same words against the clock: fluency practice
+        if(dupOf && mode !== 'timedchoice'){ item.dupOf = null; if(dupOf.mode === 'timedchoice'){ dupOf.dupOf = d.id; item.fluency = dupOf.d.id; } }
+        out.push(item);
+      });
+      return out;
+    });
+  }
+
+  // Tools from the Library each unit can use, by skill
+  var TOOL = {
+    handwriting: { name: 'Hangul handwriting', e: '✏️', skill: 'write', view: 'wsMake', arg: JSON.stringify({ src: 'trace', script: 'hangul' }) },
+    ask: { name: 'Ask about a word', e: '🐢', skill: 'read', view: 'chat', arg: 'ask' },
+    cloze: function(id){ return { name: 'Fill the gaps', e: '🧩', skill: 'read', view: 'wsMake', arg: JSON.stringify({ src: 'cloze', deck: id }) }; },
+    worksheet: function(id){ return { name: 'Worksheet', e: '📝', skill: 'write', view: 'wsMake', arg: JSON.stringify({ src: 'deck', deck: id }) }; },
+    play: function(id, name){ return { name: 'Role-play: ' + name, e: '🗣️', skill: 'speak', view: 'play', arg: id }; },
+    writing: { name: 'My writing', e: '✍️', skill: 'write', view: 'writing' },
+    teach: { name: 'Teach Shelly', e: '🎓', skill: 'speak', view: 'teachback' },
+    tricky: { name: 'Tricky spots', e: '🔎', skill: 'read', view: 'misconceptions' },
+    mastery: { name: 'Mastery', e: '🏆', skill: 'read', view: 'mastery' },
+    game: function(name){ return { name: 'Minigame on the board: ' + name, e: '🎮', skill: 'listen', game: true }; }
+  };
+
+  // The course plan itself
+  function courseDesign(ans, info){
+    var korean = (ans.subjects || []).indexOf('korean') >= 0 || /korea/i.test(ans.goal || '');
+    var talk = /conversation|talk|speak|chat|travel|trip|visit/i.test(ans.goal || '') || korean;
+    var by = function(st){ return info.filter(function(x){ return x.stage === st && !x.dupOf; }); };
+    var words = by('words').sort(function(a, b){ return b.n - a.n; }), main = words[0], extraWords = words.slice(1);
+    var level = ans.level === 'comfortable' ? 1.5 : ans.level === 'some' ? 1.2 : 1;
+    var perDay = Math.max(4, Math.min(22, Math.round((+ans.minutes || 20) * .45 * level)));
+    var units = [];
+    function U(o){ o.decks = (o.decks || []).filter(Boolean); o.tools = (o.tools || []).filter(Boolean); units.push(o); return o; }
+    function deckRef(x, role, from, to){ if(!x) return null; from = from || 0; to = Math.min(x.n, to == null ? x.n : to); if(to <= from) return null; return { id: x.d.id, name: x.d.name, role: role || 'learn', from: from, to: to, n: to - from, part: from > 0 || to < x.n, fluency: x.fluency || null }; }
+    // the main word deck is shared out over the units that need words, in its own order
+    var chunkAt = 0, wordUnits = korean ? 5 : 3;
+    var chunk = main ? Math.ceil(main.n / wordUnits) : 0;
+    function nextWords(){ if(!main || chunkAt >= main.n) return null; var r = deckRef(main, 'learn', chunkAt, chunkAt + chunk); if(r) chunkAt = r.to; return r; }
+    if(korean && talk){
+      var script = by('script'), listen = by('listening')[0], speak = by('speaking')[0], nums = by('numbers'), sent = by('sentences')[0], stories = by('stories'), roots = by('roots')[0];
+      var story = function(re){ return stories.find(function(s){ return re.test(s.d.name); }) || null; };
+      U({ key: 'hangul', title: 'Hangul: reading the signs', focus: 'Signs, menus and names', why: 'Every conversation starts with hearing and reading the sounds right. Hangul is a logical alphabet: about a week of steady practice and you can sound out any word you see.',
+        cando: ['I can read any Hangul syllable block aloud, slowly', 'I can hear the difference between 달, 탈 and 딸', 'I can write my name in Hangul'],
+        decks: script.map(function(x){ return deckRef(x, 'learn'); }).concat([deckRef(listen, 'practice', 0, Math.min(listen ? listen.n : 0, 10))]),
+        tools: [TOOL.handwriting, TOOL.game('Hangul Blocks'), TOOL.game('Echo Shell'), TOOL.ask],
+        check: 'Read 10 new syllables and pick words you hear' });
+      U({ key: 'hello', title: 'Hello, thank you, sorry', focus: 'Meeting people', why: 'The first minute of any conversation is the same few phrases. Knowing them cold makes every later one easier.',
+        cando: ['I can greet people politely and say goodbye the right way (안녕히 가세요 / 계세요)', 'I can say thank you, sorry and excuse me', 'I can introduce myself: my name and where I am from'],
+        decks: [deckRef(speak, 'learn'), nextWords(), deckRef(listen, 'practice')],
+        tools: [TOOL.play('intro', 'Introduce yourself'), TOOL.teach, TOOL.game('Tide Pairs')],
+        check: 'Phrases from listening, and replying in the right way' });
+      U({ key: 'food', title: 'At the café and restaurant', focus: 'Ordering food and drinks', why: 'Food is where you will talk most on a trip. One pattern, 주세요 ("please give me"), does most of the work.',
+        cando: ['I can order food and drinks with 주세요', 'I can ask for water, the menu or the bill', 'I can answer "hot or cold?" and "for here or to go?"'],
+        decks: [deckRef(story(/커피|coffee|café/i), 'learn'), nextWords()],
+        tools: [TOOL.play('cafe', 'Order at a café'), TOOL.play('restaurant', 'At a restaurant'), TOOL.cloze(main && main.d.id), TOOL.game('Bubble Catch')],
+        check: 'Ordering phrases and food words' });
+      U({ key: 'numbers', title: 'Numbers, prices and time', focus: 'Shopping and paying', why: 'Korean has two number systems; prices use one and counting things the other. Learning when to use each turns prices and times from a puzzle into a habit.',
+        cando: ['I can understand prices said aloud and ask 얼마예요?', 'I can count things with native numbers and the right counter (두 개, 세 명)', 'I can pay by card or cash'],
+        decks: nums.map(function(x){ return deckRef(x, 'learn'); }),
+        tools: [TOOL.game('Counting Cove'), TOOL.play('shop', 'Buy something at a shop'), TOOL.worksheet(nums[0] && nums[0].d.id)],
+        check: 'Native or Sino numbers, prices and counters' });
+      U({ key: 'review1', review: true, title: 'Review week: a day out', focus: 'Putting it together', why: 'Mixing everything from the first units, and using it in a role-play without hints, is what moves words from "I know it" to "I can say it".',
+        cando: ['I can get through a café order and a shop purchase without hints', 'I can still read and say the words from earlier units'],
+        decks: [], tools: [TOOL.play('cafe', 'Café, no hints'), TOOL.play('shop', 'Shop, no hints'), TOOL.tricky, TOOL.mastery], check: 'Mixed check on units 1–4' });
+      U({ key: 'around', title: 'Getting around', focus: 'Directions, subway and taxis', why: 'Asking the way and telling a driver where to go uses the 가요 / 가 주세요 patterns and a few direction words.',
+        cando: ['I can ask where a place is (…어디예요?)', 'I can understand left, right and straight on', 'I can tell a taxi where to go'],
+        decks: [deckRef(sent, 'learn'), nextWords()],
+        tools: [TOOL.play('subway', 'Ask the way'), TOOL.play('taxi', 'Take a taxi'), TOOL.game('Sentence Current')],
+        check: 'Direction phrases and building sentences' });
+      U({ key: 'you', title: 'Talking about you', focus: 'Small talk', why: 'Conversation means questions coming back at you. This unit is about answering about family, weather and what she likes, then asking back.',
+        cando: ['I can talk about my family and what I like', 'I can say what the weather is like', 'I can ask someone a simple question back'],
+        decks: [deckRef(story(/가족|family/i), 'learn'), deckRef(story(/비|rain/i), 'learn'), nextWords()],
+        tools: [TOOL.play('intro', 'Small talk'), TOOL.writing, TOOL.teach],
+        check: 'Small-talk questions and answers' });
+      U({ key: 'stay', title: 'Hotels and helping hands', focus: 'Staying and solving problems', why: 'The phrases that matter most when something goes wrong: checking in, finding the restroom, asking for help.',
+        cando: ['I can check in at a hotel with my name and reservation', 'I can ask where the restroom is', 'I can ask for help and say what is wrong'],
+        decks: [nextWords(), deckRef(roots, 'practice', 0, roots ? Math.min(roots.n, 30) : 0)].concat(extraWords.map(function(x){ return deckRef(x, 'practice'); })),
+        tools: [TOOL.play('hotel', 'Check in at a hotel'), TOOL.play('help', 'Ask for help'), TOOL.ask],
+        check: 'Hotel and help phrases' });
+      U({ key: 'final', review: true, title: 'Conversation week: a day in Seoul', focus: 'Showing what you can do', why: 'The final week strings every situation into one "day in Seoul": no new material, all speaking and listening, then a final check.',
+        cando: ['I can get through a whole day of travel situations in Korean', 'I can introduce myself in five sentences, out loud and in writing'],
+        decks: [], tools: [TOOL.play('intro', 'Meet someone'), TOOL.play('subway', 'Find the station'), TOOL.play('restaurant', 'Lunch'), TOOL.play('shop', 'Shopping'), TOOL.play('hotel', 'Back at the hotel'), TOOL.writing],
+        check: 'Final mixed check on the whole course' });
+      if(main && chunkAt < main.n){ var tail = units.find(function(u){ return u.key === 'stay'; }); tail.decks.unshift(deckRef(main, 'learn', chunkAt, main.n)); chunkAt = main.n; }
+    } else {
+      // Any other subject: the same shape, from whatever decks she has, in a sensible order
+      var order = ['script', 'listening', 'speaking', 'words', 'numbers', 'sentences', 'stories', 'roots'], made = 0;
+      order.forEach(function(st){
+        var xs = by(st); if(!xs.length) return;
+        if(st === 'words'){
+          for(var k = 0; k < wordUnits && main && chunkAt < main.n; k++){ var w = nextWords(); U({ key: 'words' + k, title: (main.d.name) + ', part ' + (k + 1), focus: 'New words', why: 'A steady handful of new words a day, mixed with the ones before, is how vocabulary sticks.',
+            cando: ['I can remember the meanings of words ' + (w.from + 1) + '–' + w.to + ' of ' + main.d.name, 'I can use them in a sentence'], decks: [w], tools: [TOOL.cloze(main.d.id), TOOL.worksheet(main.d.id), TOOL.teach], check: 'Words from this part' }); made++; }
+          extraWords.forEach(function(x){ U({ key: 'w-' + x.d.id, title: x.d.name, focus: 'New words', why: 'More words, linked to the ones she knows.', cando: ['I can remember the words in ' + x.d.name], decks: [deckRef(x, 'learn')], tools: [TOOL.worksheet(x.d.id)], check: 'Words from ' + x.d.name }); made++; });
+        } else {
+          var label = { script: 'Sounds and letters', listening: 'Listening', speaking: 'Saying it out loud', numbers: 'Numbers', sentences: 'Building sentences', stories: 'Little stories', roots: 'Word families' }[st];
+          U({ key: st, title: label, focus: label, why: 'Each skill gets its own focused time before it is mixed with the rest.', cando: xs.map(function(x){ return 'I can do ' + x.d.name + ' with 8 out of 10 right'; }).slice(0, 3),
+            decks: xs.map(function(x){ return deckRef(x, 'learn'); }), tools: [TOOL.mastery], check: label + ' check' }); made++;
+        }
+        if(made && made % 3 === 0) U({ key: 'review' + made, review: true, title: 'Review week', focus: 'Putting it together', why: 'Mixed review of the last few units, so nothing fades.', cando: ['I can still do everything from the last units'], decks: [], tools: [TOOL.tricky, TOOL.mastery], check: 'Mixed check' });
+      });
+      U({ key: 'final', review: true, title: 'Final review', focus: 'Showing what you can do', why: 'No new material: everything mixed, then a final check.', cando: ['I can do everything from this course'], decks: [], tools: [TOOL.mastery, TOOL.tricky], check: 'Final mixed check' });
+    }
+    // how long each unit takes: new cards at her pace, plus time to use them and review
+    units.forEach(function(u, i){
+      var newN = u.decks.filter(function(dk){ return dk.role === 'learn'; }).reduce(function(s, dk){ return s + dk.n; }, 0);
+      u.newN = newN; u.i = i; u.id = 'u' + i;
+      u.review = !!u.review;
+      u.reviewOf = units.slice(Math.max(0, i - 2), i).map(function(p){ return p.id; });   // spaced review: the two units before come back
+    });
+    return { units: units, perDay: perDay };
+  }
+  // Dates for every unit, from the start date, her days a week and the pace, fitted to a target date if there is one
+  function courseSchedule(co){
+    var days = Math.max(2, Math.min(7, +co.days || 5));
+    function weeksFor(u){ if(u.testedOut) return 1; if(u.review) return 1; var studyDays = Math.ceil((u.newN || 0) / co.perDay) + 2; return Math.max(1, Math.min(4, Math.ceil(studyDays / days))) + (u.extraWeeks || 0) - (u.lessWeeks || 0); }
+    if(co.target && !co.fitted){
+      var avail = Math.floor((dateOf(co.target) - dateOf(co.start)) / (7 * 864e5));
+      for(var tries = 0; tries < 12; tries++){
+        var tot = co.units.reduce(function(s, u){ return s + Math.max(1, weeksFor(u)); }, 0);
+        if(tot <= avail || co.perDay >= 25) break;
+        co.perDay = Math.min(25, Math.round(co.perDay * 1.15) + 1);
+      }
+      co.fitNote = (function(){ var tot = co.units.reduce(function(s, u){ return s + Math.max(1, weeksFor(u)); }, 0);
+        return tot <= avail ? 'Fits before ' + niceDate(co.target) + ' at about ' + co.perDay + ' new words a study day.' : 'The full course needs ' + tot + ' weeks; your date is ' + avail + ' weeks away. More minutes a day, or the review weeks done faster, will close the gap.'; })();
+    }
+    var at = co.start;
+    co.units.forEach(function(u){ u.weeks = Math.max(1, weeksFor(u)); u.start = at; u.end = addDays(at, u.weeks * 7 - 3); at = addDays(at, u.weeks * 7); });
+    co.end = co.units.length ? co.units[co.units.length - 1].end : co.start;
+    return co;
+  }
+  function courseBuild(ans){
+    return courseDecks().then(function(info){
+      var plan = courseDesign(ans, info);
+      var co = { v: 1, goal: ans.goal, subjects: ans.subjects, level: ans.level, minutes: +ans.minutes, days: +ans.days, start: ans.start, target: ans.target || '',
+        perDay: plan.perDay, units: plan.units, evals: [], log: [{ date: today(), text: 'Course planned: ' + plan.units.length + ' units, about ' + plan.perDay + ' new words a study day.' }], built: Date.now() };
+      return courseSchedule(co);
+    });
+  }
+  // Which unit is "now"
+  function courseNow(co){
+    return co.units.filter(function(u){ return !u.done; })[0] || null;   // like a class, the earliest unit not yet finished
+  }
+  // How far along a unit is: the share of its new cards she knows now
+  function unitProgress(u){
+    var learn = u.decks.filter(function(dk){ return dk.role === 'learn'; });
+    if(!learn.length) return Promise.resolve(u.done ? 1 : null);
+    return Promise.all(learn.map(function(dk){ return cards(dk.id).then(function(cs){ cs = sortedCards(cs).slice(dk.from, dk.to); return [cs.filter(knownCard).length, cs.length]; }); }))
+      .then(function(rs){ var k = 0, n = 0; rs.forEach(function(r){ k += r[0]; n += r[1]; }); return n ? k / n : null; });
+  }
+
+  /* ---- Checks (all optional). A unit check is 10 quick questions from that unit's cards (about a third from the
+     two units before it). Placement samples every unit. The result changes the course, and the change is logged. ---- */
+  function checkItems(co, kind, idx){
+    var units = kind === 'placement' ? co.units.filter(function(u){ return !u.review; }) : kind === 'unit' ? [co.units[idx]] : co.units.slice(0, idx + 1);
+    var spaced = kind === 'unit' ? co.units.slice(Math.max(0, idx - 2), idx).filter(function(u){ return !u.review; }) : [];
+    function from(us, n){
+      var refs = []; us.forEach(function(u){ u.decks.forEach(function(dk){ refs.push({ dk: dk, unit: u.id }); }); });
+      if(!refs.length) return Promise.resolve([]);
+      return Promise.all(refs.map(function(r){ return cards(r.dk.id).then(function(cs){ return sortedCards(cs).slice(r.dk.from, r.dk.to).map(function(c){ return { c: c, unit: r.unit, deck: r.dk.id }; }); }); }))
+        .then(function(ls){ var all = [].concat.apply([], ls).filter(function(x){ return plain(x.c.front) && plain(x.c.back) && plain(x.c.front) !== plain(x.c.back); }); return shuffle(all).slice(0, n); });
+    }
+    var n = kind === 'placement' ? 3 * units.length : 10;
+    var mainP = kind === 'placement' ? Promise.all(units.map(function(u){ return from([u], 3); })).then(function(ls){ return [].concat.apply([], ls); }) : from(units, spaced.length ? 7 : n);
+    return Promise.all([mainP, from(spaced, 3)]).then(function(r){ var items = r[0].concat(r[1]);
+      // wrong answers come from the same decks
+      return Promise.all(items.map(function(x){ return cards(x.deck); })).then(function(pools){
+        return items.map(function(x, i){
+          var c = x.c, f = plain(c.front), b = plain(c.back), ko = hasHangul(f) ? f : hasHangul(b) ? b : null, en = ko === f ? b : f;
+          if(c.choices && c.choices.length) return { unit: x.unit, card: c.id, deck: x.deck, q: b, opts: shuffle([f].concat(c.choices.map(plain)).slice(0, 4)), ok: f, say: null };
+          var type = ko ? ['read', 'recall', 'listen'][i % 3] : 'read';
+          var others = shuffle(pools[i].filter(function(o){ return o.id !== c.id; })).map(function(o){ var of = plain(o.front), ob = plain(o.back), oko = hasHangul(of) ? of : ob, oen = oko === of ? ob : of;
+            return !ko ? ob : type === 'recall' ? oko : oen; }).filter(function(v, k, a){ return v && a.indexOf(v) === k; });
+          var right = type === 'recall' ? ko : (ko ? en : b), q = type === 'recall' ? en : type === 'listen' ? '🔊' : (ko || f);
+          return { unit: x.unit, card: c.id, deck: x.deck, type: type, q: q, say: type === 'listen' ? ko : null, ok: right, opts: shuffle([right].concat(others.filter(function(o){ return o !== right; }).slice(0, 3))) };
+        });
+      });
+    });
+  }
+  // What a result does to the course
+  function courseAdjust(co, kind, idx, score, missed, byUnit){
+    var u = co.units[idx], next = co.units[idx + 1], pct = Math.round(score * 100), msg;
+    if(kind === 'placement'){
+      var skipped = [];
+      co.units.forEach(function(x){ var r = byUnit[x.id]; if(!x.review && r && r[1] && r[0] / r[1] >= .85){ x.testedOut = true; skipped.push(x.title); } });
+      msg = skipped.length ? 'Placement check: ' + pct + '%. Already strong in ' + skipped.join(', ') + ', so those become one-week quick reviews.' : 'Placement check: ' + pct + '%. Starting from the beginning at the planned pace.';
+    } else if(score >= .9){
+      u.done = true; u.doneOn = today();
+      if(next && !next.review && next.weeks > 1) next.lessWeeks = (next.lessWeeks || 0) + 1;
+      co.perDay = Math.min(25, Math.round(co.perDay * 1.15));
+      msg = u.title + ' check: ' + pct + '%. Excellent: the next unit is a week shorter and new words come a little faster (' + co.perDay + ' a day).';
+    } else if(score >= .75){
+      u.done = true; u.doneOn = today();
+      co.fixups = (co.fixups || []).concat(missed).slice(-40);
+      msg = u.title + ' check: ' + pct + '%. Unit done. The ' + missed.length + ' item' + (missed.length === 1 ? '' : 's') + ' missed come back as fix-up practice in the next unit.';
+    } else if(score >= .55){
+      u.extraWeeks = (u.extraWeeks || 0) + 1; co.perDay = Math.max(4, Math.round(co.perDay * .9));
+      co.fixups = (co.fixups || []).concat(missed).slice(-40);
+      msg = u.title + ' check: ' + pct + '%. One more week on this unit, with the missed items as fix-ups and a gentler pace (' + co.perDay + ' new words a day). Try the check again at the end of the week.';
+    } else {
+      u.extraWeeks = (u.extraWeeks || 0) + 1; co.perDay = Math.max(4, Math.round(co.perDay * .8));
+      co.fixups = (co.fixups || []).concat(missed).slice(-40);
+      if(next && !next.review) co.units.splice(idx + 1, 0, { id: 'r' + Date.now(), key: 'catchup', review: true, title: 'Catch-up week: ' + u.title, focus: 'Going over it again', why: 'Added after the check: the same material again, more slowly, mixed with what came before.', cando: u.cando, decks: [], tools: [TOOL.tricky, TOOL.mastery], check: 'The ' + u.title + ' check again', reviewOf: [u.id], newN: 0 });
+      msg = u.title + ' check: ' + pct + '%. That was hard, which is useful to know. An extra week on this unit and a catch-up week after it, at a gentler pace (' + co.perDay + ' new words a day).';
+    }
+    if(kind === 'review' && score < .7) msg = u.title + ': ' + pct + '%. Some earlier units have faded, so their words are mixed into the coming weeks as extra review.';
+    co.evals.push({ date: today(), kind: kind, unit: u ? u.id : null, score: score });
+    co.log.push({ date: today(), text: msg });
+    co.fitted = true;   // a target date's pace isn't recalculated over the check's adjustment
+    courseSchedule(co);   // the dates follow the change
+    return msg;
+  }
+
+  // Wendy's (and any profile's) answers: the questionnaire
+  function defaultAnswers(){
+    var p = CC() && CC().profile(), co = course();
+    if(co) return { goal: co.goal, subjects: co.subjects, level: co.level, minutes: co.minutes, days: co.days, start: co.start, target: co.target };
+    var g = myGoals().filter(function(x){ return x !== 'explore'; });
+    return { goal: (p && p.learnGoal) || (g.indexOf('korean') >= 0 ? 'Be conversational when I visit Korea' : ''), subjects: g, level: 'new', minutes: 20, days: 5, start: nextMonday(), target: '' };
+  }
+  LIB.views.courseSetup = { title: 'Coral Classroom', render: function(el){
+    var a = defaultAnswers(), p = CC() && CC().profile();
+    var opt = function(v, cur, l){ return '<option value="' + v + '"' + (String(cur) === String(v) ? ' selected' : '') + '>' + l + '</option>'; };
+    el.innerHTML = '<section class="clib-card"><h2>🏫 What do you want to learn?</h2><p>A few questions, and Coral Classroom plans a course for ' + esc(p ? p.name : 'you') + ': units with clear goals, dates, and checks that adjust it as you go. You can change any answer later.</p>' +
+      '<label class="clib-label" for="coGoal">Your goal, in your own words</label><textarea id="coGoal" class="clib-input co-goal" placeholder="For example: be conversational when I visit Korea">' + esc(a.goal || '') + '</textarea>' +
+      '<label class="clib-label">Subjects</label><div class="clib-row" role="group" aria-label="Subjects">' + goalChoices().map(function(g){ return '<button type="button" class="clib-btn" data-cosub="' + esc(g.id) + '" aria-pressed="' + ((a.subjects || []).indexOf(g.id) >= 0) + '">' + g.icon + ' ' + esc(g.label) + '</button>'; }).join('') + '</div>' +
+      '<label class="clib-label" for="coLevel">Where are you starting?</label><select id="coLevel" class="clib-input">' + opt('new', a.level, 'Brand new') + opt('some', a.level, 'I know a little') + opt('comfortable', a.level, 'I know quite a lot') + '</select>' +
+      '<div class="co-two"><div><label class="clib-label" for="coMin">Minutes a day</label><select id="coMin" class="clib-input">' + [10, 15, 20, 30, 45, 60].map(function(m){ return opt(m, a.minutes, m + ' minutes'); }).join('') + '</select></div>' +
+      '<div><label class="clib-label" for="coDays">Days a week</label><select id="coDays" class="clib-input">' + [3, 4, 5, 6, 7].map(function(d){ return opt(d, a.days, d + ' days'); }).join('') + '</select></div></div>' +
+      '<div class="co-two"><div><label class="clib-label" for="coStart">Start on</label><input id="coStart" type="date" class="clib-input" value="' + esc(a.start) + '"></div>' +
+      '<div><label class="clib-label" for="coTarget">Trip or target date (optional)</label><input id="coTarget" type="date" class="clib-input" value="' + esc(a.target || '') + '"></div></div>' +
+      '<label class="co-check"><input type="checkbox" id="coPlace"> Start with a short placement check, to skip what I already know</label>' +
+      '<div class="clib-row"><button type="button" class="clib-btn main" data-co-make>' + (course() ? 'Re-plan my course' : 'Plan my course') + '</button></div><p class="clib-msg" aria-live="polite"></p></section>';
+    $$('[data-cosub]', el).forEach(function(b){ b.addEventListener('click', function(){ b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true')); }); });
+    $('[data-co-make]', el).addEventListener('click', function(){
+      var ans = { goal: $('#coGoal', el).value.trim(), subjects: $$('[data-cosub][aria-pressed="true"]', el).map(function(b){ return b.dataset.cosub; }), level: $('#coLevel', el).value,
+        minutes: +$('#coMin', el).value, days: +$('#coDays', el).value, start: $('#coStart', el).value || nextMonday(), target: $('#coTarget', el).value || '' };
+      var msg = $('.clib-msg', el);
+      if(!ans.goal){ msg.textContent = 'Write your goal first: it shapes the whole course.'; return; }
+      msg.textContent = 'Planning…';
+      var old = course();
+      courseBuild(ans).then(function(co){
+        if(old){ co.evals = old.evals || []; co.log = (old.log || []).concat([{ date: today(), text: 'Re-planned from new answers.' }]); }
+        return saveCourse(co).then(function(){ sound('correct'); if($('#coPlace', el).checked) go('courseCheck', 'placement', true); else go('classroom', null, true); });
+      }, function(){ msg.textContent = 'Couldn\'t plan the course. Try again.'; });
+    });
+  } };
+
+  LIB.views.classroom = { title: 'Coral Classroom', render: function(el){
+    var co = course();
+    if(!co){
+      var a = defaultAnswers();   // first visit: plan straight away from what we know, then she can adjust the answers
+      el.innerHTML = '<section class="clib-card"><p>Planning your course…</p></section>';
+      courseBuild(a).then(function(c){ return saveCourse(c); }).then(function(){ go('classroom', null, true); });
+      return;
+    }
+    var now = courseNow(co), ni = now ? co.units.indexOf(now) : -1, t = today();
+    var weekOf = now ? Math.min(now.weeks, Math.max(1, Math.floor((dateOf(t) - dateOf(now.start)) / (7 * 864e5)) + 1)) : 0;
+    var late = now && now.end < t ? Math.round((dateOf(t) - dateOf(now.end)) / 864e5) : 0;
+    var html = '<section class="clib-card co-head"><h2>🏫 Coral Classroom</h2>' +
+      '<label class="clib-label" for="coGoalEdit">My goal</label><div class="co-goalrow"><textarea id="coGoalEdit" class="clib-input co-goal">' + esc(co.goal) + '</textarea></div>' +
+      '<div class="clib-row"><button type="button" class="clib-btn" data-co-goalsave>Save goal</button><button type="button" class="clib-btn" data-view="courseSetup">Change my answers</button>' +
+      (!co.evals.length ? '<button type="button" class="clib-btn" data-co-check="placement">Placement check (optional)</button>' : '') + '</div><p class="clib-msg" data-co-goalmsg aria-live="polite"></p>' +
+      '<p class="co-meta">' + co.minutes + ' minutes a day, ' + co.days + ' days a week · about ' + co.perDay + ' new words a study day · ' + niceDate(co.start) + ' to ' + niceDate(co.end) + (co.target ? ' · trip ' + niceDate(co.target) : '') + '</p>' +
+      (co.fitNote ? '<p class="co-meta">' + esc(co.fitNote) + '</p>' : '') + '</section>';
+    if(now){
+      html += '<section class="clib-card co-now"><span class="co-tag">Now · Unit ' + (ni + 1) + ' of ' + co.units.length + (now.start <= t ? ' · week ' + weekOf + ' of ' + now.weeks : ' · starts ' + niceDate(now.start)) + '</span>' +
+        '<h2>' + esc(now.title) + '</h2><p class="co-focus">' + esc(now.focus) + ' · ' + niceDate(now.start) + ' – ' + niceDate(now.end) + '</p>' +
+        (late ? '<p class="co-late">' + late + ' day' + (late === 1 ? '' : 's') + ' past this unit\'s end date. No problem: take the check when you\'re ready, and the dates after it will move.</p>' : '') +
+        '<p>' + esc(now.why) + '</p><h3>By the end I can…</h3><ul class="co-cando">' + now.cando.map(function(c){ return '<li>' + esc(c) + '</li>'; }).join('') + '</ul>' +
+        '<div class="co-bar" aria-hidden="true"><i data-co-prog style="width:0"></i></div><p class="co-meta" data-co-progt></p>' +
+        '<h3>This week</h3><ol class="co-week">' + rhythm(co, now).map(function(r, k){ return '<li><b>' + esc(r[0]) + '</b> ' + r[1].map(function(x, j){ return '<button type="button" class="clib-btn co-go" data-co-go="' + k + ':' + j + '">' + x.e + ' ' + esc(x.name) + '</button>'; }).join(' ') + '</li>'; }).join('') + '</ol>' +
+        ((co.fixups || []).length ? '<p class="co-meta">🔧 ' + co.fixups.length + ' fix-up item' + (co.fixups.length === 1 ? '' : 's') + ' from earlier checks are mixed into your practice.</p>' : '') +
+        '<div class="clib-row"><button type="button" class="clib-btn main" data-co-check="' + (now.review ? 'review' : 'unit') + ':' + ni + '">Take the ' + (now.review ? 'review' : 'unit') + ' check (optional)</button><button type="button" class="clib-btn" data-co-skip="' + ni + '">Mark this unit done</button></div></section>';
+    } else html += '<section class="clib-card co-now"><h2>🎉 Course complete!</h2><p>Every unit is done. Change your answers to plan the next course.</p></section>';
+    html += '<h3 class="clib-more-h">The course</h3><ol class="co-line">' + co.units.map(function(u, i){
+      var st = u.done ? 'done' : u === now ? 'now' : u.start > t ? 'later' : 'open';
+      return '<li class="co-u ' + st + (u.review ? ' review' : '') + '"><details' + (u === now ? ' open' : '') + '><summary><span class="co-dot" aria-hidden="true">' + (u.done ? '✓' : i + 1) + '</span><span class="co-ut"><b>' + esc(u.title) + '</b><small>' + niceDate(u.start) + ' – ' + niceDate(u.end) + ' · ' + u.weeks + ' week' + (u.weeks === 1 ? '' : 's') + (u.testedOut ? ' · quick review' : '') + (u.done ? ' · done' : '') + '</small></span></summary>' +
+        '<div class="co-ud"><p>' + esc(u.why) + '</p><ul class="co-cando">' + u.cando.map(function(c){ return '<li>' + esc(c) + '</li>'; }).join('') + '</ul>' +
+        (u.decks.length ? '<p class="co-meta"><b>Decks:</b> ' + u.decks.map(function(dk){ return esc(dk.name) + (dk.part ? ' (cards ' + (dk.from + 1) + '–' + dk.to + ')' : '') + (dk.role !== 'learn' ? ' (practice)' : ''); }).join(', ') + '</p>' : '') +
+        '<p class="co-meta"><b>Also:</b> ' + u.tools.map(function(x){ return esc(x.name); }).join(', ') + '</p><p class="co-meta"><b>Check:</b> ' + esc(u.check) + '</p></div></details></li>'; }).join('') + '</ol>';
+    html += '<h3 class="clib-more-h">What changed and why</h3><ul class="co-log">' + co.log.slice().reverse().map(function(l){ return '<li><small>' + niceDate(l.date) + '</small> ' + esc(l.text) + '</li>'; }).join('') + '</ul>';
+    html += '<div class="clib-row"><button type="button" class="clib-btn" data-co-off>Turn Coral Classroom off</button></div>';
+    el.innerHTML = html;
+    wireTiles(el);
+    if(now) unitProgress(now).then(function(p){ var b = $('[data-co-prog]', el), tx = $('[data-co-progt]', el); if(p == null || !b) return; b.style.width = Math.round(p * 100) + '%';
+      var exp = now.start > t ? 0 : Math.min(1, (dateOf(t) - dateOf(now.start)) / Math.max(1, dateOf(now.end) - dateOf(now.start)));
+      tx.textContent = Math.round(p * 100) + '% of this unit\'s new cards known' + (now.start <= t ? (p + .15 >= exp ? ' · on track' : ' · a little behind: the Daily Plan will lean on this unit') : ''); });
+    var wk = now ? rhythm(co, now) : [];
+    $$('[data-co-go]', el).forEach(function(b){ b.addEventListener('click', function(){ var p = b.dataset.coGo.split(':'), x = wk[+p[0]][1][+p[1]]; courseStart(x); }); });
+    $('[data-co-goalsave]', el).addEventListener('click', function(){ co.goal = $('#coGoalEdit', el).value.trim() || co.goal; co.log.push({ date: today(), text: 'Goal changed to "' + co.goal + '".' }); saveCourse(co).then(function(){ $('[data-co-goalmsg]', el).textContent = 'Saved. To re-plan around the new goal, use Change my answers.'; }); });
+    $$('[data-co-check]', el).forEach(function(b){ b.addEventListener('click', function(){ go('courseCheck', b.dataset.coCheck); }); });
+    $$('[data-co-skip]', el).forEach(function(b){ b.addEventListener('click', function(){ var u = co.units[+b.dataset.coSkip]; u.done = true; u.doneOn = today(); co.log.push({ date: today(), text: u.title + ' marked done without a check.' }); courseSchedule(co); saveCourse(co).then(function(){ go('classroom', null, true); }); }); });
+    $('[data-co-off]', el).addEventListener('click', function(){ var c = CC(); if(c && c.setCourseOn) Promise.resolve(c.setCourseOn(false)).then(function(){ go('home', null, true); }); });
+  } };
+  // The week's rhythm for a unit, as days with activities
+  function rhythm(co, u){
+    var learn = u.decks.filter(function(d){ return d.role === 'learn'; }), prac = u.decks.filter(function(d){ return d.role !== 'learn'; });
+    var deckAct = function(dk, tag){ return { name: (tag || '') + dk.name, e: '🗂️', deck: dk.id }; };
+    var speakT = u.tools.filter(function(x){ return x.skill === 'speak'; }), otherT = u.tools.filter(function(x){ return x.skill !== 'speak'; });
+    var earlier = co.units.filter(function(p){ return (u.reviewOf || []).indexOf(p.id) >= 0; }).map(function(p){ return p.decks.filter(function(d){ return d.role === 'learn'; })[0]; }).filter(Boolean);
+    var rows = [
+      ['Learn', learn.slice(0, 2).map(function(d){ return deckAct(d); }).concat(u.review ? [TOOL.mastery] : [])],
+      ['Listen and repeat', prac.map(function(d){ return deckAct(d); }).concat(otherT.filter(function(x){ return x.skill === 'listen'; })).slice(0, 2)],
+      ['Use it', speakT.slice(0, 2).concat(otherT.filter(function(x){ return x.skill === 'write'; }).slice(0, 1))],
+      ['Mix old and new', earlier.map(function(d){ return deckAct(d, 'Review: '); }).concat(learn.filter(function(d){ return d.fluency; }).map(function(d){ return { name: 'Against the clock', e: '⏱️', deck: d.fluency }; })).slice(0, 2)],
+      ['Check in', [TOOL.tricky].concat(otherT.filter(function(x){ return x.skill === 'read'; }).slice(0, 1))]
+    ].filter(function(r){ return r[1].length; });
+    if((+co.days || 5) <= 3) rows = [rows[0], rows[2] || rows[1], rows[rows.length - 1]].filter(Boolean);
+    return rows;
+  }
+  function courseStart(x){
+    sound('tap');
+    if(x.deck){ close(); CC().startDeck(x.deck); return; }
+    if(x.game){ close(); return; }   // minigames live on the board: closing the Library goes back to it
+    go(x.view, x.arg);
+  }
+
+  // A check: quick questions; the result adjusts the course
+  LIB.views.courseCheck = { title: 'Check', render: function(el, arg){
+    var co = course(); if(!co){ go('classroom', null, true); return; }
+    var parts = String(arg || 'placement').split(':'), kind = parts[0], idx = +parts[1] || 0, u = co.units[idx];
+    el.innerHTML = '<section class="clib-card"><p>Getting the questions ready…</p></section>';
+    checkItems(co, kind, idx).then(function(items){
+      if(!items.length){ el.innerHTML = '<section class="clib-card"><p>There\'s nothing to check here yet.</p><div class="clib-row"><button type="button" class="clib-btn" data-view="classroom">Back</button></div></section>'; wireTiles(el); return; }
+      var qi = 0, right = 0, missed = [], byUnit = {};
+      function show(){
+        if(qi === items.length) return finish();
+        var it = items[qi];
+        el.innerHTML = '<section class="clib-card co-q"><span class="co-tag">' + (kind === 'placement' ? 'Placement check' : kind === 'review' ? 'Review check' : 'Unit check: ' + esc(u.title)) + ' · ' + (qi + 1) + ' of ' + items.length + '</span>' +
+          (it.say ? '<button type="button" class="clib-btn co-hear" data-co-hear>🔊 Hear it again</button><p class="co-meta">What does it mean?</p>' : '<p class="clib-big co-qt">' + esc(it.q) + '</p><p class="co-meta">' + (it.type === 'recall' ? 'How do you say this in Korean?' : 'Pick the right one.') + '</p>') +
+          '<div class="co-opts">' + it.opts.map(function(o){ return '<button type="button" class="clib-btn co-opt" data-o="' + esc(o) + '">' + esc(o) + '</button>'; }).join('') + '</div>' +
+          '<div class="clib-row"><button type="button" class="clib-btn" data-co-dunno>I don\'t know yet</button><button type="button" class="clib-btn" data-co-quit>Stop the check</button></div></section>';
+        if(it.say) setTimeout(function(){ speak(it.say); }, 200);
+        var h = $('[data-co-hear]', el); if(h) h.addEventListener('click', function(){ speak(it.say); });
+        function answer(ok, b){
+          byUnit[it.unit] = byUnit[it.unit] || [0, 0]; byUnit[it.unit][1]++;
+          if(ok){ right++; byUnit[it.unit][0]++; sound('correct'); if(b) b.classList.add('ok'); } else { missed.push({ deck: it.deck, card: it.card }); sound('wrong'); if(b) b.classList.add('no'); var good = $$('.co-opt', el).find(function(x){ return x.dataset.o === it.ok; }); if(good) good.classList.add('ok'); }
+          $$('.co-opt', el).forEach(function(x){ x.disabled = true; });
+          qi++; setTimeout(show, ok ? 650 : 1500);
+        }
+        $$('.co-opt', el).forEach(function(b){ b.addEventListener('click', function(){ answer(b.dataset.o === it.ok, b); }); });
+        $('[data-co-dunno]', el).addEventListener('click', function(){ answer(false, null); });
+        $('[data-co-quit]', el).addEventListener('click', function(){ go('classroom', null, true); });
+      }
+      function finish(){
+        var score = right / items.length, msg = courseAdjust(co, kind, idx, score, missed, byUnit);
+        saveCourse(co).then(function(){
+          el.innerHTML = '<section class="clib-card"><h2>' + (score >= .75 ? '🎉 ' : '🌱 ') + right + ' of ' + items.length + '</h2><p class="clib-big">' + esc(msg) + '</p><div class="clib-row"><button type="button" class="clib-btn main" data-view="classroom">See my course</button></div></section>';
+          wireTiles(el);
+        });
+      }
+      show();
+    });
+  } };
+
+  // the Classroom's own look
+  (function(){
+    var css = [
+      '.co-goal{ min-height:64px; }', '.co-two{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }', '.co-check{ display:flex; gap:8px; align-items:center; margin:14px 0 4px; font-weight:700; }',
+      '.co-meta{ color:var(--clib-soft); font-weight:700; font-size:.9rem; margin:6px 0; }', '.co-tag{ display:inline-block; font-weight:800; font-size:.8rem; letter-spacing:.04em; text-transform:uppercase; color:var(--clib-accent); }',
+      '.co-now h2{ margin:4px 0 2px; }', '.co-focus{ font-weight:800; color:var(--clib-soft); margin:0 0 8px; }', '.co-late{ background:var(--clib-read-bg); color:var(--clib-read); padding:8px 12px; border-radius:12px; font-weight:700; }',
+      '.co-cando{ margin:6px 0 10px; padding-left:0; list-style:none; } .co-cando li{ padding:3px 0 3px 26px; position:relative; font-weight:700; } .co-cando li::before{ content:"✓"; position:absolute; left:4px; color:var(--clib-good); font-weight:900; }',
+      '.co-bar{ height:12px; border-radius:999px; background:var(--clib-line); overflow:hidden; margin-top:8px; } .co-bar i{ display:block; height:100%; background:var(--clib-accent); border-radius:999px; transition:width .6s; }',
+      '.co-week{ padding-left:20px; } .co-week li{ margin:8px 0; } .co-week b{ display:block; margin-bottom:4px; } .co-go{ margin:2px 4px 2px 0; }',
+      '.co-line{ list-style:none; padding:0; margin:0; display:grid; gap:8px; }', '.co-u details{ background:var(--clib-card); border:1px solid var(--clib-line); border-radius:16px; padding:10px 14px; }',
+      '.co-u summary{ display:flex; gap:12px; align-items:center; cursor:pointer; list-style:none; } .co-u summary::-webkit-details-marker{ display:none; }',
+      '.co-dot{ flex:none; width:34px; height:34px; border-radius:50%; display:grid; place-items:center; font-weight:900; background:var(--clib-bg); border:2px solid var(--clib-line); }',
+      '.co-u.done .co-dot{ background:var(--clib-good); color:#fff; border-color:var(--clib-good); } .co-u.now .co-dot{ background:var(--clib-accent); color:var(--clib-accent-ink); border-color:var(--clib-accent); }',
+      '.co-u.now details{ border-color:var(--clib-accent); box-shadow:0 0 0 2px var(--clib-accent) inset; } .co-u.review .co-ut b::after{ content:" · review"; color:var(--clib-soft); font-weight:700; }',
+      '.co-ut{ display:flex; flex-direction:column; } .co-ut small{ color:var(--clib-soft); font-weight:700; }', '.co-ud{ padding:8px 0 0 46px; }',
+      '.co-log{ padding-left:18px; } .co-log li{ margin:6px 0; font-weight:700; } .co-log small{ color:var(--clib-soft); margin-right:6px; }',
+      '.co-q .co-qt{ font-size:2rem; margin:10px 0 4px; }', '.co-opts{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0; } .co-opt{ min-height:56px; font-size:1.05rem; }',
+      '.co-opt.ok{ background:var(--clib-good); color:#fff; border-color:var(--clib-good); } .co-opt.no{ background:var(--clib-bad); color:#fff; border-color:var(--clib-bad); }',
+      '.co-hear{ font-size:1.2rem; padding:14px 22px; margin:10px 0; }',
+      '.clib-classroom{ display:flex; gap:14px; align-items:center; width:100%; text-align:left; border:2px solid var(--clib-accent); background:var(--clib-card); border-radius:20px; padding:14px 16px; margin:0 0 14px; cursor:pointer; font:inherit; color:var(--clib-ink); }',
+      '.clib-classroom .co-cr-e{ font-size:2.2rem; } .clib-classroom b{ display:block; font-size:1.1rem; } .clib-classroom small{ color:var(--clib-soft); font-weight:700; }',
+      '@media (max-width:520px){ .co-two, .co-opts{ grid-template-columns:1fr; } .co-ud{ padding-left:0; } }'
+    ];
+    var s = document.createElement('style'); s.textContent = css.join('\n'); (document.head || document.documentElement).appendChild(s);
+  })();
+  // The Classroom's banner at the top of the Library's home, for a profile with it on
+  function classroomBanner(){
+    if(!courseOn()) return '';
+    var co = course(), now = co && courseNow(co);
+    return '<button type="button" class="clib-classroom" data-view="classroom"><span class="co-cr-e" aria-hidden="true">🏫</span><span><b>Coral Classroom</b><small>' +
+      (!co ? 'Plan your course: a few questions, then units with goals, dates and checks.' : now ? 'Unit ' + (co.units.indexOf(now) + 1) + ' of ' + co.units.length + ': ' + esc(now.title) + ' · until ' + niceDate(now.end) : 'Course complete! 🎉') + '</small></span></button>';
+  }
   LIB.views.home = { title: 'Library', render: function(el){
     if(pendingAct){ markDone(pendingAct.goal, pendingAct.id); pendingAct = null; }
     var p = CC() && CC().profile(), goals = myGoals(), r = dayRec();
@@ -188,6 +621,7 @@
     var isDone = function(a){ return done.indexOf(a.id) >= 0; }, next = today4.find(function(a){ return !isDone(a); }), nDone = today4.filter(isDone).length;
     var html = '<div class="clib-hello"><span class="clib-av" aria-hidden="true">' + esc(p ? p.name.charAt(0) : '🐢') + '</span><div><h2>Hi' + (p ? ' ' + esc(p.name) : '') + '!</h2><p>' +
       (goals[0] === 'explore' ? 'Pick something to learn.' : 'Your goal' + (goals.length > 1 ? 's' : '') + ': ' + goals.map(function(g){ var m = goalMeta(g); return '<span class="clib-chip ' + lookOf(g) + '">' + m.icon + ' ' + esc(m.label) + '</span>'; }).join(' ')) + '</p></div></div>';
+    html += classroomBanner();
     html += '<div class="clib-tabs" role="tablist" aria-label="Your goals">' + goals.map(function(g){ var m = goalMeta(g);
       return '<button type="button" role="tab" class="clib-tab ' + lookOf(g) + '" aria-selected="' + (g === tab) + '" data-tab="' + esc(g) + '">' + m.icon + ' ' + esc(m.label) + '</button>'; }).join('') + '</div>';
     html += '<div class="clib-path ' + lookOf(tab) + '"><section class="clib-next" aria-label="Next up">' + (next
@@ -514,6 +948,41 @@
       { bot: '네! 따뜻한 거요, 차가운 거요? (Hot or cold?)', want: [/따뜻|차가|hot|cold/i], hint: 'Say 따뜻한 거요 (hot one) or 차가운 거요 (cold one).' },
       { bot: '사천 원입니다. (That\'s 4,000 won.)', want: [/여기|감사|here|thank|gamsa/i], hint: 'Say 여기요 (here you go) and 감사합니다 (thank you).' },
       { bot: '감사합니다! 좋은 하루 되세요! (Have a nice day!)', end: true } ] },
+    // Korean travel situations, for Coral Classroom's units (each line: what she hears, then what she might say)
+    { id: 'restaurant', e: '🍲', title: 'Eat at a Korean restaurant', lang: 'ko', turns: [
+      { bot: '어서 오세요! 몇 분이세요? (Welcome! How many people?)', want: [/명|한|두|세|one|two|three|myeong/i], hint: 'Say how many: 한 명이요 (one person) or 두 명이요 (two people).' },
+      { bot: '여기 앉으세요. 뭐 드시겠어요? (Please sit here. What will you have?)', want: [/주세요|비빔밥|불고기|김치찌개|냉면|please|juseyo/i], hint: 'Pick a dish and add 주세요: 비빔밥 주세요 (bibimbap, please).' },
+      { bot: '네, 알겠습니다. 물은 셀프예요. (OK. Water is self-service.)', want: [/네|감사|thank|ok|yes/i], hint: 'Say 네, 감사합니다 (OK, thank you).' },
+      { bot: '맛있게 드세요! (Enjoy your meal!)', end: true } ] },
+    { id: 'shop', e: '🛍️', title: 'Buy something at a shop', lang: 'ko', turns: [
+      { bot: '어서 오세요! 찾으시는 거 있어요? (Welcome! Looking for anything?)', want: [/이거|얼마|있어요|this|how much|eolma/i], hint: 'Point and ask: 이거 얼마예요? (How much is this?)' },
+      { bot: '만 오천 원이에요. (It\'s 15,000 won.)', want: [/주세요|비싸|깎|살게요|please|expensive|take/i], hint: 'Say 이거 주세요 (I\'ll take this) or 조금 비싸요 (it\'s a bit expensive).' },
+      { bot: '카드로 하시겠어요? (Paying by card?)', want: [/네|카드|현금|yes|card|cash/i], hint: 'Say 네, 카드로 할게요 (yes, by card) or 현금이요 (cash).' },
+      { bot: '감사합니다! 안녕히 가세요! (Thank you! Goodbye!)', end: true } ] },
+    { id: 'subway', e: '🚇', title: 'Ask the way to the subway', lang: 'ko', turns: [
+      { bot: '네, 무엇을 도와드릴까요? (Yes, how can I help you?)', want: [/어디|역|where|station|eodi/i], hint: 'Ask: 명동역 어디예요? (Where is Myeongdong Station?)' },
+      { bot: '이 길로 쭉 가세요. 그리고 오른쪽으로 가세요. (Go straight along this road, then turn right.)', want: [/네|감사|오른쪽|thank|right|ok/i], hint: 'Check: 오른쪽이요? (Right?) or say 네, 감사합니다!' },
+      { bot: '네, 맞아요. 걸어서 오 분 걸려요. (That\'s right. It\'s a five-minute walk.)', want: [/감사|thank|gamsa/i], hint: 'Say 감사합니다! (Thank you!)' },
+      { bot: '조심히 가세요! (Take care!)', end: true } ] },
+    { id: 'taxi', e: '🚕', title: 'Take a taxi', lang: 'ko', turns: [
+      { bot: '어디로 가세요? (Where are you going?)', want: [/가 주세요|주세요|호텔|역|please|hotel|station/i], hint: 'Say the place and 가 주세요: 서울역 가 주세요 (Seoul Station, please).' },
+      { bot: '네. 안전벨트 매세요. (OK. Please wear your seatbelt.)', want: [/네|감사|yes|thank|ok/i], hint: 'Say 네! (OK!)' },
+      { bot: '도착했어요. 만 이천 원입니다. (We\'re here. That\'s 12,000 won.)', want: [/카드|여기|감사|card|here|thank/i], hint: 'Say 카드로 할게요 (by card) or 여기요 (here you go).' },
+      { bot: '감사합니다! 좋은 하루 되세요! (Thank you! Have a nice day!)', end: true } ] },
+    { id: 'hotel', e: '🏨', title: 'Check in at a hotel', lang: 'ko', turns: [
+      { bot: '안녕하세요! 체크인하시겠어요? (Hello! Are you checking in?)', want: [/네|예약|yes|reservation/i], hint: 'Say 네, 예약했어요 (Yes, I have a reservation).' },
+      { bot: '성함이 어떻게 되세요? (May I have your name?)', want: [/예요|이에요|입니다|저는|name|I\'m/i], hint: 'Say your name with 예요 or 이에요: 웬디예요 (I\'m Wendy).' },
+      { bot: '네, 확인됐습니다. 아침은 일곱 시부터예요. (You\'re confirmed. Breakfast is from seven.)', want: [/네|감사|thank|ok/i], hint: 'Say 네, 감사합니다!' },
+      { bot: '좋은 시간 보내세요! (Have a lovely stay!)', end: true } ] },
+    { id: 'intro', e: '👋', title: 'Introduce yourself', lang: 'ko', turns: [
+      { bot: '안녕하세요! 이름이 뭐예요? (Hello! What\'s your name?)', want: [/예요|이에요|입니다|저는|name|I\'m/i], hint: 'Say 저는 웬디예요 (I\'m Wendy), with your name.' },
+      { bot: '어디에서 왔어요? (Where are you from?)', want: [/왔어요|에서|from|미국|캐나다|영국|호주/i], hint: 'Say your country and 에서 왔어요: 미국에서 왔어요 (I\'m from the US).' },
+      { bot: '한국어 잘하시네요! 왜 한국어를 공부해요? (Your Korean is good! Why are you learning it?)', want: [/여행|좋아|때문|travel|trip|like|because/i], hint: 'Say 한국 여행을 해요 (I\'m travelling in Korea) or 한국 문화를 좋아해요 (I like Korean culture).' },
+      { bot: '반가워요! 즐거운 여행 되세요! (Nice to meet you! Have a great trip!)', end: true } ] },
+    { id: 'help', e: '🆘', title: 'Ask for help', lang: 'ko', turns: [
+      { bot: '무슨 일이에요? (What\'s the matter?)', want: [/화장실|도와|잃어|아파|toilet|restroom|help|lost|sick/i], hint: 'Say 화장실 어디예요? (Where is the restroom?) or 도와주세요 (Please help me).' },
+      { bot: '저기 있어요. 왼쪽이에요. (It\'s over there, on the left.)', want: [/감사|네|thank|ok/i], hint: 'Say 감사합니다!' },
+      { bot: '괜찮아요! (You\'re welcome!)', end: true } ] },
     { id: 'market', e: '🍎', title: 'Buy fruit at a Chinese market', lang: 'zh', turns: [
       { bot: '你好！你要什么？(Nǐ hǎo! What would you like?)', want: [/要|苹果|香蕉|yào|want|apple|banana/i], hint: 'Say 我要苹果 (wǒ yào píngguǒ, "I want apples").' },
       { bot: '要几个？(How many?)', want: [/\d|一|二|两|三|四|五|个|one|two|three/i], hint: 'Say a number and 个: 三个 (sān gè, three).' },

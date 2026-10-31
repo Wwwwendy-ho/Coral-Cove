@@ -1,5 +1,32 @@
 # Changelog
 
+## Coral Classroom: a course planned like a teacher would (October 31, 2026)
+
+- **Any profile can have a course**; for now it's on for Wendy. A new profile's form asks "What do you want to
+  learn?", and an answer switches it on for that profile. The Library's home shows a Coral Classroom banner.
+- **The questions**: the goal in your own words, subjects, starting level, minutes a day, days a week, start
+  date, an optional trip or target date, and an optional placement check. Everything can be changed later; the
+  goal is a text box on the Classroom page.
+- **Planned backwards from the goal**: each unit has a real-life focus, a "why", "I can…" goals, the decks and
+  Library tools that build those skills (listening, speaking, reading and writing), and a weekly rhythm: learn,
+  listen and repeat, use it, mix old and new, check in. The two units before come back as spaced review, and
+  there are review weeks and a final week.
+- **Wendy's course (be conversational in Korea)**, Nov 2 to Feb 26: Hangul, Hello and thank you, Café and
+  restaurant, Numbers and prices, a review week, Getting around, Talking about you, Hotels and getting help, and
+  a "day in Seoul" conversation week. The pace is about 9 new words a study day, fitted to a trip date if she adds
+  one.
+- **Checks that change the course** (all optional): 10 quick questions per unit (reading, recalling and listening,
+  a third of them from earlier units), a placement check, and review checks.
+  - 90% or more: the next unit is a week shorter and the pace goes up.
+  - 75–89%: the unit is done, and the missed items come back as fix-ups.
+  - 55–74%: an extra week at a gentler pace.
+  - Below 55%: an extra week plus a catch-up week.
+  - Every change is listed under "What changed and why".
+- **Seven new Korean role-plays** for the trip: a restaurant, a shop, asking the way to the subway, a taxi, hotel
+  check-in, introducing yourself, and asking for help.
+- **In the app**: the Daily Plan draws on the current unit's decks (and the two before it). The treasure map
+  shows the course as a voyage of islands, with Shelly on today's and flags on finished ones.
+
 ## The reef carries on past the board (October 31, 2026)
 
 - Pinch out to the map and the sea no longer ends at the board. A wide sea floor carries on in every direction,

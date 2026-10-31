@@ -605,6 +605,16 @@
     })();
   }
 
+  // Coral Classroom on the map: the course as a voyage. Each unit is an island with its dates; finished ones fly a
+  // flag, Shelly (Lumi at night) sits on today's, and the ones still to come wait further along the route.
+  function reef3dVoyageHTML(view){
+    var n = reefCourseNow(); if(!n || !n.co.units.length) return '';
+    var nice = function(iso){ var p = String(iso || '').split('-'); try { return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); } catch(e){ return iso; } };
+    return '<div class="r3-voyage" aria-label="Your course"><b class="r3-voy-h">Your voyage: ' + esc(n.co.goal || 'my course') + '</b><ol>' + n.co.units.map(function(u, i){
+      var st = u.done ? 'done' : i === n.i ? 'now' : 'later';
+      return '<li class="r3-isle ' + st + (u.review ? ' review' : '') + '"><span class="r3-isle-i" aria-hidden="true">' + (u.done ? '🚩' : i === n.i ? reefGuideMini(view.night) : u.review ? '⭐' : '🏝️') + '</span>' +
+        '<span class="r3-isle-t">' + esc(u.title) + '</span><small>' + nice(u.start) + '</small></li>'; }).join('') + '</ol></div>';
+  }
   // Treasure map: the whole board from above on parchment. Tap a deck to send the guide there.
   function reef3dMap(view, fromZoom){
     var sp = view.spaces, minX = -8, maxX = 8, minZ = 0, maxZ = 2;
@@ -629,7 +639,7 @@
     var ov = document.createElement('div');
     ov.className = 'r3-map' + (fromZoom ? ' from-zoom' : ''); ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', 'Treasure map');
     ov.innerHTML = '<div class="r3-map-card"><div class="r3-map-head"><b>Treasure map</b><button type="button" class="r3-map-close" data-r3-close aria-label="Close the map">'+ccIcon('close')+'</button></div>' +
-      '<p class="r3-map-hint">Tap a place to swim there.</p>' +
+      '<p class="r3-map-hint">Tap a place to swim there.</p>' + reef3dVoyageHTML(view) +
       '<div class="r3-map-board" style="height:'+H+'px"><svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true">' +
         '<path d="'+d+'" fill="none" stroke="#b5452f" stroke-width="3" stroke-dasharray="2 9" stroke-linecap="round"/>' + dots + '</svg>' + spots +
         '<span class="r3-map-me" style="left:'+(px(me) / W * 100).toFixed(1)+'%;top:'+py(me).toFixed(0)+'px" aria-hidden="true">'+reefGuideMini(view.night)+'</span>' +
