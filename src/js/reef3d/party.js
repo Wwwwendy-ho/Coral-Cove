@@ -612,7 +612,7 @@
     var nice = function(iso){ var p = String(iso || '').split('-'); try { return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); } catch(e){ return iso; } };
     return '<div class="r3-voyage" aria-label="Your course"><b class="r3-voy-h">Your voyage: ' + esc(n.co.goal || 'my course') + '</b><ol>' + n.co.units.map(function(u, i){
       var st = u.done ? 'done' : i === n.i ? 'now' : 'later';
-      return '<li class="r3-isle ' + st + (u.review ? ' review' : '') + '"><span class="r3-isle-i" aria-hidden="true">' + (u.done ? '🚩' : i === n.i ? reefGuideMini(view.night) : u.review ? '⭐' : '🏝️') + '</span>' +
+      return '<li class="r3-isle ' + st + (u.review ? ' review' : '') + '"><span class="r3-isle-i" aria-hidden="true">' + (u.done ? ccIcon('flag') : i === n.i ? reefGuideMini(view.night) : u.review ? ccIcon('star') : ccIcon('island')) + '</span>' +
         '<span class="r3-isle-t">' + esc(u.title) + '</span><small>' + nice(u.start) + '</small></li>'; }).join('') + '</ol></div>';
   }
   // Treasure map: the whole board from above on parchment. Tap a deck to send the guide there.

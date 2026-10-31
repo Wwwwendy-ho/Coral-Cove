@@ -140,6 +140,10 @@
   }
   function myGoals(){ var p = CC() && CC().profile(), g = p && p.goals || []; return g.length ? g : ['explore']; }
   function goalDecks(subject){ return decks().filter(function(d){ return d.subject === subject; }); }
+  var ACT_ICON = { deck: 'cards', 'play-cafe': 'cup', 'play-library': 'library', 'play-sci': 'flask', 'ws-cloze': 'puzzle', 'ws-trace': 'edit', ask: 'ask', mastery: 'trophy', tricky: 'search',
+    teach: 'tutor', writing: 'edit', talks: 'talk', facts: 'maths', geometry: 'maths', manip: 'counting', measure: 'clock', mental: 'tutor', placement: 'progress', puzzles: 'puzzle', visual: 'search' };
+  function actIcon(a){ var n = ACT_ICON[a.id] || (/^ws-/.test(a.id || '') ? 'worksheet' : null); return n ? icon(n, a.e) : a.e; }
+  var PLAY_ICON = { cafe: 'cup', restaurant: 'bowl', shop: 'bag', subway: 'train', taxi: 'car', hotel: 'bed', intro: 'wave', help: 'lifebuoy', market: 'apple', library: 'library', scientist: 'flask' };
   function act(id, e, name, note, view, arg){ return { id: id, e: e, name: name, note: note, view: view, arg: arg }; }
   function wsAct(id, e, name, note, o){ return act(id, e, name, note, 'wsMake', JSON.stringify(o)); }
   function goalPlan(subject){
@@ -238,16 +242,16 @@
 
   // Tools from the Library each unit can use, by skill
   var TOOL = {
-    handwriting: { name: 'Hangul handwriting', e: '✏️', skill: 'write', view: 'wsMake', arg: JSON.stringify({ src: 'trace', script: 'hangul' }) },
-    ask: { name: 'Ask about a word', e: '🐢', skill: 'read', view: 'chat', arg: 'ask' },
-    cloze: function(id){ return { name: 'Fill the gaps', e: '🧩', skill: 'read', view: 'wsMake', arg: JSON.stringify({ src: 'cloze', deck: id }) }; },
-    worksheet: function(id){ return { name: 'Worksheet', e: '📝', skill: 'write', view: 'wsMake', arg: JSON.stringify({ src: 'deck', deck: id }) }; },
-    play: function(id, name){ return { name: 'Role-play: ' + name, e: '🗣️', skill: 'speak', view: 'play', arg: id }; },
-    writing: { name: 'My writing', e: '✍️', skill: 'write', view: 'writing' },
-    teach: { name: 'Teach Shelly', e: '🎓', skill: 'speak', view: 'teachback' },
-    tricky: { name: 'Tricky spots', e: '🔎', skill: 'read', view: 'misconceptions' },
-    mastery: { name: 'Mastery', e: '🏆', skill: 'read', view: 'mastery' },
-    game: function(name){ return { name: 'Minigame on the board: ' + name, e: '🎮', skill: 'listen', game: true }; }
+    handwriting: { name: 'Hangul handwriting', ic: 'edit', skill: 'write', view: 'wsMake', arg: JSON.stringify({ src: 'trace', script: 'hangul' }) },
+    ask: { name: 'Ask about a word', ic: 'ask', skill: 'read', view: 'chat', arg: 'ask' },
+    cloze: function(id){ return { name: 'Fill the gaps', ic: 'puzzle', skill: 'read', view: 'wsMake', arg: JSON.stringify({ src: 'cloze', deck: id }) }; },
+    worksheet: function(id){ return { name: 'Worksheet', ic: 'worksheet', skill: 'write', view: 'wsMake', arg: JSON.stringify({ src: 'deck', deck: id }) }; },
+    play: function(id, name){ return { name: 'Role-play: ' + name, ic: PLAY_ICON[id] || 'talk', skill: 'speak', view: 'play', arg: id }; },
+    writing: { name: 'My writing', ic: 'edit', skill: 'write', view: 'writing' },
+    teach: { name: 'Teach Shelly', ic: 'tutor', skill: 'speak', view: 'teachback' },
+    tricky: { name: 'Tricky spots', ic: 'search', skill: 'read', view: 'misconceptions' },
+    mastery: { name: 'Mastery', ic: 'trophy', skill: 'read', view: 'mastery' },
+    game: function(name){ return { name: 'Minigame on the board: ' + name, ic: 'games', skill: 'listen', game: true }; }
   };
 
   // The course plan itself
@@ -449,7 +453,7 @@
   LIB.views.courseSetup = { title: 'Coral Classroom', render: function(el){
     var a = defaultAnswers(), p = CC() && CC().profile();
     var opt = function(v, cur, l){ return '<option value="' + v + '"' + (String(cur) === String(v) ? ' selected' : '') + '>' + l + '</option>'; };
-    el.innerHTML = '<section class="clib-card"><h2>🏫 What do you want to learn?</h2><p>A few questions, and Coral Classroom plans a course for ' + esc(p ? p.name : 'you') + ': units with clear goals, dates, and checks that adjust it as you go. You can change any answer later.</p>' +
+    el.innerHTML = '<section class="clib-card"><h2>' + icon('school', '🏫') + ' What do you want to learn?</h2><p>A few questions, and Coral Classroom plans a course for ' + esc(p ? p.name : 'you') + ': units with clear goals, dates, and checks that adjust it as you go. You can change any answer later.</p>' +
       '<label class="clib-label" for="coGoal">Your goal, in your own words</label><textarea id="coGoal" class="clib-input co-goal" placeholder="For example: be conversational when I visit Korea">' + esc(a.goal || '') + '</textarea>' +
       '<label class="clib-label">Subjects</label><div class="clib-row" role="group" aria-label="Subjects">' + goalChoices().map(function(g){ return '<button type="button" class="clib-btn" data-cosub="' + esc(g.id) + '" aria-pressed="' + ((a.subjects || []).indexOf(g.id) >= 0) + '">' + g.icon + ' ' + esc(g.label) + '</button>'; }).join('') + '</div>' +
       '<label class="clib-label" for="coLevel">Where are you starting?</label><select id="coLevel" class="clib-input">' + opt('new', a.level, 'Brand new') + opt('some', a.level, 'I know a little') + opt('comfortable', a.level, 'I know quite a lot') + '</select>' +
@@ -485,22 +489,24 @@
     var now = courseNow(co), ni = now ? co.units.indexOf(now) : -1, t = today();
     var weekOf = now ? Math.min(now.weeks, Math.max(1, Math.floor((dateOf(t) - dateOf(now.start)) / (7 * 864e5)) + 1)) : 0;
     var late = now && now.end < t ? Math.round((dateOf(t) - dateOf(now.end)) / 864e5) : 0;
-    var html = '<section class="clib-card co-head"><h2>🏫 Coral Classroom</h2>' +
-      '<label class="clib-label" for="coGoalEdit">My goal</label><div class="co-goalrow"><textarea id="coGoalEdit" class="clib-input co-goal">' + esc(co.goal) + '</textarea></div>' +
-      '<div class="clib-row"><button type="button" class="clib-btn" data-co-goalsave>Save goal</button><button type="button" class="clib-btn" data-view="courseSetup">Change my answers</button>' +
-      (!co.evals.length ? '<button type="button" class="clib-btn" data-co-check="placement">Placement check (optional)</button>' : '') + '</div><p class="clib-msg" data-co-goalmsg aria-live="polite"></p>' +
-      '<p class="co-meta">' + co.minutes + ' minutes a day, ' + co.days + ' days a week · about ' + co.perDay + ' new words a study day · ' + niceDate(co.start) + ' to ' + niceDate(co.end) + (co.target ? ' · trip ' + niceDate(co.target) : '') + '</p>' +
-      (co.fitNote ? '<p class="co-meta">' + esc(co.fitNote) + '</p>' : '') + '</section>';
+    var html = '';
     if(now){
       html += '<section class="clib-card co-now"><span class="co-tag">Now · Unit ' + (ni + 1) + ' of ' + co.units.length + (now.start <= t ? ' · week ' + weekOf + ' of ' + now.weeks : ' · starts ' + niceDate(now.start)) + '</span>' +
         '<h2>' + esc(now.title) + '</h2><p class="co-focus">' + esc(now.focus) + ' · ' + niceDate(now.start) + ' – ' + niceDate(now.end) + '</p>' +
         (late ? '<p class="co-late">' + late + ' day' + (late === 1 ? '' : 's') + ' past this unit\'s end date. No problem: take the check when you\'re ready, and the dates after it will move.</p>' : '') +
         '<p>' + esc(now.why) + '</p><h3>By the end I can…</h3><ul class="co-cando">' + now.cando.map(function(c){ return '<li>' + esc(c) + '</li>'; }).join('') + '</ul>' +
         '<div class="co-bar" aria-hidden="true"><i data-co-prog style="width:0"></i></div><p class="co-meta" data-co-progt></p>' +
-        '<h3>This week</h3><ol class="co-week">' + rhythm(co, now).map(function(r, k){ return '<li><b>' + esc(r[0]) + '</b> ' + r[1].map(function(x, j){ return '<button type="button" class="clib-btn co-go" data-co-go="' + k + ':' + j + '">' + x.e + ' ' + esc(x.name) + '</button>'; }).join(' ') + '</li>'; }).join('') + '</ol>' +
-        ((co.fixups || []).length ? '<p class="co-meta">🔧 ' + co.fixups.length + ' fix-up item' + (co.fixups.length === 1 ? '' : 's') + ' from earlier checks are mixed into your practice.</p>' : '') +
+        '<h3>This week</h3><ol class="co-week">' + rhythm(co, now).map(function(r, k){ return '<li><b>' + esc(r[0]) + '</b> ' + r[1].map(function(x, j){ return '<button type="button" class="clib-btn co-go" data-co-go="' + k + ':' + j + '">' + icon(x.ic, '') + ' ' + esc(x.name) + '</button>'; }).join(' ') + '</li>'; }).join('') + '</ol>' +
+        ((co.fixups || []).length ? '<p class="co-meta">' + icon('check', '') + ' ' + co.fixups.length + ' fix-up item' + (co.fixups.length === 1 ? '' : 's') + ' from earlier checks are mixed into your practice.</p>' : '') +
         '<div class="clib-row"><button type="button" class="clib-btn main" data-co-check="' + (now.review ? 'review' : 'unit') + ':' + ni + '">Take the ' + (now.review ? 'review' : 'unit') + ' check (optional)</button><button type="button" class="clib-btn" data-co-skip="' + ni + '">Mark this unit done</button></div></section>';
     } else html += '<section class="clib-card co-now"><h2>🎉 Course complete!</h2><p>Every unit is done. Change your answers to plan the next course.</p></section>';
+    var headHtml = '<section class="clib-card co-head"><h2>' + icon('school', '🏫') + ' Coral Classroom</h2>' +
+      '<label class="clib-label" for="coGoalEdit">My goal</label><div class="co-goalrow"><textarea id="coGoalEdit" class="clib-input co-goal" rows="2">' + esc(co.goal) + '</textarea></div>' +
+      '<div class="clib-row"><button type="button" class="clib-btn" data-co-goalsave>Save goal</button><button type="button" class="clib-btn" data-view="courseSetup">Change my answers</button>' +
+      (!co.evals.length ? '<button type="button" class="clib-btn" data-co-check="placement">Placement check (optional)</button>' : '') + '</div><p class="clib-msg" data-co-goalmsg aria-live="polite"></p>' +
+      '<p class="co-meta">' + co.minutes + ' minutes a day, ' + co.days + ' days a week · about ' + co.perDay + ' new words a study day · ' + niceDate(co.start) + ' to ' + niceDate(co.end) + (co.target ? ' · trip ' + niceDate(co.target) : '') + '</p>' +
+      (co.fitNote ? '<p class="co-meta">' + esc(co.fitNote) + '</p>' : '') + '</section>';
+    html += headHtml;
     html += '<h3 class="clib-more-h">The course</h3><ol class="co-line">' + co.units.map(function(u, i){
       var st = u.done ? 'done' : u === now ? 'now' : u.start > t ? 'later' : 'open';
       return '<li class="co-u ' + st + (u.review ? ' review' : '') + '"><details' + (u === now ? ' open' : '') + '><summary><span class="co-dot" aria-hidden="true">' + (u.done ? '✓' : i + 1) + '</span><span class="co-ut"><b>' + esc(u.title) + '</b><small>' + niceDate(u.start) + ' – ' + niceDate(u.end) + ' · ' + u.weeks + ' week' + (u.weeks === 1 ? '' : 's') + (u.testedOut ? ' · quick review' : '') + (u.done ? ' · done' : '') + '</small></span></summary>' +
@@ -524,14 +530,14 @@
   // The week's rhythm for a unit, as days with activities
   function rhythm(co, u){
     var learn = u.decks.filter(function(d){ return d.role === 'learn'; }), prac = u.decks.filter(function(d){ return d.role !== 'learn'; });
-    var deckAct = function(dk, tag){ return { name: (tag || '') + dk.name, e: '🗂️', deck: dk.id }; };
+    var deckAct = function(dk, tag){ return { name: (tag || '') + dk.name, ic: 'cards', deck: dk.id }; };
     var speakT = u.tools.filter(function(x){ return x.skill === 'speak'; }), otherT = u.tools.filter(function(x){ return x.skill !== 'speak'; });
     var earlier = co.units.filter(function(p){ return (u.reviewOf || []).indexOf(p.id) >= 0; }).map(function(p){ return p.decks.filter(function(d){ return d.role === 'learn'; })[0]; }).filter(Boolean);
     var rows = [
       ['Learn', learn.slice(0, 2).map(function(d){ return deckAct(d); }).concat(u.review ? [TOOL.mastery] : [])],
       ['Listen and repeat', prac.map(function(d){ return deckAct(d); }).concat(otherT.filter(function(x){ return x.skill === 'listen'; })).slice(0, 2)],
       ['Use it', speakT.slice(0, 2).concat(otherT.filter(function(x){ return x.skill === 'write'; }).slice(0, 1))],
-      ['Mix old and new', earlier.map(function(d){ return deckAct(d, 'Review: '); }).concat(learn.filter(function(d){ return d.fluency; }).map(function(d){ return { name: 'Against the clock', e: '⏱️', deck: d.fluency }; })).slice(0, 2)],
+      ['Mix old and new', earlier.map(function(d){ return deckAct(d, 'Review: '); }).concat(learn.filter(function(d){ return d.fluency; }).map(function(d){ return { name: 'Against the clock', ic: 'clock', deck: d.fluency }; })).slice(0, 2)],
       ['Check in', [TOOL.tricky].concat(otherT.filter(function(x){ return x.skill === 'read'; }).slice(0, 1))]
     ].filter(function(r){ return r[1].length; });
     if((+co.days || 5) <= 3) rows = [rows[0], rows[2] || rows[1], rows[rows.length - 1]].filter(Boolean);
@@ -556,7 +562,7 @@
         if(qi === items.length) return finish();
         var it = items[qi];
         el.innerHTML = '<section class="clib-card co-q"><span class="co-tag">' + (kind === 'placement' ? 'Placement check' : kind === 'review' ? 'Review check' : 'Unit check: ' + esc(u.title)) + ' · ' + (qi + 1) + ' of ' + items.length + '</span>' +
-          (it.say ? '<button type="button" class="clib-btn co-hear" data-co-hear>🔊 Hear it again</button><p class="co-meta">What does it mean?</p>' : '<p class="clib-big co-qt">' + esc(it.q) + '</p><p class="co-meta">' + (it.type === 'recall' ? 'How do you say this in Korean?' : 'Pick the right one.') + '</p>') +
+          (it.say ? '<button type="button" class="clib-btn co-hear" data-co-hear>' + icon('sound', '🔊') + ' Hear it again</button><p class="co-meta">What does it mean?</p>' : '<p class="clib-big co-qt">' + esc(it.q) + '</p><p class="co-meta">' + (it.type === 'recall' ? 'How do you say this in Korean?' : 'Pick the right one.') + '</p>') +
           '<div class="co-opts">' + it.opts.map(function(o){ return '<button type="button" class="clib-btn co-opt" data-o="' + esc(o) + '">' + esc(o) + '</button>'; }).join('') + '</div>' +
           '<div class="clib-row"><button type="button" class="clib-btn" data-co-dunno>I don\'t know yet</button><button type="button" class="clib-btn" data-co-quit>Stop the check</button></div></section>';
         if(it.say) setTimeout(function(){ speak(it.say); }, 200);
@@ -585,7 +591,7 @@
   // the Classroom's own look
   (function(){
     var css = [
-      '.co-goal{ min-height:64px; }', '.co-two{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }', '.co-check{ display:flex; gap:8px; align-items:center; margin:14px 0 4px; font-weight:700; }',
+      'textarea.clib-input.co-goal{ min-height:0; height:auto; }', '.co-two{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }', '.co-check{ display:flex; gap:8px; align-items:center; margin:14px 0 4px; font-weight:700; }',
       '.co-meta{ color:var(--clib-soft); font-weight:700; font-size:.9rem; margin:6px 0; }', '.co-tag{ display:inline-block; font-weight:800; font-size:.8rem; letter-spacing:.04em; text-transform:uppercase; color:var(--clib-accent); }',
       '.co-now h2{ margin:4px 0 2px; }', '.co-focus{ font-weight:800; color:var(--clib-soft); margin:0 0 8px; }', '.co-late{ background:var(--clib-read-bg); color:var(--clib-read); padding:8px 12px; border-radius:12px; font-weight:700; }',
       '.co-cando{ margin:6px 0 10px; padding-left:0; list-style:none; } .co-cando li{ padding:3px 0 3px 26px; position:relative; font-weight:700; } .co-cando li::before{ content:"✓"; position:absolute; left:4px; color:var(--clib-good); font-weight:900; }',
@@ -602,7 +608,7 @@
       '.co-opt.ok{ background:var(--clib-good); color:#fff; border-color:var(--clib-good); } .co-opt.no{ background:var(--clib-bad); color:#fff; border-color:var(--clib-bad); }',
       '.co-hear{ font-size:1.2rem; padding:14px 22px; margin:10px 0; }',
       '.clib-classroom{ display:flex; gap:14px; align-items:center; width:100%; text-align:left; border:2px solid var(--clib-accent); background:var(--clib-card); border-radius:20px; padding:14px 16px; margin:0 0 14px; cursor:pointer; font:inherit; color:var(--clib-ink); }',
-      '.clib-classroom .co-cr-e{ font-size:2.2rem; } .clib-classroom b{ display:block; font-size:1.1rem; } .clib-classroom small{ color:var(--clib-soft); font-weight:700; }',
+      '.clib-classroom .co-cr-e .cc-ic{ width:2.4rem; height:2.4rem; color:var(--clib-accent); } .co-go .cc-ic, .co-hear .cc-ic{ width:1.2em; height:1.2em; vertical-align:-.25em; color:var(--clib-accent); } .co-head h2 .cc-ic{ color:var(--clib-accent); vertical-align:-.2em; } .clib-classroom b{ display:block; font-size:1.1rem; } .clib-classroom small{ color:var(--clib-soft); font-weight:700; }',
       '@media (max-width:520px){ .co-two, .co-opts{ grid-template-columns:1fr; } .co-ud{ padding-left:0; } }'
     ];
     var s = document.createElement('style'); s.textContent = css.join('\n'); (document.head || document.documentElement).appendChild(s);
@@ -611,7 +617,7 @@
   function classroomBanner(){
     if(!courseOn()) return '';
     var co = course(), now = co && courseNow(co);
-    return '<button type="button" class="clib-classroom" data-view="classroom"><span class="co-cr-e" aria-hidden="true">🏫</span><span><b>Coral Classroom</b><small>' +
+    return '<button type="button" class="clib-classroom" data-view="classroom"><span class="co-cr-e" aria-hidden="true">' + icon('school', '🏫') + '</span><span><b>Coral Classroom</b><small>' +
       (!co ? 'Plan your course: a few questions, then units with goals, dates and checks.' : now ? 'Unit ' + (co.units.indexOf(now) + 1) + ' of ' + co.units.length + ': ' + esc(now.title) + ' · until ' + niceDate(now.end) : 'Course complete! 🎉') + '</small></span></button>';
   }
   LIB.views.home = { title: 'Library', render: function(el){
@@ -625,13 +631,13 @@
     html += '<div class="clib-tabs" role="tablist" aria-label="Your goals">' + goals.map(function(g){ var m = goalMeta(g);
       return '<button type="button" role="tab" class="clib-tab ' + lookOf(g) + '" aria-selected="' + (g === tab) + '" data-tab="' + esc(g) + '">' + m.icon + ' ' + esc(m.label) + '</button>'; }).join('') + '</div>';
     html += '<div class="clib-path ' + lookOf(tab) + '"><section class="clib-next" aria-label="Next up">' + (next
-      ? '<span class="clib-next-lbl">Next up</span><span class="clib-next-e" aria-hidden="true">' + next.e + '</span><b>' + esc(next.name) + '</b><p data-note="' + next.id + '">' + esc(next.note) + '</p>' +
+      ? '<span class="clib-next-lbl">Next up</span><span class="clib-next-e" aria-hidden="true">' + actIcon(next) + '</span><b>' + esc(next.name) + '</b><p data-note="' + next.id + '">' + esc(next.note) + '</p>' +
         '<button type="button" class="clib-go" data-act="' + next.id + '">Start ▶</button>'
       : '<span class="clib-next-lbl">Today</span><span class="clib-next-e" aria-hidden="true">🎉</span><b>All ' + today4.length + ' done for today!</b><p>You worked hard. You can pick another one to keep going.</p>') +
       '<div class="clib-daybar" aria-hidden="true">' + today4.map(function(a){ return '<i class="' + (isDone(a) ? 'on' : '') + '"></i>'; }).join('') + '</div>' +
       '<p class="clib-daybar-t">' + nDone + ' of ' + today4.length + ' done today</p></section>';
     html += '<section class="clib-side"><h3>' + (next ? 'Or pick one' : 'Keep going') + '</h3>' + plan.filter(function(a){ return a !== next; }).map(function(a){
-      return '<button type="button" class="clib-pick" data-act="' + a.id + '"><span class="clib-pick-e" aria-hidden="true">' + a.e + '</span><span class="clib-pick-t"><b>' + esc(a.name) +
+      return '<button type="button" class="clib-pick" data-act="' + a.id + '"><span class="clib-pick-e" aria-hidden="true">' + actIcon(a) + '</span><span class="clib-pick-t"><b>' + esc(a.name) +
         (isDone(a) ? ' <span class="clib-tick">✓ done</span>' : '') + '</b><small data-note="' + a.id + '">' + esc(a.note) + '</small></span></button>'; }).join('') + '</section></div>';
     html += '<h3 class="clib-more-h">Everything else</h3><div class="clib-more">' + [['🐢', 'Tutor', 'tutorHome', 'tutor'], ['📝', 'Worksheets', 'wsHome', 'worksheet'], ['🔢', 'Maths lab', 'mathHome', 'maths'],
       ['✍️', 'Check my work', 'checkHome', 'checkwork'], ['📈', 'My progress', 'progressHome', 'progress'], ['🗂️', 'All decks', 'decks', 'cards'], ['⚙️', 'Settings', 'settings', 'settings']].map(function(x){
@@ -946,8 +952,8 @@
     { id: 'cafe', e: '☕', title: 'Order at a Korean café', lang: 'ko', turns: [
       { bot: '어서 오세요! (Welcome!) 뭐 드릴까요? (What would you like?)', want: [/주세요|please|juseyo/i], hint: 'Name a drink and add 주세요 (juseyo, "please"). Try: 우유 주세요 (milk, please).' },
       { bot: '네! 따뜻한 거요, 차가운 거요? (Hot or cold?)', want: [/따뜻|차가|hot|cold/i], hint: 'Say 따뜻한 거요 (hot one) or 차가운 거요 (cold one).' },
-      { bot: '사천 원입니다. (That\'s 4,000 won.)', want: [/여기|감사|here|thank|gamsa/i], hint: 'Say 여기요 (here you go) and 감사합니다 (thank you).' },
-      { bot: '감사합니다! 좋은 하루 되세요! (Have a nice day!)', end: true } ] },
+      { bot: '네, 사천 원이에요. (That\'s 4,000 won.)', want: [/여기|감사|here|thank|gamsa/i], hint: 'Say 여기요 (here you go) and 감사합니다 (thank you).' },
+      { bot: '감사합니다! 좋은 하루 보내세요! (Have a nice day!)', end: true } ] },
     // Korean travel situations, for Coral Classroom's units (each line: what she hears, then what she might say)
     { id: 'restaurant', e: '🍲', title: 'Eat at a Korean restaurant', lang: 'ko', turns: [
       { bot: '어서 오세요! 몇 분이세요? (Welcome! How many people?)', want: [/명|한|두|세|one|two|three|myeong/i], hint: 'Say how many: 한 명이요 (one person) or 두 명이요 (two people).' },
@@ -968,7 +974,7 @@
       { bot: '어디로 가세요? (Where are you going?)', want: [/가 주세요|주세요|호텔|역|please|hotel|station/i], hint: 'Say the place and 가 주세요: 서울역 가 주세요 (Seoul Station, please).' },
       { bot: '네. 안전벨트 매세요. (OK. Please wear your seatbelt.)', want: [/네|감사|yes|thank|ok/i], hint: 'Say 네! (OK!)' },
       { bot: '도착했어요. 만 이천 원입니다. (We\'re here. That\'s 12,000 won.)', want: [/카드|여기|감사|card|here|thank/i], hint: 'Say 카드로 할게요 (by card) or 여기요 (here you go).' },
-      { bot: '감사합니다! 좋은 하루 되세요! (Thank you! Have a nice day!)', end: true } ] },
+      { bot: '감사합니다! 좋은 하루 보내세요! (Thank you! Have a nice day!)', end: true } ] },
     { id: 'hotel', e: '🏨', title: 'Check in at a hotel', lang: 'ko', turns: [
       { bot: '안녕하세요! 체크인하시겠어요? (Hello! Are you checking in?)', want: [/네|예약|yes|reservation/i], hint: 'Say 네, 예약했어요 (Yes, I have a reservation).' },
       { bot: '성함이 어떻게 되세요? (May I have your name?)', want: [/예요|이에요|입니다|저는|name|I\'m/i], hint: 'Say your name with 예요 or 이에요: 웬디예요 (I\'m Wendy).' },
@@ -980,7 +986,7 @@
       { bot: '한국어 잘하시네요! 왜 한국어를 공부해요? (Your Korean is good! Why are you learning it?)', want: [/여행|좋아|때문|travel|trip|like|because/i], hint: 'Say 한국 여행을 해요 (I\'m travelling in Korea) or 한국 문화를 좋아해요 (I like Korean culture).' },
       { bot: '반가워요! 즐거운 여행 되세요! (Nice to meet you! Have a great trip!)', end: true } ] },
     { id: 'help', e: '🆘', title: 'Ask for help', lang: 'ko', turns: [
-      { bot: '무슨 일이에요? (What\'s the matter?)', want: [/화장실|도와|잃어|아파|toilet|restroom|help|lost|sick/i], hint: 'Say 화장실 어디예요? (Where is the restroom?) or 도와주세요 (Please help me).' },
+      { bot: '무슨 일이에요? (What\'s the matter?)', want: [/화장실|도와|잃어|아파|toilet|restroom|help|lost|sick/i], hint: 'Say 화장실이 어디예요? (Where is the restroom?) or 도와주세요 (Please help me).' },
       { bot: '저기 있어요. 왼쪽이에요. (It\'s over there, on the left.)', want: [/감사|네|thank|ok/i], hint: 'Say 감사합니다!' },
       { bot: '괜찮아요! (You\'re welcome!)', end: true } ] },
     { id: 'market', e: '🍎', title: 'Buy fruit at a Chinese market', lang: 'zh', turns: [
@@ -1038,6 +1044,11 @@
   function deckContext(){ return decks().slice(0, 20).map(function(d){ return d.name; }).join(', '); }
 
   /* ---- the chat screen, used by Ask, Socratic, talks, role-plays and debates ---- */
+  // A role-play line is said without its English translation in brackets ("어서 오세요! (Welcome!)" says only the
+  // Korean): the translation is on the screen, and the natural voice reads the language being practised.
+  // A hint like "Say 이거 얼마예요? (How much is this?)" is read as just the Korean to copy: 이거 얼마예요?
+  function koPhrases(t){ var m = String(t || '').replace(/\([^)]*\)/g, '').match(/[가-힣][가-힣\s,.?!~]*/g); return m ? m.map(function(x){ return x.trim(); }).join(' ') : ''; }
+  function sayable(t){ var s2 = String(t || '').replace(/\s*\([^)]*\)/g, '').trim(); return s2 || t; }
   function chatScreen(el, opts){
     el.innerHTML = '<div class="clib-chat"><div class="clib-msgs" aria-live="polite"></div>' +
       '<form class="clib-send"><input class="clib-input" autocomplete="off" placeholder="' + esc(opts.placeholder || 'Type here…') + '" aria-label="Your message">' +
@@ -1045,7 +1056,7 @@
       '<button type="submit" class="clib-btn main">Send</button></form>' + (opts.extra || '') + '</div>';
     var msgs = $('.clib-msgs', el), form = $('.clib-send', el), inp = $('input', form), history = [];
     function add(who, text, cls){ var d = document.createElement('div'); d.className = 'clib-m ' + who + (cls ? ' ' + cls : ''); d.textContent = text; msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight; return d; }
-    function say(text){ add('bot', text); history.push({ role: 'assistant', content: text }); speak(text); }
+    function say(text){ add('bot', text); history.push({ role: 'assistant', content: text }); speak(/^play:/.test(opts.mode || '') ? sayable(text) : text); }
     form.addEventListener('submit', function(e){
       e.preventDefault(); var q = inp.value.trim(); if(!q) return; inp.value = '';
       add('me', q); history.push({ role: 'user', content: q });
@@ -1127,7 +1138,7 @@
 
   LIB.views.plays = { title: 'Role-play', render: function(el){
     var lang = { korean: 'ko', reading: 'en', science: 'en' }, g = myGoals().map(function(x){ return lang[x]; }), rank = function(p){ var i = g.indexOf(p.lang); return i < 0 ? 99 : i; };
-    el.innerHTML = '<p class="clib-lede">Practise real conversations. Shelly plays the other person.</p>' + tiles(PLAYS.slice().sort(function(a, b){ return rank(a) - rank(b); }).map(function(p){ return { e: p.e, name: p.title, view: 'play', arg: p.id }; })); wireTiles(el);
+    el.innerHTML = '<p class="clib-lede">Practise real conversations. Shelly plays the other person.</p>' + tiles(PLAYS.slice().sort(function(a, b){ return rank(a) - rank(b); }).map(function(p){ return { e: p.e, icon: PLAY_ICON[p.id], name: p.title, view: 'play', arg: p.id }; })); wireTiles(el);
   } };
   LIB.views.play = { title: 'Role-play', render: function(el, id){
     var p = PLAYS.find(function(x){ return x.id === id; }) || PLAYS[0], i = 0, tries = 0;
@@ -1140,7 +1151,7 @@
         tries++; return tries >= 2 ? 'Here\'s a hint: ' + t.hint : 'Hmm, try again! ' + t.bot;
       },
       system: function(){ return 'Role-play: you are the other person in "' + p.title + '". Stay in character, use simple ' + (p.lang === 'ko' ? 'Korean with English in brackets' : p.lang === 'zh' ? 'Chinese with pinyin and English in brackets' : 'English') + ', one short line at a time. If she makes a mistake, model the right phrase gently and keep going.'; } });
-    $('[data-hint]', el).addEventListener('click', function(){ var t = p.turns[i]; var m = document.createElement('div'); m.className = 'clib-m bot'; m.textContent = t.end ? 'All done!' : '💡 ' + t.hint; $('.clib-msgs', el).appendChild(m); speak(t.hint || ''); });
+    $('[data-hint]', el).addEventListener('click', function(){ var t = p.turns[i]; var m = document.createElement('div'); m.className = 'clib-m bot'; m.textContent = t.end ? 'All done!' : '💡 ' + t.hint; $('.clib-msgs', el).appendChild(m); speak(koPhrases(t.hint) || t.hint || ''); });
   } };
 
   LIB.views.debates = { title: 'Debate', render: function(el){

@@ -1,5 +1,18 @@
 # Changelog
 
+## Coral Classroom polish: drawn icons, today first, cleaner role-play voice (October 31, 2026)
+
+- **Drawn icons instead of emoji** on the Library's activity tiles (Role-play, Fill the gaps, Handwriting, Ask,
+  Worksheet, Mastery, Tricky spots and the maths tools), on every role-play scene (café cup, restaurant bowl, shop
+  bag, subway train, taxi, hotel bed, hello, help, market, library, lab), across the Coral Classroom, and on the
+  voyage's islands on the treasure map. New icons: school, talk, jigsaw, trophy, magnifier, clock, island and the
+  scenes.
+- **Today's unit comes first** in the Classroom, with the goal and settings below it, so on a phone (upright or
+  sideways) the first thing on screen is what to do now. The goal box is two lines.
+- **Role-plays read only the language being practised**: Shelly says "어서 오세요! 뭐 드릴까요?", and the English in
+  brackets stays on screen. A hint reads just the Korean to copy ("이거 얼마예요?"). Two lines now use wording that
+  already has natural-voice clips.
+
 ## Coral Classroom: a course planned like a teacher would (October 31, 2026)
 
 - **Any profile can have a course**; for now it's on for Wendy. A new profile's form asks "What do you want to
