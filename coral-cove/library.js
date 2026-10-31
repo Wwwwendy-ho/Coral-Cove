@@ -1047,7 +1047,9 @@
   // A role-play line is said without its English translation in brackets ("어서 오세요! (Welcome!)" says only the
   // Korean): the translation is on the screen, and the natural voice reads the language being practised.
   // A hint like "Say 이거 얼마예요? (How much is this?)" is read as just the Korean to copy: 이거 얼마예요?
-  function koPhrases(t){ var m = String(t || '').replace(/\([^)]*\)/g, '').match(/[가-힣][가-힣\s,.?!~]*/g); return m ? m.map(function(x){ return x.trim(); }).join(' ') : ''; }
+  function koPhrases(t){ var m = String(t || '').replace(/\([^)]*\)/g, '').match(/[가-힣][가-힣\s,.?!~]*/g);
+    // each phrase is its own sentence, so each finds its own natural-voice clip (한 명이요. 두 명이요.)
+    return m ? m.map(function(x){ x = x.trim().replace(/\s+([.,?!~])/g, '$1').replace(/,$/, ''); return /[.?!~]$/.test(x) ? x : x + '.'; }).join(' ') : ''; }
   function sayable(t){ var s2 = String(t || '').replace(/\s*\([^)]*\)/g, '').trim(); return s2 || t; }
   function chatScreen(el, opts){
     el.innerHTML = '<div class="clib-chat"><div class="clib-msgs" aria-live="polite"></div>' +

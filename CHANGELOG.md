@@ -1,5 +1,15 @@
 # Changelog
 
+## A natural Korean voice for the role-plays (October 31, 2026)
+
+- 63 new Korean clips in a natural voice, for every line Shelly says in the Korean role-plays (café, restaurant,
+  shop, subway, taxi, hotel, introductions, getting help) and every phrase their hints suggest. Nothing in the
+  role-plays falls back to the device voice any more.
+- The voice is SNAP Piper Korean (Apache 2.0), a bright, friendly young woman's voice. It is given each phrase's
+  real pronunciation (감사합니다 is read [감사함니다], 맛있게 [마싣께]), so the words sound the way Koreans say them.
+- A hint that offers two phrases ("한 명이요" or "두 명이요") reads them as two sentences, each with its own clip.
+- `tools/voice/gen_ko.py` and `ko_g2p.py` make more Korean clips the same way (see tools/voice/README.md).
+
 ## Coral Classroom polish: drawn icons, today first, cleaner role-play voice (October 31, 2026)
 
 - **Drawn icons instead of emoji** on the Library's activity tiles (Role-play, Fill the gaps, Handwriting, Ask,
